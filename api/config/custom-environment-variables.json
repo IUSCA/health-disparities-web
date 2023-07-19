@@ -3,10 +3,17 @@
     "port": "PORT"
   },
   "postgres": {
-    "password": "DATABASE_PASSWORD"
+    
+    "hostname": "DATABASE_HOST",
+    "port": "DATABASE_PORT",
+    "user": "DATABASE_USER",
+    "password": "DATABASE_PASSWORD",
+    "db": "DATABASE_DB",
+    "schema": "DATABASE_SCHEMA"
   },
   "mode": "NODE_ENV",
   "workflow_server": {
     "auth_token": "WORKFLOW_AUTH_TOKEN"
   }
+
 }

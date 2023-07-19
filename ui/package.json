@@ -17,6 +17,7 @@
     "@vueuse/core": "^9.13.0",
     "@vueuse/integrations": "^9.13.0",
     "axios": "^1.4.0",
+    "chart.js": "^4.3.0",
     "config": "^3.3.9",
     "dayjs": "^1.11.8",
     "epic-spinners": "^2.0.0",
@@ -25,6 +26,7 @@
     "moment-timezone": "^0.5.43",
     "pinia": "^2.1.4",
     "vue": "^3.3.4",
+    "vue-chartjs": "^5.2.0",
     "vue-router": "^4.2.2",
     "vuestic-ui": "^1.7.0"
   },

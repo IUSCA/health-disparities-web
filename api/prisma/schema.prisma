@@ -213,3 +213,187 @@ model project_contact {
 
   @@id([project_id, contact_id])
 }
+
+model participant {
+  id           Int           @id @default(autoincrement())
+  // person_ibid  person_ibid[]
+  ib_id        String
+  study_id     Int
+  demographics demographic[]
+  labs         lab[]
+  covid_tests  covid_test[]
+  covid_vaxes  covid_vax[]
+  dxs          dx[]
+  hospitals    hospital[]
+  medications  medication[]
+
+  @@unique([ib_id, study_id])
+}
+
+model demographic {
+  id           Int       @id @default(autoincrement())
+  gender       String
+  race         String
+  ethnicity    String?
+  // deid_max_enc_date
+  max_enc_date DateTime
+  chs_flag     Int
+  // deid_dob
+  dob          DateTime
+  // deid_enroll_date
+  enroll_date  DateTime?
+
+  study_id       Int
+  ib_id          String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
+}
+
+model lab {
+  id       Int      @id @default(autoincrement())
+  name     String
+  // tie back to an actual event? one timestamp, many related data? 
+  date     DateTime
+  category String   @db.VarChar(100)
+  result   Decimal
+  unit     String   @db.VarChar(100)
+
+  study_id       Int
+  ib_id          String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  // any given study_id and ib_id pair may have multiple labs associated
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
+}
+
+model covid_test {
+  id   Int      @id @default(autoincrement())
+  // covid_test     String
+  name String
+  // deid_test_date String
+  date DateTime
+
+  result String
+
+  study_id       Int
+  ib_id          String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
+}
+
+model covid_vax {
+  id           Int      @id @default(autoincrement())
+  // vaccine_text        String
+  name         String   @db.VarChar(100)
+  // tie back to an actual event? one timestamp, many related data? 
+  // deid_im_date        String
+  date         DateTime
+  manufacturer String
+  dose_number  Int
+  series_doses Int
+  is_booster   String
+
+  study_id       Int
+  ib_id          String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
+}
+
+// AKA diagnosis
+model dx {
+  id   Int    @id @default(autoincrement())
+  // dx_name             String
+  name String
+
+  // deid_dx_date        String
+  date        DateTime
+  code        String
+  code_system String
+
+  study_id       Int
+  ib_id          String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
+}
+
+// e.g. hospital visit, admission
+model hospital {
+  id             Int       @id @default(autoincrement())
+  // these values are bigger than an Int:
+  // ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(Error { kind: ToSql(0), cause: Some(Error { kind: ConversionError("Unable to fit integer value '2305743223' into an INT4 (32-bit signed integer)."), original_code: None, original_message: None }) }), transient: false })
+  // enc_id         Int
+  enc_id         String
+  // deid_admit          String
+  admit_date     DateTime
+  // deid_discharge      String
+  discharge_date DateTime?
+  // TODO: possible to link to other dx table? 
+  dx_code        String
+  dx_code_system String
+
+  study_id       Int
+  ib_id          String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
+}
+
+model medication {
+  id                 Int      @id @default(autoincrement())
+  // drug_name
+  name               String
+  // drug_category 
+  category           String
+  start_date         DateTime
+  dispense_qty       Decimal?
+  dispense_qty_unit  String?
+  nbr_refills        Int?
+  strength_dose      String?
+  strength_dose_unit String?
+
+  study_id       Int
+  ib_id          String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
+}
+
+model resultsBy {
+  id      Int    @id @default(autoincrement())
+  name    String
+  results Json
+}
+
+model cohort {
+  id       Int               @id @default(autoincrement())
+  name     String
+  query    Json
+  participants cohort_participants[]
+
+}
+
+model group {
+  id       Int               @id @default(autoincrement())
+  name     String
+  query    Json
+}
+
+model cohort_participants {
+  cohort_id  Int
+  participant_id Int
+  cohorts    cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([cohort_id, participant_id])
+}
+

@@ -104,10 +104,16 @@ function isActive(path) {
 }
 
 const user_items = ref([
+{
+    icon: "material-symbols:search",
+    title: "Search",
+    path: "/participants",
+  },
+
   {
-    icon: "mdi-flask",
-    title: "Projects",
-    path: "/projects",
+    icon: "lucide:group",
+    title: "Cohort",
+    path: "/cohort",
   },
   // {
   //   icon: "mdi-chart-gantt",

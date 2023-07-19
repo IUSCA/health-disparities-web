@@ -17,4 +17,7 @@ router.use('/users', require('./users'));
 router.use('/workflows', require('./workflows'));
 router.use('/projects', require('./projects'));
 
+router.use('/cohort', require('./cohort'));
+router.use('/participant', require('./participant'));
+
 module.exports = router;

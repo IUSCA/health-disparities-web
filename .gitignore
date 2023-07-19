@@ -56,3 +56,6 @@ qc
 backup
 
 !db/postgres
+
+meili_data/*
+
