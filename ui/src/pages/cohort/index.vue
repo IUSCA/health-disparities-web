@@ -4,15 +4,14 @@ import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, Li
 
 import { useCohortStore } from "@/stores/cohort"
 import cohortService from '@/services/cohort'
+import { useToastStore } from "@/stores/toast";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 const cohortStore = useCohortStore()
-
 cohortStore.getCategories()
 
 const showSettings = ref(false)
-const addModal = ref(false)
 
 
 const includes =  ref({
@@ -104,7 +103,22 @@ const includeAddGroup = ref(null)
 const excludeAddGroup = ref(null)
 
 const resultsBy = ref(null)
+const allResultsBy = ref([])
 const resultsByDetails = ref({NEW: []})
+
+onMounted(async () => {
+
+cohortService.getResultsBy().then(results => {
+  console.log(results)
+  for(let data of results.data) {
+    console.log(data)
+    resultsByDetails.value[data.name] = data.fields
+  }
+})
+
+})
+
+
 
 const loading = ref(false)
 
@@ -115,28 +129,62 @@ const chart_options = ref([])
 
 const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) { return ($1 && ' ') + $2.toUpperCase(); })
 
-const save = (data) => {
-  resultsBy.value = data.name
-  resultsByDetails.value[data.name] = Object.keys(data.fields)
 
-  
+
+
+const save = (data) => {
+  resultsByDetails.value[data.name] = data.fields
+  resultsBy.value = data.name
   showSettings.value = false
 }
 
-watch([resultsBy, includes, excludes], () => {
+
+
+const checkValues = (obj) => {
+    for (let key in obj) {
+        if (Array.isArray(obj[key])) {
+            for (let item of obj[key]) {
+                if (typeof item === 'object' && item !== null) {
+                    if ('val' in item && item.val === "") {
+                        return false;
+                    }
+                    if (!checkValues(item)) {
+                        return false;
+                    }
+                }
+            }
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            if ('val' in obj[key] && obj[key].val === "") {
+                return false;
+            }
+            if (!checkValues(obj[key])) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+
+watchDebounced([resultsBy, includes, excludes], () => {
   
-  if(!resultsBy.value || !includes.value || !excludes.value)
+  if(!resultsBy.value || !checkValues(includes.value) || !checkValues(excludes.value))
     return
 
+
+  chart_category.value = null
   chart_data.value = null
   loading.value = true
 
   cohortService.resultsBy({includes: includes.value, excludes: excludes.value, resultsBy: resultsByDetails.value[resultsBy.value]})
   .then(result => {
 
+    console.log(result)
+
     results.value = result.data.facetDistribution
 
-    console.log(results.value)
+    console.log(`category ${Object.keys(results.value)[0]}`)
 
     chart_category.value = Object.keys(results.value)[0]
     chart_options.value = Object.keys(results.value)
@@ -145,13 +193,16 @@ watch([resultsBy, includes, excludes], () => {
 
     loading.value = false
   })
-}, { deep: true })
+}, { deep: true, debounce: 500 })
 
 
 watch(chart_category, () => {
+  if(!chart_category.value)
+    return
+
   let labels = []
   let dataset = {data: []}
-  console.log(results.value, chart_category.value)
+
   for(const key of Object.keys(results.value[chart_category.value])) {
     labels.push(key)
     dataset.data.push(results.value[chart_category.value][key])
@@ -164,14 +215,39 @@ watch(chart_category, () => {
 }, {deep: true})
 
 const cohort_name = ref("")
+const cohort_options = ref([])
+
+const addNewOption = (newOption) => {
+      const option = {
+        id: String(cohort_options.value.length),
+        text: newOption,
+        value: newOption,
+      };
+      cohort_options.value = [...cohort_options.value, option];
+}
+
+
+const toast = useToastStore();
+
+const saveCohort = async () => {
+  if(!cohort_name.value || !checkValues(includes.value) || !checkValues(excludes.value)) {
+    
+    toast.error("Please fill all the fields")
+    return
+  }
+
+  await cohortService.saveCohort({cohort_name: cohort_name, includes: includes.value, excludes: excludes.value, resultsBy: resultsByDetails.value[resultsBy.value]})
+  toast.success("Cohort Saved")
+}
 
 </script>
 
 <template>
 <div class="flex flex-col">
-    <div class="flex flex-row mb-4">
 
-      <va-input class="w-2 border-gray-500 border border-solid  w-full rounded" v-model="cohort_name" label="Cohort"  />
+    <div class="flex flex-row mb-4">
+      <!-- <va-input class="w-2 border-gray-500 border border-solid  w-full rounded" v-model="cohort_name" label="Cohort"  /> -->
+      <va-select  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="cohort_name" label="Cohort" :options="cohort_options" multiple searchable highlight-matched-text allow-create="unique" @create-new="addNewOption" />
     </div>
     <div class=" grid gap-4 grid-cols-3 w-full mb-12">
       <va-card stripe stripe-color="success" >
@@ -308,7 +384,7 @@ const cohort_name = ref("")
         </va-card-content>
       </va-card>
     </div>
-    <va-button class="" preset="secondary" border-color="primary" @click="save"><Icon icon="material-symbols:save-sharp" /> &nbsp; Save </va-button>
+    <va-button @click="saveCohort" class="" preset="secondary" border-color="primary" ><Icon icon="material-symbols:save-sharp" /> &nbsp; Save </va-button>
 </div>
 
 <va-modal v-model="showSettings"  size="large" blur maxWidth="100%" maxHeight="100%" hide-default-actions>

@@ -148,16 +148,16 @@ const operator_items = ref([
   //   title: "Data Uploader",
   //   path: "/datauploader",
   // },
-  {
-    icon: "mdi-dna",
-    title: "Raw Data",
-    path: "/rawdata",
-  },
-  {
-    icon: "mdi-package-variant-closed",
-    title: "Data Products",
-    path: "/dataproducts",
-  },
+  // {
+  //   icon: "mdi-dna",
+  //   title: "Raw Data",
+  //   path: "/rawdata",
+  // },
+  // {
+  //   icon: "mdi-package-variant-closed",
+  //   title: "Data Products",
+  //   path: "/dataproducts",
+  // },
   {
     icon: "mdi-table-account",
     title: "User Management",

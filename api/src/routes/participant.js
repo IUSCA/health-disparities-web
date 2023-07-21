@@ -4,7 +4,7 @@ const { MeiliSearch } = require('meilisearch');
 let { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
-const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' })
+const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
 const modelService = require('../services/model');
 
@@ -17,8 +17,6 @@ const categories = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hosp
 
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
-
-
 
 const isPermittedTo = accessControl('user');
 const router = express.Router();

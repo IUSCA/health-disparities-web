@@ -4,7 +4,7 @@ const { MeiliSearch } = require('meilisearch');
 let { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
-const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' })
+const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
 const modelService = require('../services/model');
 
@@ -26,22 +26,32 @@ const router = express.Router();
 
 // CREATE
 router.post('/', isPermittedTo('create', false), asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const result = await prisma.participant.create(req.body);
     res.json(result);
   }),
 );
 
 router.post('/all', isPermittedTo('create', false), asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const result = await prisma.participant.createMany(req.body);
     res.json(result);
   }),
 );
 
+router.post('/saveSetting', isPermittedTo('create', false), asyncHandler(async (req, res, next) => {
+  // #swagger.tags = ['cohort']
+  const name = req.body.name
+  const fields = req.body.fields
+  const result = await prisma.results_by.createMany({data: {name: name, fields: fields}});
+  console.log(result)
+  res.json(result);
+}),
+);
+
 
 router.get('/metadata', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const result =  modelService.getMetadata('participant');
     return res.json(result);
   
@@ -88,7 +98,7 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 
 
 router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
-  // #swagger.tags = ['participant']
+  // #swagger.tags = ['cohort']
 
   // Fuzzy search string
   const search = req.body?.search ? req.body.search: undefined
@@ -131,6 +141,14 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
   return res.json(data);
 }));
 
+router.get('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
+
+  let resultsBy = await prisma.results_by.findMany()
+
+  return res.json(resultsBy);
+
+}))
+
 router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
 
   let includes = req.body?.includes ? req.body.includes: []
@@ -139,7 +157,8 @@ router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, n
   let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
 
   if(resultsBy) {
-    resultsBy = resultsBy.map(v => v.replace('.', 's.'))
+    console.log(resultsBy)
+    resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
   } else {
     return res.status(400).send('resultsBy is required');
   }
@@ -180,11 +199,57 @@ router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, n
   // Query MeiliSearch
   let data  = await client.index('participants').search("", {filter: filter, limit: 0, facets: resultsBy})
 
-  console.log(data)
+  // console.log(data)
 
   return res.json(data)
 
 }))
+
+
+router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (req, res, next) => { 
+  let name = req.body?.cohort_name ? req.body.cohort_name: null
+  let includes = req.body?.includes ? req.body.includes: []
+  let excludes = req.body?.excludes ? req.body.excludes: []
+
+  let query = ``
+
+  let x = 0
+  for(let group of Object.keys(includes)) {
+    for(let include of includes[group]) {
+      if(x == 0) {
+        query = query + ` ${include.category}s.${include.field} ${include.op} ${include.val}`
+      } else {
+        console.log("join", include.join)
+        query = query + ` ${include.join} ${include.category}s.${include.field} ${include.op} ${include.val}`
+      }
+
+      x = x + 1
+    }
+  }
+
+  x = 0
+
+  for(let group of Object.keys(excludes)) {   
+    for(let exclude of excludes[group]) {
+      if(x == 0) {
+        query = query + ` AND ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
+      } else {
+        query = query + ` ${exclude.join} ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
+      }
+
+      x = x + 1
+    }
+  }
+
+
+  console.log({data: {name: name, query: query}})
+  // const result = await prisma.cohort.create({data: {name: name, query: query}})
+
+  let data  = await client.index('participants').search("", {filter: query, limit: 0, facets: ['id']})
+  console.log(data)
+
+}))
+
 
 router.get('/categories', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
 
@@ -194,7 +259,7 @@ router.get('/categories', isPermittedTo('read', false), asyncHandler(async (req,
 
 
 router.get('/fields/:name', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
-  // #swagger.tags = ['participant']
+  // #swagger.tags = ['cohort']
   console.log('name', req.params.name)
   const result =  modelService.getFields(req.params.name);
 
@@ -202,6 +267,31 @@ router.get('/fields/:name', isPermittedTo('read'), asyncHandler(async (req, res,
   return res.json(result);
 
 }))
+
+const checkValues = (obj) => {
+  for (let key in obj) {
+      if (Array.isArray(obj[key])) {
+          for (let item of obj[key]) {
+              if (typeof item === 'object' && item !== null) {
+                  if ('val' in item && item.val === "") {
+                      return false;
+                  }
+                  if (!checkValues(item)) {
+                      return false;
+                  }
+              }
+          }
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          if ('val' in obj[key] && obj[key].val === "") {
+              return false;
+          }
+          if (!checkValues(obj[key])) {
+              return false;
+          }
+      }
+  }
+  return true;
+}
 
 
 const fuzzySearchTable = async (table, search, count = false) => {
@@ -270,7 +360,7 @@ router.get('/:id', isPermittedTo('read'), asyncHandler(async (req, res, next) =>
 
   // console.log(include)
 
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const result = await prisma.participant.findUnique({where: {id: parseInt(req.params.id)}, include: include})
     if (result) { return res.json(result); }
     return next(createError.NotFound());
@@ -278,7 +368,7 @@ router.get('/:id', isPermittedTo('read'), asyncHandler(async (req, res, next) =>
 );
 
 router.get('/mine', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const user_id = get_current_user(req, res);
 
     const result = await prisma.participant.findUnique({where: {user_id: parseInt(user_id)}})
@@ -291,14 +381,14 @@ router.get('/mine', isPermittedTo('read'), asyncHandler(async (req, res, next) =
 
 // UPDATE
 router.put('/:id', isPermittedTo('update'), asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const result = await prisma.participant.update({ where: { id: req.params.id}, data: req.body});
     res.json(result);
   }),
 );
 
 router.put('/all', isPermittedTo('update'), asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const result = await prisma.participant.updateMany({ data: req.body});
     res.json(result);
   }),
@@ -308,14 +398,14 @@ router.put('/all', isPermittedTo('update'), asyncHandler(async (req, res, next) 
 
 // DELETE
 router.delete('/:id', isPermittedTo('delete'), asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const result = await prisma.participant.delete({ where: {id: req.params.id}});
     res.json(result);
   }),
 );
 
 router.delete('/all', isPermittedTo('delete'), asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['participant']
+    // #swagger.tags = ['cohort']
     const result = await prisma.participant.deleteMany({ where: {id: req.params.id}});
     res.json(result);
   }),

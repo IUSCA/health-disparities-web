@@ -17,6 +17,11 @@ const setting_name = ref('')
 const getHeader = (field) => makeLabel(field) + " - " +  Object.keys(chosen_fields.value).filter(key => key.startsWith(field)).length
 const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) { return ($1 && ' ') + $2.toUpperCase(); })
 
+const save = async () => {
+  await cohortService.saveSetting({name: setting_name.value, fields: chosen_fields.value})
+  emit('save', { name: setting_name.value, fields: chosen_fields.value })
+}
+
 </script>
 
 <template>
@@ -26,7 +31,7 @@ const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) {
   <va-accordion v-model="value" class="max-w-sm">
     <va-collapse v-for="(field, index) in categories" :key="index" :header="getHeader(field)" @click="getFields(field)">
       <div v-if="fields" class="mt-3">
-        <va-switch class="mr-2" v-model="chosen_fields[`${field}.${option}`]" v-for="option in fields">{{ option }}</va-switch>
+        <va-switch @click.stop class="mr-2" v-model="chosen_fields[`${field}.${option}`]" v-for="option in fields">{{ option }}</va-switch>
       </div>
       <div v-else>
         <va-loading />
@@ -34,7 +39,7 @@ const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) {
       <br />
     </va-collapse>
   </va-accordion>
-  <va-button v-if="chosen_fields !== {}" class="mt-2 w-full" @click="() => emit('save', { name: setting_name, fields: chosen_fields })"><Icon icon="ic:baseline-save" /> &nbsp; Save</va-button>
+  <va-button v-if="chosen_fields !== {}" class="mt-2 w-full" @click="save"><Icon icon="ic:baseline-save" /> &nbsp; Save</va-button>
 </div>
 
 </template>

@@ -19,6 +19,9 @@ class cohortService {
   getMetadata = () => api.get(`/cohort/metadata`)
 
   resultsBy = (data) => api.post(`/cohort/resultsBy`, data)
+  saveSetting = (data) => api.post(`/cohort/saveSetting`, data)
+  getResultsBy = () => api.get(`/cohort/resultsBy`)
+  saveCohort = (data) => api.post(`/cohort/saveCohort`, data)
 }
 
 export default new cohortService()

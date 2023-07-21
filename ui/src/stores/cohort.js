@@ -9,6 +9,7 @@ export const useCohortStore = defineStore('cohort', () => {
       sortBy: 'id', sortingOrder: 'asc', numPerPage: 10, page: 1, search: '', category: 'demographics',
     })
 
+
     const categories = ref([])
     const metadata = ref({})
 
@@ -38,6 +39,8 @@ export const useCohortStore = defineStore('cohort', () => {
       metadata.value = result.data
      })
     .catch((error) => status.value = error)
+
+
 
     return {
         all,
