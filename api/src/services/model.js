@@ -43,14 +43,14 @@ const getMetadata = (model_name) => {
   // console.log(metaData)
   data.fields = []
   for(let field of Object.keys(metaData)) {
-    if(metaData[field] === 'Int' || metaData[field] === 'String') {
+    if(metaData[field] === 'Int' || metaData[field] === 'String' || metaData[field] === 'DateTime' || metaData[field] === 'Decimal') {
       data.fields.push(`${field}`)
     } else {
       let subMetaData = getFieldsWithType(`${metaData[field]}`)
       // console.log('submetadata', subMetaData)
       data[metaData[field]] = []
       for(let subfield of Object.keys(subMetaData)) {
-        if(subMetaData[subfield] === 'Int' || subMetaData[subfield] === 'String') {
+        if(subMetaData[subfield] === 'Int' || subMetaData[subfield] === 'String' || subMetaData[subfield] === 'DateTime' || subMetaData[subfield] === 'Decimal') {
           data[metaData[field]].push(`${subfield}`)
         }
       }

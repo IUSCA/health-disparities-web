@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { MeiliSearch } = require('meilisearch');
-const { getFieldsWithType } = require('../services/model');
+const { getFieldsWithType } = require('../src/services/model');
 require('dotenv-safe').config()
 
 const prisma = new PrismaClient();
@@ -8,21 +8,21 @@ const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['
 
 const main = async () => {
 
-  const count = await prisma.participant.count();
+  // const count = await prisma.participant.count();
 
-  console.log(`Indexing ${count} participants...`)
-  let x = 0
-  while(x < count) {
-    const participants = await prisma.participant.findMany({
-      skip: x,
-      take: 1000,
-      include: {demographics: true, labs: true, covid_tests: true, covid_vaxes: true, dxs: true, hospitals: true, medications: true}
-    });
+  // console.log(`Indexing ${count} participants...`)
+  // let x = 0
+  // while(x < count) {
+  //   const participants = await prisma.participant.findMany({
+  //     skip: x,
+  //     take: 1000,
+  //     include: {demographics: true, labs: true, covid_tests: true, covid_vaxes: true, dxs: true, hospitals: true, medications: true}
+  //   });
 
-    await client.index('participants').addDocuments(participants, { primaryKey: 'id' })
+  //   await client.index('participants').addDocuments(participants, { primaryKey: 'id' })
 
-    x = x + 1000
-  }
+  //   x = x + 1000
+  // }
 
   console.log('Enabling filtering and sorting...')
   enableFiltering('participant')
@@ -37,7 +37,7 @@ const enableFiltering = async (model_name) => {
   let data = []
 
   for(let field of Object.keys(fields)) {
-    if((fields[field] === 'Int' || fields[field] === 'String')  ) {
+    if(fields[field] === 'Int' || fields[field] === 'String' || fields[field] === 'DateTime' || fields[field] === 'Decimal'  ) {
       if(! field.includes('id'))
         data.push(field);
     
@@ -45,7 +45,7 @@ const enableFiltering = async (model_name) => {
 
       let subFields = getFieldsWithType(fields[field]);
       for(let subField of Object.keys(subFields)) {
-        if((subFields[subField] === 'Int' || subFields[subField] === 'String') ) {
+        if(subFields[subField] === 'Int' || subFields[subField] === 'String' || subFields[subField] === 'DateTime' || subFields[subField] === 'Decimal' ) {
           if(! subField.includes('id'))
             data.push(`${field}.${subField}`)
         } 

@@ -17,7 +17,7 @@ const categories = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hosp
 
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
-const { result } = require('lodash');
+
 
 
 
@@ -250,6 +250,35 @@ router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (r
 
 }))
 
+
+router.post('/values', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
+
+  const category = req.body?.category ? req.body.category: null
+  const field = req.body?.field ? req.body.field: null
+  const search = req.body?.search ? req.body.search: ''
+
+  console.log(category, field, search)
+
+  if(!category || !field ) return res.status(400).send('field and search are required');
+
+  const results = await prisma[category].findMany({
+    where: {
+      [field]: {
+        contains: search,
+      },
+    },
+    select: { [field]: true},
+    distinct: [field],
+    take: 10, // Limit the number of results to 10
+  });
+
+  const values = results.map(item => Object.values(item)[0])
+
+  console.log(values)
+
+  return res.json(values);
+
+}))
 
 router.get('/categories', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
 
