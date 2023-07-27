@@ -42,22 +42,41 @@ values: []
   }]
 })
 
+
+
 const getFields = (type, group, index, data) => cohortService.getFields(data).then(result => {
+  console.log(result, type, group, index, data)
   if(type === 'include') {
+    includes.value[group][index].field = ""
+    includes.value[group][index].op = ""
+    includes.value[group][index].val = ""
     includes.value[group][index].options = Object.keys(result.data)
     includes.value[group][index].operators = result.data
   }
 
   if(type === 'exclude') {
-    excludes.value[group][index].options = result.data
+    excludes.value[group][index].field = ""
+    excludes.value[group][index].op = ""
+    excludes.value[group][index].val = ""
+    excludes.value[group][index].options = Object.keys(result.data)
     excludes.value[group][index].operators = result.data
   }
 })
 
-// const getExcludes = (group, index, data) => cohortService.getFields(data).then(result => {
-//   excludes.value[group][index].options = result.data
-// })
-// const getIncludes = (group, index, data) => cohortService.getFields(data).then(result => includes.value[group][index].options = result.data)
+const getInitialValues = (type, group, index, category, field, search) => {
+  console.log(type, group, index, category, field, search)
+  if(type === 'include') {
+    includes.value[group][index].op = ""
+    includes.value[group][index].val = ""
+  }
+
+  if(type === 'exclude') {
+    excludes.value[group][index].op = ""
+    excludes.value[group][index].val = ""
+  }
+
+  getValues(type, group, index, category, field, search)
+}
 
 const getValues = (type, group, index, category, field, search) => cohortService.getValues({category: category, field: field, search: search}).then(result => {
   if(type === 'include')
@@ -274,6 +293,37 @@ const saveCohort = async () => {
   toast.success("Cohort Saved")
 }
 
+const updateVal = (search) => {
+  console.log(search)
+  if(selectedValue.value !== null) 
+    getValues(selectedValue.value.type, selectedValue.value.group, selectedValue.value.index, selectedValue.value.category, selectedValue.value.field, search)
+  
+}
+
+const selectedValue = ref(null)
+const changeSelected = (type, group, index, category, field, search) => selectedValue.value = {type: type, group: group, index: index, category: category, field: field, search: ''}
+
+
+const showRemove = ref(false)
+const removeVal = ref(null)
+
+// Ask user if they really wanted to remove
+const removeDialog = (type, group, index) => {
+  removeVal.value = {type: type, group: group, index: index}
+  showRemove.value = true
+}
+
+// Actually remove
+const remove = () => {
+  showRemove.value = false
+  if(removeVal.value.type === 'include') {
+    includes.value[removeVal.value.group].splice(removeVal.value.index, 1)
+  } else {
+    excludes.value[removeVal.value.group].splice(removeVal.value.index, 1)
+  }
+}
+
+
 </script>
 
 <template>
@@ -302,16 +352,28 @@ const saveCohort = async () => {
               
               <div v-if="include.edit" class="border-gray-500 border border-solid p-4">
                 
+                <!-- Category -->
                 <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.category" :options="cohortStore.categories" label="Category" @update:modelValue="getFields('include', group, index, include.category)"  />
+
                 <div v-if="include.category" class="mb-2">
+                  <!-- Fields -->
                   <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.field" :options="include.options" label="Field" 
-                  @update:modelValue="getValues('include', group, index, include.category, include.field, include.val)" />
+                  @update:modelValue="getInitialValues('include', group, index, include.category, include.field, include.val)" />
+
+                  <!-- Operator -->
                   <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.op" :options="include.operators[include.field]" label="Operator" />
                   
+                  <!-- Values -->
+                  <va-input v-if="include.field in include.operators && include.operators[include.field].length > 1" class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" />
+                  <va-select v-if="include.field in include.operators && ! (include.operators[include.field].length > 1)"  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text @updateSearch="updateVal" @focus="changeSelected('include', group, index, include.category, include.field, include.val)" :loading="Array.isArray(include.values) && include.values.length === 0" />
 
-                  <va-input v-if="include.operators[include.field].length > 1" class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" />
-                  <va-select v-if="! (include.operators[include.field].length > 1)"  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text   />
-                  <va-button v-if="include.val" class="w-full " @click="include.edit=false" preset="secondary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >Save</va-button>
+
+                  <!-- Actions -->
+                  <div class="flex mt-2">
+                    <va-button  class="m-2 " @click="removeDialog('include', group, index)" color="danger" border-color="danger" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="typcn:delete-outline" /></va-button>
+                    <va-button v-if="include.val" class="m-2 " @click="include.edit=false" color="success" border-color="success" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="material-symbols:save-sharp" /></va-button>
+                  </div>
+
                 </div>
               </div>
 
@@ -352,14 +414,26 @@ const saveCohort = async () => {
               
               <div v-if="exclude.edit" class="border-gray-500 border border-solid p-4">
                 
+                <!-- Category -->
                 <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.category" :options="cohortStore.categories" label="Category" @update:modelValue="getFields('exclude', group, index, exclude.category)"  />
                 <div v-if="exclude.category" class="mb-2">
+                  <!-- Fields -->
                   <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.field" :options="exclude.options" label="Field" 
-                  @update:modelValue="getValues('exclude', group, index, exclude.category, exclude.field, exclude.val)" />
-                  <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.op" :options="exclude.operators" label="Operator" />
+                  @update:modelValue="getInitialValues('exclude', group, index, exclude.category, exclude.field, exclude.val)" />
                   
-                  <va-select  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="exclude.val" label="Value" :options="exclude.values" searchable highlight-matched-text   />
-                  <va-button v-if="exclude.val" class="w-full " @click="exclude.edit=false" preset="secondary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >Save</va-button>
+                  <!-- Operator -->
+                  <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.op" :options="exclude.operators[exclude.field]" label="Operator" />
+                  
+                  <!-- Values -->
+                  <va-input v-if="exclude.field in exclude.operators && exclude.operators[exclude.field].length > 1" class="w-2 border-gray-500 border border-solid w-full rounded" v-model="exclude.val" label="Value" />
+                  <va-select v-if="exclude.field in exclude.operators && ! (exclude.operators[exclude.field].length > 1)"  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="exclude.val" label="Value" :options="exclude.values"  searchable highlight-matched-text @updateSearch="updateVal" @focus="changeSelected('exclude', group, index, exclude.category, exclude.field, exclude.val)" :loading="Array.isArray(exclude.values) && exclude.values.length === 0" />
+
+                  <!-- Actions -->
+                  <div class="flex mt-2">
+                    <va-button  class="m-2 " @click="removeDialog('exclude', group, index)" color="danger" border-color="danger" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="typcn:delete-outline" /></va-button>
+                    <va-button v-if="exclude.val" class="m-2 " @click="exclude.edit=false" color="success" border-color="success" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="material-symbols:save-sharp" /></va-button>
+                  </div>
+
                 </div>
               </div>
 
@@ -431,6 +505,11 @@ const saveCohort = async () => {
   <Settings class="w-full h-3/4" @save="save" />
 </va-modal>
 
+<va-modal v-model="showRemove"  size="large" blur maxWidth="100%" maxHeight="100%" hide-default-actions>
+  <p>Delete query?</p>
+  <br />
+  <va-button @click="remove()" class="mx-2" color="danger" border-color="danger" >Delete</va-button>
+</va-modal>
 
 
 </template>

@@ -211,16 +211,16 @@ router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (r
   let includes = req.body?.includes ? req.body.includes: []
   let excludes = req.body?.excludes ? req.body.excludes: []
 
-  let query = ``
+  let filter = ``
 
   let x = 0
   for(let group of Object.keys(includes)) {
     for(let include of includes[group]) {
       if(x == 0) {
-        query = query + ` ${include.category}s.${include.field} ${include.op} ${include.val}`
+        filter = filter + `${include.category}s.${include.field} ${include.op} ${include.val} `
       } else {
         console.log("join", include.join)
-        query = query + ` ${include.join} ${include.category}s.${include.field} ${include.op} ${include.val}`
+        filter = filter + ` ${include.join} ${include.category}s.${include.field} ${include.op} ${include.val}`
       }
 
       x = x + 1
@@ -232,9 +232,9 @@ router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (r
   for(let group of Object.keys(excludes)) {   
     for(let exclude of excludes[group]) {
       if(x == 0) {
-        query = query + ` AND ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
+        filter = filter + ` AND ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
       } else {
-        query = query + ` ${exclude.join} ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
+        filter = filter + ` ${exclude.join} ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
       }
 
       x = x + 1
@@ -242,11 +242,16 @@ router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (r
   }
 
 
-  console.log({data: {name: name, query: query}})
-  // const result = await prisma.cohort.create({data: {name: name, query: query}})
+  // console.log({data: {name: name, filter: filter}})
+  // const result = await prisma.cohort.create({data: {name: name, query: filter}})
+  console.log({filter: filter, fields: ['id'], limit: 1000000 })
+  client.index('participants').getDocuments({ limit: 1000000, filter: String(filter)})
+  .then(results => console.log(results))
+  .catch(error => console.log(error))
 
-  let data  = await client.index('participants').search("", {filter: query, limit: 0, facets: ['id']})
-  console.log(data)
+  // console.log(data)
+  // data = data.results.map(v => v.id)
+  // console.log(data)
 
 }))
 
