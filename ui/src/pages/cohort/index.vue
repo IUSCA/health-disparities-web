@@ -20,6 +20,7 @@ const includes =  ref({
     join: "",
     category: "",
     op: "",
+operators: [],
     field: "",
     options: [],
     val: "",
@@ -33,6 +34,7 @@ const excludes = ref({
     join: "",
     category: "",
     op: "",
+operators: [],
     field: "",
     options: [],
     val: "",
@@ -40,8 +42,22 @@ values: []
   }]
 })
 
-const getExcludes = (group, index, data) => cohortService.getFields(data).then(result => excludes.value[group][index].options = result.data)
-const getIncludes = (group, index, data) => cohortService.getFields(data) .then(result => includes.value[group][index].options = result.data)
+const getFields = (type, group, index, data) => cohortService.getFields(data).then(result => {
+  if(type === 'include') {
+    includes.value[group][index].options = Object.keys(result.data)
+    includes.value[group][index].operators = result.data
+  }
+
+  if(type === 'exclude') {
+    excludes.value[group][index].options = result.data
+    excludes.value[group][index].operators = result.data
+  }
+})
+
+// const getExcludes = (group, index, data) => cohortService.getFields(data).then(result => {
+//   excludes.value[group][index].options = result.data
+// })
+// const getIncludes = (group, index, data) => cohortService.getFields(data).then(result => includes.value[group][index].options = result.data)
 
 const getValues = (type, group, index, category, field, search) => cohortService.getValues({category: category, field: field, search: search}).then(result => {
   if(type === 'include')
@@ -49,7 +65,7 @@ const getValues = (type, group, index, category, field, search) => cohortService
 
   if(type === 'exclude')
     excludes.value[group][index].values = result.data
-} )
+})
 
 
 const add = (type, group, join) => {
@@ -60,6 +76,7 @@ const add = (type, group, join) => {
       join: join,
       category: "",
       op: "",
+operators: [],
       field: "",
       options: [],
       val: "",
@@ -72,6 +89,7 @@ values: []
       join: join,
       category: "",
       op: "",
+operators: [],
       field: "",
       options: [],
       val: "",
@@ -89,6 +107,7 @@ const addGroup = (type, join) => {
       join: join,
       category: "",
       op: "",
+operators: [],
       field: "",
       options: [],
       val: "",
@@ -101,6 +120,7 @@ values: []
       join: join,
       category: "",
       op: "",
+operators: [],
       field: "",
       options: [],
       val: "",
@@ -282,11 +302,11 @@ const saveCohort = async () => {
               
               <div v-if="include.edit" class="border-gray-500 border border-solid p-4">
                 
-                <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.category" :options="cohortStore.categories" label="Category" @update:modelValue="getIncludes( group, index, include.category)"  />
+                <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.category" :options="cohortStore.categories" label="Category" @update:modelValue="getFields('include', group, index, include.category)"  />
                 <div v-if="include.category" class="mb-2">
                   <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.field" :options="include.options" label="Field" 
                   @update:modelValue="getValues('include', group, index, include.category, include.field, include.val)" />
-                  <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.op" :options="['contains', '>', '<', '=']" label="Operator" />
+                  <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.op" :options="include.operators[include.field]" label="Operator" />
                   
                   <va-select  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text   />
                   <va-button v-if="include.val" class="w-full " @click="include.edit=false" preset="secondary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >Save</va-button>
@@ -330,11 +350,11 @@ const saveCohort = async () => {
               
               <div v-if="exclude.edit" class="border-gray-500 border border-solid p-4">
                 
-                <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.category" :options="cohortStore.categories" label="Category" @update:modelValue="getExcludes( group, index, exclude.category)"  />
+                <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.category" :options="cohortStore.categories" label="Category" @update:modelValue="getFields('exclude', group, index, exclude.category)"  />
                 <div v-if="exclude.category" class="mb-2">
                   <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.field" :options="exclude.options" label="Field" 
                   @update:modelValue="getValues('exclude', group, index, exclude.category, exclude.field, exclude.val)" />
-                  <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.op" :options="['!=', 'IS EMPTY']" label="Operator" />
+                  <va-select class="w-full border-gray-800 border border-solid rounded" v-model="exclude.op" :options="exclude.operators" label="Operator" />
                   
                   <va-select  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="exclude.val" label="Value" :options="exclude.values" searchable highlight-matched-text   />
                   <va-button v-if="exclude.val" class="w-full " @click="exclude.edit=false" preset="secondary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >Save</va-button>

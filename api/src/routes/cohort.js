@@ -290,10 +290,27 @@ router.get('/categories', isPermittedTo('read', false), asyncHandler(async (req,
 router.get('/fields/:name', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
   // #swagger.tags = ['cohort']
   console.log('name', req.params.name)
-  const result =  modelService.getFields(req.params.name);
 
-  console.log('result', result)
-  return res.json(result);
+
+
+  // const result =  modelService.getFields(req.params.name);
+  const results = modelService.getFieldsWithType(req.params.name);
+
+
+  let data = {}
+
+  for(let result of Object.keys(results)) {
+    if(results[result] === 'Int' ||  results[result] === 'Decimal') {
+      data[result] = ['=', '>', '<', '>=', '<=']
+    } else if(results[result] === 'DateTime') {
+      data[result] = [ '>', '<', '>=', '<=']
+    } else if(results[result] === 'String') {
+      data[result] = ['=']
+    }
+  }
+
+  console.log('result', data)
+  return res.json(data);
 
 }))
 
