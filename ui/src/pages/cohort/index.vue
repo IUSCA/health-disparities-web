@@ -308,7 +308,9 @@ const saveCohort = async () => {
                   @update:modelValue="getValues('include', group, index, include.category, include.field, include.val)" />
                   <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.op" :options="include.operators[include.field]" label="Operator" />
                   
-                  <va-select  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text   />
+
+                  <va-input v-if="include.operators[include.field].length > 1" class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" />
+                  <va-select v-if="! (include.operators[include.field].length > 1)"  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text   />
                   <va-button v-if="include.val" class="w-full " @click="include.edit=false" preset="secondary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >Save</va-button>
                 </div>
               </div>
