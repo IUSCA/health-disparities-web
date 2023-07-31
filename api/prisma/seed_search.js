@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { MeiliSearch } = require('meilisearch');
-const { getFieldsWithType } = require('../services/model');
+const { getFieldsWithType } = require('../src/services/model');
 require('dotenv-safe').config()
 
 const prisma = new PrismaClient();
@@ -14,19 +14,19 @@ const main = async () => {
 
 
   for(let table of tables) {
-  // const count = await prisma[table].count();
+  const count = await prisma[table].count();
 
-  // console.log(`Indexing ${count} ${table}...`)
-  // let x = 0
-  // while(x <= count) {
-  //   const data = await prisma[table].findMany({
-  //     skip: x,
-  //     take: 1000,
-  //   });
+  console.log(`Indexing ${count} ${table}...`)
+  let x = 0
+  while(x <= count) {
+    const data = await prisma[table].findMany({
+      skip: x,
+      take: 1000,
+    });
 
-  //   await client.index(table).addDocuments(data, { primaryKey: 'id' })
-  //   x += 1000
-  // }
+    await client.index(table).addDocuments(data, { primaryKey: 'id' })
+    x += 1000
+  }
 
   console.log(`Enabling filtering and sorting for ${table}...`)
   enableFiltering(table)

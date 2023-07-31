@@ -13,6 +13,8 @@ class cohortService {
   getCategories = () => api.get(`/cohort/categories`)
   getFields = (data) => api.get(`/cohort/fields/${data}`)
 
+  getFieldsMetadata = (data) => api.get(`/cohort/fields/metadata/${data}`)
+
   // SEARCH
   searchAll = (data) => api.post(`/cohort/search/all`, data)
   searchTotals = (data) => api.post(`/cohort/search/totals`, data)
@@ -23,6 +25,8 @@ class cohortService {
   getResultsBy = () => api.get(`/cohort/resultsBy`)
   saveCohort = (data) => api.post(`/cohort/saveCohort`, data)
   getValues = (data) => api.post(`/cohort/values`, data)
+
+  getParticipants = (data) => api.post(`/cohort/participants`, data)
 }
 
 export default new cohortService()

@@ -97,49 +97,6 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 }))
 
 
-router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
-  // #swagger.tags = ['cohort']
-
-  // Fuzzy search string
-  const search = req.body?.search ? req.body.search: undefined
-
- const tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
-
- // Build queries for each table
- let queries = []
-  for(let table of tables) {
-    console.log(table)
-    queries.push({
-      indexUid: table,
-      q: search,
-      limit: 0,
-      facets: ['participant_id']
-    })
-
-    // await fuzzySearchTable(table, search, true)
-
-  }
-
-  // Get the total number of hits for each table
-  let data = await client.multiSearch({ queries: queries } )
-
-  // console.log(data)
-
-  // // Convert the results to a dictionary
-  // let results = data.results.reduce((acc, field) => {
-  //   acc[field.indexUid] = {}
-  //   acc[field.indexUid]['total'] = field.estimatedTotalHits
-  //   acc[field.indexUid]['participant'] = Object.keys(field.facetDistribution.participant_id).length
-
-    
-  //   return acc;
-  // }, {});
-
-
-  // console.log(results)
-
-  return res.json(data);
-}));
 
 router.get('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
 
@@ -169,27 +126,31 @@ router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, n
   for(let group of Object.keys(includes)) {
     for(let include of includes[group]) {
       if(x == 0) {
-        filter = filter + ` ${include.category}s.${include.field} ${include.op} ${include.val}`
+        filter = filter + ` '${include.category}s.${include.field}' ${include.op} '${include.val}'`
       } else {
         console.log("join", include.join)
-        filter = filter + ` ${include.join} ${include.category}s.${include.field} ${include.op} ${include.val}`
+        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
       }
 
       x = x + 1
     }
   }
 
-  x = 0
+  
 
-  for(let group of Object.keys(excludes)) {   
-    for(let exclude of excludes[group]) {
-      if(x == 0) {
-        filter = filter + ` AND ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
-      } else {
-        filter = filter + ` ${exclude.join} ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
+  if(checkValues(excludes)) {
+    x = 0
+
+    for(let group of Object.keys(excludes)) {   
+      for(let exclude of excludes[group]) {
+        if(x == 0) {
+          filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} ''${exclude.val}''`
+        } else {
+          filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} ''${exclude.val}''`
+        }
+
+        x = x + 1
       }
-
-      x = x + 1
     }
   }
 
@@ -199,12 +160,59 @@ router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, n
   // Query MeiliSearch
   let data  = await client.index('participants').search("", {filter: filter, limit: 0, facets: resultsBy})
 
-  // console.log(data)
+  console.log(data)
 
   return res.json(data)
 
 }))
 
+
+router.post('/participants', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
+  let includes = req.body?.includes ? req.body.includes: []
+  let excludes = req.body?.excludes ? req.body.excludes: []
+
+  console.log(includes, excludes)
+
+
+  let filter = ``
+
+  let x = 0
+  for(let group of Object.keys(includes)) {
+    for(let include of includes[group]) {
+      if(x == 0) {
+        filter = filter + `'${include.category}s.${include.field}' ${include.op} '${include.val}' `
+      } else {
+        console.log("join", include.join)
+        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+      }
+
+      x = x + 1
+    }
+  }
+
+
+  if(checkValues(excludes)) {
+    x = 0
+    for(let group of Object.keys(excludes)) {   
+      for(let exclude of excludes[group]) {
+        if(x == 0) {
+          filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+        } else {
+          filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+        }
+
+        x = x + 1
+      }
+    }
+  }
+
+  let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
+
+  console.log(data)
+
+  return res.json(data.total)
+
+}))
 
 router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (req, res, next) => { 
   let name = req.body?.cohort_name ? req.body.cohort_name: null
@@ -217,27 +225,29 @@ router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (r
   for(let group of Object.keys(includes)) {
     for(let include of includes[group]) {
       if(x == 0) {
-        filter = filter + `${include.category}s.${include.field} ${include.op} ${include.val} `
+        filter = filter + `'${include.category}s.${include.field}' ${include.op} '${include.val}' `
       } else {
         console.log("join", include.join)
-        filter = filter + ` ${include.join} ${include.category}s.${include.field} ${include.op} ${include.val}`
+        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
       }
 
       x = x + 1
     }
   }
 
-  x = 0
 
-  for(let group of Object.keys(excludes)) {   
-    for(let exclude of excludes[group]) {
-      if(x == 0) {
-        filter = filter + ` AND ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
-      } else {
-        filter = filter + ` ${exclude.join} ${exclude.category}s.${exclude.field} ${exclude.op} ${exclude.val}`
+  if(checkValues(excludes)) {
+    x = 0
+    for(let group of Object.keys(excludes)) {   
+      for(let exclude of excludes[group]) {
+        if(x == 0) {
+          filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+        } else {
+          filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+        }
+
+        x = x + 1
       }
-
-      x = x + 1
     }
   }
 
@@ -245,13 +255,13 @@ router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (r
   // console.log({data: {name: name, filter: filter}})
   // const result = await prisma.cohort.create({data: {name: name, query: filter}})
   console.log({filter: filter, fields: ['id'], limit: 1000000 })
-  client.index('participants').getDocuments({ limit: 1000000, filter: String(filter)})
-  .then(results => console.log(results))
-  .catch(error => console.log(error))
+  let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
+  // .then(results => console.log(results))
+  // .catch(error => console.log(error))
 
-  // console.log(data)
-  // data = data.results.map(v => v.id)
-  // console.log(data)
+  data = data.results.map(v => v.id)
+
+  console.log(data)
 
 }))
 
@@ -277,9 +287,11 @@ router.post('/values', isPermittedTo('read'), asyncHandler(async (req, res, next
     take: 10, // Limit the number of results to 10
   });
 
+  console.log(`results = ${JSON.stringify(results)}`)
+
   const values = results.map(item => Object.values(item)[0])
 
-  console.log(values)
+  console.log(`values = ${JSON.stringify(values)}`)
 
   return res.json(values);
 
@@ -288,6 +300,16 @@ router.post('/values', isPermittedTo('read'), asyncHandler(async (req, res, next
 router.get('/categories', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
 
   return res.json(categories)
+
+}))
+
+router.get('/fields/metadata/:name', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
+  // #swagger.tags = ['cohort']
+  console.log('name', req.params.name)
+  const result =  modelService.getFields(req.params.name);
+
+  console.log('result', result)
+  return res.json(result);
 
 }))
 

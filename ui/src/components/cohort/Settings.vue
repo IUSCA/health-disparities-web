@@ -8,7 +8,7 @@ const categories = ref([])
 const fields = ref([])
 
 cohortService.getCategories().then(result => categories.value = result.data)
-const getFields = (val) => cohortService.getFields(val) .then(result => fields.value = result.data)
+const getFields = (val) => cohortService.getFieldsMetadata(val) .then(result => fields.value = result.data)
 
 const chosen_fields = ref({})
 

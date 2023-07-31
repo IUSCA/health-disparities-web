@@ -154,6 +154,7 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
 }));
 
 
+
 router.get('/categories', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
 
   return res.json(categories)

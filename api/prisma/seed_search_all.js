@@ -38,7 +38,7 @@ const enableFiltering = async (model_name) => {
 
   for(let field of Object.keys(fields)) {
     if(fields[field] === 'Int' || fields[field] === 'String' || fields[field] === 'DateTime' || fields[field] === 'Decimal'  ) {
-      if(! field.includes('id'))
+      // if(! field.includes('id'))
         data.push(field);
     
     } else {
@@ -46,7 +46,7 @@ const enableFiltering = async (model_name) => {
       let subFields = getFieldsWithType(fields[field]);
       for(let subField of Object.keys(subFields)) {
         if(subFields[subField] === 'Int' || subFields[subField] === 'String' || subFields[subField] === 'DateTime' || subFields[subField] === 'Decimal' ) {
-          if(! subField.includes('id'))
+          // if(! subField.includes('id'))
             data.push(`${field}.${subField}`)
         } 
       }

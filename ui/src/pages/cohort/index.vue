@@ -44,24 +44,29 @@ values: []
 
 
 
-const getFields = (type, group, index, data) => cohortService.getFields(data).then(result => {
-  console.log(result, type, group, index, data)
-  if(type === 'include') {
-    includes.value[group][index].field = ""
-    includes.value[group][index].op = ""
-    includes.value[group][index].val = ""
-    includes.value[group][index].options = Object.keys(result.data)
-    includes.value[group][index].operators = result.data
-  }
+const getFields = (type, group, index, data) => {
 
-  if(type === 'exclude') {
-    excludes.value[group][index].field = ""
-    excludes.value[group][index].op = ""
-    excludes.value[group][index].val = ""
-    excludes.value[group][index].options = Object.keys(result.data)
-    excludes.value[group][index].operators = result.data
-  }
-})
+  cohortService.getFields(data).then(result => {
+    console.log(result, type, group, index, data)
+    if(type === 'include') {
+      includes.value[group][index].field = ""
+      includes.value[group][index].op = ""
+      includes.value[group][index].val = ""
+      includes.value[group][index].values = []
+      includes.value[group][index].options = Object.keys(result.data)
+      includes.value[group][index].operators = result.data
+    }
+
+    if(type === 'exclude') {
+      excludes.value[group][index].field = ""
+      excludes.value[group][index].op = ""
+      excludes.value[group][index].val = ""
+      excludes.value[group][index].values = []
+      excludes.value[group][index].options = Object.keys(result.data)
+      excludes.value[group][index].operators = result.data
+    }
+  })
+}
 
 const getInitialValues = (type, group, index, category, field, search) => {
   console.log(type, group, index, category, field, search)
@@ -222,7 +227,12 @@ const checkValues = (obj) => {
 
 watchDebounced([resultsBy, includes, excludes], () => {
   
-  if(!resultsBy.value || !checkValues(includes.value) || !checkValues(excludes.value))
+  if(checkValues(includes.value)) {
+    participants.value = 'loading'  
+    getParticipants()
+  }
+
+  if(!resultsBy.value)
     return
 
 
@@ -242,7 +252,7 @@ watchDebounced([resultsBy, includes, excludes], () => {
     chart_category.value = Object.keys(results.value)[0]
     chart_options.value = Object.keys(results.value)
 
-
+    
 
     loading.value = false
   })
@@ -283,7 +293,7 @@ const addNewOption = (newOption) => {
 const toast = useToastStore();
 
 const saveCohort = async () => {
-  if(!cohort_name.value || !checkValues(includes.value) || !checkValues(excludes.value)) {
+  if(!cohort_name.value || !checkValues(includes.value) ) {
     
     toast.error("Please fill all the fields")
     return
@@ -295,8 +305,16 @@ const saveCohort = async () => {
 
 const updateVal = (search) => {
   console.log(search)
-  if(selectedValue.value !== null) 
+  if(selectedValue.value !== null) {
+    if(selectedValue.value.type === 'include')
+      includes.value[selectedValue.value.group][selectedValue.value.index].values = []
+
+    if(selectedValue.value.type === 'exclude')
+      excludes.value[selectedValue.value.group][selectedValue.value.index].values = []
+
     getValues(selectedValue.value.type, selectedValue.value.group, selectedValue.value.index, selectedValue.value.category, selectedValue.value.field, search)
+
+  }
   
 }
 
@@ -323,6 +341,8 @@ const remove = () => {
   }
 }
 
+const participants = ref(0)
+const getParticipants = () => cohortService.getParticipants({includes: includes.value, excludes: excludes.value}).then(result => participants.value = result.data)
 
 </script>
 
@@ -335,7 +355,7 @@ const remove = () => {
     </div>
     <div class=" grid gap-4 grid-cols-3 w-full mb-12">
       <va-card stripe stripe-color="success" >
-        <va-card-title>Includes</va-card-title>
+        <va-card-title><h1 class="text-xl  mx-auto">Includes</h1></va-card-title>
         <va-card-content>
 
           <div v-for="group in Object.keys(includes)" class="border border-white">
@@ -398,7 +418,7 @@ const remove = () => {
         </va-card-content>
       </va-card>
       <va-card stripe stripe-color="danger">
-        <va-card-title>Excludes</va-card-title>
+        <va-card-title><h1 class="text-xl  mx-auto">Excludes</h1></va-card-title>
         <va-card-content>
           <div v-for="group in Object.keys(excludes)" class="border border-white">
             
@@ -456,9 +476,16 @@ const remove = () => {
         </va-card-content>
       </va-card>
       <va-card stripe stripe-color="info">
-        <va-card-title>Results By</va-card-title>
+        <va-card-title><h1 class="text-xl  mx-auto">Preview</h1></va-card-title>
         <va-card-content>
+          <div class="flex flex-col items-center">
+            <div class="text-xl mb-2">Participants: &nbsp; <span v-if="participants != 'loading'">{{ participants }}</span><span v-else-if="participants == 'loading'">
+            <br />
+            <va-progress-circle indeterminate class="mx-auto" />
+            </span></div>
+          </div>
           <div class="flex">
+            
             <va-select class="w-full border-gray-800 border border-solid rounded" v-model="resultsBy" :options="Object.keys(resultsByDetails)" />
             <va-button class="flex flex-row   ml-2 pl-2" preset="secondary" border-color="primary" @click="showSettings = !showSettings"><Icon icon="mdi:cog" /> &nbsp; </va-button>
           </div>

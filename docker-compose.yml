@@ -46,7 +46,7 @@ services:
       - |
         npm install \
         && npx prisma db push \
-        && exec /opt/sca/app/node_modules/.bin/nodemon --signal SIGTERM src/index.js
+        && exec /opt/sca/app/node_modules/.bin/nodemon src/index.js
 
 
     extra_hosts:
@@ -69,9 +69,10 @@ services:
       - 127.0.0.1:5432:5432
     expose:
       - 5432
+
   meilisearch:
     container_name: meilisearch
-    image: getmeili/meilisearch:v1.1
+    image: getmeili/meilisearch:v1.2
     volumes:
       - ./meili_data:/meili_data
     environment:
