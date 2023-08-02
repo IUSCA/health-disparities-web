@@ -227,12 +227,9 @@ const checkValues = (obj) => {
 
 watchDebounced([resultsBy, includes, excludes], () => {
   
-  if(checkValues(includes.value)) {
-    participants.value = 'loading'  
-    getParticipants()
-  }
 
-  if(!resultsBy.value)
+
+  if(!resultsBy.value && !checkValues(includes.value))
     return
 
 
@@ -243,14 +240,17 @@ watchDebounced([resultsBy, includes, excludes], () => {
   cohortService.resultsBy({includes: includes.value, excludes: excludes.value, resultsBy: resultsByDetails.value[resultsBy.value]})
   .then(result => {
 
-    console.log(result)
+    console.log(result.data)
 
-    results.value = result.data.facetDistribution
+    participants.value = result.data.participants
 
-    console.log(`category ${Object.keys(results.value)[0]}`)
+    delete result.data.participants
 
-    chart_category.value = Object.keys(results.value)[0]
-    chart_options.value = Object.keys(results.value)
+    results.value = result.data
+    console.log(`category ${Object.keys(result.data)[0]}`)
+
+    chart_category.value = Object.keys(result.data)[0]
+    chart_options.value = Object.keys(result.data)
 
     
 
@@ -342,8 +342,10 @@ const remove = () => {
 }
 
 const participants = ref(0)
-const getParticipants = () => cohortService.getParticipants({includes: includes.value, excludes: excludes.value}).then(result => participants.value = result.data)
+// const getParticipants = () => cohortService.getParticipants({includes: includes.value, excludes: excludes.value}).then(result => participants.value = result.data)
 
+
+const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")
 </script>
 
 <template>
@@ -384,6 +386,8 @@ const getParticipants = () => cohortService.getParticipants({includes: includes.
                   <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.op" :options="include.operators[include.field]" label="Operator" />
                   
                   <!-- Values -->
+                  <!-- <va-input v-if="include.field in include.operators && !include.operators[include.field].includes('startsWith')" class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" />
+                  <va-select v-if="include.field in include.operators && include.operators[include.field].includes('startsWith')"  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text @updateSearch="updateVal" @focus="changeSelected('include', group, index, include.category, include.field, include.val)" :loading="Array.isArray(include.values) && include.values.length === 0" /> -->
                   <va-input v-if="include.field in include.operators && include.operators[include.field].length > 1" class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" />
                   <va-select v-if="include.field in include.operators && ! (include.operators[include.field].length > 1)"  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text @updateSearch="updateVal" @focus="changeSelected('include', group, index, include.category, include.field, include.val)" :loading="Array.isArray(include.values) && include.values.length === 0" />
 
@@ -479,7 +483,7 @@ const getParticipants = () => cohortService.getParticipants({includes: includes.
         <va-card-title><h1 class="text-xl  mx-auto">Preview</h1></va-card-title>
         <va-card-content>
           <div class="flex flex-col items-center">
-            <div class="text-xl mb-2">Participants: &nbsp; <span v-if="participants != 'loading'">{{ participants }}</span><span v-else-if="participants == 'loading'">
+            <div class="text-xl mb-2">Participants: &nbsp; <span v-if="participants != 'loading'">{{ numFormat(participants) }}</span><span v-else-if="participants == 'loading'">
             <br />
             <va-progress-circle indeterminate class="mx-auto" />
             </span></div>

@@ -6,6 +6,18 @@ let { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
+const Typesense = require('typesense')
+
+let tclient = new Typesense.Client({
+  'nodes': [{
+    'host': 'typesense', // For Typesense Cloud use xxx.a1.typesense.net
+    'port': '8108',      // For Typesense Cloud use 443
+    'protocol': 'http'   // For Typesense Cloud use https
+  }],
+  'apiKey': 'xyz',
+  'connectionTimeoutSeconds': 500000
+})
+
 const modelService = require('../services/model');
 
 const categories = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
@@ -128,17 +140,22 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
   // Fuzzy search string
   const search = req.body?.search ? req.body.search: undefined
 
- const tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
+ const tables = ['demographics', 'labs', 'covid_tests', 'covid_vaxes', 'dxs', 'hospitals', 'medications']
+
+
+ let searchRequests = {
+  'searches': [
+
+  ]
+}
 
  // Build queries for each table
- let queries = []
   for(let table of tables) {
     // console.log(table)
-    queries.push({
-      indexUid: table,
-      q: search,
-      limit: 0,
-      facets: ['participant_id']
+    searchRequests.searches.push({
+      'collection': 'participant',
+      'query_by'  : `${table}`,
+      'facet_by'  : `${table}`
     })
 
     // await fuzzySearchTable(table, search, true)
@@ -146,9 +163,38 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
   }
 
   // Get the total number of hits for each table
-  let data = await client.multiSearch({ queries: queries } )
+  // let data = await client.multiSearch({ queries: queries } )
+
+  console.log(searchRequests)
+
+  let searchParameters = {
+    'q': '*',
+    'collection': 'participant',
+      'query_by'  : `demographics.particpant_id`,
+      'facet_by'  : `demographics.particpant_id`,
+      'max_facet_values': 10000000,
+  }
+
+  // let data = await tclient.multiSearch.perform(searchRequests, {'q': '*'})
+
+  let results = await tclient.collections('participant').documents().search(searchParameters)
+  console.log(results)
 
 
+  let data = {participants: results.found}
+  for(let field of results.facet_counts) {
+
+    data[field.field_name] = field.counts.reduce((acc, curr) => {
+        acc[curr.value] = curr.count;
+        return acc;
+    }, {});
+  }
+
+  console.log(data)
+
+  console.log('length', data['demographics.id'], Object.keys(data['demographics.id']).length)
+
+  return res.json(data)
 
   return res.json(data);
 }));

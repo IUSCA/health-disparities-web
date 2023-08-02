@@ -6,6 +6,20 @@ let { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
+
+const Typesense = require('typesense')
+
+let tclient = new Typesense.Client({
+  'nodes': [{
+    'host': 'typesense', // For Typesense Cloud use xxx.a1.typesense.net
+    'port': '8108',      // For Typesense Cloud use 443
+    'protocol': 'http'   // For Typesense Cloud use https
+  }],
+  'apiKey': 'xyz',
+  'connectionTimeoutSeconds': 500000
+})
+
+
 const modelService = require('../services/model');
 
 const categories = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
@@ -107,7 +121,6 @@ router.get('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, ne
 }))
 
 router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
-
   let includes = req.body?.includes ? req.body.includes: []
   let excludes = req.body?.excludes ? req.body.excludes: []
 
@@ -120,51 +133,245 @@ router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, n
     return res.status(400).send('resultsBy is required');
   }
 
-  let filter = ``
+  let searchParameters = {
+    'q'         : '*',
+    'query_by'  : "",
+    'filter_by' : "",
+    'facet_by': "",
+    // 'limit_hits': 0,
+    // 'sort_by'   : 'num_employees:desc'
+  }
+
+
+  let filter_by = ''
 
   let x = 0
   for(let group of Object.keys(includes)) {
     for(let include of includes[group]) {
       if(x == 0) {
-        filter = filter + ` '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+        filter_by = `${include.category}s.${include.field}: ${include.op} '${include.val}'`
+
+        
+
       } else {
-        console.log("join", include.join)
-        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+
+        filter_by = filter_by + ` ${(include.join === 'AND') ? '&&' : '||'} ${include.category}s.${include.field}: ${include.op} '${include.val}'`
       }
+
+      if(!resultsBy.includes(`${include.category}s.${include.field}`))
+          resultsBy.push(`${include.category}s.${include.field}`)
 
       x = x + 1
     }
   }
 
-  
-
   if(checkValues(excludes)) {
     x = 0
-
-    for(let group of Object.keys(excludes)) {   
-      for(let exclude of excludes[group]) {
+    for(let group of Object.keys(excludes)) {
+      for(let include of excludes[group]) {
         if(x == 0) {
-          filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} ''${exclude.val}''`
+          filter_by = filter_by + ` && ${include.category}s.${include.field}: ${invertSymbol(include.op)} '${include.val}'`
         } else {
-          filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} ''${exclude.val}''`
+          filter_by = filter_by + ` ${(include.join === 'AND') ? '&&' : '||'} ${include.category}s.${include.field}: ${invertSymbol(include.op)} '${include.val}'`
         }
+        if(!resultsBy.includes(`${include.category}s.${include.field}`))
+          resultsBy.push(`${include.category}s.${include.field}`)
 
         x = x + 1
       }
     }
   }
 
-  console.log(`filter ${filter}`)
-  console.log(`resultsBy ${resultsBy}`)
+  searchParameters.query_by = resultsBy.join(', ')
+  searchParameters.filter_by = filter_by
+  searchParameters.facet_by = resultsBy.join(', ')
+
+  console.log(`searchParameters ${JSON.stringify(searchParameters)}`)
+
  
-  // Query MeiliSearch
-  let data  = await client.index('participants').search("", {filter: filter, limit: 0, facets: resultsBy})
+  // Query Typesense
+  let results = await tclient.collections('participant').documents().search(searchParameters)
+  console.log(results)
+
+
+  let data = {participants: results.found}
+  for(let field of results.facet_counts) {
+
+    data[field.field_name] = field.counts.reduce((acc, curr) => {
+        acc[curr.value] = curr.count;
+        return acc;
+    }, {});
+  }
 
   console.log(data)
 
   return res.json(data)
 
+
 }))
+
+
+// USING PRISMA
+// router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+
+//   let includes = req.body?.includes ? req.body.includes: []
+//   let excludes = req.body?.excludes ? req.body.excludes: []
+
+//   let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
+
+//   if(resultsBy) {
+//     console.log(resultsBy)
+//     resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
+//   } else {
+//     return res.status(400).send('resultsBy is required');
+//   }
+
+//   let where = {}
+
+//   let x = 0
+//   for(let group of Object.keys(includes)) {
+//     for(let include of includes[group]) {
+//       if(x == 0) {
+//         where[`${include.category}s`] = {every: {[include.field]:  {[include.op]: include.val}}}
+//         // .${include.field}' ${include.op} '${include.val}'`)
+//         // filter = filter + ` '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+//       } 
+//       // else {
+//       //   console.log("join", include.join)
+//       //   filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+//       // }
+
+//       x = x + 1
+//     }
+//   }
+
+  
+
+//   // if(checkValues(excludes)) {
+//   //   x = 0
+
+//   //   for(let group of Object.keys(excludes)) {   
+//   //     for(let exclude of excludes[group]) {
+//   //       if(x == 0) {
+//   //         filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//   //       } else {
+//   //         filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//   //       }
+
+//   //       x = x + 1
+//   //     }
+//   //   }
+//   // }
+
+//   // let select = convertDataStructure(resultsBy)
+
+//   // for(let field of resultsBy) {
+//   //   let table = field.split('.')[0]
+//   //   select[table] = {...select[table], select: {[field.split('.')[1]]: true}}
+//   // }
+
+//   let select = {}
+
+//   for(let field of resultsBy) {
+//     let table = field.split('.')[0]
+//     let subfield = field.split('.')[1]
+//     if (!select[table]) {
+//       select[table] = {select: {}};
+//     }
+//     select[table].select[subfield] = true;
+//   }
+  
+//   console.log(`QUERY: ${JSON.stringify({where: where, select: select})} `)
+ 
+
+//   let results = await prisma.participant.findMany({where: where, select: {id: true, ...select}})
+
+//   console.log(results.length, results)
+
+//   let data = {}
+  
+//   for(let field of resultsBy) {
+//     let table = field.split('.')[0]
+//     let subfield = field.split('.')[1]
+
+
+
+//     if (!data[table]) 
+//       data[table] = {}
+
+//     data[table][subfield] = [...new Set(results[table].map(v => v[subfield]))].length
+    
+//   }
+
+//   console.log(JSON.stringify(data))
+
+
+//   return res.json(data)
+
+// }))
+
+
+
+// USING MEILISEARCH
+// router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+
+//   let includes = req.body?.includes ? req.body.includes: []
+//   let excludes = req.body?.excludes ? req.body.excludes: []
+
+//   let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
+
+//   if(resultsBy) {
+//     console.log(resultsBy)
+//     resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
+//   } else {
+//     return res.status(400).send('resultsBy is required');
+//   }
+
+//   let filter = ``
+
+//   let x = 0
+//   for(let group of Object.keys(includes)) {
+//     for(let include of includes[group]) {
+//       if(x == 0) {
+//         filter = filter + ` '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+//       } else {
+//         console.log("join", include.join)
+//         filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+//       }
+
+//       x = x + 1
+//     }
+//   }
+
+  
+
+//   if(checkValues(excludes)) {
+//     x = 0
+
+//     for(let group of Object.keys(excludes)) {   
+//       for(let exclude of excludes[group]) {
+//         if(x == 0) {
+//           filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//         } else {
+//           filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//         }
+
+//         x = x + 1
+//       }
+//     }
+//   }
+
+//   console.log(`filter ${filter}`)
+//   console.log(`resultsBy ${resultsBy}`)
+ 
+//   // Query MeiliSearch
+//   let data  = await client.index('participants').search("", {filter: filter, limit: 0, facets: resultsBy})
+
+//   console.log(data)
+
+//   return res.json(data)
+
+// }))
 
 
 router.post('/participants', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
@@ -326,6 +533,7 @@ router.get('/fields/:name', isPermittedTo('read'), asyncHandler(async (req, res,
 
   let data = {}
 
+
   for(let result of Object.keys(results)) {
     if(results[result] === 'Int' ||  results[result] === 'Decimal') {
       data[result] = ['=', '>', '<', '>=', '<=']
@@ -335,6 +543,16 @@ router.get('/fields/:name', isPermittedTo('read'), asyncHandler(async (req, res,
       data[result] = ['=']
     }
   }
+
+  // for(let result of Object.keys(results)) {
+  //   if(results[result] === 'Int' ||  results[result] === 'Decimal') {
+  //     data[result] = ['equals', 'gt', 'lt', 'gte', 'lte']
+  //   } else if(results[result] === 'DateTime') {
+  //     data[result] = [ 'gt', 'lt', 'gte', 'lte']
+  //   } else if(results[result] === 'String') {
+  //     data[result] = ['equals', 'contains', 'startsWith', 'endsWith']
+  //   }
+  // }
 
   console.log('result', data)
   return res.json(data);
@@ -366,6 +584,22 @@ const checkValues = (obj) => {
   return true;
 }
 
+const  invertSymbol = (symbol) => {
+  switch (symbol) {
+      case '=':
+          return '!=';
+      case '>':
+          return '<';
+      case '<':
+          return '>';
+      case '>=':
+          return '<=';
+      case '<=':
+          return '>=';
+      default:
+          return 'Invalid symbol';
+  }
+}
 
 const fuzzySearchTable = async (table, search, count = false) => {
   let where = {}
