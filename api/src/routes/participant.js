@@ -109,82 +109,63 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 router.post('/search/facetOptions', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
   const table = req.body?.table ? req.body.table: undefined
 
-  let data = await client.index(table).getFilterableAttributes()
+  console.log(table)
 
-  data = data.filter(value => ! value.includes('id'));
+  // let data = await client.index(table).getFilterableAttributes()
+
+  // data = data.filter(value => ! value.includes('id'));
+
+  // Get all fields and information on the participant collection
+  colls = await tclient.collections('participant').retrieve()
+
+  // Get all non-id fields for specified table
+  const data = colls.fields.map(coll => {
+    if(! coll.name.includes('id') &&  coll.name.includes(table) ) {
+      return coll.name.replace(`${table}s.`, '') 
+    }
+  }).filter(value => value !== undefined && value !== `${table}s`)  // Remove undefined values
+
+
+  console.log(data)
 
   return res.json(data)
 }))
 
 router.post('/search/facets', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
 // Fuzzy search string
-  const search = req.body?.search ? req.body.search: ""
+  const search = req.body?.search ? req.body.search: '*'
   const table = req.body?.table ? req.body.table: undefined
   const chart_category = req.body?.chart_category ? req.body.chart_category: null
 
-  // Query MeiliSearch
-  let data  = await client.index('participants').search(search, {limit: 0, facets: [`${table}s.${chart_category}`]})
+  // Get all fields and information on the participant collection
+  colls = await tclient.collections('participant').retrieve()
 
-  let results = {}
+  // Join all fields to query by - removing problematic fields
+  const query_by = colls.fields.map(coll => {
+    if(! coll.name.includes('id') && ! coll.name.includes('chs_flag')  && ! coll.name.includes('nbr_refills'))
+      return coll.name 
+  }).join(', ')
 
-  for(let str of Object.keys(data.facetDistribution)) {
-    results[str.substring(str.indexOf('.')+1)] = data.facetDistribution[str]
-  }
-
-  return res.json(results)
-}))
-
-router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
-  // #swagger.tags = ['participant']
-
-  // Fuzzy search string
-  const search = req.body?.search ? req.body.search: undefined
-
- const tables = ['demographics', 'labs', 'covid_tests', 'covid_vaxes', 'dxs', 'hospitals', 'medications']
-
-
- let searchRequests = {
-  'searches': [
-
-  ]
-}
-
- // Build queries for each table
-  for(let table of tables) {
-    // console.log(table)
-    searchRequests.searches.push({
-      'collection': 'participant',
-      'query_by'  : `${table}`,
-      'facet_by'  : `${table}`
-    })
-
-    // await fuzzySearchTable(table, search, true)
-
-  }
-
-  // Get the total number of hits for each table
-  // let data = await client.multiSearch({ queries: queries } )
-
-  console.log(searchRequests)
 
   let searchParameters = {
-    'q': '*',
-    'collection': 'participant',
-      'query_by'  : `demographics.particpant_id`,
-      'facet_by'  : `demographics.particpant_id`,
-      'max_facet_values': 10000000,
+    'q'         : search,
+    'query_by'  : query_by,
+    // 'filter_by' : "demographics.gender:= 'F'",
+    'facet_by'  : `${table}s.${chart_category}`,
+    'max_facet_values': 1000,
+    // 'sort_by'   : 'num_employees:desc'
   }
 
-  // let data = await tclient.multiSearch.perform(searchRequests, {'q': '*'})
 
+  // Query Typesense
   let results = await tclient.collections('participant').documents().search(searchParameters)
   console.log(results)
 
 
-  let data = {participants: results.found}
+  let data = {}
   for(let field of results.facet_counts) {
 
-    data[field.field_name] = field.counts.reduce((acc, curr) => {
+    data[field.field_name.replace(`${table}s.`, '')] = field.counts.reduce((acc, curr) => {
         acc[curr.value] = curr.count;
         return acc;
     }, {});
@@ -192,9 +173,44 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
 
   console.log(data)
 
-  console.log('length', data['demographics.id'], Object.keys(data['demographics.id']).length)
-
   return res.json(data)
+}))
+
+router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+  // #swagger.tags = ['participant']
+
+  // Fuzzy search string
+  const search = req.body?.search ? req.body.search: `*`
+
+  // Get all fields and information on the participant collection
+  colls = await tclient.collections('participant').retrieve()
+
+  // Join all fields to query by - removing problematic fields
+  const query_by = colls.fields.map(coll => {
+    if(! coll.name.includes('id') && ! coll.name.includes('chs_flag')  && ! coll.name.includes('nbr_refills'))
+      return coll.name 
+  }).join(', ')
+
+
+  // Set search parameters
+  let searchParameters = {
+    'q': search,
+    'query_by': query_by,
+    'facet_by': 'demographics.id, labs.id, dxs.id, covid_tests.id, covid_vaxes.id, hospitals.id, medications.id',  // query by id to get a full count by total
+    'max_facet_values': 1,
+  }
+
+  let results = await tclient.collections('participant').documents().search(searchParameters)
+  // console.log(JSON.stringify(results.facet_counts))
+
+  let data = {}
+
+  // Get the total count for each facet
+  for(let count of results.facet_counts) {
+    data[count.field_name.replace('es.id', '').replace('s.id', '')] = count.stats.total_values 
+  }
+
+  console.log(JSON.stringify(data))
 
   return res.json(data);
 }));

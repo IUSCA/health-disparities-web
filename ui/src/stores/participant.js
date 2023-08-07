@@ -73,16 +73,9 @@ export const useParticipantStore = defineStore('participant', () => {
     
     const searchTotals = (params = options.value) => participantService.searchTotals(params)
     .then(result => {
-      let results = result.data.results.reduce((acc, field) => {
-      acc[field.indexUid] = {}
-      acc[field.indexUid]['total'] = field.estimatedTotalHits
-      acc[field.indexUid]['participant'] = Object.keys(field.facetDistribution.participant_id).length
 
-      
-      return acc;
-    }, {});
 
-      details.value.total = results
+      details.value.total = result.data
 
       // details.value.total = result.data
     })
