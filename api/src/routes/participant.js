@@ -61,7 +61,7 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
     // console.log(req.body)
 
     // Fuzzy search string
-    const search = req.body?.search ? req.body.search: undefined
+    const search = req.body?.search ? req.body.search: '*'
     const category = req.body?.category ? req.body.category: null
     
     if (! category) return res.status(400).send('Category is required');
@@ -78,31 +78,53 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 
     // Column sorting
     const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
-    const sort = req.body.sortBy ? req.body.sortBy: 'id'
+    const sort = req.body.sortBy ? `${category}s.${req.body.sortBy}`: `${category}s.name`
 
-    // Get all fields
-    let facets =  await client.index(category).getFilterableAttributes()
+   // Get all fields and information on the participant collection
+   colls = await tclient.collections('participant').retrieve()
 
-    // Remove id fields
-    // facets = facets.filter(value => ! value.includes('id'));
-   
-    // Query MeiliSearch
-    let data  = await client.index(category).search(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit})
+   console.log(JSON.stringify(colls))
 
-    // data.hits = data.hits.filter(value => ! value.includes('id'));
+   // Join all fields to query by - removing problematic fields
+   const query_by = colls.fields.map(coll => {
+     if( coll.name.includes(category) && !coll.name.includes('ib_id') && !coll.name.includes('study_id') && !coll.name.includes('participant_id') && !coll.name.includes(`${category}s.id`))
+       return coll.name 
+   }).join(', ')
 
-    data.hits = data.hits.map(obj =>
-      Object.keys(obj).reduce((acc, key) => {
-        if (!key.includes('ib_id') && !key.includes('study_id')) {
-          acc[key] = obj[key];
-        }
-        return acc;
-      }, {})
-    );
 
-    // console.log(data.hits)
+   console.log(query_by)
 
-    return res.json(data)
+  let searchParameters = {
+      'q'         : search,
+      'query_by'  : query_by,
+      'fields': query_by,
+      // 'sort_by': `labs.labs.name:${order}`,
+      'page': page,
+      'per_page': numPerPage,
+
+    }
+
+  // Query Typesense
+  let results = await tclient.collections('participant').documents().search(searchParameters)
+
+  let data = {}
+
+  for(let hit of results.hits) {
+
+    if(data.hits === undefined) data.hits = []
+
+    data.hits = [...data.hits, ...hit.document[`${category}s`]]
+
+    // if(data.hits.length >= numPerPage) break
+  }
+  data.count = data.hits.length
+  data.hits.length = numPerPage
+
+
+  console.log(data)
+
+  return res.json(data)
+
 }))
 
 
@@ -159,7 +181,7 @@ router.post('/search/facets', isPermittedTo('read'), asyncHandler(async (req, re
 
   // Query Typesense
   let results = await tclient.collections('participant').documents().search(searchParameters)
-  console.log(results)
+  // console.log(results)
 
 
   let data = {}
@@ -171,7 +193,7 @@ router.post('/search/facets', isPermittedTo('read'), asyncHandler(async (req, re
     }, {});
   }
 
-  console.log(data)
+  // console.log(data)
 
   return res.json(data)
 }))
@@ -181,6 +203,16 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
 
   // Fuzzy search string
   const search = req.body?.search ? req.body.search: `*`
+
+
+  if(search === '*') {
+    // Get the total count for each facet
+    let result = await prisma.participant_stats.findFirst({orderBy: {id: 'desc'}})
+    if(result) {
+      console.log('returning cached data')
+      return res.json(result.stats)
+    }
+  }
 
   // Get all fields and information on the participant collection
   colls = await tclient.collections('participant').retrieve()

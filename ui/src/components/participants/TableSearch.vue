@@ -34,7 +34,7 @@ const participantStore = useParticipantStore()
 
 
 // Sort and pagination
-const sortBy = ref("id")
+const sortBy = ref("name")
 const sortingOrder = ref("asc")
 const currentPage = ref(1)
 const numPerPage = ref(10)

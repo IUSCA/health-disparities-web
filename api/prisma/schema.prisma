@@ -230,6 +230,11 @@ model participant {
   @@unique([ib_id, study_id])
 }
 
+model participant_stats {
+  id           Int           @id @default(autoincrement())
+  stats        Json
+}
+
 model demographic {
   id           Int       @id @default(autoincrement())
   gender       String

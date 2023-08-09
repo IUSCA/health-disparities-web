@@ -45,7 +45,6 @@ const enableFiltering = async (model_name) => {
   for(let field of Object.keys(fields)) {
     console.log(`field = ${field}, type = ${fields[field]}`)
     if(fields[field] === 'Int' || fields[field] === 'String') { 
-
         data.push(field);
     }
   }

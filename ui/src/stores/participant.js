@@ -7,7 +7,7 @@ export const useParticipantStore = defineStore('participant', () => {
     const details = ref({})
     const categories = ref([])
 
-    const options = ref({sortBy: 'id', sortingOrder: 'asc', numPerPage: 10, page: 1, search: '', category: 'demographics'})
+    const options = ref({sortBy: '', sortingOrder: 'asc', numPerPage: 10, page: 1, search: '', category: 'demographics'})
     const metadata = ref({})
     const status = ref("")
 

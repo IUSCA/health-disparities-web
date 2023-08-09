@@ -84,13 +84,13 @@ const createCollection = async (model_name) => {
 
   for(let field of Object.keys(fields)) {
     if(field === 'id') {
-      collection.fields.push({"name": field, "type": "string", 'facet': true});
+      collection.fields.push({"name": field, "type": "string", 'facet': true, 'sort': true});
     } else if(fields[field] === 'Int') {
-      collection.fields.push({"name": field, "type": "int32"});
+      collection.fields.push({"name": field, "type": "int32", 'sort': true});
     } else if(fields[field] === 'String') {
-      collection.fields.push({"name": field, "type": "string"});
+      collection.fields.push({"name": field, "type": "string", 'sort': true});
     } else {
-      collection.fields.push({"name": field, "type": "object[]", "optional": true, 'facet': true});
+      collection.fields.push({"name": field, "type": "auto", "optional": true, 'facet': true });
     }
   }
 
