@@ -12,7 +12,6 @@ const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['
 const main = async () => {
   let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication', 'participant']
 
-
   for(let table of tables) {
   const count = await prisma[table].count();
 

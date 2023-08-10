@@ -159,20 +159,23 @@ router.post('/search/facets', isPermittedTo('read'), asyncHandler(async (req, re
   const table = req.body?.table ? req.body.table: undefined
   const chart_category = req.body?.chart_category ? req.body.chart_category: null
 
+  console.log('category', chart_category)
+
   // Get all fields and information on the participant collection
-  colls = await tclient.collections('participant').retrieve()
+  colls = await tclient.collections().retrieve()
+
+  console.log(JSON.stringify(colls))
 
   // Join all fields to query by - removing problematic fields
-  const query_by = colls.fields.map(coll => {
-    if(! coll.name.includes('id') && ! coll.name.includes('chs_flag')  && ! coll.name.includes('nbr_refills'))
-      return coll.name 
-  }).join(', ')
+  const query_by = colls.fields.map(coll => coll.name).join(', ')
 
+
+  console.log(query_by)
 
   let searchParameters = {
     'q'         : search,
     'query_by'  : query_by,
-    // 'filter_by' : "demographics.gender:= 'F'",
+    "filter_by":"$participant(participant_id:=participant_a)",
     'facet_by'  : `${table}s.${chart_category}`,
     'max_facet_values': 1000,
     // 'sort_by'   : 'num_employees:desc'
