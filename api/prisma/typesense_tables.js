@@ -39,26 +39,26 @@ const main = async () => {
   }
 
 
-  console.log('Getting all tables from prisma...')
-  let tables = [collection]
+  // console.log('Getting all tables from prisma...')
+  // let tables = [collection]
 
-  // Get all the fields from prisma
-  const fields = getFieldsWithType(collection)
+  // // Get all the fields from prisma
+  // const fields = getFieldsWithType(collection)
 
-  // Loop through each field and add related tables to 
-  for(let field of Object.keys(fields)) {
-    if(!(fields[field] === 'Int' || fields[field] === 'String' || fields[field] === 'DateTime' || fields[field] === 'Decimal'  )) 
-      tables.push(fields[field])
-  }
-
-
+  // // Loop through each field and add related tables to 
+  // for(let field of Object.keys(fields)) {
+  //   if(!(fields[field] === 'Int' || fields[field] === 'String' || fields[field] === 'DateTime' || fields[field] === 'Decimal'  )) 
+  //     tables.push(fields[field])
+  // }
 
 
-  // Loop through each table and create the documents
-  console.log('Creating documents...')
-  for(let table of tables) {
-    await createDocuments(table)
-  }
+
+
+  // // Loop through each table and create the documents
+  // console.log('Creating documents...')
+  // for(let table of tables) {
+  //   await createDocuments(table)
+  // }
 
 }
 
@@ -199,9 +199,9 @@ const createCollection = async (collection) => {
   console.log('collection', collection)
 
   // Create collection
-  let results = await client.collections().create(collection)
+  // let results = await client.collections().create(collection)
 
-  return results
+  // return results
 }
 
 

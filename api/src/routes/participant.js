@@ -172,29 +172,30 @@ router.post('/search/facets', isPermittedTo('read'), asyncHandler(async (req, re
 
   console.log(query_by)
 
-  let searchParameters = {
-    'q'         : search,
-    'query_by'  : query_by,
-    "filter_by":"$participant(participant_id:=participant_a)",
-    'facet_by'  : `${table}s.${chart_category}`,
-    'max_facet_values': 1000,
-    // 'sort_by'   : 'num_employees:desc'
-  }
+  let searchRequests = {
+    'searches': [
+      {
+        "q":"*",
+        "include": `${table}(${chart_category})`,
+        // "filter_by":`$${table}(gender:='M') && $covid_test(result:='Positive')`,
+        "facet_by": `${table}(${chart_category})`,
+        "collection":`${table}`
+      }
+  ]}
+
+ 
+  tclient.multiSearch.perform(searchRequests, {})
+  console.log(JSON.stringify(results))
 
 
-  // Query Typesense
-  let results = await tclient.collections('participant').documents().search(searchParameters)
-  // console.log(results)
+  // let data = {}
+  // for(let field of results.facet_counts) {
 
-
-  let data = {}
-  for(let field of results.facet_counts) {
-
-    data[field.field_name.replace(`${table}s.`, '')] = field.counts.reduce((acc, curr) => {
-        acc[curr.value] = curr.count;
-        return acc;
-    }, {});
-  }
+  //   data[field.field_name.replace(`${table}s.`, '')] = field.counts.reduce((acc, curr) => {
+  //       acc[curr.value] = curr.count;
+  //       return acc;
+  //   }, {});
+  // }
 
   // console.log(data)
 
@@ -232,11 +233,11 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
     'q': search,
     'query_by': query_by,
     'facet_by': 'demographics.id, labs.id, dxs.id, covid_tests.id, covid_vaxes.id, hospitals.id, medications.id',  // query by id to get a full count by total
-    'max_facet_values': 1,
+    'max_facet_values': 10,
   }
 
   let results = await tclient.collections('participant').documents().search(searchParameters)
-  // console.log(JSON.stringify(results.facet_counts))
+  console.log(JSON.stringify(results.facet_counts))
 
   let data = {}
 
