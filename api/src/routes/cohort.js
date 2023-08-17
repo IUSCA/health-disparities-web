@@ -117,7 +117,7 @@ router.post('/test/resultsBy', isPermittedTo('read'), asyncHandler(async (req, r
 
   let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
 
-  console.log(resultsBy, includes, excludes)
+  console.log("INCLUDES", includes)
 
   if(resultsBy) {
     console.log(resultsBy)
@@ -140,15 +140,11 @@ router.post('/test/resultsBy', isPermittedTo('read'), asyncHandler(async (req, r
   let filter_by = ''
 
   let x = 0
-  for(let group in includes) {
-    for(let include in group.query) {
+  for(let group of includes) {
+    for(let include of group.query) {
       if(x == 0) {
         filter_by = `${include.category}s.${include.field}: ${include.op} '${include.val}'`
-
-        
-
       } else {
-
         filter_by = filter_by + ` ${(include.join === 'AND') ? '&&' : '||'} ${include.category}s.${include.field}: ${include.op} '${include.val}'`
       }
 
@@ -159,10 +155,12 @@ router.post('/test/resultsBy', isPermittedTo('read'), asyncHandler(async (req, r
     }
   }
 
+  console.log("FILTER BY: ", filter_by)
+
   if(checkValues(excludes)) {
     x = 0
-    for(let group of Object.keys(excludes)) {
-      for(let include of excludes[group]) {
+    for(let group of excludes) {
+      for(let include of group.query) {
         if(x == 0) {
           filter_by = filter_by + ` && ${include.category}s.${include.field}: ${invertSymbol(include.op)} '${include.val}'`
         } else {
@@ -185,12 +183,11 @@ router.post('/test/resultsBy', isPermittedTo('read'), asyncHandler(async (req, r
  
   // Query Typesense
   let results = await tclient.collections('participant').documents().search(searchParameters)
-  console.log(results)
+  // console.log(results)
 
 
   let data = {participants: results.found}
   for(let field of results.facet_counts) {
-
     data[field.field_name] = field.counts.reduce((acc, curr) => {
         acc[curr.value] = curr.count;
         return acc;

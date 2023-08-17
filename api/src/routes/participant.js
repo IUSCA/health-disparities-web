@@ -29,6 +29,7 @@ const categories = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hosp
 
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
+const { get } = require('lodash');
 
 const isPermittedTo = accessControl('user');
 const router = express.Router();
@@ -73,55 +74,32 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
     const page = req.body?.page ? parseInt(req.body.page): 1
     const numPerPage = req.body?.numPerPage ? parseInt(req.body.numPerPage): 10
 
-    limit = numPerPage
-    offset = limit * (page - 1)
-
     // Column sorting
     const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
-    const sort = req.body.sortBy ? `${category}s.${req.body.sortBy}`: `${category}s.name`
+    const sort = req.body.sortBy ? `${req.body.sortBy}`: `name`
 
-   // Get all fields and information on the participant collection
-   colls = await tclient.collections('participant').retrieve()
+    // Get all fields and information on the participant collection
+    const fields = await getFieldsWithType(category)
 
-   console.log(JSON.stringify(colls))
+    // Join all fields to query by - removing problematic fields
+    let where = {}
+    let select = {}
 
-   // Join all fields to query by - removing problematic fields
-   const query_by = colls.fields.map(coll => {
-     if( coll.name.includes(category) && !coll.name.includes('ib_id') && !coll.name.includes('study_id') && !coll.name.includes('participant_id') && !coll.name.includes(`${category}s.id`))
-       return coll.name 
-   }).join(', ')
-
-
-   console.log(query_by)
-
-  let searchParameters = {
-      'q'         : search,
-      'query_by'  : query_by,
-      'fields': query_by,
-      // 'sort_by': `labs.labs.name:${order}`,
-      'page': page,
-      'per_page': numPerPage,
-
+    for(const field in fields) {
+      where[field] = { contains: search, }
+      select[field] = true
     }
+    const results = await prisma[category].findMany({
+      where: where,
+      select: select,
+      take: numPerPage,
+      orderBy: {
+        [sort]: order,
+      },
+      skip: (page - 1) * numPerPage
 
-  // Query Typesense
-  let results = await tclient.collections('participant').documents().search(searchParameters)
+    });
 
-  let data = {}
-
-  for(let hit of results.hits) {
-
-    if(data.hits === undefined) data.hits = []
-
-    data.hits = [...data.hits, ...hit.document[`${category}s`]]
-
-    // if(data.hits.length >= numPerPage) break
-  }
-  data.count = data.hits.length
-  data.hits.length = numPerPage
-
-
-  console.log(data)
 
   return res.json(data)
 

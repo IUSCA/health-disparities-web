@@ -59,11 +59,11 @@ const getValues = ( group, index, category, field, search) => cohortService.getV
 })
 
 
-const criteria = ref()
+const criteria = ref('')
 
 const add = ( group, join) => {
 
-    criteria.value = ''
+    
     params.modelValue[group]['query'].push({
       edit: true,
       join: join,
@@ -75,6 +75,8 @@ const add = ( group, join) => {
       val: "",
       values: []
     })
+
+    criteria.value = ''
 
     emit('update:modelValue', params.modelValue)
 
@@ -153,6 +155,7 @@ const removeDialog = ( group, index) => {
 // Actually remove
 const remove = () => {
   showRemove.value = false
+  console.log("Removing", removeVal.value)
   params.modelValue[removeVal.value.group]['query'].splice(removeVal.value.index, 1)
 
 }
@@ -193,7 +196,7 @@ const remove = () => {
 
         <!-- Actions -->
         <div class="flex mt-2">
-          <va-button  class="m-2 " @click="removeDialog('include', group, index)" color="danger" border-color="danger" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="typcn:delete-outline" /></va-button>
+          <va-button  class="m-2 " @click="removeDialog(group, index)" color="danger" border-color="danger" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="typcn:delete-outline" /></va-button>
           <va-button v-if="include.val" class="m-2 " @click="include.edit=false" color="success" border-color="success" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="material-symbols:save-sharp" /></va-button>
         </div>
 
@@ -208,7 +211,7 @@ const remove = () => {
 
   </div>
 
-  <va-select v-model="criteria"  class="w-full mt-2" :options="['AND', 'OR']" @update:modelValue="add(group, include)" label="Add Criteria" />
+  <va-select v-model="criteria"  class="w-full mt-2" :options="['AND', 'OR']" @update:modelValue="add(group, criteria)" label="Add Criteria" />
   
 </div>
 <va-divider  />
