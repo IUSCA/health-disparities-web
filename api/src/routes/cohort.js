@@ -111,6 +111,98 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 }))
 
 
+router.post('/test/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+  let includes = req.body?.includes ? req.body.includes: []
+  let excludes = req.body?.excludes ? req.body.excludes: []
+
+  let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
+
+  console.log(resultsBy, includes, excludes)
+
+  if(resultsBy) {
+    console.log(resultsBy)
+    resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
+  } else {
+    console.log('eck')
+    return res.status(400).send('resultsBy is required');
+  }
+
+  let searchParameters = {
+    'q'         : '*',
+    'query_by'  : "",
+    'filter_by' : "",
+    'facet_by': "",
+    // 'limit_hits': 0,
+    // 'sort_by'   : 'num_employees:desc'
+  }
+
+
+  let filter_by = ''
+
+  let x = 0
+  for(let group in includes) {
+    for(let include in group.query) {
+      if(x == 0) {
+        filter_by = `${include.category}s.${include.field}: ${include.op} '${include.val}'`
+
+        
+
+      } else {
+
+        filter_by = filter_by + ` ${(include.join === 'AND') ? '&&' : '||'} ${include.category}s.${include.field}: ${include.op} '${include.val}'`
+      }
+
+      if(!resultsBy.includes(`${include.category}s.${include.field}`))
+          resultsBy.push(`${include.category}s.${include.field}`)
+
+      x = x + 1
+    }
+  }
+
+  if(checkValues(excludes)) {
+    x = 0
+    for(let group of Object.keys(excludes)) {
+      for(let include of excludes[group]) {
+        if(x == 0) {
+          filter_by = filter_by + ` && ${include.category}s.${include.field}: ${invertSymbol(include.op)} '${include.val}'`
+        } else {
+          filter_by = filter_by + ` ${(include.join === 'AND') ? '&&' : '||'} ${include.category}s.${include.field}: ${invertSymbol(include.op)} '${include.val}'`
+        }
+        if(!resultsBy.includes(`${include.category}s.${include.field}`))
+          resultsBy.push(`${include.category}s.${include.field}`)
+
+        x = x + 1
+      }
+    }
+  }
+
+  searchParameters.query_by = resultsBy.join(', ')
+  searchParameters.filter_by = filter_by
+  searchParameters.facet_by = resultsBy.join(', ')
+
+  console.log(`searchParameters ${JSON.stringify(searchParameters)}`)
+
+ 
+  // Query Typesense
+  let results = await tclient.collections('participant').documents().search(searchParameters)
+  console.log(results)
+
+
+  let data = {participants: results.found}
+  for(let field of results.facet_counts) {
+
+    data[field.field_name] = field.counts.reduce((acc, curr) => {
+        acc[curr.value] = curr.count;
+        return acc;
+    }, {});
+  }
+
+  console.log(data)
+
+  return res.json(data)
+
+
+}))
 
 router.get('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
 
