@@ -54,30 +54,9 @@ const main = async () => {
  
    console.log(JSON.stringify(data))
 
-   let result = await prisma.participant_stats.create({data: {stats: data}})
+   let result = await prisma.stats.create({data: {stats: data, name: 'summary_totals'}})
 
    console.log(result)
-
-
-  // let searchParameters = {
-  //   'q'         : '*',
-  //   'query_by'  : "demographics.ethnicity, demographics.gender, demographics.race",
-  //   'filter_by' : "demographics.gender:= 'F'",
-  //   'facet_by'  : "demographics.ethnicity, demographics.gender, demographics.race",
-  //   'max_facet_values': 1000,
-  //   // 'sort_by'   : 'num_employees:desc'
-  // }
-
-  // let results = await client.collections('participant').documents().search(searchParameters)
-  
-  // console.log(JSON.stringify(results.facet_counts))
-
-  // results = results.facet_counts[0].counts.reduce((acc, curr) => {
-  //     acc[curr.value] = curr.count;
-  //     return acc;
-  // }, {});
-
-  // console.log(results)
 }
 
 

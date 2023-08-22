@@ -47,9 +47,9 @@ watch([chart_category], () => {
   participantStore.getFacets({table: options.value.category, chart_category: chart_category.value, search: options.value.search})
     .then(() => { 
 
-      for(const key of Object.keys(participantStore.details.facets[chart_category.value])) {
+      for(const key of Object.keys(participantStore.details.facets)) {
         labels.push(key)
-        dataset.data.push(participantStore.details.facets[chart_category.value][key])
+        dataset.data.push(participantStore.details.facets[key])
       }
 
       chart_data.value = {

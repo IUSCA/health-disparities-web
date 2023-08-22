@@ -1,10 +1,11 @@
 const express = require('express');
 const createError = require('http-errors');
 const { MeiliSearch } = require('meilisearch');
-let { PrismaClient } = require('@prisma/client')
+let { PrismaClient, Prisma } = require('@prisma/client')
+const { getFieldsWithType } = require('../services/model');
 
 const prisma = new PrismaClient()
-const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
+// const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
 const Typesense = require('typesense')
 
@@ -76,7 +77,7 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 
     // Column sorting
     const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
-    const sort = req.body.sortBy ? `${req.body.sortBy}`: `name`
+    const sort = req.body.sortBy ? `${req.body.sortBy}`: `id`
 
     // Get all fields and information on the participant collection
     const fields = await getFieldsWithType(category)
@@ -85,13 +86,23 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
     let where = {}
     let select = {}
 
-    for(const field in fields) {
-      where[field] = { contains: search, }
-      select[field] = true
+    // for(const key, field in fields) {
+    if(search !== '*') {
+      for(const key of Object.keys(fields)) {
+        console.log(key, fields[key])
+        if(fields[key] === 'String') {
+          where[key] = { contains: search, }
+        } else if(fields[key] === 'Int' && !isNaN(search)) {
+          where[key] = { in: [parseInt(search)], }
+        }
+
+        // select[fields[key]] = true
+      }
     }
-    const results = await prisma[category].findMany({
+
+    let results = await prisma[category].findMany({
       where: where,
-      select: select,
+      // select: select,
       take: numPerPage,
       orderBy: {
         [sort]: order,
@@ -100,13 +111,29 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 
     });
 
+    let excludes = ['ib_id', 'study_id', 'id']
+    results = results.map(result => { if(result) { for(const exclude of excludes) { delete result[exclude] } return result } })
+
+    let data = {}
+
+    // Get Count for Data
+    const count = await prisma[category].count({where: where})
+
+    data.hits = results
+    data.estimatedTotalHits = count
+
+    console.log(data)
+
 
   return res.json(data)
 
 }))
 
 
-router.post('/search/facetOptions', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+
+
+
+router.post('/search/typesense/facetOptions', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
   const table = req.body?.table ? req.body.table: undefined
 
   console.log(table)
@@ -120,50 +147,71 @@ router.post('/search/facetOptions', isPermittedTo('read', false), asyncHandler(a
 
   // Get all non-id fields for specified table
   const data = colls.fields.map(coll => {
-    if(! coll.name.includes('id') &&  coll.name.includes(table) ) {
+    if(! coll.name.includes('id') && ! coll.name.includes('date') &&  coll.name.includes(table) ) {
       return coll.name.replace(`${table}s.`, '') 
     }
   }).filter(value => value !== undefined && value !== `${table}s`)  // Remove undefined values
 
 
-  console.log(data)
+  // console.log(data)
 
   return res.json(data)
 }))
 
-router.post('/search/facets', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+router.post('/search/typesense/facets', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
 // Fuzzy search string
   const search = req.body?.search ? req.body.search: '*'
   const table = req.body?.table ? req.body.table: undefined
   const chart_category = req.body?.chart_category ? req.body.chart_category: null
 
-  console.log('category', chart_category)
+  console.log(chart_category, table)
 
   // Get all fields and information on the participant collection
   colls = await tclient.collections().retrieve()
 
-  console.log(JSON.stringify(colls))
-
-  // Join all fields to query by - removing problematic fields
-  const query_by = colls.fields.map(coll => coll.name).join(', ')
 
 
-  console.log(query_by)
+  const query = `SELECT DISTINCT ${chart_category} FROM ${table};`
+
+  const values = await prisma.$queryRaw`${Prisma.raw(query)}`;
 
   let searchRequests = {
     'searches': [
-      {
-        "q":"*",
-        "include": `${table}(${chart_category})`,
-        // "filter_by":`$${table}(gender:='M') && $covid_test(result:='Positive')`,
-        "facet_by": `${table}(${chart_category})`,
-        "collection":`${table}`
-      }
-  ]}
+    ]
+  }
 
- 
-  tclient.multiSearch.perform(searchRequests, {})
-  console.log(JSON.stringify(results))
+  console.log( values.length)
+
+  let x = 0
+  for(let value of values) {
+    // console.log(value)
+    if(x >= 200) break
+
+    searchRequests.searches.push({
+      'collection': 'participant',
+      'q': search,
+      'filter_by': `${table}s.${chart_category}:=${value[chart_category]}`,
+      query_by: `${table}s.${chart_category}`,
+      per_page: 0
+    })
+    x = x + 1
+  }
+
+  const result = await tclient.multiSearch.perform(searchRequests, {limit_multi_searches: 200})
+
+  console.log(JSON.stringify(result.results.length))
+
+
+  let results = {}
+
+  for(let value in values) {
+    
+    results[values[value][chart_category]] = result.results[value].found
+
+  }
+
+  // let results = await tclient.collections('participant').documents().search(searchParameters)
+  // console.log(JSON.stringify(results))
 
 
   // let data = {}
@@ -177,8 +225,71 @@ router.post('/search/facets', isPermittedTo('read'), asyncHandler(async (req, re
 
   // console.log(data)
 
-  return res.json(data)
+  // return res.json(data)
+  return res.json(results)
 }))
+
+// router.post('/search/meilisearch/facetOptions', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+//   const table = req.body?.table ? req.body.table: undefined
+
+//   let data = await client.index(table).getFilterableAttributes()
+
+//   data = data.filter(value => ! value.includes('id'));
+
+//   return res.json(data)
+// }))
+
+// router.post('/search/meilisearch/facets', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+// // Fuzzy search string
+//   const search = req.body?.search ? req.body.search: ""
+//   const table = req.body?.table ? req.body.table: undefined
+//   const chart_category = req.body?.chart_category ? req.body.chart_category: null
+
+//   // Query MeiliSearch
+//   let data  = await client.index('participants').search(search, {limit: 0, facets: [`${table}s.${chart_category}`]})
+
+//   let results = {}
+
+//   for(let str of Object.keys(data.facetDistribution)) {
+//     results[str.substring(str.indexOf('.')+1)] = data.facetDistribution[str]
+//   }
+
+//   return res.json(results)
+// }))
+
+
+// router.post('/search/meilisearch/totals', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+//   // #swagger.tags = ['participant']
+
+//   // Fuzzy search string
+//   const search = req.body?.search ? req.body.search: undefined
+
+//  const tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
+
+//  // Build queries for each table
+//  let queries = []
+//   for(let table of tables) {
+//     // console.log(table)
+//     queries.push({
+//       indexUid: table,
+//       q: search,
+//       limit: 0,
+//       facets: ['participant_id']
+//     })
+
+//     // await fuzzySearchTable(table, search, true)
+
+//   }
+
+//   // Get the total number of hits for each table
+//   let data = await client.multiSearch({ queries: queries } )
+
+
+
+//   return res.json(data);
+// }));
+
+
 
 router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
   // #swagger.tags = ['participant']
@@ -187,9 +298,10 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
   const search = req.body?.search ? req.body.search: `*`
 
 
+
   if(search === '*') {
     // Get the total count for each facet
-    let result = await prisma.participant_stats.findFirst({orderBy: {id: 'desc'}})
+    let result = await prisma.stats.findFirst({where: {name: 'summary_totals'}})
     if(result) {
       console.log('returning cached data')
       return res.json(result.stats)

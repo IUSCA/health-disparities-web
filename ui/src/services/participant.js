@@ -18,8 +18,8 @@ class participantService {
   searchTotals = (data) => api.post(`/participant/search/totals`, data)
   getMetadata = () => api.get(`/participant/metadata`)
 
-  getFacets = (data) => api.post(`/participant/search/facets`, data)
-  getFacetOptions = (data) => api.post(`/participant/search/facetOptions`, data)
+  getFacets = (data) => api.post(`/participant/search/typesense/facets`, data)
+  getFacetOptions = (data) => api.post(`/participant/search/typesense/facetOptions`, data)
 
 
 }

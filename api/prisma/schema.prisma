@@ -230,8 +230,9 @@ model participant {
   @@unique([ib_id, study_id])
 }
 
-model participant_stats {
+model stats {
   id           Int           @id @default(autoincrement())
+  name         String
   stats        Json
 }
 

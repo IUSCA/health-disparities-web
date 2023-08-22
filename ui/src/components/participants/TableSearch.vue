@@ -115,7 +115,7 @@ const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) {
   <div v-if="display === 'Table'">
     <va-data-table :items="participantStore.all" :columns="columns" v-model:sort-by="sortBy" v-model:sorting-order="sortingOrder"  :filter="search"  >
       <template #cell(actions)="{ rowData }">
-        <va-button preset="secondary" border-color="primary"   @click="patientDetails(rowData.id)" class="va-button"><Icon icon="clarity:details-line" />&nbsp; Participant</va-button>
+        <va-button preset="secondary" border-color="primary"   @click="patientDetails(rowData.participant_id)" class="va-button"><Icon icon="clarity:details-line" />&nbsp; Participant</va-button>
       </template>
     </va-data-table>
     <div class="mt-2 flex flex-row content-end">
