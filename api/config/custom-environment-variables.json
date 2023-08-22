@@ -17,7 +17,7 @@
   },
   "typesense": {
     
-    "hostname": "TYPESENSE_HOST",
+    "host": "TYPESENSE_HOST",
     "port": "TYPESENSE_PORT",
     "protocol": "TYPESENSE_PROTOCOL",
     "api_key": "TYPESENSE_API_KEY"
