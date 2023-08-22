@@ -4,7 +4,7 @@ const { MeiliSearch } = require('meilisearch');
 let { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
-const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
+// const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
 
 const Typesense = require('typesense')
@@ -72,43 +72,43 @@ router.get('/metadata', isPermittedTo('read'), asyncHandler(async (req, res, nex
 }))
 
 // READ
-router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
-    console.log(req.body)
+// router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+//     console.log(req.body)
 
-    // Fuzzy search string
-    const search = req.body?.search ? req.body.search: undefined
-    const category = req.body?.category ? req.body.category: null
+//     // Fuzzy search string
+//     const search = req.body?.search ? req.body.search: undefined
+//     const category = req.body?.category ? req.body.category: null
     
-    if (! category) return res.status(400).send('Category is required');
+//     if (! category) return res.status(400).send('Category is required');
 
-    // Fields - incoming fields or set a default
-    // const fields = req.body?.fields ? req.body.fields: ['id', 'hospitals.id', 'labs.name', 'medications.id', 'dxs.id', 'covid_tests.name', 'covid_vaxes.id']
+//     // Fields - incoming fields or set a default
+//     // const fields = req.body?.fields ? req.body.fields: ['id', 'hospitals.id', 'labs.name', 'medications.id', 'dxs.id', 'covid_tests.name', 'covid_vaxes.id']
 
-    // Pagination
-    const page = req.body?.page ? parseInt(req.body.page): 1
-    const numPerPage = req.body?.numPerPage ? parseInt(req.body.numPerPage): 10
+//     // Pagination
+//     const page = req.body?.page ? parseInt(req.body.page): 1
+//     const numPerPage = req.body?.numPerPage ? parseInt(req.body.numPerPage): 10
 
-    limit = numPerPage
-    offset = limit * (page - 1)
+//     limit = numPerPage
+//     offset = limit * (page - 1)
 
-    // Column sorting
-    const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
-    const sort = req.body.sortBy ? req.body.sortBy: 'id'
+//     // Column sorting
+//     const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
+//     const sort = req.body.sortBy ? req.body.sortBy: 'id'
 
-    // Get all fields
-    let facets =  await client.index(category).getFilterableAttributes()
+//     // Get all fields
+//     let facets =  await client.index(category).getFilterableAttributes()
 
-    // Remove id fields
-    facets = facets.filter(value => ! value.includes('id'));
+//     // Remove id fields
+//     facets = facets.filter(value => ! value.includes('id'));
    
-    // Query MeiliSearch
-    let data  = await client.index(category).search(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, facets: ['participant_id', ...facets]})
+//     // Query MeiliSearch
+//     let data  = await client.index(category).search(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, facets: ['participant_id', ...facets]})
 
 
-    // console.log(data)
+//     // console.log(data)
 
-    return res.json(data)
-}))
+//     return res.json(data)
+// }))
 
 
 router.post('/test/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
@@ -402,172 +402,172 @@ router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, n
 
 
 // USING MEILISEARCH
-router.post('/meilisearch/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+// router.post('/meilisearch/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
 
-  let includes = req.body?.includes ? req.body.includes: []
-  let excludes = req.body?.excludes ? req.body.excludes: []
+//   let includes = req.body?.includes ? req.body.includes: []
+//   let excludes = req.body?.excludes ? req.body.excludes: []
 
-  let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
+//   let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
 
-  if(resultsBy) {
-    console.log(resultsBy)
-    resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
-  } else {
-    return res.status(400).send('resultsBy is required');
-  }
+//   if(resultsBy) {
+//     console.log(resultsBy)
+//     resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
+//   } else {
+//     return res.status(400).send('resultsBy is required');
+//   }
 
-  let filter = ``
+//   let filter = ``
 
-  let x = 0
-  for(let group of Object.keys(includes)) {
-    for(let include of includes[group]) {
-      if(x == 0) {
-        filter = filter + ` '${include.category}s.${include.field}' ${include.op} '${include.val}'`
-      } else {
-        console.log("join", include.join)
-        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
-      }
+//   let x = 0
+//   for(let group of Object.keys(includes)) {
+//     for(let include of includes[group]) {
+//       if(x == 0) {
+//         filter = filter + ` '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+//       } else {
+//         console.log("join", include.join)
+//         filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+//       }
 
-      x = x + 1
-    }
-  }
+//       x = x + 1
+//     }
+//   }
 
   
 
-  if(checkValues(excludes)) {
-    x = 0
+//   if(checkValues(excludes)) {
+//     x = 0
 
-    for(let group of Object.keys(excludes)) {   
-      for(let exclude of excludes[group]) {
-        if(x == 0) {
-          filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
-        } else {
-          filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
-        }
+//     for(let group of Object.keys(excludes)) {   
+//       for(let exclude of excludes[group]) {
+//         if(x == 0) {
+//           filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//         } else {
+//           filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//         }
 
-        x = x + 1
-      }
-    }
-  }
+//         x = x + 1
+//       }
+//     }
+//   }
 
-  console.log(`filter ${filter}`)
-  console.log(`resultsBy ${resultsBy}`)
+//   console.log(`filter ${filter}`)
+//   console.log(`resultsBy ${resultsBy}`)
  
-  // Query MeiliSearch
-  let results  = await client.index('participants').search("", {filter: filter, limit: 0, facets: resultsBy})
+//   // Query MeiliSearch
+//   let results  = await client.index('participants').search("", {filter: filter, limit: 0, facets: resultsBy})
 
-  console.log(results)
+//   console.log(results)
 
-  let data = {}
+//   let data = {}
 
-  data.participants = results.estimatedTotalHits
+//   data.participants = results.estimatedTotalHits
 
-  for(let field of Object.keys(results.facetDistribution)) {
-    data[field] = results.facetDistribution[field]
-  }
+//   for(let field of Object.keys(results.facetDistribution)) {
+//     data[field] = results.facetDistribution[field]
+//   }
 
-  return res.json(data)
+//   return res.json(data)
 
-}))
-
-
-router.post('/participants', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
-  let includes = req.body?.includes ? req.body.includes: []
-  let excludes = req.body?.excludes ? req.body.excludes: []
-
-  console.log(includes, excludes)
+// }))
 
 
-  let filter = ``
+// router.post('/participants', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
+//   let includes = req.body?.includes ? req.body.includes: []
+//   let excludes = req.body?.excludes ? req.body.excludes: []
 
-  let x = 0
-  for(let group of Object.keys(includes)) {
-    for(let include of includes[group]) {
-      if(x == 0) {
-        filter = filter + `'${include.category}s.${include.field}' ${include.op} '${include.val}' `
-      } else {
-        console.log("join", include.join)
-        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
-      }
-
-      x = x + 1
-    }
-  }
+//   console.log(includes, excludes)
 
 
-  if(checkValues(excludes)) {
-    x = 0
-    for(let group of Object.keys(excludes)) {   
-      for(let exclude of excludes[group]) {
-        if(x == 0) {
-          filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
-        } else {
-          filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
-        }
+//   let filter = ``
 
-        x = x + 1
-      }
-    }
-  }
+//   let x = 0
+//   for(let group of Object.keys(includes)) {
+//     for(let include of includes[group]) {
+//       if(x == 0) {
+//         filter = filter + `'${include.category}s.${include.field}' ${include.op} '${include.val}' `
+//       } else {
+//         console.log("join", include.join)
+//         filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+//       }
 
-  let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
-
-  console.log(data)
-
-  return res.json(data.total)
-
-}))
-
-router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (req, res, next) => { 
-  let name = req.body?.cohort_name ? req.body.cohort_name: null
-  let includes = req.body?.includes ? req.body.includes: []
-  let excludes = req.body?.excludes ? req.body.excludes: []
-
-  let filter = ``
-
-  let x = 0
-  for(let group of Object.keys(includes)) {
-    for(let include of includes[group]) {
-      if(x == 0) {
-        filter = filter + `'${include.category}s.${include.field}' ${include.op} '${include.val}' `
-      } else {
-        console.log("join", include.join)
-        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
-      }
-
-      x = x + 1
-    }
-  }
+//       x = x + 1
+//     }
+//   }
 
 
-  if(checkValues(excludes)) {
-    x = 0
-    for(let group of Object.keys(excludes)) {   
-      for(let exclude of excludes[group]) {
-        if(x == 0) {
-          filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
-        } else {
-          filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
-        }
+//   if(checkValues(excludes)) {
+//     x = 0
+//     for(let group of Object.keys(excludes)) {   
+//       for(let exclude of excludes[group]) {
+//         if(x == 0) {
+//           filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//         } else {
+//           filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//         }
 
-        x = x + 1
-      }
-    }
-  }
+//         x = x + 1
+//       }
+//     }
+//   }
+
+//   let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
+
+//   console.log(data)
+
+//   return res.json(data.total)
+
+// }))
+
+// router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (req, res, next) => { 
+//   let name = req.body?.cohort_name ? req.body.cohort_name: null
+//   let includes = req.body?.includes ? req.body.includes: []
+//   let excludes = req.body?.excludes ? req.body.excludes: []
+
+//   let filter = ``
+
+//   let x = 0
+//   for(let group of Object.keys(includes)) {
+//     for(let include of includes[group]) {
+//       if(x == 0) {
+//         filter = filter + `'${include.category}s.${include.field}' ${include.op} '${include.val}' `
+//       } else {
+//         console.log("join", include.join)
+//         filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+//       }
+
+//       x = x + 1
+//     }
+//   }
 
 
-  // console.log({data: {name: name, filter: filter}})
-  // const result = await prisma.cohort.create({data: {name: name, query: filter}})
-  console.log({filter: filter, fields: ['id'], limit: 1000000 })
-  let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
-  // .then(results => console.log(results))
-  // .catch(error => console.log(error))
+//   if(checkValues(excludes)) {
+//     x = 0
+//     for(let group of Object.keys(excludes)) {   
+//       for(let exclude of excludes[group]) {
+//         if(x == 0) {
+//           filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//         } else {
+//           filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+//         }
 
-  data = data.results.map(v => v.id)
+//         x = x + 1
+//       }
+//     }
+//   }
 
-  console.log(data)
 
-}))
+//   // console.log({data: {name: name, filter: filter}})
+//   // const result = await prisma.cohort.create({data: {name: name, query: filter}})
+//   console.log({filter: filter, fields: ['id'], limit: 1000000 })
+//   let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
+//   // .then(results => console.log(results))
+//   // .catch(error => console.log(error))
+
+//   data = data.results.map(v => v.id)
+
+//   console.log(data)
+
+// }))
 
 
 router.post('/values', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
