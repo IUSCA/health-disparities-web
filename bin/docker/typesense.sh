@@ -17,5 +17,5 @@ sudo docker run -d \
   --name=${CONTNAME} \
   --net=${NET} \
   --ip=${CONT_IP} \
-  -v ${DATADIR}:/data\
-  ${HUBNAME}
+  -v ${DATADIR}:/data \
+  ${HUBNAME} --data-dir /data --api-key=xyz --enable-cors
