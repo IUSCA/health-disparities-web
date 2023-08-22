@@ -3,6 +3,8 @@ const createError = require('http-errors');
 const { MeiliSearch } = require('meilisearch');
 let { PrismaClient } = require('@prisma/client')
 
+const config = require('config');
+
 const prisma = new PrismaClient()
 // const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
@@ -11,11 +13,11 @@ const Typesense = require('typesense')
 
 let tclient = new Typesense.Client({
   'nodes': [{
-    'host': 'typesense', // For Typesense Cloud use xxx.a1.typesense.net
-    'port': '8108',      // For Typesense Cloud use 443
-    'protocol': 'http'   // For Typesense Cloud use https
+    'host': config.get('typesense.host'), // For Typesense Cloud use xxx.a1.typesense.net
+    'port': config.get('typesense.port'),      // For Typesense Cloud use 443
+    'protocol': config.get('typesense.protocol')   // For Typesense Cloud use https
   }],
-  'apiKey': 'xyz',
+  'apiKey': config.get('typesense.api_key'),
   'connectionTimeoutSeconds': 500000
 })
 

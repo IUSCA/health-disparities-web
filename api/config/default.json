@@ -14,6 +14,12 @@
     "db": "app",
     "schema": "public"
   },
+  "typesense": {
+    "host": "typesense",
+    "port": "8108",
+    "protocol": "http",
+    "api_key": "xyz"
+  },
   "workflow_server": {
     "base_url": "http://localhost:5000",
     "auth_token": ""
