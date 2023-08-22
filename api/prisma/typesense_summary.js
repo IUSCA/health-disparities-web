@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 
 const { getFieldsWithType } = require('../src/services/model');
 require('dotenv-safe').config()
-
+const config = require('config');
 const prisma = new PrismaClient();
 
 
