@@ -32,7 +32,7 @@ const categories = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hosp
 
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
-const { get } = require('lodash');
+
 
 const isPermittedTo = accessControl('user');
 const router = express.Router();
