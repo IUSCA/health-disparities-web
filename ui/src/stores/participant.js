@@ -57,6 +57,7 @@ export const useParticipantStore = defineStore('participant', () => {
 
     const getFacets = (data) => participantService.getFacets(data)
     .then(results => {
+      console.log(results.data)
       details.value.facets = results.data
     })
     .catch((error) => status.value = error)
@@ -74,10 +75,11 @@ export const useParticipantStore = defineStore('participant', () => {
     const searchTotals = (params = options.value) => participantService.searchTotals(params)
     .then(result => {
 
+      console.log(result.data)
+      // details.value.total = result.data
+      // details.value.participant = result.data
 
       details.value.total = result.data
-
-      // details.value.total = result.data
     })
     .catch((error) => status.value = error)
 

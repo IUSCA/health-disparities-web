@@ -7,19 +7,19 @@ const { getFieldsWithType } = require('../services/model');
 const config = require('config');
 
 const prisma = new PrismaClient()
-// const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
+const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
-const Typesense = require('typesense')
+// const Typesense = require('typesense')
 
-let tclient = new Typesense.Client({
-  'nodes': [{
-    'host': config.get('typesense.host'), // For Typesense Cloud use xxx.a1.typesense.net
-    'port': config.get('typesense.port'),      // For Typesense Cloud use 443
-    'protocol': config.get('typesense.protocol')   // For Typesense Cloud use https
-  }],
-  'apiKey': config.get('typesense.api_key'),
-  'connectionTimeoutSeconds': 500000
-})
+// let tclient = new Typesense.Client({
+//   'nodes': [{
+//     'host': config.get('typesense.host'), // For Typesense Cloud use xxx.a1.typesense.net
+//     'port': config.get('typesense.port'),      // For Typesense Cloud use 443
+//     'protocol': config.get('typesense.protocol')   // For Typesense Cloud use https
+//   }],
+//   'apiKey': config.get('typesense.api_key'),
+//   'connectionTimeoutSeconds': 500000
+// })
 
 const modelService = require('../services/model');
 
@@ -124,7 +124,7 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
     data.hits = results
     data.estimatedTotalHits = count
 
-    console.log(data)
+    // console.log(data)
 
 
   return res.json(data)
@@ -173,44 +173,70 @@ router.post('/search/typesense/facets', isPermittedTo('read'), asyncHandler(asyn
 
 
 
-  const query = `SELECT DISTINCT ${chart_category} FROM ${table};`
+  const value_query= `SELECT DISTINCT ${chart_category} FROM ${table};`
+  const value_names = await prisma.$queryRaw`${Prisma.raw(value_query)}`;
+  console.log(JSON.stringify(value_names))
 
-  const values = await prisma.$queryRaw`${Prisma.raw(query)}`;
 
-  let searchRequests = {
-    'searches': [
-    ]
-  }
-
-  console.log( values.length)
+  let query = `SELECT `;
 
   let x = 0
-  for(let value of values) {
-    // console.log(value)
-    if(x >= 200) break
 
-    searchRequests.searches.push({
-      'collection': 'participant',
-      'q': search,
-      'filter_by': `${table}s.${chart_category}:=${value[chart_category]}`,
-      query_by: `${table}s.${chart_category}`,
-      per_page: 0
-    })
+  for(let value of value_names) {
+    console.log(value)
+
+    if(x === value_names.length - 1)
+      query = query + `COUNT(DISTINCT CASE WHEN ${chart_category} = '${value[chart_category]}' THEN participant_id ELSE NULL END) AS "${value[chart_category]}" `
+    else
+      query = query + `COUNT(DISTINCT CASE WHEN ${chart_category} = '${value[chart_category]}' THEN participant_id ELSE NULL END) AS "${value[chart_category]}", `
+    
     x = x + 1
   }
 
-  const result = await tclient.multiSearch.perform(searchRequests, {limit_multi_searches: 200})
 
-  console.log(JSON.stringify(result.results.length))
+  query = query + ` FROM ${table};`
 
 
-  let results = {}
 
-  for(let value in values) {
+  // const query = `SELECT COUNT(participant_id) FROM (SELECT DISTINCT ${chart_category} FROM ${table}) AS temp;`
+  // const query = `SELECT COUNT(DISTINCT participant_id) as ${chart_category}  FROM ${table} GROUP BY ${chart_category};`
+  console.log(query)
 
-    results[values[value][chart_category]] = result.results[value].found
+  const results = await prisma.$queryRaw`${Prisma.raw(query)}`;
+  console.log(JSON.stringify(results))
 
-  }
+  // let where = { }
+  
+
+  // console.log( values.length)
+
+  // let x = 0
+  // for(let value of values) {
+  //   // console.log(value)
+
+
+  //   // searchRequests.searches.push({
+  //   //   'collection': 'participant',
+  //   //   'q': search,
+  //   //   'filter_by': `${table}s.${chart_category}:=${value[chart_category]}`,
+  //   //   query_by: `${table}s.${chart_category}`,
+  //   //   per_page: 0
+  //   // })
+  //   x = x + 1
+  // }
+
+  // const result = await tclient.multiSearch.perform(searchRequests, {limit_multi_searches: 200})
+
+  // console.log(JSON.stringify(result.results.length))
+
+
+  // let results = {}
+
+  // for(let value in values) {
+
+  //   results[values[value][chart_category]] = result.results[value].found
+
+  // }
 
   // let results = await tclient.collections('participant').documents().search(searchParameters)
   // console.log(JSON.stringify(results))
@@ -228,68 +254,84 @@ router.post('/search/typesense/facets', isPermittedTo('read'), asyncHandler(asyn
   // console.log(data)
 
   // return res.json(data)
+  return res.json(results[0])
+}))
+
+router.post('/search/meilisearch/facetOptions', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+  const table = req.body?.table ? req.body.table: undefined
+
+  let data = await client.index(table).getFilterableAttributes()
+
+  data = data.filter(value => ! value.includes('id'));
+
+  return res.json(data)
+}))
+
+router.post('/search/meilisearch/facets', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+// Fuzzy search string
+  const search = req.body?.search ? req.body.search: ""
+  const table = req.body?.table ? req.body.table: undefined
+  const chart_category = req.body?.chart_category ? req.body.chart_category: null
+
+  // Query MeiliSearch
+  let data  = await client.index('participants').search(search, {limit: 0, facets: [`${table}s.${chart_category}`]})
+
+  let results = {}
+
+  for(let str of Object.keys(data.facetDistribution)) {
+    results[str.substring(str.indexOf('.')+1)] = data.facetDistribution[str]
+  }
+
+  // console.log(JSON.stringify(results))
+
   return res.json(results)
 }))
 
-// router.post('/search/meilisearch/facetOptions', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
-//   const table = req.body?.table ? req.body.table: undefined
 
-//   let data = await client.index(table).getFilterableAttributes()
+router.post('/search/meilisearch/totals', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+  // #swagger.tags = ['participant']
 
-//   data = data.filter(value => ! value.includes('id'));
+  // Fuzzy search string
+  const search = req.body?.search ? req.body.search: undefined
 
-//   return res.json(data)
-// }))
+ const tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
 
-// router.post('/search/meilisearch/facets', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
-// // Fuzzy search string
-//   const search = req.body?.search ? req.body.search: ""
-//   const table = req.body?.table ? req.body.table: undefined
-//   const chart_category = req.body?.chart_category ? req.body.chart_category: null
+ // Build queries for each table
+ let queries = []
+  for(let table of tables) {
+    // console.log(table)
+    queries.push({
+      indexUid: table,
+      q: search,
+      limit: 0,
+      facets: ['participant_id']
+    })
 
-//   // Query MeiliSearch
-//   let data  = await client.index('participants').search(search, {limit: 0, facets: [`${table}s.${chart_category}`]})
+    // await fuzzySearchTable(table, search, true)
 
-//   let results = {}
+  }
 
-//   for(let str of Object.keys(data.facetDistribution)) {
-//     results[str.substring(str.indexOf('.')+1)] = data.facetDistribution[str]
-//   }
-
-//   return res.json(results)
-// }))
-
-
-// router.post('/search/meilisearch/totals', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
-//   // #swagger.tags = ['participant']
-
-//   // Fuzzy search string
-//   const search = req.body?.search ? req.body.search: undefined
-
-//  const tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
-
-//  // Build queries for each table
-//  let queries = []
-//   for(let table of tables) {
-//     // console.log(table)
-//     queries.push({
-//       indexUid: table,
-//       q: search,
-//       limit: 0,
-//       facets: ['participant_id']
-//     })
-
-//     // await fuzzySearchTable(table, search, true)
-
-//   }
-
-//   // Get the total number of hits for each table
-//   let data = await client.multiSearch({ queries: queries } )
+  // Get the total number of hits for each table
+  let data = await client.multiSearch({ queries: queries } )
 
 
 
-//   return res.json(data);
-// }));
+
+
+  let results = data.results.reduce((acc, field) => {
+    acc[field.indexUid] = {}
+    acc[field.indexUid]['total'] = field.estimatedTotalHits
+    acc[field.indexUid]['participant'] = Object.keys(field.facetDistribution.participant_id).length
+
+    
+    return acc;
+  }, {});
+
+
+  console.log(JSON.stringify(results))
+
+  return res.json(results);
+}));
 
 
 
@@ -326,6 +368,9 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
     'query_by': query_by,
     'facet_by': 'demographics.id, labs.id, dxs.id, covid_tests.id, covid_vaxes.id, hospitals.id, medications.id',  // query by id to get a full count by total
     'max_facet_values': 10,
+    per_page: 0,
+    limit_hits: 0
+    
   }
 
   let results = await tclient.collections('participant').documents().search(searchParameters)

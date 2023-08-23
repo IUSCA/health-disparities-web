@@ -6,20 +6,20 @@ let { PrismaClient } = require('@prisma/client')
 const config = require('config');
 
 const prisma = new PrismaClient()
-// const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
+const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
 
 
-const Typesense = require('typesense')
+// const Typesense = require('typesense')
 
-let tclient = new Typesense.Client({
-  'nodes': [{
-    'host': config.get('typesense.host'), // For Typesense Cloud use xxx.a1.typesense.net
-    'port': config.get('typesense.port'),      // For Typesense Cloud use 443
-    'protocol': config.get('typesense.protocol')   // For Typesense Cloud use https
-  }],
-  'apiKey': config.get('typesense.api_key'),
-  'connectionTimeoutSeconds': 500000
-})
+// let tclient = new Typesense.Client({
+//   'nodes': [{
+//     'host': config.get('typesense.host'), // For Typesense Cloud use xxx.a1.typesense.net
+//     'port': config.get('typesense.port'),      // For Typesense Cloud use 443
+//     'protocol': config.get('typesense.protocol')   // For Typesense Cloud use https
+//   }],
+//   'apiKey': config.get('typesense.api_key'),
+//   'connectionTimeoutSeconds': 500000
+// })
 
 
 const modelService = require('../services/model');
@@ -404,73 +404,73 @@ router.post('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, n
 
 
 // USING MEILISEARCH
-// router.post('/meilisearch/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+router.post('/meilisearch/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
 
-//   let includes = req.body?.includes ? req.body.includes: []
-//   let excludes = req.body?.excludes ? req.body.excludes: []
+  let includes = req.body?.includes ? req.body.includes: []
+  let excludes = req.body?.excludes ? req.body.excludes: []
 
-//   let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
+  let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
 
-//   if(resultsBy) {
-//     console.log(resultsBy)
-//     resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
-//   } else {
-//     return res.status(400).send('resultsBy is required');
-//   }
+  if(resultsBy) {
+    console.log(resultsBy)
+    resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
+  } else {
+    return res.status(400).send('resultsBy is required');
+  }
 
-//   let filter = ``
+  let filter = ``
 
-//   let x = 0
-//   for(let group of Object.keys(includes)) {
-//     for(let include of includes[group]) {
-//       if(x == 0) {
-//         filter = filter + ` '${include.category}s.${include.field}' ${include.op} '${include.val}'`
-//       } else {
-//         console.log("join", include.join)
-//         filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
-//       }
+  let x = 0
+  for(let group of Object.keys(includes)) {
+    for(let include of includes[group]) {
+      if(x == 0) {
+        filter = filter + ` '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+      } else {
+        console.log("join", include.join)
+        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+      }
 
-//       x = x + 1
-//     }
-//   }
+      x = x + 1
+    }
+  }
 
   
 
-//   if(checkValues(excludes)) {
-//     x = 0
+  if(checkValues(excludes)) {
+    x = 0
 
-//     for(let group of Object.keys(excludes)) {   
-//       for(let exclude of excludes[group]) {
-//         if(x == 0) {
-//           filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
-//         } else {
-//           filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
-//         }
+    for(let group of Object.keys(excludes)) {   
+      for(let exclude of excludes[group]) {
+        if(x == 0) {
+          filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+        } else {
+          filter = filter + ` ${exclude.join} '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
+        }
 
-//         x = x + 1
-//       }
-//     }
-//   }
+        x = x + 1
+      }
+    }
+  }
 
-//   console.log(`filter ${filter}`)
-//   console.log(`resultsBy ${resultsBy}`)
+  console.log(`filter ${filter}`)
+  console.log(`resultsBy ${resultsBy}`)
  
-//   // Query MeiliSearch
-//   let results  = await client.index('participants').search("", {filter: filter, limit: 0, facets: resultsBy})
+  // Query MeiliSearch
+  let results  = await client.index('participants').search("", {filter: filter, limit: 0, facets: resultsBy})
 
-//   console.log(results)
+  console.log(results)
 
-//   let data = {}
+  let data = {}
 
-//   data.participants = results.estimatedTotalHits
+  data.participants = results.estimatedTotalHits
 
-//   for(let field of Object.keys(results.facetDistribution)) {
-//     data[field] = results.facetDistribution[field]
-//   }
+  for(let field of Object.keys(results.facetDistribution)) {
+    data[field] = results.facetDistribution[field]
+  }
 
-//   return res.json(data)
+  return res.json(data)
 
-// }))
+}))
 
 
 // router.post('/participants', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 

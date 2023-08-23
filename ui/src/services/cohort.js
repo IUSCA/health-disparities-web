@@ -20,7 +20,7 @@ class cohortService {
   searchTotals = (data) => api.post(`/cohort/search/totals`, data)
   getMetadata = () => api.get(`/cohort/metadata`)
 
-  resultsBy = (data) => api.post(`/cohort/resultsBy`, data)
+  resultsBy = (data) => api.post(`/cohort/meilisearch/resultsBy`, data)
   saveSetting = (data) => api.post(`/cohort/saveSetting`, data)
   getResultsBy = () => api.get(`/cohort/resultsBy`)
   getResultsByTest = (data) => api.post(`/cohort/test/resultsBy`, data)

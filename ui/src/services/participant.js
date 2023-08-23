@@ -15,11 +15,11 @@ class participantService {
 
   // SEARCH
   searchAll = (data) => api.post(`/participant/search/all`, data)
-  searchTotals = (data) => api.post(`/participant/search/totals`, data)
+  searchTotals = (data) => api.post(`/participant/search/meilisearch/totals`, data)
   getMetadata = () => api.get(`/participant/metadata`)
 
-  getFacets = (data) => api.post(`/participant/search/typesense/facets`, data)
-  getFacetOptions = (data) => api.post(`/participant/search/typesense/facetOptions`, data)
+  getFacets = (data) => api.post(`/participant/search/meilisearch/facets`, data)
+  getFacetOptions = (data) => api.post(`/participant/search/meilisearch/facetOptions`, data)
 
 
 }

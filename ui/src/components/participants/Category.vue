@@ -40,8 +40,8 @@ watch(options, () => {
       <va-card class="">
         <va-card-content class="bold text-2xl">
           <div class="flex flex-col text-center">
-            <span>{{ makeLabel(category) }}  {{ numFormat(participantStore.details.total[category])}}</span> 
-            <!-- <span class="text-base">Participants  {{ numFormat(participantStore.details.total[category].participant)}}</span>  -->
+            <span>{{ makeLabel(category) }}  {{ numFormat(participantStore.details.total[category].total)}}</span> 
+            <span class="text-base">Participants  {{ numFormat(participantStore.details.total[category].participant)}}</span> 
           </div>
         </va-card-content>
       </va-card>
