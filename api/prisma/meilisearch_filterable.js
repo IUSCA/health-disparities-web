@@ -1,25 +1,70 @@
 const { PrismaClient } = require('@prisma/client');
 
 const { getFieldsWithType } = require('../src/services/model');
+
+const { MeiliSearch } = require('meilisearch');
+const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' })
+
 require('dotenv-safe').config()
 
 const prisma = new PrismaClient();
 
 const main = async () => {
 
+  await updateParticipants()
+
+
+  let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication', 'participant']
+
+  for(let table of tables) {
+
+    await enableFiltering(table)
+  }
+}
+
+// Enable filtering  and sorting for everything in the model
+const enableFiltering = async (model_name) => { 
+
+  // const model_name = 'participant'
+  const fields = getFieldsWithType(model_name)
+
+  let data = []
+
+  for(let field of Object.keys(fields)) {
+    console.log(`field = ${field}, type = ${fields[field]}`)
+    if(fields[field] === 'String' || fields[field] === 'Int' || fields[field] === 'Decimal' || fields[field] === 'DateTime' || fields[field] === 'Boolean') { 
+        data.push(field);
+    }
+  }
+
+  console.log(`data = ${JSON.stringify(data)}`)
+
+  if(data.length > 0) {
+    console.log(`Enabling filtering and sorting for ${model_name}...`)
+
+    await client.index(model_name).updateSettings({
+      filterableAttributes: data,
+      sortableAttributes: data,
+      displayedAttributes: ['*'],
+    })
+  }
+}
+
+const updateParticipants = async () => {
+
   let collection = 'participant'
 
 
-  console.log(`Getting all ${collection} collections...`)
-  let collections = await getCollections(collection)
+  console.log(`Getting all ${collection} ...`)
+  let attributes = await getCollections(collection)
 
-  collections.reverse() // Reverse the order so the parent is created first
+  console.log('Collections: ', JSON.stringify(attributes))
 
-  console.log('Collections: ', JSON.stringify(collections))
+  const result = await client.index('participants').updateFilterableAttributes(attributes)
 
+  console.log(result)
 
 }
-
 
 const getCollections = async (model_name) => { 
 
@@ -41,7 +86,8 @@ const getCollections = async (model_name) => {
     } else {
       if(fields[field] !== 'participant') {
         let col = await getCollections(fields[field])
-        all.push(...col)
+        const newArray = col.map(item => `${field}.${item}`);
+        all.push(...newArray)
       }
     }
   }
