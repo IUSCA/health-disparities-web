@@ -18,21 +18,44 @@ const chart_options = ref([])
 const { options, details } = storeToRefs(participantStore)
 
 onMounted(() => {
-  console.log(options.value.category)
+  console.log( options.value.category)
   participantService.getFacetOptions({table: options.value.category}).then(result => {
-    console.log(result.data)
+    console.log('OPTIONS', result.data)
     chart_options.value = result.data
     chart_category.value = result.data[0]
   })
 })
 
 
-// watch(details, () => {
-//   if('facets' in participantStore.details) {
-//     chart_category.value = Object.keys(participantStore.details.facets)[0]
-//     chart_options.value = Object.keys(participantStore.details.facets)
-//   }
-// }, {deep: true})
+watch(options, () => {
+  if('facets' in participantStore.details) {
+    console.log("FACETS", participantStore.details.facets)
+    // chart_category.value = Object.keys(participantStore.details.facets)[0]
+
+    let labels = []
+    let dataset = {data: []}
+
+    participantStore.getFacets({table: options.value.category, chart_category: chart_category.value, search: options.value.search})
+    .then(() => { 
+
+      for(const key of Object.keys(participantStore.details.facets[chart_category.value])) {
+        labels.push(key)
+        dataset.data.push(participantStore.details.facets[chart_category.value][key])
+      }
+
+      chart_data.value = {
+        labels: labels,
+        datasets: [dataset]
+      }
+    
+      console.log(chart_data.value)
+
+      loading.value = false
+    })
+
+
+  }
+}, {deep: true})
 
 
 

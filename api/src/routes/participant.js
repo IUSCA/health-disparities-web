@@ -62,73 +62,51 @@ router.get('/metadata', isPermittedTo('read'), asyncHandler(async (req, res, nex
 
 // READ
 router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
-    // console.log(req.body)
+  // console.log(req.body)
 
-    // Fuzzy search string
-    const search = req.body?.search ? req.body.search: '*'
-    const category = req.body?.category ? req.body.category: null
-    
-    if (! category) return res.status(400).send('Category is required');
+  // Fuzzy search string
+  const search = req.body?.search ? req.body.search: undefined
+  const category = req.body?.category ? req.body.category: null
+  
+  if (! category) return res.status(400).send('Category is required');
 
-    // Fields - incoming fields or set a default
-    // const fields = req.body?.fields ? req.body.fields: ['id', 'hospitals.id', 'labs.name', 'medications.id', 'dxs.id', 'covid_tests.name', 'covid_vaxes.id']
+  // Fields - incoming fields or set a default
+  // const fields = req.body?.fields ? req.body.fields: ['id', 'hospitals.id', 'labs.name', 'medications.id', 'dxs.id', 'covid_tests.name', 'covid_vaxes.id']
 
-    // Pagination
-    const page = req.body?.page ? parseInt(req.body.page): 1
-    const numPerPage = req.body?.numPerPage ? parseInt(req.body.numPerPage): 10
+  // Pagination
+  const page = req.body?.page ? parseInt(req.body.page): 1
+  const numPerPage = req.body?.numPerPage ? parseInt(req.body.numPerPage): 10
 
-    // Column sorting
-    const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
-    const sort = req.body.sortBy ? `${req.body.sortBy}`: `id`
+  limit = numPerPage
+  offset = limit * (page - 1)
 
-    // Get all fields and information on the participant collection
-    const fields = await getFieldsWithType(category)
+  // Column sorting
+  const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
+  const sort = req.body.sortBy ? req.body.sortBy: 'id'
 
-    // Join all fields to query by - removing problematic fields
-    let where = {}
-    let select = {}
+  // Get all fields
+  let facets =  await client.index(category).getFilterableAttributes()
 
-    // for(const key, field in fields) {
-    if(search !== '*') {
-      for(const key of Object.keys(fields)) {
-        console.log(key, fields[key])
-        if(fields[key] === 'String') {
-          where[key] = { contains: search, }
-        } else if(fields[key] === 'Int' && !isNaN(search)) {
-          where[key] = { in: [parseInt(search)], }
-        }
+  // Remove id fields
+  // facets = facets.filter(value => ! value.includes('id'));
+ 
+  // Query MeiliSearch
+  let data  = await client.index(category).search(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit})
 
-        // select[fields[key]] = true
+  // data.hits = data.hits.filter(value => ! value.includes('id'));
+
+  data.hits = data.hits.map(obj =>
+    Object.keys(obj).reduce((acc, key) => {
+      if (!key.includes('ib_id') && !key.includes('study_id')) {
+        acc[key] = obj[key];
       }
-    }
+      return acc;
+    }, {})
+  );
 
-    let results = await prisma[category].findMany({
-      where: where,
-      // select: select,
-      take: numPerPage,
-      orderBy: {
-        [sort]: order,
-      },
-      skip: (page - 1) * numPerPage
-
-    });
-
-    let excludes = ['ib_id', 'study_id', 'id']
-    results = results.map(result => { if(result) { for(const exclude of excludes) { delete result[exclude] } return result } })
-
-    let data = {}
-
-    // Get Count for Data
-    const count = await prisma[category].count({where: where})
-
-    data.hits = results
-    data.estimatedTotalHits = count
-
-    // console.log(data)
-
+  // console.log(data.hits)
 
   return res.json(data)
-
 }))
 
 
@@ -262,7 +240,7 @@ router.post('/search/meilisearch/facetOptions', isPermittedTo('read', false), as
 
   let data = await client.index(table).getFilterableAttributes()
 
-  data = data.filter(value => ! value.includes('id'));
+  data = data.filter(value => ! value.includes('id') && ! value.includes('date'));
 
   return res.json(data)
 }))
