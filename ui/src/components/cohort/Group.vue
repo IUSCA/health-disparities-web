@@ -160,6 +160,17 @@ const remove = () => {
 
 }
 
+const group_options = ref([])
+
+const addNewGroup = (newOption) => {
+  const option = {
+        id: String(group_options.value.length),
+        text: newOption,
+        value: newOption,
+      };
+      group_options.value = [...group_options.value, option];
+}
+
 </script>
 
 <template>
@@ -172,7 +183,7 @@ const remove = () => {
     </va-divider>
     <div v-if="grouping.group && index === 0" class="flex flex-col items-center">
 
-        <va-select class="mb-2 border-gray-500 border border-solid w-full rounded" v-model="grouping.group" label="Group" :options="[]" multiple searchable highlight-matched-text allow-create="unique" @create-new="addNewGroup" />
+        <va-select class="mb-2 border-gray-500 border border-solid w-full rounded" v-model="grouping.group" label="Group" :options="group_options" searchable highlight-matched-text allow-create="unique" @create-new="addNewGroup" />
 
     </div>
     
@@ -210,6 +221,11 @@ const remove = () => {
     </div>
 
   </div>
+
+
+    <va-button v-if="isNaN(grouping.group)" class="w-full mt-2" @click="include.edit=true" preset="primary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >
+      <Icon icon="material-symbols:save-sharp" />Save Group
+    </va-button>
 
   <va-select v-model="criteria"  class="w-full mt-2" :options="['AND', 'OR']" @update:modelValue="add(group, criteria)" label="Add Criteria" />
   

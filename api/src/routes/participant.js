@@ -262,6 +262,14 @@ router.post('/search/meilisearch/facets', isPermittedTo('read'), asyncHandler(as
 
   // console.log(JSON.stringify(results))
 
+    // Sort the entries by value
+  const sortedEntries = Object.entries(results[chart_category]).sort(([, a], [, b]) => b - a);
+
+  // Create a new object with the sorted entries
+  results[chart_category] = Object.fromEntries(sortedEntries);
+
+  // console.log(JSON.stringify(results))
+
   return res.json(results)
 }))
 
