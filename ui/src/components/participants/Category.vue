@@ -2,7 +2,7 @@
 import { storeToRefs } from "pinia";
 import { useParticipantStore } from "@/stores/participant"
 const participantStore = useParticipantStore()
-const summaryNumbers = ref({})
+
 
 // emit toggle view
 const emit = defineEmits(["toggleView"])
