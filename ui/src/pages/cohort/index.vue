@@ -27,14 +27,55 @@ const resultsByDetails = ref({NEW: []})
 
 onMounted(async () => {
   cohortService.getResultsBy().then(results => {
-    console.log(results)
     for(let data of results.data) {
-      console.log(data)
       resultsByDetails.value[data.name] = data.fields
+    }
+  })
+  cohortService.getMyCohorts().then(results => {
+    console.log(results.data)
+    for(let result of results.data) {
+      console.log(result)
+      addNewOption(result.name, result.id, result.query)
     }
   })
 })
 
+const addNewOption = (newOption, id = null, query = null) => {
+      const option = {
+        id: id ? id : String(cohort_options.value.length),
+        text: newOption,
+        value: query ? query : newOption,
+      };
+      cohort_options.value = [...cohort_options.value, option];
+}
+
+const showCohort = (cohort) => {
+  if(cohort.text === cohort.value)
+    return
+
+  console.log(cohort)
+
+  includes.value = cohort.value.includes
+  excludes.value = cohort.value.excludes
+
+}
+
+
+const saveCohort = async () => {
+  if(!cohort_name.value || !checkValues(includes.value) ) {
+    toast.error("Please fill all the fields")
+    return
+  }
+
+  if(cohort_name.value.text === cohort_name.value.value) {
+    await cohortService.saveCohort({cohort_name: cohort_name.value.text, includes: includes.value, excludes: excludes.value, resultsBy: resultsByDetails.value[resultsBy.value]})
+  } else {
+    await cohortService.saveCohort({cohort_name: cohort_name.value.text, includes: includes.value, excludes: excludes.value, resultsBy: resultsByDetails.value[resultsBy.value], id: cohort_name.value.id})
+  }
+
+
+  toast.success("Cohort Saved")
+}
 
 
 const includes = ref([{
@@ -107,35 +148,34 @@ const checkValues = (obj) => {
 
 watchDebounced([resultsBy, includes, excludes], () => {
   
-  console.log(resultsBy.value, includes.value, excludes.value)
-
+  // If required fields are not filled out, return
   if(resultsBy.value === null || !checkValues(includes.value))
     return
 
-
-  console.log("RESULTBY", resultsBy.value, "DETAILS", resultsByDetails.value[resultsBy.value])
-
+  // Reset
   chart_category.value = null
   chart_data.value = null
   loading.value = true
 
+  // Get Results
   cohortService.resultsBy({includes: includes.value, excludes: excludes.value, resultsBy: resultsByDetails.value[resultsBy.value]})
   .then(result => {
 
-    console.log(result.data)
 
+    // Set Participants
     participants.value = result.data.participants
 
+    // Remove from results
     delete result.data.participants
 
+    // Set Results
     results.value = result.data
-    console.log(`category ${Object.keys(result.data)[0]}`)
 
+    // Set Chart Options
     chart_category.value = Object.keys(result.data)[0]
     chart_options.value = Object.keys(result.data)
 
-    
-
+    // Set loading
     loading.value = false
   })
 }, { deep: true, debounce: 500 })
@@ -160,19 +200,13 @@ watch(chart_category, () => {
 }, {deep: true})
 
 
-const saveCohort = async () => {
-  if(!cohort_name.value || !checkValues(includes.value) ) {
-    
-    toast.error("Please fill all the fields")
-    return
-  }
 
-  await cohortService.saveCohort({cohort_name: cohort_name, includes: includes.value, excludes: excludes.value, resultsBy: resultsByDetails.value[resultsBy.value]})
-  toast.success("Cohort Saved")
-}
 
 
 const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")
+
+
+
 </script>
 
 <template>
@@ -180,7 +214,7 @@ const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d)
   
       <div class="flex flex-row mb-4">
         <!-- <va-input class="w-2 border-gray-500 border border-solid  w-full rounded" v-model="cohort_name" label="Cohort"  /> -->
-        <va-select  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="cohort_name" label="Cohort" :options="cohort_options" multiple searchable highlight-matched-text allow-create="unique" @create-new="addNewOption" />
+        <va-select  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="cohort_name" label="Cohort" :options="cohort_options" searchable highlight-matched-text allow-create="unique" @create-new="addNewOption" @update:modelValue="showCohort(cohort_name)" />
       </div>
       <div class=" grid gap-4 grid-cols-3 w-full mb-12">
         <va-card stripe stripe-color="success" >

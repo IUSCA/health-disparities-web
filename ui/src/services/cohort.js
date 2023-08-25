@@ -31,6 +31,8 @@ class cohortService {
 
   saveGroup = (data) => api.post(`/cohort/saveGroup`, data)
   getGroups = () => api.get(`/cohort/groups`)
+
+  getMyCohorts = () => api.get(`/cohort/mine`)
 }
 
 export default new cohortService()

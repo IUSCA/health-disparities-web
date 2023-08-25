@@ -63,95 +63,6 @@ router.get('/metadata', isPermittedTo('read'), asyncHandler(async (req, res, nex
 
 
 
-router.post('/test/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
-  let includes = req.body?.includes ? req.body.includes: []
-  let excludes = req.body?.excludes ? req.body.excludes: []
-
-  let resultsBy = req.body?.resultsBy ? req.body.resultsBy: null
-
-  console.log("INCLUDES", includes)
-
-  if(resultsBy) {
-    console.log(resultsBy)
-    resultsBy = Object.keys(resultsBy).map(v => v.replace('.', 's.'))
-  } else {
-    console.log('eck')
-    return res.status(400).send('resultsBy is required');
-  }
-
-  let searchParameters = {
-    'q'         : '*',
-    'query_by'  : "",
-    'filter_by' : "",
-    'facet_by': "",
-    // 'limit_hits': 0,
-    // 'sort_by'   : 'num_employees:desc'
-  }
-
-
-  let filter_by = ''
-
-  let x = 0
-  for(let group of includes) {
-    for(let include of group.query) {
-      if(x == 0) {
-        filter_by = `${include.category}s.${include.field}: ${include.op} '${include.val}'`
-      } else {
-        filter_by = filter_by + ` ${(include.join === 'AND') ? '&&' : '||'} ${include.category}s.${include.field}: ${include.op} '${include.val}'`
-      }
-
-      if(!resultsBy.includes(`${include.category}s.${include.field}`))
-          resultsBy.push(`${include.category}s.${include.field}`)
-
-      x = x + 1
-    }
-  }
-
-  console.log("FILTER BY: ", filter_by)
-
-  if(checkValues(excludes)) {
-    x = 0
-    for(let group of excludes) {
-      for(let include of group.query) {
-        if(x == 0) {
-          filter_by = filter_by + ` && ${include.category}s.${include.field}: ${invertSymbol(include.op)} '${include.val}'`
-        } else {
-          filter_by = filter_by + ` ${(include.join === 'AND') ? '&&' : '||'} ${include.category}s.${include.field}: ${invertSymbol(include.op)} '${include.val}'`
-        }
-        if(!resultsBy.includes(`${include.category}s.${include.field}`))
-          resultsBy.push(`${include.category}s.${include.field}`)
-
-        x = x + 1
-      }
-    }
-  }
-
-  searchParameters.query_by = resultsBy.join(', ')
-  searchParameters.filter_by = filter_by
-  searchParameters.facet_by = resultsBy.join(', ')
-
-  console.log(`searchParameters ${JSON.stringify(searchParameters)}`)
-
- 
-  // Query Typesense
-  let results = await tclient.collections('participant').documents().search(searchParameters)
-  // console.log(results)
-
-
-  let data = {participants: results.found}
-  for(let field of results.facet_counts) {
-    data[field.field_name] = field.counts.reduce((acc, curr) => {
-        acc[curr.value] = curr.count;
-        return acc;
-    }, {});
-  }
-
-  console.log(data)
-
-  return res.json(data)
-
-
-}))
 
 router.get('/resultsBy', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
 
@@ -271,6 +182,18 @@ router.post('/saveGroup', isPermittedTo('create'), asyncHandler(async (req, res,
 
 }))
 
+router.get('/mine', isPermittedTo('read'), asyncHandler(async (req, res, next) => { 
+
+  // const user_id = get_current_user(req, res);
+
+  // const result = await prisma.cohort.findUnique({where: {user_id: parseInt(user_id)}})
+  const result = await prisma.cohort.findMany()
+
+  if (result) { return res.json(result); }
+
+  return next(createError.NotFound());
+}))
+
 router.get('/groups', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
   
     const result = await prisma.group.findMany()
@@ -281,16 +204,18 @@ router.get('/groups', isPermittedTo('read'), asyncHandler(async (req, res, next)
 
 router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (req, res, next) => { 
   let cohort_name = req.body?.cohort_name ? req.body.cohort_name: null
+  let id = req.body?.id ? req.body.id: null
   let includes = req.body?.includes ? req.body.includes: []
   let excludes = req.body?.excludes ? req.body.excludes: []
 
   console.log('NAME', cohort_name)
+  console.log()
 
   let filter = ``
 
   let x = 0
-  for(let group of Object.keys(includes)) {
-    for(let include of includes[group]) {
+  for(let group of includes) {
+    for(let include of group.query) {
       if(x == 0) {
         filter = filter + `'${include.category}s.${include.field}' ${include.op} '${include.val}' `
       } else {
@@ -305,8 +230,8 @@ router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (r
 
   if(checkValues(excludes)) {
     x = 0
-    for(let group of Object.keys(excludes)) {   
-      for(let exclude of excludes[group]) {
+    for(let group of excludes) {
+      for(let exclude of group.query) {
         if(x == 0) {
           filter = filter + ` AND '${exclude.category}s.${exclude.field}' ${exclude.op} '${exclude.val}'`
         } else {
@@ -319,25 +244,52 @@ router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (r
   }
 
   // Create Cohort
-  let cohort_data = {data: {name: cohort_name, query: {includes: includes, excludes: excludes}}}
-  console.log(cohort_data)
-  const result = await prisma.cohort.create(cohort_data)
-
-  // Get Participants IDs
-  console.log({filter: filter, fields: ['id'], limit: 1000000 })
-  let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
+  let cohort_data = {name: cohort_name, query: {includes: includes, excludes: excludes}}
 
 
-  // Create Cohort Participants Query
-  let query = { data: []}
-  query.data = data.results.map(v => {return {participant_id: v.id, cohort_id: result.id}})
+  if(id) {
+    const result = await prisma.cohort.update({where: {id: id}, data: cohort_data})
+
+    // Remove old IDs from previous cohort creation/update
+    await prisma.cohort_participants.deleteMany({where: {cohort_id: id}})
+
+    // Get Participants IDs
+    console.log({filter: filter, fields: ['id'], limit: 1000000 })
+    let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
 
 
-  // Create Cohort Participants
-  let results = await prisma.cohort_participants.createMany(query)
+    // Create Cohort Participants Query
+    let query = { data: []}
+    query.data = data.results.map(v => {return {participant_id: v.id, cohort_id: result.id}})
 
-  console.log(results)
 
+    // Create Cohort Participants
+    let results = await prisma.cohort_participants.createMany(query)
+
+    console.log(results)
+
+    return res.json(results)
+
+  } else {
+    const result = await prisma.cohort.create({data: cohort_data})
+
+    // Get Participants IDs
+    console.log({filter: filter, fields: ['id'], limit: 1000000 })
+    let data = await client.index('participants').getDocuments({filter: filter, fields: ['id'], limit: 1000000 })
+
+
+    // Create Cohort Participants Query
+    let query = { data: []}
+    query.data = data.results.map(v => {return {participant_id: v.id, cohort_id: result.id}})
+
+
+    // Create Cohort Participants
+    let results = await prisma.cohort_participants.createMany(query)
+
+    console.log(results)
+
+    return res.json(results)
+  }
 }))
 
 
@@ -542,15 +494,7 @@ router.get('/:id', isPermittedTo('read'), asyncHandler(async (req, res, next) =>
   }),
 );
 
-router.get('/mine', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['cohort']
-    const user_id = get_current_user(req, res);
 
-    const result = await prisma.participant.findUnique({where: {user_id: parseInt(user_id)}})
-    if (result) { return res.json(result); }
-    return next(createError.NotFound());
-  }),
-);
 
 
 
