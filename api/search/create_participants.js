@@ -8,24 +8,28 @@ const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['
 
 const main = async () => {
 
-  // const count = await prisma.participant.count();
+  const count = await prisma.participant.count();
 
-  // console.log(`Indexing ${count} participants...`)
-  // let x = 0
+  console.log(`Indexing ${count} participants...`)
+  let x = 0
   // while(x < count) {
-  //   const participants = await prisma.participant.findMany({
-  //     skip: x,
-  //     take: 1000,
-  //     include: {demographics: true, labs: true, covid_tests: true, covid_vaxes: true, dxs: true, hospitals: true, medications: true}
-  //   });
+    const participants = await prisma.participant.findMany({
+      skip: x,
+      take: 10,
+      include: {demographics: true, labs: true, covid_tests: true, covid_vaxes: true, dxs: true, hospitals: true, medications: true}
+    });
 
-  //   await client.index('participants').addDocuments(participants, { primaryKey: 'id' })
 
-  //   x = x + 1000
+    console.log(participants)
+
+    // let results = await client.index('participants').addDocuments(participants, { primaryKey: 'id' })
+    // console.log(results)
+
+    x = x + 1000
   // }
 
-  console.log('Enabling filtering and sorting...')
-  enableFiltering('participant')
+  // console.log('Enabling filtering and sorting...')
+  // enableFiltering('participant')
 }
 
 // Enable filtering  and sorting for everything in the model

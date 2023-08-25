@@ -248,6 +248,37 @@ sortObject = (obj) => {
 }
 
 
+router.post('/saveGroup', isPermittedTo('create'), asyncHandler(async (req, res, next) => {
+  let id = req.body?.id ? req.body.id: null
+  let name = req.body?.name ? req.body.name: null
+  let query = req.body?.query ? req.body.query : null
+
+  if(!name && !query) return res.status(400).send('name and query are required');
+
+
+
+
+
+  let result = {}
+  
+  if(id) {
+    result = await prisma.group.update({where: {id: id}, data: {name: name, query: query}})
+  } else {
+    result = await prisma.group.create({data: {name: name, query: query}})
+  }
+
+  return res.json(result)
+
+}))
+
+router.get('/groups', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+  
+    const result = await prisma.group.findMany()
+  
+    return res.json(result)
+  
+}))
+
 router.post('/saveCohort', isPermittedTo('create', false), asyncHandler(async (req, res, next) => { 
   let cohort_name = req.body?.cohort_name ? req.body.cohort_name: null
   let includes = req.body?.includes ? req.body.includes: []

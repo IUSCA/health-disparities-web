@@ -26,19 +26,16 @@ const resultsBy = ref(null)
 const resultsByDetails = ref({NEW: []})
 
 onMounted(async () => {
-
-cohortService.getResultsBy().then(results => {
-  console.log(results)
-  for(let data of results.data) {
-    console.log(data)
-    resultsByDetails.value[data.name] = data.fields
-  }
+  cohortService.getResultsBy().then(results => {
+    console.log(results)
+    for(let data of results.data) {
+      console.log(data)
+      resultsByDetails.value[data.name] = data.fields
+    }
+  })
 })
 
-})
 
-
-const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) { return ($1 && ' ') + $2.toUpperCase(); })
 
 const includes = ref([{
     group: 1,
@@ -112,7 +109,7 @@ watchDebounced([resultsBy, includes, excludes], () => {
   
   console.log(resultsBy.value, includes.value, excludes.value)
 
-  if(!resultsBy.value && !checkValues(includes.value))
+  if(resultsBy.value === null || !checkValues(includes.value))
     return
 
 
