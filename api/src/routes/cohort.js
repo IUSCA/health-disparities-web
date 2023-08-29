@@ -187,9 +187,23 @@ router.get('/mine', isPermittedTo('read'), asyncHandler(async (req, res, next) =
   // const user_id = get_current_user(req, res);
 
   // const result = await prisma.cohort.findUnique({where: {user_id: parseInt(user_id)}})
-  const result = await prisma.cohort.findMany()
+  const results = await prisma.cohort.findMany()
 
-  if (result) { return res.json(result); }
+
+  for(let result of results) {
+
+    const count = await prisma.cohort_participants.count({
+      where: {
+        cohort_id: result.id,
+      },
+    });
+    result.participants = count
+  }
+
+  console.log(results)
+  
+  // return results.length;
+  if (results) { return res.json(results); }
 
   return next(createError.NotFound());
 }))

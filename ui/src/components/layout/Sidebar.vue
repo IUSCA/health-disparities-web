@@ -115,6 +115,11 @@ const user_items = ref([
     title: "Cohort",
     path: "/cohort",
   },
+  {
+    icon: "carbon:ibm-process-mining",
+    title: "Analysis",
+    path: "/analysis",
+  },
   // {
   //   icon: "mdi-chart-gantt",
   //   title: "Tracks",

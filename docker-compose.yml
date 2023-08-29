@@ -80,14 +80,6 @@ services:
     expose:
       - 7700
 
-  typesense:
-    container_name: typesense
-    image: typesense/typesense:0.24.1
-    volumes:
-      - ./typesense-data:/data
-    ports:
-      - 127.0.0.1:8108:8108
-    command: '--data-dir /data --api-key=xyz --enable-cors'
 
 volumes:
   ui_modules:
