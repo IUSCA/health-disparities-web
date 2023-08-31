@@ -23,7 +23,7 @@ const main = async () => {
     });
 
 
-    console.log(participants)
+    // console.log(participants)
 
     let results = await client.index('participants').addDocuments(participants, { primaryKey: 'id' })
     console.log(results)
