@@ -7,19 +7,11 @@ const { getFieldsWithType } = require('../services/model');
 const config = require('config');
 
 const prisma = new PrismaClient()
-const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://meilisearch:7700' })
+const client = new MeiliSearch({ 
+  host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' , 
+  apiKey: process.env['SEARCH_KEY'] ? process.env['SEARCH_KEY'] : 'xyz'
+})
 
-// const Typesense = require('typesense')
-
-// let tclient = new Typesense.Client({
-//   'nodes': [{
-//     'host': config.get('typesense.host'), // For Typesense Cloud use xxx.a1.typesense.net
-//     'port': config.get('typesense.port'),      // For Typesense Cloud use 443
-//     'protocol': config.get('typesense.protocol')   // For Typesense Cloud use https
-//   }],
-//   'apiKey': config.get('typesense.api_key'),
-//   'connectionTimeoutSeconds': 500000
-// })
 
 const modelService = require('../services/model');
 

@@ -4,7 +4,10 @@ const { getFieldsWithType } = require('../src/services/model');
 require('dotenv-safe').config()
 
 const prisma = new PrismaClient();
-const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' })
+const client = new MeiliSearch({ 
+  host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' , 
+  apiKey: process.env['SEARCH_KEY'] ? process.env['SEARCH_KEY'] : 'xyz'
+})
 
 const main = async () => {
 
@@ -12,7 +15,7 @@ const main = async () => {
 
   console.log(`Indexing ${count} participants...`)
   let x = 0
-  // while(x < count) {
+  while(x < count) {
     const participants = await prisma.participant.findMany({
       skip: x,
       take: 10,
@@ -22,20 +25,18 @@ const main = async () => {
 
     console.log(participants)
 
-    // let results = await client.index('participants').addDocuments(participants, { primaryKey: 'id' })
-    // console.log(results)
+    let results = await client.index('participants').addDocuments(participants, { primaryKey: 'id' })
+    console.log(results)
 
     x = x + 1000
-  // }
+  }
 
-  // console.log('Enabling filtering and sorting...')
-  // enableFiltering('participant')
+  console.log('Enabling filtering and sorting...')
+  enableFiltering('participant')
 }
 
 // Enable filtering  and sorting for everything in the model
 const enableFiltering = async (model_name) => { 
-
-  // const model_name = 'participant'
   const fields = getFieldsWithType(model_name)
 
   let data = []
@@ -54,11 +55,8 @@ const enableFiltering = async (model_name) => {
             data.push(`${field}.${subField}`)
         } 
       }
-
     }
-
   }
-
 
   await client.index('participants').updateSettings({
     filterableAttributes: data,
@@ -66,9 +64,6 @@ const enableFiltering = async (model_name) => {
   })
 
 }
-
-
-
 
 main()
   .then(() => {

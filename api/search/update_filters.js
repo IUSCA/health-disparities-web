@@ -3,7 +3,10 @@ const { PrismaClient } = require('@prisma/client');
 const { getFieldsWithType } = require('../src/services/model');
 
 const { MeiliSearch } = require('meilisearch');
-const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' })
+const client = new MeiliSearch({ 
+  host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' , 
+  apiKey: process.env['SEARCH_KEY'] ? process.env['SEARCH_KEY'] : 'xyz'
+})
 
 require('dotenv-safe').config()
 
@@ -14,7 +17,7 @@ const main = async () => {
   await updateParticipants()
 
 
-  let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication', 'participant']
+  let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
 
   for(let table of tables) {
 

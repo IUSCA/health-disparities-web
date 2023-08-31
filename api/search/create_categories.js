@@ -7,10 +7,13 @@ const prisma = new PrismaClient();
 
 console.log(process.env['SEARCH_URL'])
 
-const client = new MeiliSearch({ host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' })
+const client = new MeiliSearch({ 
+  host: process.env['SEARCH_URL'] ? process.env['SEARCH_URL'] : 'http://dgl_meilisearch:7700' , 
+  apiKey: process.env['SEARCH_KEY'] ? process.env['SEARCH_KEY'] : 'xyz'
+})
 
 const main = async () => {
-  let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication', 'participant']
+  let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
 
   for(let table of tables) {
   const count = await prisma[table].count();
