@@ -14,7 +14,7 @@ const main = async () => {
   console.log(process.env['SEARCH_URL'], process.env['SEARCH_KEY'])
   try {
     
-    hasIndex('participants')
+    await hasIndex('participants')
 
 
 
