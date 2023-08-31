@@ -14,9 +14,9 @@ const main = async () => {
   console.log(process.env['SEARCH_URL'], process.env['SEARCH_KEY'])
   try {
     
-    await hasIndex('participants')
+    let results = await hasIndex('participants')
 
-
+    console.log(results)
 
   } catch(e) {  
 
@@ -28,10 +28,9 @@ const main = async () => {
 
 const hasIndex = async (indexName) => {
   const indexes = await client.getIndexes()
-  console.log(indexes.results)
+
 
   for(let index of indexes.results) {
-    console.log(index, index.uid)
     if(index.uid === indexName) {
       return true
     }

@@ -42,10 +42,8 @@ const main = async () => {
 
 const hasIndex = async (indexName) => {
   const indexes = await client.getIndexes()
-  console.log(indexes.results)
 
   for(let index of indexes.results) {
-    console.log(index, index.uid)
     if(index.uid === indexName) {
       return true
     }
