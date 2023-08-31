@@ -11,6 +11,11 @@ const client = new MeiliSearch({
 
 const main = async () => {
 
+  if(hasIndex('participants')) {
+    console.log('Deleting existing index...')
+    await client.index('participants').delete()
+  }
+
   const count = await prisma.participant.count();
 
   console.log(`Indexing ${count} participants...`)
@@ -34,6 +39,21 @@ const main = async () => {
   console.log('Enabling filtering and sorting...')
   enableFiltering('participant')
 }
+
+const hasIndex = async (indexName) => {
+  const indexes = await client.getIndexes()
+  console.log(indexes.results)
+
+  for(let index of indexes.results) {
+    console.log(index, index.uid)
+    if(index.uid === indexName) {
+      return true
+    }
+  }
+
+  return false
+}
+
 
 // Enable filtering  and sorting for everything in the model
 const enableFiltering = async (model_name) => { 
