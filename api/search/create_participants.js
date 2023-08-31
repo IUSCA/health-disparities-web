@@ -18,7 +18,7 @@ const main = async () => {
   while(x < count) {
     const participants = await prisma.participant.findMany({
       skip: x,
-      take: 10,
+      take: 1000,
       include: {demographics: true, labs: true, covid_tests: true, covid_vaxes: true, dxs: true, hospitals: true, medications: true}
     });
 
