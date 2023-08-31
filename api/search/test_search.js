@@ -11,8 +11,14 @@ const client = new MeiliSearch({
 
 const main = async () => {
 
-  const result = await client.getIndexes({ limit: 3 })
-  console.log(result)
+  try {
+    const result = await client.getIndexes({ limit: 3 })
+    console.log(result)
+  } catch(e) {  
+
+    console.log(e)
+  }
+
 
 }
 
