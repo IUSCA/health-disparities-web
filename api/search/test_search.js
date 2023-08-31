@@ -13,6 +13,8 @@ const main = async () => {
   console.log('Getting indexes...')
   console.log(process.env['SEARCH_URL'], process.env['SEARCH_KEY'])
   try {
+    const created = await client.createIndex('test')
+    console.log(created)
     const result = await client.getIndexes({ limit: 3 })
     console.log(result)
   } catch(e) {  
