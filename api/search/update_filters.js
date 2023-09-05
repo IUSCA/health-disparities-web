@@ -80,6 +80,18 @@ const updateParticipants = async () => {
 
   const result = await client.index('participants').updateFilterableAttributes(attributes)
 
+
+  await client.index(model_name).updateSettings({
+    filterableAttributes: attributes,
+    sortableAttributes: attributes,
+    displayedAttributes: ['*'],
+    pagination: { maxTotalHits: 7000000 },
+  })
+  await client.index(model_name).updateFaceting({
+    maxValuesPerFacet: 7000000
+  })
+
+
   console.log(result)
 
 }
