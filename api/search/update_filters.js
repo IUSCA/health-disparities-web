@@ -31,6 +31,17 @@ const enableFiltering = async (model_name) => {
   // const model_name = 'participant'
   const fields = getFieldsWithType(model_name)
 
+  let values = {}
+
+  values['demographic'] = {maxValuesPerFacet: 50000, maxTotalHits: 7000000}
+  values['lab'] = {maxValuesPerFacet: 3000000, maxTotalHits: 7000000}
+  values['covid_test'] = {maxValuesPerFacet: 130000, maxTotalHits: 7000000}
+  values['covid_vax'] = {maxValuesPerFacet: 70000, maxTotalHits: 7000000}
+  values['dx'] = {maxValuesPerFacet: 20000000, maxTotalHits: 20000000}
+  values['hospital'] = {maxValuesPerFacet: 400000, maxTotalHits: 7000000}
+  values['medication'] = {maxValuesPerFacet: 1600000, maxTotalHits: 7000000}
+
+
   let data = []
 
   for(let field of Object.keys(fields)) {
@@ -49,6 +60,10 @@ const enableFiltering = async (model_name) => {
       filterableAttributes: data,
       sortableAttributes: data,
       displayedAttributes: ['*'],
+      pagination: { maxTotalHits: values[model_name].maxTotalHits },
+    })
+    await client.index(model_name).updateFaceting({
+      maxValuesPerFacet: values[model_name].maxValuesPerFacet
     })
   }
 }
