@@ -11,7 +11,7 @@ const client = new MeiliSearch({
 
 const main = async () => {
 
-  let results = await client.index('demographic').getFilterableAttributes()
+  let results = await client.index('participants').getFilterableAttributes()
 
   console.log(results)
 
