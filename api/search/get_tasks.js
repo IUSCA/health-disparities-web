@@ -11,18 +11,10 @@ const client = new MeiliSearch({
 
 const main = async () => {
   console.log('Getting indexes...')
-  console.log(process.env['SEARCH_URL'], process.env['SEARCH_KEY'])
-  try {
-    
-    let results = await hasIndex('participants')
 
-    console.log(results)
+  let results = await client.getTasks()
 
-  } catch(e) {  
-
-    console.log(e)
-  }
-
+  console.log(results)
 
 }
 
