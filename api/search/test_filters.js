@@ -14,18 +14,12 @@ const prisma = new PrismaClient();
 
 const main = async () => {
 
-  await updateParticipants()
+  await enableFiltering("demographic")
 
 
-  let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
 
-  for(let table of tables) {
-
-    await enableFiltering(table)
-  }
 }
 
-// Enable filtering  and sorting for everything in the model
 const enableFiltering = async (model_name) => { 
 
   console.log(`Enabling filtering and sorting for ${model_name}...`)
@@ -73,70 +67,13 @@ const enableFiltering = async (model_name) => {
   }
 }
 
-const updateParticipants = async () => {
-
-  let collection = 'participant'
-
-
-  console.log(`Updating participants ...`)
-  let attributes = await getCollections(collection)
-
-  console.log('Collections: ', JSON.stringify(attributes))
-
-
-
-  const results = await client.index('participants').updateSettings({
-    filterableAttributes: attributes,
-    sortableAttributes: attributes,
-    displayedAttributes: ['*'],
-    pagination: { maxTotalHits: 7000000 },
-    faceting: { maxValuesPerFacet: 7000000 }
-  })
-
-
-  console.log(results)
-
-}
-
-const getCollections = async (model_name) => { 
-
-  // console.log('MODEL: ', model_name)
-  let all = []
-
-
-  
-  // Get all the fields from prisma
-  const fields = getFieldsWithType(model_name)
-
-  // console.log('FIELDS: ', fields)
-
-
-  // Loop through each field and add it to the collection
-  for(let field of Object.keys(fields)) {
-    if(fields[field] === 'String' || fields[field] === 'Int' || fields[field] === 'Decimal' || fields[field] === 'DateTime' || fields[field] === 'Boolean') {
-      all.push(field);
-    } else {
-      if(fields[field] !== 'participant') {
-        let col = await getCollections(fields[field])
-        const newArray = col.map(item => `${field}.${item}`);
-        all.push(...newArray)
-      }
-    }
-  }
-
-
-
-  return all
-
-
-}
 
 main()
   .then(() => {
-    prisma.$disconnect();
+
   })
   .catch(async (e) => {
     console.error(e);
-    await prisma.$disconnect();
+
     process.exit(1);
   });
