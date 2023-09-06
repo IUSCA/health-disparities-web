@@ -124,6 +124,8 @@ router.post('/search/meilisearch/facets', isPermittedTo('read'), asyncHandler(as
 
   table = (table === 'covid_vax') ? 'covid_vaxes' : `${table}s`
 
+  console.log(table, chart_category, search)
+
   // Query MeiliSearch
   let data  = await client.index('participants').search(search, {limit: 0, facets: [`${table}.${chart_category}`]})
 
