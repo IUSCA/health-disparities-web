@@ -94,7 +94,7 @@ const updateParticipants = async () => {
     faceting: { maxValuesPerFacet: 7000000 }
   })
 
-  await client.index(model_name).updateFilterableAttributes(attributes)
+  await client.index('participants').updateFilterableAttributes(attributes)
 
 
   console.log(results)
