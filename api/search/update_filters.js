@@ -28,6 +28,8 @@ const main = async () => {
 // Enable filtering  and sorting for everything in the model
 const enableFiltering = async (model_name) => { 
 
+  console.log(`Enabling filtering and sorting for ${model_name}...`)
+
   // const model_name = 'participant'
   const fields = getFieldsWithType(model_name)
 
@@ -73,7 +75,7 @@ const updateParticipants = async () => {
   let collection = 'participant'
 
 
-  console.log(`Getting all ${collection} ...`)
+  console.log(`Updating participants ...`)
   let attributes = await getCollections(collection)
 
   console.log('Collections: ', JSON.stringify(attributes))
