@@ -63,11 +63,12 @@ const enableFiltering = async (model_name) => {
       sortableAttributes: data,
       displayedAttributes: ['*'],
       pagination: { maxTotalHits: values[model_name].maxTotalHits },
-      faceting: {
-        maxValuesPerFacet: values[model_name].maxValuesPerFacet
-      }
+      faceting: { maxValuesPerFacet: values[model_name].maxValuesPerFacet }
 
     })
+    
+    await client.index(model_name).updateFilterableAttributes(data)
+
 
     console.log(`results = ${JSON.stringify(results)}`)
   }
@@ -92,6 +93,8 @@ const updateParticipants = async () => {
     pagination: { maxTotalHits: 7000000 },
     faceting: { maxValuesPerFacet: 7000000 }
   })
+
+  await client.index(model_name).updateFilterableAttributes(attributes)
 
 
   console.log(results)
