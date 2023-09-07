@@ -15,6 +15,7 @@ class participantService {
 
   // SEARCH
   searchAll = (data) => api.post(`/participant/search/all`, data)
+  searchParticipants = (data) => api.post(`/participant/search/participants`, data)
   searchTotals = (data) => api.post(`/participant/search/meilisearch/totals`, data)
   getMetadata = () => api.get(`/participant/metadata`)
 

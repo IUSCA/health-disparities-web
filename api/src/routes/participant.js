@@ -77,7 +77,7 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
   const sort = req.body.sortBy ? req.body.sortBy: 'id'
 
   // Get all fields
-  let facets =  await client.index(category).getFilterableAttributes()
+  // let facets =  await client.index(category).getFilterableAttributes()
 
   // Remove id fields
   // facets = facets.filter(value => ! value.includes('id'));
@@ -102,7 +102,54 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 }))
 
 
+// PARTICIPANT FILTER AND SEARCH
+router.post('/search/participants', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+  // console.log(req.body)
 
+  // Fuzzy search string
+  const search = req.body?.search ? req.body.search: undefined
+  const category = req.body?.category ? req.body.category: null
+  
+  if (! category) return res.status(400).send('Category is required');
+
+  // Fields - incoming fields or set a default
+  const fields = req.body?.fields ? req.body.fields: ['id', 'hospitals.id', 'labs.name', 'medications.id', 'dxs.id', 'covid_tests.name', 'covid_vaxes.id']
+
+  // Pagination
+  const page = req.body?.page ? parseInt(req.body.page): 1
+  const numPerPage = req.body?.numPerPage ? parseInt(req.body.numPerPage): 10
+
+  limit = numPerPage
+  offset = limit * (page - 1)
+
+  // Column sorting
+  const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
+  const sort = req.body.sortBy ? req.body.sortBy: 'id'
+
+  // Get all fields
+  // let facets =  await client.index(category).getFilterableAttributes()
+
+  // Remove id fields
+  // facets = facets.filter(value => ! value.includes('id'));
+ 
+  // Query MeiliSearch
+  let data  = await client.index(category).search(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: fields})
+
+  // data.hits = data.hits.filter(value => ! value.includes('id'));
+
+  data.hits = data.hits.map(obj =>
+    Object.keys(obj).reduce((acc, key) => {
+      if (!key.includes('ib_id') && !key.includes('study_id')) {
+        acc[key] = obj[key];
+      }
+      return acc;
+    }, {})
+  );
+
+  // console.log(data.hits)
+
+  return res.json(data)
+}))
 
 
 

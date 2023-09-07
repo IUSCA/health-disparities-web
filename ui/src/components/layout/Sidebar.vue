@@ -107,11 +107,15 @@ const user_items = ref([
 {
     icon: "material-symbols:search",
     title: "Search",
-    path: "/participants",
+    path: "/search",
   },
-
   {
-    icon: "lucide:group",
+    icon: "material-symbols:person",
+    title: "Participant",
+    path: "/participant",
+  },
+  {
+    icon: "mdi:account-multiple",
     title: "Cohort",
     path: "/cohort",
   },
