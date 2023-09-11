@@ -108,12 +108,10 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
 
   // Fuzzy search string
   const search = req.body?.search ? req.body.search: undefined
-  const category = req.body?.category ? req.body.category: null
+  let category = req.body?.category ? req.body.category: null
   
   if (! category) return res.status(400).send('Category is required');
 
-  // Fields - incoming fields or set a default
-  const fields = req.body?.fields ? req.body.fields: ['id', 'hospitals.id', 'labs.name', 'medications.id', 'dxs.id', 'covid_tests.name', 'covid_vaxes.id']
 
   // Pagination
   const page = req.body?.page ? parseInt(req.body.page): 1
@@ -127,30 +125,91 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   const sort = req.body.sortBy ? req.body.sortBy: 'id'
 
   // Get all fields
-  // let facets =  await client.index(category).getFilterableAttributes()
+  const fields = modelService.getMetadata(category).fields
 
-  // Remove id fields
-  // facets = facets.filter(value => ! value.includes('id'));
- 
+
+  // Pluralize category
+  category = (category === 'covid_vax') ? 'covid_vax' : `${category}s`
+
+  // Assign fields to retrieve
+  let attributesToRetrieve = fields.map(field => `${category}.${field}`)
+
+  console.log(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
+
   // Query MeiliSearch
-  let data  = await client.index(category).search(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: fields})
+  let data  = await client.index('participants').search(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
 
-  // data.hits = data.hits.filter(value => ! value.includes('id'));
+  console.log(JSON.stringify(data))
 
-  data.hits = data.hits.map(obj =>
-    Object.keys(obj).reduce((acc, key) => {
-      if (!key.includes('ib_id') && !key.includes('study_id')) {
-        acc[key] = obj[key];
+
+  let results = []
+
+  for(let result in data.hits) {
+    // dynamically get column data
+    if(category in data.hits[result]) {
+      cat  = data.hits[result][category][0]
+
+      let row = {}
+      for(let field of fields) {
+        row[field] = cat[field]
       }
-      return acc;
-    }, {})
-  );
 
+      results.push(row)
+    }
+  }
+
+  data.hits = results
+
+  
   // console.log(data.hits)
 
   return res.json(data)
 }))
 
+const calculateYearsSince = (dateString) => {
+  const currentDate = new Date();
+  const inputDate = new Date(dateString);
+
+  const yearsDiff = currentDate.getFullYear() - inputDate.getFullYear();
+
+  // Check if the current month and day are before the input date's month and day
+  if (
+    currentDate.getMonth() < inputDate.getMonth() ||
+    (currentDate.getMonth() === inputDate.getMonth() &&
+      currentDate.getDate() < inputDate.getDate())
+  ) {
+    // If so, subtract 1 from the difference in years
+    return yearsDiff - 1;
+  }
+
+  return yearsDiff;
+}
+
+
+const calculateAge = (dateString) => {
+  // Get the current date
+  let currentDate = new Date();
+  
+  // Convert the provided date string to a Date object
+  let birthDate = new Date(dateString);
+  
+  // Calculate the age
+  let age = currentDate.getFullYear() - birthDate.getFullYear();
+  
+  // Check if the birthday hasn't occurred yet this year
+  if (currentDate.getMonth() < birthDate.getMonth() || 
+      (currentDate.getMonth() === birthDate.getMonth() && 
+       currentDate.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age;
+}
+
+
+const flattenByKey = (arr, key) => arr.flatMap((item) =>
+    item[key].map((obj) => Object.assign({}, obj))
+  );
 
 
 router.post('/search/meilisearch/facetOptions', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
@@ -282,7 +341,7 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
   }
 
   let results = await tclient.collections('participant').documents().search(searchParameters)
-  console.log(JSON.stringify(results.facet_counts))
+  // console.log(JSON.stringify(results.facet_counts))
 
   let data = {}
 
@@ -291,7 +350,7 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
     data[count.field_name.replace('es.id', '').replace('s.id', '')] = count.stats.total_values 
   }
 
-  console.log(JSON.stringify(data))
+  // console.log(JSON.stringify(data))
 
   return res.json(data);
 }));
@@ -299,8 +358,9 @@ router.post('/search/totals', isPermittedTo('read', false), asyncHandler(async (
 
 
 router.get('/categories', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+  const results = modelService.getRelationships('participant')
 
-  return res.json(categories)
+  return res.json(results)
 
 }))
 

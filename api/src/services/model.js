@@ -40,10 +40,10 @@ const getFields = (model_name) => {
 const getMetadata = (model_name) => {
   let data = {}
   let metaData = getFieldsWithType(model_name);
-  // console.log(metaData)
+  console.log(metaData)
   data.fields = []
   for(let field of Object.keys(metaData)) {
-    if(metaData[field] === 'Int' || metaData[field] === 'String' || metaData[field] === 'DateTime' || metaData[field] === 'Decimal') {
+    if(metaData[field] === 'Int' || metaData[field] === 'String' || metaData[field] === 'DateTime' || metaData[field] === 'Decimal' || metaData[field] === 'Boolean') {
       data.fields.push(`${field}`)
     } else {
       let subMetaData = getFieldsWithType(`${metaData[field]}`)
@@ -57,6 +57,20 @@ const getMetadata = (model_name) => {
     }
   }
   
+  return data
+}
+
+const getRelationships = (model_name) => {
+  let data = {}
+  let metaData = getFieldsWithType(model_name);
+
+  data = []
+  for(let field of Object.keys(metaData)) {
+    if(metaData[field] !== 'Int' && metaData[field] !== 'String' && metaData[field] !== 'DateTime' && metaData[field] !== 'Decimal' && metaData[field] !== 'Boolean') {
+      data.push(metaData[field])
+    }
+  }
+
   return data
 }
 
@@ -90,4 +104,5 @@ module.exports = {
   getFields,
   getMetadata,
   getMetadataAsSelect,
+  getRelationships
 };

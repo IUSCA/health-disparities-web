@@ -105,25 +105,25 @@ function isActive(path) {
 
 const user_items = ref([
 {
-    icon: "material-symbols:search",
-    title: "Search",
+    icon: "solar:chart-bold",
+    title: "Categories",
     path: "/search",
   },
   {
     icon: "material-symbols:person",
-    title: "Participant",
-    path: "/participant",
+    title: "Participants",
+    path: "/participants/demographic",
   },
   {
     icon: "mdi:account-multiple",
     title: "Cohort",
     path: "/cohort",
   },
-  {
-    icon: "carbon:ibm-process-mining",
-    title: "Analysis",
-    path: "/analysis",
-  },
+  // {
+  //   icon: "carbon:ibm-process-mining",
+  //   title: "Analysis",
+  //   path: "/analysis",
+  // },
   // {
   //   icon: "mdi-chart-gantt",
   //   title: "Tracks",
