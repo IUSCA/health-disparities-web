@@ -104,15 +104,22 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 
 // PARTICIPANT FILTER AND SEARCH
 router.post('/search/participants', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
-  // console.log(req.body)
 
   // Fuzzy search string
   const search = req.body?.search ? req.body.search: undefined
+
+  // Table
   let category = req.body?.category ? req.body.category: null
-  
+
   if (! category) return res.status(400).send('Category is required');
 
+  // Cross table filters
+  const filters = req.body?.filters ? req.body.filters: null
+  
+  
 
+  console.log('FILTERS', JSON.stringify(filters))
+  
   // Pagination
   const page = req.body?.page ? parseInt(req.body.page): 1
   const numPerPage = req.body?.numPerPage ? parseInt(req.body.numPerPage): 10
@@ -124,47 +131,81 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
   const sort = req.body.sortBy ? req.body.sortBy: 'id'
 
-  // Get all fields
-  const fields = modelService.getMetadata(category).fields
 
+  let data = {}
 
-  // Pluralize category
-  category = (category === 'covid_vax') ? 'covid_vax' : `${category}s`
+  // filter
+  if(checkValues(filters)) {
+    let select = createDbFilter(filters)
 
-  // Assign fields to retrieve
-  let attributesToRetrieve = fields.map(field => `${category}.${field}`)
+    data.hits = await prisma[category].findMany({select: select, skip: offset, take: limit, orderBy: {[sort]: order}})
+    data.count = await prisma[category].count({select: select})
 
-  console.log(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
-
-  // Query MeiliSearch
-  let data  = await client.index('participants').search(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
-
-  console.log(JSON.stringify(data))
-
-
-  let results = []
-
-  for(let result in data.hits) {
-    // dynamically get column data
-    if(category in data.hits[result]) {
-      cat  = data.hits[result][category][0]
-
-      let row = {}
-      for(let field of fields) {
-        row[field] = cat[field]
-      }
-
-      results.push(row)
-    }
+    let filter = createSearchFilter(filters)
+    let results = await client.index(category).search("", {filter: filter, limit: 0, facets: ['participant_id']})
+    data.participant_count =  Object.keys(results.facetDistribution.participant_id).length
+  
+  // no search or filter
+  } else {
+    data.hits = await prisma[category].findMany({skip: offset, take: limit, orderBy: {[sort]: order}})
+    data.count = await prisma[category].count()
+    let results = await client.index(category).search("", { limit: 0, facets: ['participant_id']})
+    data.participant_count =  Object.keys(results.facetDistribution.participant_id).length
   }
 
-  data.hits = results
-
-  
-  // console.log(data.hits)
+  console.log('DATA', JSON.stringify(data))
 
   return res.json(data)
 }))
+
+const createSearchFilter = (filters) => {
+  let x = 0
+  let filter = ''
+    for(let include of filters) {
+      if(x == 0) {
+        filter = filter + `'${include.category}s.${include.field}' ${include.op} '${include.val}' `
+      } else {
+        console.log("join", include.join)
+        filter = filter + ` ${include.join} '${include.category}s.${include.field}' ${include.op} '${include.val}'`
+      }
+
+      x = x + 1
+    }
+
+  return filter
+}
+
+const createDbFilter = (filters) => {
+  let select = {}
+  if(checkValues(filters)) {
+    for(const filter of filters) {
+      if(category === filter.category) {
+        if('where' in select) {
+          select.where = { [filter.field]: filter.val, ...select.where}
+        } else {
+          select.where = { [filter.field]: filter.val, ...select.where}
+        }
+      } else if(filter.category in select && 'where' in select[filter.category]) 
+        select[filter.category]['where'] = { [filter.field]: filter.val, ...select[filter.category]['where']} 
+      else
+        select[filter.category] = { where: { [filter.field]: filter.val } }
+    }
+  } else {
+    select = null
+  }
+
+return select
+}
+
+const checkValues = (obj) => {
+  for (let key in obj) {
+    for(let val of Object.keys(obj[key])) {
+    console.log(obj[key][val])
+    if (obj[key][val] === null || obj[key][val] === undefined || obj[key][val] === "") return false;
+    }
+  }
+  return true;
+}
 
 const calculateYearsSince = (dateString) => {
   const currentDate = new Date();
@@ -376,22 +417,20 @@ router.get('/categories/:name', isPermittedTo('read'), asyncHandler(async (req, 
 }))
 
 
-const fuzzySearchTable = async (table, search, count = false) => {
-  let where = {}
+const fuzzySearchTable = async (table, search, count = false, filter = false, offset = false, limit = false) => {
+  let where =  {}
   if(search) {
     // Get the fields for the model
     const fields = getFieldsWithType(table)
     // console.log(`fields = ${JSON.stringify(fields)}`)
     let OR = []
-
     
-
     for(const key of Object.keys(fields)) {
       // Filter table by search string
       if(typeof fields[key] !== 'object') {
         // Set search by field type
         if(fields[key] === 'String') {
-          OR.push({[key]: { contains: search}})
+          OR.push({[key]: { contains: search, mode: 'insensitive'}})
         } else if(fields[key] === 'Int' && !isNaN(search)) {
           OR.push({[key]: { in: [parseInt(search)]}})
         }
@@ -399,7 +438,6 @@ const fuzzySearchTable = async (table, search, count = false) => {
 
     }
 
-    
 
     // Join all OR statements
     if(OR.length > 0) 
@@ -411,15 +449,20 @@ const fuzzySearchTable = async (table, search, count = false) => {
   let query = {}
   if(where) query.where = where
 
+  // Set the offset
+  if(offset) query.skip = offset
+
+  // Set the limit
+  if(limit) query.take = limit
 
 
-
-  // console.log(`query = ${JSON.stringify(query)}`)
+  console.log(`query = ${JSON.stringify(query)}`)
 
   let results
 
   // Get Data
   if(count) {
+    console.log(table, query)
     results = await prisma[table].count(query);
   } else {
     results = await prisma[table].findMany(query);

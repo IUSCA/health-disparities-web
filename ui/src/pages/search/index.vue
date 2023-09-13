@@ -5,6 +5,7 @@ import { useParticipantStore } from "@/stores/participant"
 import router from "@/router";
 const participantStore = useParticipantStore()
 
+const search = ref(null)
 
 // emit toggle view
 const emit = defineEmits(["toggleView"])
@@ -22,7 +23,7 @@ const { options } = storeToRefs(participantStore)
 
 
 // Watch for changes to the search options
-watch(options, () => { 
+watch(search, () => { 
     participantStore.searchTotals()
  }, { deep: true })
 
@@ -34,6 +35,7 @@ onMounted(() => {
     search.value = participantStore.options.search
   }
 })
+
 
 
 </script>

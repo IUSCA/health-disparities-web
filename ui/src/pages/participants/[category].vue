@@ -30,10 +30,13 @@ const searchParticipants = () => {
     loading.value = false
 
     participants.value = results.data.hits
-    count.value = results.data.estimatedTotalHits
+    count.value = results.data.count
+    participant_count.value = results.data.participant_count
+
   })
 }
 
+const participant_count = ref(0)
 
 // Category display
 const category = ref(null)
@@ -58,7 +61,18 @@ const options = ref({
   sortBy: "id",
   sortingOrder: "asc",
   page: 1,
-  numPerPage: 10
+  numPerPage: 10,
+  filters: [{
+      edit: true,
+      join: "",
+      category: "",
+      op: "",
+      operators: [],
+      field: "",
+      options: [],
+      val: "",
+      values: []
+    }]
 })
 
 // Loading boolean
@@ -83,11 +97,19 @@ const columns = computed (() => {
   return cols
 })
 
+// Sort and pagination
+watch([options], () => {
+  console.log('searching...')
+  searchParticipants()
+}, { deep: true })
+
+
 
 const updateCategory = (category) => {
   console.log(category)
   options.value.category = category.value
   options.value.page = 1
+  options.value.sortBy = "id"
   router.replace({ path: `/participants/${category.value}` })
   searchParticipants()
 }
@@ -103,19 +125,16 @@ const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) {
 <div class="w-full flex flex-row">
   <div class="w-4/6  mb-2 mr-4 flex flex-col">
       <div class="flex">  
-          <va-input v-model="search"  class="border-gray-500 border border-solid w-full mb-6 rounded" label="Search"  clearable> 
-            <template #prependInner> <Icon icon="material-symbols:search" class="text-xl" /> </template> 
-          </va-input>
+          <div><va-chip outline> Participants: {{ participant_count }} </va-chip></div>
       </div>
 
-      <va-data-table :items="participants" :columns="columns" v-model:sort-by="sortBy" v-model:sorting-order="sortingOrder"  :filter="search"  >
-
+      <va-data-table :items="participants" :columns="columns" v-model:sort-by="options.sortBy" v-model:sorting-order="options.sortingOrder"    >
         <template #cell(actions)="{ rowData }">
           <va-button preset="secondary" border-color="primary"   @click="patientDetails(rowData.participant_id)" class="va-button"><Icon icon="clarity:details-line" />&nbsp; Participant</va-button>
         </template>
       </va-data-table>
       <div class="mt-2 flex flex-row content-end">
-        <va-select class="w-2 border-gray-800 border border-solid w-full  rounded" v-model="numPerPage" :options="pageOptions" label="Number Per Page" />
+        <va-select class="w-2 border-gray-800 border border-solid w-full  rounded" v-model="options.numPerPage" :options="pageOptions" label="Number Per Page" />
         <b class="pt-2 ml-2">Total: {{ count }}</b>
         <va-pagination v-model="options.page" input :pages="pages" />
       </div>
@@ -131,7 +150,24 @@ const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) {
     <va-accordion v-model="filter" class="w-full">
       <va-collapse v-for="(field, index) in categories" :key="index" :header="getHeader(field)" @click="getFields(field)">
         <div v-if="fields" class="mt-3">
+          <!-- Fields -->
+          <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.field" :options="include.options" label="Field" 
+          @update:modelValue="getInitialValues( group, index, include.category, include.field, include.val)" />
+
+          <!-- Operator -->
+          <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.op" :options="include.operators[include.field]" label="Operator" />
           
+          <!-- Values -->
+          <va-input v-if="include.field in include.operators && include.operators[include.field].length > 1" class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" />
+          <va-select v-if="include.field in include.operators && ! (include.operators[include.field].length > 1)"  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text @updateSearch="updateVal" @focus="changeSelected( group, index, include.category, include.field, include.val)" :loading="Array.isArray(include.values) && include.values.length === 0" @update:modelValue="changeValue()" />
+
+
+          <!-- Actions -->
+          <div class="flex mt-2">
+            <va-button  class="m-2 " @click="removeDialog(group, index)" color="danger" border-color="danger" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="typcn:delete-outline" /></va-button>
+            <va-button v-if="include.val" class="m-2 " @click="include.edit=false" color="success" border-color="success" hover-behavior="opacity" :hover-opacity="0.4" ><Icon icon="material-symbols:save-sharp" /></va-button>
+          </div>
+
         </div>
         <div v-else>
           <va-loading />
