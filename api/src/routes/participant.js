@@ -134,21 +134,39 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
 
   let data = {}
 
+
   // filter
   if(checkValues(filters)) {
-    let select = createDbFilter(filters)
+    // Get all fields and total number of category
+    query = createDbFilter(filters, category)
 
-    data.hits = await prisma[category].findMany({select: select, skip: offset, take: limit, orderBy: {[sort]: order}})
-    data.count = await prisma[category].count({select: select})
 
+    console.log('SELECT', JSON.stringify(query))
+    
+    // Get Count
+    data.count = await prisma[category].count(query)
+
+    // Add pagination and sorting
+    query.skip = offset
+    query.take = limit
+    query.orderBy = {[sort]: order}
+
+    // Get data
+    data.hits = await prisma[category].findMany(query)
+
+    // Get the total number of participants
     let filter = createSearchFilter(filters)
-    let results = await client.index(category).search("", {filter: filter, limit: 0, facets: ['participant_id']})
-    data.participant_count =  Object.keys(results.facetDistribution.participant_id).length
+    let n = (category === 'covid_vax') ? 'covid_vaxes' : `${category}s.participant_id`
+    let results = await client.index('participants').search("", {filter: filter, limit: 0, facets: [n]})
+    data.participant_count =  Object.keys(results.facetDistribution[n]).length
   
-  // no search or filter
+  // no filter
   } else {
+    // Get all fields and total number of category
     data.hits = await prisma[category].findMany({skip: offset, take: limit, orderBy: {[sort]: order}})
     data.count = await prisma[category].count()
+
+    // Get the total number of participants
     let results = await client.index(category).search("", { limit: 0, facets: ['participant_id']})
     data.participant_count =  Object.keys(results.facetDistribution.participant_id).length
   }
@@ -175,34 +193,61 @@ const createSearchFilter = (filters) => {
   return filter
 }
 
-const createDbFilter = (filters) => {
+const createDbFilter = (filters, category = null) => {
   let select = {}
+
   if(checkValues(filters)) {
+
+    if(filters.length == 1) {
+      return (filters[0].category === category) 
+      ? { where: { [filters[0].field]: filters[0].val }}
+      : { [filters[0].category]: { where: { [filters[0].field]: filters[0].val }}}
+    } 
+
     for(const filter of filters) {
-      if(category === filter.category) {
-        if('where' in select) {
-          select.where = { [filter.field]: filter.val, ...select.where}
-        } else {
-          select.where = { [filter.field]: filter.val, ...select.where}
-        }
-      } else if(filter.category in select && 'where' in select[filter.category]) 
-        select[filter.category]['where'] = { [filter.field]: filter.val, ...select[filter.category]['where']} 
-      else
-        select[filter.category] = { where: { [filter.field]: filter.val } }
+      if(select === {}) {
+        select = (category === filter.category) 
+          ? {[filter.join]: {where: { [filter.field]: filter.val}}}
+          : {[filter.join]: {[filter.category]: {where: { [filter.field]: filter.val,}}}}
+      } else {
+        select = Object.assign({}, select, (category === filter.category)
+          ? {[filter.join]: {where: { [filter.field]: filter.val}}}
+          : {[filter.join]: {[filter.category]: {where: { [filter.field]: filter.val,}}}}
+        )
+      }
     }
-  } else {
-    select = null
   }
 
-return select
+  return select
+}
+
+
+const convert_operator = (op) => {
+  switch(op) {
+    case '=':
+      return 'eq'
+    case '!=':
+      return 'neq'
+    case '>':
+      return 'gt'
+    case '>=':
+      return 'gte'
+    case '<':
+      return 'lt'
+    case '<=':
+      return 'lte'
+    case 'LIKE':
+      return 'like'
+    case 'ILIKE':
+      return 'ilike'
+    default:
+      return 'eq'
+}
 }
 
 const checkValues = (obj) => {
   for (let key in obj) {
-    for(let val of Object.keys(obj[key])) {
-    console.log(obj[key][val])
-    if (obj[key][val] === null || obj[key][val] === undefined || obj[key][val] === "") return false;
-    }
+    if(obj[key].val === null || obj[key].val === undefined || obj[key].val === "") return false;
   }
   return true;
 }
