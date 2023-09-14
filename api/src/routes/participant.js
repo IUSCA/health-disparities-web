@@ -104,22 +104,15 @@ router.post('/search/all', isPermittedTo('read', false), asyncHandler(async (req
 
 // PARTICIPANT FILTER AND SEARCH
 router.post('/search/participants', isPermittedTo('read', false), asyncHandler(async (req, res, next) => {
+  // console.log(req.body)
 
   // Fuzzy search string
   const search = req.body?.search ? req.body.search: undefined
-
-  // Table
   let category = req.body?.category ? req.body.category: null
-
+  
   if (! category) return res.status(400).send('Category is required');
 
-  // Cross table filters
-  const filters = req.body?.filters ? req.body.filters: null
-  
-  
 
-  console.log('FILTERS', JSON.stringify(filters))
-  
   // Pagination
   const page = req.body?.page ? parseInt(req.body.page): 1
   const numPerPage = req.body?.numPerPage ? parseInt(req.body.numPerPage): 10
@@ -131,50 +124,48 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
   const sort = req.body.sortBy ? req.body.sortBy: 'id'
 
-
-  let data = {}
-
-
-  // filter
-  if(checkValues(filters)) {
-    // Get all fields and total number of category
-    query = createDbFilter(filters, category)
+  // Get all fields
+  const fields = modelService.getMetadata(category).fields
 
 
-    console.log('SELECT', JSON.stringify(query))
-    
-    // Get Count
-    data.count = await prisma[category].count(query)
+  // Pluralize category
+  category = (category === 'covid_vax') ? 'covid_vaxes' : `${category}s`
 
-    // Add pagination and sorting
-    query.skip = offset
-    query.take = limit
-    query.orderBy = {[sort]: order}
+  // Assign fields to retrieve
+  let attributesToRetrieve = fields.map(field => `${category}.${field}`)
 
-    // Get data
-    data.hits = await prisma[category].findMany(query)
+  console.log(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
 
-    // Get the total number of participants
-    let filter = createSearchFilter(filters)
-    let n = (category === 'covid_vax') ? 'covid_vaxes' : `${category}s.participant_id`
-    let results = await client.index('participants').search("", {filter: filter, limit: 0, facets: [n]})
-    data.participant_count =  Object.keys(results.facetDistribution[n]).length
-  
-  // no filter
-  } else {
-    // Get all fields and total number of category
-    data.hits = await prisma[category].findMany({skip: offset, take: limit, orderBy: {[sort]: order}})
-    data.count = await prisma[category].count()
+  // Query MeiliSearch
+  let data  = await client.index('participants').search(search, {sort: [`${category}.${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
 
-    // Get the total number of participants
-    let results = await client.index(category).search("", { limit: 0, facets: ['participant_id']})
-    data.participant_count =  Object.keys(results.facetDistribution.participant_id).length
+  console.log(JSON.stringify(data))
+
+
+  let results = []
+
+  for(let result in data.hits) {
+    // dynamically get column data
+    if(category in data.hits[result]) {
+      cat  = data.hits[result][category][0]
+
+      let row = {}
+      for(let field of fields) {
+        row[field] = cat[field]
+      }
+
+      results.push(row)
+    }
   }
 
-  console.log('DATA', JSON.stringify(data))
+  data.hits = results
+
+  
+  console.log(data)
 
   return res.json(data)
 }))
+
 
 const createSearchFilter = (filters) => {
   let x = 0
@@ -193,64 +184,6 @@ const createSearchFilter = (filters) => {
   return filter
 }
 
-const createDbFilter = (filters, category = null) => {
-  let select = {}
-
-  if(checkValues(filters)) {
-
-    if(filters.length == 1) {
-      return (filters[0].category === category) 
-      ? { where: { [filters[0].field]: filters[0].val }}
-      : { [filters[0].category]: { where: { [filters[0].field]: filters[0].val }}}
-    } 
-
-    for(const filter of filters) {
-      if(select === {}) {
-        select = (category === filter.category) 
-          ? {[filter.join]: {where: { [filter.field]: filter.val}}}
-          : {[filter.join]: {[filter.category]: {where: { [filter.field]: filter.val,}}}}
-      } else {
-        select = Object.assign({}, select, (category === filter.category)
-          ? {[filter.join]: {where: { [filter.field]: filter.val}}}
-          : {[filter.join]: {[filter.category]: {where: { [filter.field]: filter.val,}}}}
-        )
-      }
-    }
-  }
-
-  return select
-}
-
-
-const convert_operator = (op) => {
-  switch(op) {
-    case '=':
-      return 'eq'
-    case '!=':
-      return 'neq'
-    case '>':
-      return 'gt'
-    case '>=':
-      return 'gte'
-    case '<':
-      return 'lt'
-    case '<=':
-      return 'lte'
-    case 'LIKE':
-      return 'like'
-    case 'ILIKE':
-      return 'ilike'
-    default:
-      return 'eq'
-}
-}
-
-const checkValues = (obj) => {
-  for (let key in obj) {
-    if(obj[key].val === null || obj[key].val === undefined || obj[key].val === "") return false;
-  }
-  return true;
-}
 
 const calculateYearsSince = (dateString) => {
   const currentDate = new Date();
@@ -462,20 +395,22 @@ router.get('/categories/:name', isPermittedTo('read'), asyncHandler(async (req, 
 }))
 
 
-const fuzzySearchTable = async (table, search, count = false, filter = false, offset = false, limit = false) => {
-  let where =  {}
+const fuzzySearchTable = async (table, search, count = false) => {
+  let where = {}
   if(search) {
     // Get the fields for the model
     const fields = getFieldsWithType(table)
     // console.log(`fields = ${JSON.stringify(fields)}`)
     let OR = []
+
     
+
     for(const key of Object.keys(fields)) {
       // Filter table by search string
       if(typeof fields[key] !== 'object') {
         // Set search by field type
         if(fields[key] === 'String') {
-          OR.push({[key]: { contains: search, mode: 'insensitive'}})
+          OR.push({[key]: { contains: search}})
         } else if(fields[key] === 'Int' && !isNaN(search)) {
           OR.push({[key]: { in: [parseInt(search)]}})
         }
@@ -483,6 +418,7 @@ const fuzzySearchTable = async (table, search, count = false, filter = false, of
 
     }
 
+    
 
     // Join all OR statements
     if(OR.length > 0) 
@@ -494,20 +430,15 @@ const fuzzySearchTable = async (table, search, count = false, filter = false, of
   let query = {}
   if(where) query.where = where
 
-  // Set the offset
-  if(offset) query.skip = offset
-
-  // Set the limit
-  if(limit) query.take = limit
 
 
-  console.log(`query = ${JSON.stringify(query)}`)
+
+  // console.log(`query = ${JSON.stringify(query)}`)
 
   let results
 
   // Get Data
   if(count) {
-    console.log(table, query)
     results = await prisma[table].count(query);
   } else {
     results = await prisma[table].findMany(query);

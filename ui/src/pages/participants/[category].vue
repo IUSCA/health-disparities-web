@@ -33,7 +33,7 @@ const searchParticipants = () => {
     loading.value = false
 
     participants.value = results.data.hits
-    count.value = results.data.count
+    count.value = results.data.estimatedTotalHits
     participant_count.value = results.data.participant_count
 
   })
