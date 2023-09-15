@@ -129,15 +129,19 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
 
 
   // Pluralize category
-  category = (category === 'covid_vax') ? 'covid_vaxes' : `${category}s`
+  const categories = (category === 'covid_vax') ? 'covid_vaxes' : `${category}s`
 
   // Assign fields to retrieve
-  let attributesToRetrieve = fields.map(field => `${category}.${field}`)
+  let attributesToRetrieve = fields.map(field => `${categories}.${field}`)
 
   console.log(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
 
   // Query MeiliSearch
-  let data  = await client.index('participants').search(search, {sort: [`${category}.${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
+  let data  = await client.index('participants').search(search, {sort: [`${categories}.${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
+
+  data.participant_count = data.estimatedTotalHits
+
+  data.count = (await client.index(category).search(search, {limit: 0})).estimatedTotalHits
 
   console.log(JSON.stringify(data))
 
@@ -146,8 +150,8 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
 
   for(let result in data.hits) {
     // dynamically get column data
-    if(category in data.hits[result]) {
-      cat  = data.hits[result][category][0]
+    if(categories in data.hits[result]) {
+      cat  = data.hits[result][categories][0]
 
       let row = {}
       for(let field of fields) {

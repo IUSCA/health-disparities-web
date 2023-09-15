@@ -33,7 +33,7 @@ const searchParticipants = () => {
     loading.value = false
 
     participants.value = results.data.hits
-    count.value = results.data.estimatedTotalHits
+    count.value = results.data.count
     participant_count.value = results.data.participant_count
 
   })
@@ -108,12 +108,12 @@ watch([options], () => {
 
 
 
-const updateCategory = (category) => {
-  console.log(category)
-  options.value.category = category.value
+const updateCategory = (cat) => {
+  console.log(cat)
+  options.value.category = cat
   options.value.page = 1
   options.value.sortBy = "id"
-  router.replace({ path: `/participants/${category.value}` })
+  router.replace({ path: `/participants/${cat}` })
   searchParticipants()
 }
 
