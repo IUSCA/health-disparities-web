@@ -143,8 +143,8 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   if(filters) 
     options.filter = filters
 
-
-  let count = (await client.index(category).search(search, {limit: 0, filter: filters})).estimatedTotalHits
+  //   console.log(options)
+  // let count = (await client.index(category).search(search, options)).estimatedTotalHits
 
   // Setup options for search
   options.limit = limit
@@ -155,7 +155,7 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   // Query MeiliSearch
   let data  = await client.index('participants').search(search, options)
   data.participant_count = data.estimatedTotalHits
-  data.count = count
+  data.count = data.estimatedTotalHits
 
 
 

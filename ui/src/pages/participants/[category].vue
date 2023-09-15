@@ -22,7 +22,26 @@ onMounted(() => {
     category.value = category_options.value.filter(i => i.value === cat.category)[0]
   })
 
+  // Populate Groups
+  cohortService.getGroups().then(results => {
+    for(let data of results.data) {
+      addNewGroup(data.name, data.id, data.query)
+    }
+  })
+
 })
+
+const group_options = ref([])
+
+const addNewGroup = (newOption, id = null, query = null) => {
+  
+  const option = {
+        id: id ? id : String(group_options.value.length),
+        text: newOption,
+        value: query ? query : newOption,
+      };
+      group_options.value = [...group_options.value, option];
+}
 
 const searchParticipants = () => {
   loading.value = true
@@ -65,9 +84,10 @@ const options = ref({
   sortingOrder: "asc",
   page: 1,
   numPerPage: 10,
+
   filters: [{
     edit: true,
-    join: "AND",
+    join: "",
     category: "",
     op: "",
     operators: [],
@@ -101,12 +121,12 @@ const columns = computed(() => {
 })
 
 // Sort and pagination
-watchDebounced([options.value.search], () => {
+watchDebounced(() => options.value.search, () => {
   console.log('searching...')
   searchParticipants()
 }, { deep: true, debounce: 500  })
 
-watch([options.value.sortBy, options.value.sortingOrder], () => {
+watch(() => [options.value.sortBy, options.value.sortingOrder, options.value.numPerPage, options.value.page], () => {
   console.log('sorting...')
   searchParticipants()
 }, { deep: true  })
@@ -178,6 +198,10 @@ const save = (index) => {
 const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) { return ($1 && ' ') + $2.toUpperCase(); })
 
 const current_fields = ref([])
+const group = ref(null)
+
+  
+
 
 </script>
 
@@ -209,14 +233,14 @@ const current_fields = ref([])
 
 
     <div class="w-1/6">
-      <va-chip outline class="mx-auto"> Participants: {{ participant_count }} </va-chip>
+      <div class="flex mb-4"><va-chip outline > Participants: {{ participant_count }} </va-chip></div>
       <div class="flex">
         <va-select class="w-2 border-gray-800 border border-solid w-full  rounded" v-model="category"
           :options="categories" label="Category" @update:modelValue="updateCategory(category)" />
       </div>
       <div>
         <h1 class="text-xl text-center my-2">Filters</h1>
-
+        <va-select class="mb-2 border-gray-500 border border-solid w-full rounded" v-model="group" label="Group" :options="group_options" searchable highlight-matched-text allow-create="unique" @create-new="addNewGroup" @update:modelValue="showGroup(group)"  />
         <div v-for="(include, index) in options.filters" class="flex flex-col">
           <va-divider v-if="include.join">
             <span class="px-2">{{ makeLabel(include.join) }}</span>
