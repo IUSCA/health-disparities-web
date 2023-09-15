@@ -101,11 +101,15 @@ const columns = computed(() => {
 })
 
 // Sort and pagination
-watch([options], () => {
+watchDebounced([options.value.search], () => {
   console.log('searching...')
   searchParticipants()
-}, { deep: true })
+}, { deep: true, debounce: 500  })
 
+watch([options.value.sortBy, options.value.sortingOrder], () => {
+  console.log('sorting...')
+  searchParticipants()
+}, { deep: true  })
 
 
 const updateCategory = (cat) => {
@@ -181,7 +185,9 @@ const current_fields = ref([])
   <div class="w-full flex flex-row">
     <div class="w-4/6  mb-2 mr-4 flex flex-col">
       <div class="flex">
-        <div><va-chip outline> Participants: {{ participant_count }} </va-chip></div>
+        <va-input v-model="options.search"  class="border-gray-500 border border-solid w-full mb-6 rounded" label="Search"  clearable> 
+            <template #prependInner> <Icon icon="material-symbols:search" class="text-xl" /> </template> 
+          </va-input>
       </div>
 
       <va-data-table :items="participants" :columns="columns" v-model:sort-by="options.sortBy"
@@ -203,6 +209,7 @@ const current_fields = ref([])
 
 
     <div class="w-1/6">
+      <va-chip outline class="mx-auto"> Participants: {{ participant_count }} </va-chip>
       <div class="flex">
         <va-select class="w-2 border-gray-800 border border-solid w-full  rounded" v-model="category"
           :options="categories" label="Category" @update:modelValue="updateCategory(category)" />

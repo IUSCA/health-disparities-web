@@ -108,9 +108,12 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
 
   // Fuzzy search string
   const search = req.body?.search ? req.body.search: undefined
+
+  // Category
   let category = req.body?.category ? req.body.category: null
-  
   if (! category) return res.status(400).send('Category is required');
+
+  let filters = checkValues(req.body?.filters) ? createSearchFilter(req.body.filters): null
 
 
   // Pagination
@@ -134,16 +137,26 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   // Assign fields to retrieve
   let attributesToRetrieve = fields.map(field => `${categories}.${field}`)
 
-  console.log(search, {sort: [`${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
+  // Setup options for Count first as it has fewer options
+  let options = { limit: 0 }
+
+  if(filters) 
+    options.filter = filters
+
+
+  let count = (await client.index(category).search(search, {limit: 0, filter: filters})).estimatedTotalHits
+
+  // Setup options for search
+  options.limit = limit
+  options.offset = offset
+  options.sort = [`${categories}.${sort}:${order}`]
+  options.attributesToRetrieve = attributesToRetrieve
 
   // Query MeiliSearch
-  let data  = await client.index('participants').search(search, {sort: [`${categories}.${sort}:${order}`],  offset: offset, limit: limit, attributesToRetrieve: attributesToRetrieve})
-
+  let data  = await client.index('participants').search(search, options)
   data.participant_count = data.estimatedTotalHits
+  data.count = count
 
-  data.count = (await client.index(category).search(search, {limit: 0})).estimatedTotalHits
-
-  console.log(JSON.stringify(data))
 
 
   let results = []
@@ -163,9 +176,6 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   }
 
   data.hits = results
-
-  
-  console.log(data)
 
   return res.json(data)
 }))
@@ -188,6 +198,12 @@ const createSearchFilter = (filters) => {
   return filter
 }
 
+const checkValues = (obj) => {
+  for (let key in obj) {
+    if(obj[key].val === null || obj[key].val === undefined || obj[key].val === "") return false;
+  }
+  return true;
+}
 
 const calculateYearsSince = (dateString) => {
   const currentDate = new Date();
