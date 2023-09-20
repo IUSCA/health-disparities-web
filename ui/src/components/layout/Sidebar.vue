@@ -119,6 +119,11 @@ const user_items = ref([
     title: "Cohort",
     path: "/cohort",
   },
+  {
+    icon: "tabler:analyze",
+    title: "Analysis",
+    path: "/igv",
+  },
   // {
   //   icon: "carbon:ibm-process-mining",
   //   title: "Analysis",

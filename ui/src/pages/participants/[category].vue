@@ -28,7 +28,7 @@ onMounted(() => {
       addNewGroup(data.name, data.id, data.query)
     }
   })
-
+  
 })
 
 const group_options = ref([])
@@ -73,8 +73,8 @@ const chosen_fields = ref({})
 // Sort and pagination
 const participants = ref([])
 const count = ref(0)
-const pageOptions = [10, 25, 50, 100]
-const pages = computed(() => Math.floor(count.value / options.value.numPerPage))
+const pageOptions = [1, 5, 10, 25, 50, 100]
+const pages = computed(() => Math.floor(participant_count.value / options.value.numPerPage))
 
 // Search Options
 const options = ref({
@@ -201,7 +201,23 @@ const current_fields = ref([])
 const group = ref(null)
 
   
+const groupChanged = ref(false)
+const changeValue = () => {
+  groupChanged.value = true
+}
 
+const saveGroup = async (option) => {
+  if(option.value != option.text) {
+    await cohortService.saveGroup({id: option.id, name: option.text, query: options.value})
+    groupChanged.value = false
+  } else {
+    cohortService.saveGroup({name: option.text, query: options.value}).then(result => {
+      options.value = options.value.filter(i => i.name !== option.text)
+      addNewGroup(result.data.name, result.data.id, result.data.query)
+      groupChanged.value = false
+    })
+  }
+}
 
 </script>
 
@@ -214,8 +230,7 @@ const group = ref(null)
           </va-input>
       </div>
 
-      <va-data-table :items="participants" :columns="columns" v-model:sort-by="options.sortBy"
-        v-model:sorting-order="options.sortingOrder">
+      <va-data-table style=" height: calc(100vh - 13.75rem)" :items="participants" :columns="columns" v-model:sort-by="options.sortBy" v-model:sorting-order="options.sortingOrder" virtual-scroller sticky-header>
         <template #cell(actions)="{ rowData }">
           <va-button preset="secondary" border-color="primary" @click="patientDetails(rowData.participant_id)"
             class="va-button">
@@ -225,7 +240,7 @@ const group = ref(null)
       </va-data-table>
       <div class="mt-2 flex flex-row content-end">
         <va-select class="w-2 border-gray-800 border border-solid w-full  rounded" v-model="options.numPerPage"
-          :options="pageOptions" label="Number Per Page" />
+          :options="pageOptions" label="Participant Per Page" />
         <b class="pt-2 ml-2">Total: {{ count }}</b>
         <va-pagination v-model="options.page" input :pages="pages" />
       </div>
@@ -299,6 +314,9 @@ const group = ref(null)
       <va-select v-model="criteria" class="w-full mt-4" :options="['AND', 'OR']" @update:modelValue="add(criteria)"
         label="Add Criteria" />
 
+      <va-button v-if="isNaN(group) && groupChanged" class="w-full mt-2" @click="saveGroup(group)" preset="primary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >
+        <Icon icon="material-symbols:save-sharp" />Save Group
+      </va-button>
     </div>
   </div>
 </div>

@@ -123,9 +123,7 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   limit = numPerPage
   offset = limit * (page - 1)
 
-  // Column sorting
-  const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
-  const sort = req.body.sortBy ? req.body.sortBy: 'id'
+
 
   // Get all fields
   const fields = modelService.getMetadata(category).fields
@@ -133,6 +131,11 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
 
   // Pluralize category
   const categories = (category === 'covid_vax') ? 'covid_vaxes' : `${category}s`
+
+  // Column sorting
+  const order = req.body.sortingOrder ? req.body.sortingOrder: 'asc'
+  const sort = req.body.sortBy ? req.body.sortBy: `${categories}.participant_id`
+
 
   // Assign fields to retrieve
   let attributesToRetrieve = fields.map(field => `${categories}.${field}`)
@@ -143,19 +146,22 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   if(filters) 
     options.filter = filters
 
-  //   console.log(options)
-  // let count = (await client.index(category).search(search, options)).estimatedTotalHits
-
   // Setup options for search
   options.limit = limit
   options.offset = offset
   options.sort = [`${categories}.${sort}:${order}`]
   options.attributesToRetrieve = attributesToRetrieve
 
+
+  console.log(options)
+
   // Query MeiliSearch
   let data  = await client.index('participants').search(search, options)
+
+  console.log(data)
+
   data.participant_count = data.estimatedTotalHits
-  data.count = data.estimatedTotalHits
+
 
 
 
@@ -164,6 +170,7 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
   for(let result in data.hits) {
     // dynamically get column data
     if(categories in data.hits[result]) {
+      if(categories === 'demographics') {
       cat  = data.hits[result][categories][0]
 
       let row = {}
@@ -172,10 +179,23 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
       }
 
       results.push(row)
+      } else {
+
+        for(let cat of data.hits[result][categories]) {
+          let row = {}
+          for(let field of fields) {
+            if(field !== 'id' && field !== 'study_id' && field !== 'ib_id')
+              row[field] = cat[field]
+          }
+          
+          results.push(row)
+        }
+      }
     }
   }
 
   data.hits = results
+  data.count = results.length
 
   return res.json(data)
 }))
