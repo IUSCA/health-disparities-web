@@ -175,7 +175,8 @@ router.post('/search/participants', isPermittedTo('read', false), asyncHandler(a
 
       let row = {}
       for(let field of fields) {
-        row[field] = cat[field]
+        if(field !== 'id' && field !== 'study_id' && field !== 'ib_id')
+          row[field] = cat[field]
       }
 
       results.push(row)

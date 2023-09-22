@@ -1,25 +1,25 @@
-<script setup >
-
-import { storeToRefs } from "pinia";
+<script setup>
 import { useParticipantStore } from "@/stores/participant"
 import router from "@/router";
 const participantStore = useParticipantStore()
 
+
 const search = ref(null)
+const display = ref('Data')
+const display_options = ref([
+  { label: 'Data', value: 'Data' },
+  { label: 'Chart', value: 'Chart' },
+])
 
-// emit toggle view
-const emit = defineEmits(["toggleView"])
-const navigateToParticipant = (category) => {
-  router.push(`/participants/${category}`) 
-}
 
+onMounted(() => {
+  if('search' in participantStore.options && participantStore.options.search !== "") {
+    search.value = participantStore.options.search
+  }
 
-// Get the initial category totals
-if(!('total' in participantStore.details))
-  participantStore.searchTotals()
-
-// Get the initial search options
-const { options } = storeToRefs(participantStore)
+  if(!('total' in participantStore.details))
+    participantStore.searchTotals()
+})
 
 
 // Watch for changes to the search options
@@ -28,16 +28,15 @@ watch(search, () => {
  }, { deep: true })
 
 
- const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) { return ($1 && ' ') + $2.toUpperCase(); })
- const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")
-onMounted(() => {
-  if('search' in participantStore.options && participantStore.options.search !== "") {
-    search.value = participantStore.options.search
+watch(() => display.value, () => {
+  if(display.value === 'Chart') {
+    router.push(`/categories/chart`)
   }
 })
 
-
-
+const navigateToParticipant = (category) => { router.push(`/participants/${category}`) }
+const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) { return ($1 && ' ') + $2.toUpperCase(); })
+const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")
 </script>
 
 <template>
@@ -46,10 +45,11 @@ onMounted(() => {
 
       <div class="w-full  mb-2 mr-4 flex flex-col">
         <div class="flex">  
-            <va-input v-model="search"  class="border-gray-500 border border-solid w-full mb-6 rounded" label="Search"  clearable> 
+            <va-input v-model="search"  class="border-gray-500 border border-solid w-full mb-4 rounded" label="Search"  clearable> 
               <template #prependInner> <Icon icon="material-symbols:search" class="text-xl" /> </template> 
             </va-input>
         </div>
+        <va-button-toggle class="mx-auto mb-4" v-model="display" :options="display_options" preset="secondary" border-color="primary" />
 
         <div class="grid grid-rows-4 grid-flow-col gap-4" v-if="'total' in participantStore.details">
           <a @click="navigateToParticipant(category)" class="va-link"  v-for="category of Object.keys(participantStore.details.total)">
@@ -74,9 +74,3 @@ onMounted(() => {
   </div>
 
 </template>
-
-<style scoped>
-
-
-
-</style>

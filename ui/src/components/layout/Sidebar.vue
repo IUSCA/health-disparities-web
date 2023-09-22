@@ -107,7 +107,7 @@ const user_items = ref([
 {
     icon: "solar:chart-bold",
     title: "Categories",
-    path: "/categories",
+    path: "/categories/data",
   },
   {
     icon: "material-symbols:person",

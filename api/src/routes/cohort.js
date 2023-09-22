@@ -171,7 +171,7 @@ router.post('/saveGroup', isPermittedTo('create'), asyncHandler(async (req, res,
 
 
 
-
+console.log(id, name, query)
 
   let result = {}
   

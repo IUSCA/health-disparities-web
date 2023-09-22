@@ -6,8 +6,12 @@ import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, Li
 import { useParticipantStore } from "@/stores/participant"
 import participantService from '@/services/participant'
 
-const participantStore = useParticipantStore()
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
+
+const participantStore = useParticipantStore()
+const params = defineProps(['category', 'search'])
+
+const { options, details } = storeToRefs(participantStore)
 
 const loading = ref(false)
 loading.value = true
@@ -15,11 +19,10 @@ const chart_category = ref(null)
 const chart_data = ref(null)
 const chart_options = ref([])
 
-const { options, details } = storeToRefs(participantStore)
 
 onMounted(() => {
-  console.log( options.value.category)
-  participantService.getFacetOptions({table: options.value.category}).then(result => {
+
+  participantService.getFacetOptions({table: params.category}).then(result => {
     console.log('OPTIONS', result.data)
     chart_options.value = result.data
     chart_category.value = result.data[0]
@@ -35,7 +38,7 @@ watch(options, () => {
     let labels = []
     let dataset = {data: []}
 
-    participantStore.getFacets({table: options.value.category, chart_category: chart_category.value, search: options.value.search})
+    participantStore.getFacets({table: params.category, chart_category: chart_category.value, search: params.search})
     .then(() => { 
 
       for(const key of Object.keys(participantStore.details.facets[chart_category.value])) {
@@ -67,7 +70,7 @@ watch([chart_category], () => {
   loading.value = true
   let labels = []
   let dataset = {data: []}
-  participantStore.getFacets({table: options.value.category, chart_category: chart_category.value, search: options.value.search})
+  participantStore.getFacets({table: params.category, chart_category: chart_category.value, search: params.search})
     .then(() => { 
 
       for(const key of Object.keys(participantStore.details.facets[chart_category.value])) {
@@ -91,8 +94,11 @@ watch([chart_category], () => {
 <template>
 
 
-    <div v-if="! loading">
-      <va-button-toggle class="mx-auto" v-model="chart_category" :options="chart_options" preset="secondary" border-color="primary" />
+    <div v-if="! loading" class="h-1/4 w-full items-center flex flex-col border border-black border-solid">
+      <div>
+      <h1 class="text-2xl">{{ params.category }}</h1>
+      </div>
+      <!-- <va-button-toggle class="mx-auto" v-model="chart_category" :options="chart_options" preset="secondary" border-color="primary" /> -->
 
       <Bar  id="my-chart-id" :key="chart_data" :options="{ responsive: true, indexAxis: 'y', plugins: {legend: {display: false}}, backgroundColor: [
         'rgba(255, 99, 132, 0.2)',

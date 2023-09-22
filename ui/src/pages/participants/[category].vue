@@ -208,14 +208,24 @@ const changeValue = () => {
 
 const saveGroup = async (option) => {
   if(option.value != option.text) {
-    await cohortService.saveGroup({id: option.id, name: option.text, query: options.value})
+    await cohortService.saveGroup({id: option.id, name: option.text, query: options.value.filters})
     groupChanged.value = false
   } else {
-    cohortService.saveGroup({name: option.text, query: options.value}).then(result => {
+    cohortService.saveGroup({name: option.text, query: options.value.filters}).then(result => {
       options.value = options.value.filter(i => i.name !== option.text)
       addNewGroup(result.data.name, result.data.id, result.data.query)
       groupChanged.value = false
     })
+  }
+}
+
+const showGroup = (option) => {
+  console.log('called....', JSON.stringify(option))
+  groupChanged.value = true
+  if(option.value != option.text) {
+    options.value.filters = option.value
+    searchParticipants()
+    groupChanged.value = false
   }
 }
 
