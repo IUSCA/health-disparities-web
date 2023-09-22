@@ -44,9 +44,14 @@
           </div>
         </collapsible>
       </div>
-      <div v-else class="text-center bg-slate-200 py-2 rounded shadow">
+      <div
+        v-else
+        class="text-center bg-slate-200 dark:bg-slate-800 py-2 rounded shadow"
+      >
         <i-mdi-card-remove-outline class="inline-block text-4xl pr-3" />
-        <span class="text-lg"> There are no active workflows. </span>
+        <span class="text-lg block md:inline">
+          There are no active workflows.
+        </span>
       </div>
     </div>
   </div>
@@ -56,7 +61,12 @@
 import workflowService from "@/services/workflow";
 import DatasetService from "@/services/dataset";
 import { useToastStore } from "@/stores/toast";
+import { useNavStore } from "@/stores/nav";
+
 const toast = useToastStore();
+const nav = useNavStore();
+
+nav.setNavItems([], false);
 
 const workflows = ref([]);
 const raw_data_stats = ref({});

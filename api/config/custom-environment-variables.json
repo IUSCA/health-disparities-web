@@ -21,6 +21,12 @@
     "port": "TYPESENSE_PORT",
     "protocol": "TYPESENSE_PROTOCOL",
     "api_key": "TYPESENSE_API_KEY"
+  },
+  "oauth": {
+    "download": {
+      "client_id": "OAUTH_DOWNLOAD_CLIENT_ID",
+      "client_secret": "OAUTH_DOWNLOAD_CLIENT_SECRET"
+    }
   }
 
 }

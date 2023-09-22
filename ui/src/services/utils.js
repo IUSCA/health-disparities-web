@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import jwtDecode from "jwt-decode";
-import moment from "moment-timezone";
 
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
@@ -74,28 +73,6 @@ function isLiveToken(jwt) {
   return false;
 }
 
-function format_duration(duration) {
-  let formattedDuration = "";
-
-  if (duration.asSeconds() < 60) {
-    formattedDuration = duration.seconds() + "s";
-  } else if (duration.asMinutes() < 10) {
-    formattedDuration = duration.minutes() + "m " + duration.seconds() + "s";
-  } else if (duration.asMinutes() < 60) {
-    formattedDuration = duration.minutes() + "m ";
-  } else if (duration.asHours() < 24) {
-    formattedDuration = duration.hours() + "h " + duration.minutes() + "m ";
-  } else {
-    formattedDuration =
-      Math.floor(duration.asDays()) + "d " + duration.hours() + "h";
-  }
-  return formattedDuration;
-}
-
-function utc_date_to_local_tz(date) {
-  return moment.utc(date).tz(moment.tz.guess()).format("YYYY-MM-DD HH:mm:ss z");
-}
-
 function lxor(a, b) {
   // logical XOR
   return (a || b) && !(a && b);
@@ -127,6 +104,75 @@ function caseInsensitiveIncludes(str, searchValue) {
   return lowerStr.includes(lowerSearchValue);
 }
 
+function getFileNameFromUrl(fileUrl) {
+  // Extract the filename from the URL by splitting on '/'
+  const url = new URL(fileUrl);
+  const parts = url.pathname.split("/");
+  return parts[parts.length - 1];
+}
+
+function downloadFile({ url, filename = null }) {
+  const anchor = document.createElement("a");
+  anchor.style.display = "none";
+  anchor.href = url;
+  anchor.target = "_blank";
+
+  // Set the file name (you can extract it from the URL or hardcode it)
+  anchor.download = filename || getFileNameFromUrl(url);
+
+  // Append the anchor to the DOM
+  document.body.appendChild(anchor);
+
+  // Trigger a click on the anchor to initiate the download
+  anchor.click();
+
+  // Clean up: remove the anchor from the DOM
+  document.body.removeChild(anchor);
+}
+
+function initials(name) {
+  const parts = (name || "").split(" ");
+  if (parts.length == 1) return parts[0][0];
+  else {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`;
+  }
+}
+
+function arrayEquals(array1, array2) {
+  return (
+    array1.length === array2.length &&
+    array1.every((value, index) => value === array2[index])
+  );
+}
+
+function mapValues(obj, fn) {
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    acc[key] = fn(key, value);
+    return acc;
+  }, {});
+}
+
+function filterByValues(obj, pred) {
+  return Object.entries(obj)
+    .filter(([k, v]) => {
+      return pred(k, v);
+    })
+    .reduce((acc, [key, value]) => {
+      acc[key] = value;
+      return acc;
+    }, {});
+}
+
+function groupBy(key) {
+  return (data) => {
+    return data.reduce((acc, curr) => {
+      const groupKeyValue = curr[key];
+      acc[groupKeyValue] = (acc[groupKeyValue] || []).concat(curr);
+      return acc;
+    }, {});
+  };
+}
+
 export {
   formatBytes,
   difference,
@@ -136,10 +182,14 @@ export {
   validateEmail,
   capitalize,
   isLiveToken,
-  format_duration,
-  utc_date_to_local_tz,
   lxor,
   cmp,
   setIntersection,
   caseInsensitiveIncludes,
+  downloadFile,
+  initials,
+  arrayEquals,
+  mapValues,
+  filterByValues,
+  groupBy,
 };

@@ -1,13 +1,16 @@
 <template>
-  <div class="collapsible-container rounded shadow m-2">
+  <div class="collapsible-container rounded shadow">
     <div
-      class="collapsible-header bg-slate-200 hover:bg-slate-300 rounded"
+      class="collapsible-header bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded"
       @click="toggleCollapsible"
     >
-      <slot name="header-content"></slot>
+      <div class="flex-grow">
+        <slot name="header-content"></slot>
+      </div>
+
       <Icon
         :icon="isCollapsed ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-        class="text-xl collapse_icon"
+        class="text-xl collapse_icon flex-none"
       />
     </div>
     <div v-if="isCollapsed" class="collapsible-body">
@@ -33,7 +36,7 @@ watch(
   () => props.modelValue,
   (newValue) => {
     isCollapsed.value = newValue;
-  }
+  },
 );
 
 function toggleCollapsible() {
@@ -58,14 +61,6 @@ function toggleCollapsible() {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-}
-
-.collapsible-header:hover {
-  /* background-color: #e5e5e5; */
-}
-
-.collapsible-body {
-  /* padding: 10px; */
 }
 
 .collapse_icon {

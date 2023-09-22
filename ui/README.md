@@ -37,7 +37,7 @@ In the developement environment, the API calls from the UI are proxied by the vi
 - [https dev](https://vitejs.dev/config/server-options.html#server-https)
 - Docker
 - Dark mode (TODO)
-- [Rollup Dependencies Visualizer](https://www.npmjs.com/package/rollup-plugin-visualizer) - Visualize and analyze your Rollup bundle to see which modules are taking up space. Run `pnpm build` and open `stats.html`
+- [Rollup Dependencies Visualizer](https://www.npmjs.com/package/rollup-plugin-visualizer) - Visualize and analyze your Rollup bundle to see which modules are taking up space. Run `npm run build` and open `stats.html`
 
 ## Icons
 
@@ -108,9 +108,25 @@ Using
 }
 </style>
 ```
+## Notable Vuestic Classes
 
-```html
+CSS: `bioloop/ui/node_modules/vuestic-ui/dist/styles/index.css`
 
+```
+va-text-text-primary
+va-text-text-inverted
+va-text-{primary, secondary, warninig, success, danger, info}
+
+va-code-text
+va-code-snippet
+
+va-link
+va-link-secondary
+
+va-blockquote
+va-text-block
+va-text-truncate
+va-text-highlighted
 ```
 
 ## Configuration
@@ -166,3 +182,79 @@ meta:
 ## Utility Components
 
 Vue Components developed in house to be reused in the app. [Documentation](docs/util_components.md)
+
+## Coding Conventions
+- Use custom component names as `<CustomComponent>`
+
+## Adding Additional Fonts
+- Search for fonts on https://fontsource.org/
+- Install - `npm install @fontsource/audiowide`
+- Add `import '@fontsource/audiowide';` in [main.js](src/main.js)
+- Add 'Audiowide' to `font-family: ` in body styles in [base.css](src/styles/base.css)
+
+## Dates and Times
+- All dates, timestamps are returned from API as ISO 8601 strings in UTC time zone
+- [datetime](src/services/datetime.js) module is used to consolidate the various date and time formats to use in the UI.
+- Use browser's local time zone to show date and time whenever possible.
+
+Usage:
+
+```javascript
+import * as datetime from '@/services/datetime.js'
+
+datetime.date("2023-06-14T01:18:40.501Z") // "Jun 14 2023"
+datetime.absolute("2023-06-14T01:18:40.501Z") // "2023-06-13 21:18:40 -04:00"
+
+datetime.fromNow("2023-06-14T01:18:40.501Z") // "2 months ago"
+datetime.readableDuration(130*1000) // "2 minutes"
+datetime.formatDuration(12000 * 1000) // "3h 20m"
+```
+
+If you have a usecase to display in formats other than above in more than one component, add a function to [datetime](src/services/datetime.js) service and use it.
+
+## Navigational Breadcrumbs
+
+To set static nav links for a page `/page1/page2`,
+
+```html
+<script setup>
+import { useNavStore } from "@/stores/nav";
+const nav = useNavStore();
+nav.setNavItems([
+  {
+    label: "Page Name 1",
+    to: "/page1"
+  },
+  {
+    label: "Page Name 2"
+  },
+]);
+</script>
+```
+
+
+To set dynamic nav links for a page `/page-dyn-1/page-dyn-2`
+
+
+```html
+<script setup>
+import { useNavStore } from "@/stores/nav";
+const nav = useNavStore();
+
+page1Promise = api.getP1()
+page2Promise = api.getP2()
+Promise.all([page1Promise, page2Promise]).then(results => {
+  const page1 = results[0]
+  const page2 = results[1]
+  nav.setNavItems([
+    {
+      label: page1.name,
+      to: "/page1"
+    },
+    {
+      label: page2.name
+    },
+  ]);
+})
+</script>
+```

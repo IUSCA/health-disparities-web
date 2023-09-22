@@ -4,10 +4,10 @@
       <va-card>
         <va-card-content>
           <div
-            class="text-xl text-gray-700 flex flex-col items-center gap-5"
+            class="text-xl flex flex-col items-center gap-5"
             v-if="notAuthorized"
           >
-            <i-mdi-alert class="text-amber-600 text-5xl"></i-mdi-alert>
+            <i-mdi-alert class="text-amber-600 text-5xl" />
             <span>
               It appears that you do not currently have permission to access
               this application. If you require access, please send a message to
@@ -20,10 +20,10 @@
             class="text-xl text-gray-700 flex flex-col items-center gap-5"
             v-if="authFailure"
           >
-            <i-mdi-alert-octagon
-              class="text-red-600 text-5xl"
-            ></i-mdi-alert-octagon>
-            <span>Authentication Failed. Something went wrong.</span>
+            <i-mdi-alert-octagon class="text-red-600 text-5xl" />
+            <span class="va-text-text-primary"
+              >Authentication Failed. Something went wrong.</span
+            >
             <div>
               <va-button to="/auth">Try Again</va-button>
             </div>
@@ -35,9 +35,7 @@
       <va-card>
         <va-card-content class="flex items-center gap-2 justify-center">
           <!-- <va-inner-loading loading class="col-span-1" /> -->
-          <span class="text-2xl text-slate-500 tracking-wide flex-none">
-            Logging in
-          </span>
+          <span class="text-2xl tracking-wide flex-none"> Logging in </span>
           <fingerprint-spinner
             class="flex-none"
             :animation-duration="2000"
@@ -85,7 +83,7 @@ if (ticket) {
       } else {
         // User was authenticated with CAS but they are not a portal user
         console.log(
-          "User was authenticated with CAS but they are not a portal user"
+          "User was authenticated with CAS but they are not a portal user",
         );
         notAuthorized.value = true;
       }

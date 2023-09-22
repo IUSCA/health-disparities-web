@@ -1,7 +1,9 @@
 <template>
   <va-modal
     v-model="visible"
-    :title="`Edit ${props.data?.type}: ${props.data?.name}`"
+    :title="`Edit ${config.dataset.types[props.data?.type]?.label} / ${
+      props.data?.name
+    }`"
     no-outside-dismiss
     fixed-layout
     ok-text="Edit"
@@ -10,21 +12,22 @@
   >
     <va-inner-loading :loading="loading">
       <div class="w-96">
-        <va-input
-          type="textarea"
+        <va-textarea
           label="Description"
           v-model="description"
           class="w-full"
           :min-rows="3"
           :max-rows="10"
+          resize
         >
-        </va-input>
+        </va-textarea>
       </div>
     </va-inner-loading>
   </va-modal>
 </template>
 
 <script setup>
+import config from "@/config";
 import DatasetService from "@/services/dataset";
 import { useToastStore } from "@/stores/toast";
 const toast = useToastStore();
@@ -42,8 +45,6 @@ const visible = ref(false);
 const loading = ref(false);
 const description = ref(props.data.description);
 
-console.log("props.data", props.data);
-
 function hide() {
   loading.value = false;
   visible.value = false;
@@ -55,9 +56,6 @@ function show() {
 
 function handleOk() {
   loading.value = true;
-  const id = props.data.id;
-
-  console.log("updating", id, "description", description.value);
 
   DatasetService.update({
     id: props.data.id,

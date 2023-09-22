@@ -7,12 +7,19 @@ class WorkflowService {
     last_task_run = false,
     prev_task_runs = false,
     only_active = false,
+    workflow_ids = null,
   } = {}) {
     return api.get("/workflows", {
       params: {
         last_task_run,
         prev_task_runs,
         only_active,
+        workflow_id: workflow_ids,
+      },
+      paramsSerializer: {
+        // to create workflow_id=123&workflow_id=456
+        // instead of workflow_id[]=123&workflow_id[]=456
+        indexes: null, // by default: false
       },
     });
   }
@@ -50,6 +57,32 @@ class WorkflowService {
       .filter((step) => !DONE_STATUSES.includes(step.status));
 
     return pending_steps.length > 0;
+  }
+
+  getWorkflowProcesses({
+    workflow_id,
+    step = null,
+    task_id = null,
+    pid = null,
+  }) {
+    return api.get(`/workflows/processes`, {
+      params: {
+        workflow_id,
+        step,
+        task_id,
+        pid,
+      },
+    });
+  }
+
+  getLogs({ processId, beforeId = null, afterId = null, level = null }) {
+    return api.get(`/workflows/processes/${processId}/logs`, {
+      params: {
+        before_id: beforeId,
+        after_id: afterId,
+        level,
+      },
+    });
   }
 }
 

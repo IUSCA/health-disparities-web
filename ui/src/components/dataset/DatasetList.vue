@@ -7,9 +7,10 @@
         <va-input
           v-model="filterInput"
           class="w-full"
-          :placeholder="`search ${props.label.toLowerCase()}`"
+          :placeholder="`Type / to search ${props.label.toLowerCase()}`"
           outline
           clearable
+          input-class="search-input"
         >
           <template #prependInner>
             <Icon icon="material-symbols:search" class="text-xl" />
@@ -48,11 +49,8 @@
         </span>
       </template>
 
-      <template #cell(staged)="{ rowData }">
-        <span
-          v-if="DatasetService.is_staged(rowData?.states)"
-          class="flex justify-center"
-        >
+      <template #cell(staged)="{ source }">
+        <span v-if="source" class="flex justify-center">
           <i-mdi-check-circle-outline class="text-green-700" />
         </span>
       </template>
@@ -62,7 +60,7 @@
       </template>
 
       <template #cell(updated_at)="{ value }">
-        <span>{{ datetime.approx_relative_time(value) }}</span>
+        <span>{{ datetime.fromNow(value) }}</span>
       </template>
 
       <template #cell(du_size)="{ source }">
@@ -135,7 +133,7 @@
           By clicking the "Archive" button, a workflow will be initiated to
           archive the {{ props.label.toLowerCase() }} to the SDA (Secure Data
           Archive). Additionally, it will stage the contents to
-          <span class="path bg-slate-200">
+          <span class="path bg-slate-200 dark:bg-slate-800">
             {{ config.paths.stage[props.dtype] }}/{{
               launch_modal.selected?.name
             }}
@@ -182,8 +180,11 @@ import DatasetService from "@/services/dataset";
 import { formatBytes } from "@/services/utils";
 import * as datetime from "@/services/datetime";
 import config from "@/config";
+import useSearchKeyShortcut from "@/composables/useSearchKeyShortcut";
 import { useToastStore } from "@/stores/toast";
+
 const toast = useToastStore();
+useSearchKeyShortcut();
 
 const props = defineProps({
   dtype: String,
@@ -210,6 +211,7 @@ const columns = ref([
     label: "registered on",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
+    width: "100px",
   },
   {
     key: "archive_path",
@@ -218,23 +220,23 @@ const columns = ref([
     thAlign: "center",
     tdAlign: "center",
     sortable: true,
+    width: "100px",
   },
   {
-    key: "states",
+    key: "is_staged",
     name: "staged",
     label: "staged",
     thAlign: "center",
     tdAlign: "center",
     sortable: true,
-    width: 40,
-    sortingFn: (a, b) =>
-      DatasetService.is_staged(a) - DatasetService.is_staged(b),
+    width: "80px",
   },
   {
     key: "updated_at",
     label: "last updated",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
+    width: "120px",
   },
   // { key: "status", sortable: false },
   {
@@ -242,21 +244,23 @@ const columns = ref([
     label: "data files",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
+    width: "80px",
   },
   {
     key: "du_size",
     label: "size",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
-    width: 80,
+    width: "100px",
     sortingFn: (a, b) => a - b,
   },
   {
     key: "workflows",
     thAlign: "center",
     tdAlign: "center",
+    width: "80px",
   },
-  { key: "actions", width: 80 },
+  { key: "actions", width: "100px" },
 ]);
 
 // initial sorting order

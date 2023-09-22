@@ -71,7 +71,7 @@ export const useAuthStore = defineStore("auth", () => {
           console.log(
             "auth store: refreshTokenBeforeExpiry: trigerring refreshToken in ",
             delay / 1000,
-            "seconds"
+            "seconds",
           );
           refreshTokenTimer = setTimeout(refreshToken, delay);
         }
@@ -117,9 +117,9 @@ export const useAuthStore = defineStore("auth", () => {
     });
   }
 
-  const setTheme = theme => {
+  const setTheme = (theme) => {
     user.value.theme = theme;
-  }
+  };
 
   const getTheme = () => user.value.theme;
 
@@ -136,7 +136,7 @@ export const useAuthStore = defineStore("auth", () => {
     canOperate,
     canAdmin,
     setTheme,
-    getTheme
+    getTheme,
   };
 });
 

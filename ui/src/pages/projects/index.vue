@@ -1,8 +1,5 @@
 <template>
   <div>
-    <!-- Title -->
-    <h2 class="text-3xl mb-4">Projects</h2>
-
     <!-- search bar and create button -->
     <div class="flex items-center gap-3 mb-3">
       <!-- search bar -->
@@ -86,11 +83,11 @@
         </template> -->
 
         <template #cell(created_at)="{ value }">
-          <span>{{ moment(value).utc().format("MMM D YYYY") }}</span>
+          <span>{{ datetime.date(value) }}</span>
         </template>
 
         <template #cell(updated_at)="{ value }">
-          <span>{{ moment(value).utc().format("MMM D YYYY") }}</span>
+          <span>{{ datetime.date(value) }}</span>
         </template>
 
         <template #cell(actions)="{ rowData }">
@@ -131,14 +128,22 @@
 </template>
 
 <script setup>
-import moment from "moment";
 import projectService from "@/services/projects";
 import { useAuthStore } from "@/stores/auth";
 import { useProjectFormStore } from "@/stores/projects/projectForm";
+import * as datetime from "@/services/datetime";
+import { useNavStore } from "@/stores/nav";
 
 const auth = useAuthStore();
 const projectFormStore = useProjectFormStore();
 const router = useRouter();
+const nav = useNavStore();
+
+nav.setNavItems([
+  {
+    label: "Projects",
+  },
+]);
 
 const projects = ref([]);
 const filterInput = ref("");
@@ -190,28 +195,29 @@ const row_items = computed(() => {
 // but the order of columns would not be preserved
 const columns = [
   { key: "name", sortable: true },
+  ...(auth.canOperate ? [{ key: "users", sortable: true, width: "30%" }] : []),
   {
     key: "datasets",
     sortable: true,
-    width: 40,
+    width: "80px",
+    thAlign: "center",
+    tdAlign: "center",
   },
-  ...(auth.canOperate ? [{ key: "users", sortable: true }] : []),
   // ...(auth.canOperate ? [{ key: "contacts", sortable: true }] : []),
-  { key: "created_at", sortable: true },
-  { key: "updated_at", sortable: true },
-  ...(auth.canOperate ? [{ key: "actions", width: 80 }] : []),
+  { key: "created_at", sortable: true, width: "100px" },
+  { key: "updated_at", sortable: true, width: "100px" },
+  ...(auth.canOperate ? [{ key: "actions", width: "80px" }] : []),
 ];
 
 function customFilteringFn(searchText, { name, users, datasets }) {
-  console.log("filtering", { searchText });
   return (
     searchText === "" ||
     (name || "").toLowerCase().includes(searchText) ||
     users.some((user) =>
-      (user?.username || "").toLowerCase().includes(searchText)
+      (user?.username || "").toLowerCase().includes(searchText),
     ) ||
     datasets.some((dataset) =>
-      (dataset?.name || "").toLowerCase().includes(searchText)
+      (dataset?.name || "").toLowerCase().includes(searchText),
     )
   );
 }

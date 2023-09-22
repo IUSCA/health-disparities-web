@@ -4,6 +4,7 @@ import hashlib
 import os
 from collections.abc import Iterable
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from enum import Enum, unique
 from itertools import islice
 from pathlib import Path
@@ -55,7 +56,7 @@ def convert_size_to_bytes(size_str: str) -> int:
 
 def merge(a: dict, b: dict) -> dict:
     """
-    "merges b into a"
+    "merges b into a" - overwrites values of a with that of b for conflicting keys
 
     a = {
         1: {"a":"A"},
@@ -131,5 +132,9 @@ def filetype(p: Path) -> FileType:
     if p.is_file():
         return FileType.FILE
     if p.is_dir():
-        return FileType.SYMBOLIC_LINK
+        return FileType.DIRECTORY
     return FileType.OTHER
+
+
+def current_time_iso8601() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")

@@ -1,20 +1,11 @@
 :root {
-  --va-input-container-label-font-size: 0.7rem;
   --va-popover-content-font-size: 0.8rem;
   --va-popover-content-padding: 0.5rem 0.5rem;
   --va-popover-content-opacity: 0.9;
-  --va-input-bordered-color: rgb(107 114 128);
+  --va-input-wrapper-border-color: rgb(148 163 184); /* bg-slate-400 */
   --va-list-item-label-caption-color: rgb(148 163 184);
-}
-
-input.va-input__content__input {
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-textarea.va-input__content__input {
-  padding-top: 5px;
-  padding-bottom: 5px;
+  --va-checkbox-square-background-color: var(--va-background-element);
+  --va-checkbox-square-border: solid 0.0625rem var(--va-secondary);
 }
 
 div.va-select-content__autocomplete {
@@ -31,11 +22,28 @@ div.va-modal__title {
   font-size: initial;
 }
 
+/* va-select drop downs are not visible if the component is on a modal */
 div.va-dropdown__content.va-dropdown__content-wrapper {
-  z-index: 1;
+  z-index: calc(var(--va-z-index-teleport-overlay) + 100);
 }
 
 /* Clear icon is too big and its font size is set by element style tag in the vuestic library */
 .va-input-wrapper__field i.va-icon {
   font-size: 24px !important;
+}
+
+/* In dark mode, the list item text color is not changing and the original color does not look good.
+ * Override the list item text color with general text color and it does change when switched to dark mode.
+*/
+.va-list-item-label {
+  color: var(--va-text-primary)
+}
+
+/* 
+ * For some reason, overrided list item label color takes precendence over va-list-item-label-caption-color
+ * Copied the same style here from the source, to increase precedence so that the caption does not have 
+ * the same color as the label.
+*/
+.va-list-item-label--caption {
+  color: var(--va-list-item-label-caption-color)
 }

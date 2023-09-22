@@ -5,9 +5,10 @@ from dotenv import load_dotenv
 
 load_dotenv()  # take environment variables from .env.
 YEAR = datetime.datetime.now().year
-AUTH_TOKEN = os.environ['AUTH_TOKEN']
+APP_API_TOKEN = os.environ['APP_API_TOKEN']
 QUEUE_PASSWORD = os.environ['QUEUE_PASS']
 MONGO_PASSWORD = os.environ['MONGO_PASS']
+ALIAS_SALT = os.environ['ALIAS_SALT']
 
 ONE_HOUR = 60 * 60
 ONE_GIGABYTE = 1024 * 1024 * 1024
@@ -19,7 +20,7 @@ config = {
                           '.vcf.gz.tbi', '.vcf'],
     'api': {
         'base_url': 'http://localhost:3030',
-        'auth_token': AUTH_TOKEN,
+        'auth_token': APP_API_TOKEN,
         'conn_timeout': 5,  # seconds
         'read_timeout': 30  # seconds
     },
@@ -33,7 +34,9 @@ config = {
         'DATA_PRODUCT': {
             'archive': f'development/{YEAR}/data_products',
             'stage': '/path/to/staged/data_products',
-        }
+        },
+        'download_dir': '/path/to/download_dir',
+        'root': '/path/to/root'
     },
     'registration': {
         'RAW_DATA': {
@@ -45,10 +48,18 @@ config = {
             'rejects': ['.snapshots'],
         },
         'recency_threshold_seconds': ONE_HOUR,
-        'minimum_project_size': ONE_GIGABYTE,
-        'wait_between_scans_seconds': FIVE_MINUTES,
+        'minimum_dataset_size': ONE_GIGABYTE,
+        'wait_between_stability_checks_seconds': FIVE_MINUTES,
+        'poll_interval_seconds': 10
     },
     'service_user': 'bioloopuser',
+    'stage': {
+        'purge': {
+            'days_to_live': 20,
+            'max_purges': 10
+        },
+        'alias_salt': ALIAS_SALT
+    },
     'workflow_registry': {
         'integrated': {
             'steps': [
@@ -73,8 +84,12 @@ config = {
                     'task': 'validate_dataset'
                 },
                 {
-                    'name': 'generate_reports',
-                    'task': 'generate_reports'
+                    'name': 'setup_download',
+                    'task': 'setup_dataset_download'
+                },
+                {
+                    'name': 'generate_qc',
+                    'task': 'generate_qc'
                 }
             ]
         }

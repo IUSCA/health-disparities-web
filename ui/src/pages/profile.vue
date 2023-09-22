@@ -1,7 +1,5 @@
 <template>
-  <h2 class="text-3xl font-bold">Profile</h2>
   <div>
-    <div class="py-3"></div>
     <va-card>
       <va-card-content>
         <va-form class="grid grid-cols-2 gap-5">
@@ -37,22 +35,16 @@
       </va-card-content>
     </va-card>
 
-    <!-- Color theme and dark mode switcher -->
+    <!-- Color theme switcher -->
     <va-card class="mt-5">
       <va-card-content>
         <div class="flex flex-col gap-5">
           <div class="flex items-center gap-3">
             Primary color:
-            <VaColorPalette v-model="colors.primary" :palette="palette" />
-          </div>
-
-          <div class="flex items-center gap-3">
-            Dark mode:
-            <VaSwitch
-              v-model="switchValue"
-              true-value="dark"
-              false-value="light"
-              size="small"
+            <VaColorPalette
+              v-model="colors.primary"
+              :palette="palette"
+              @update:model-value="persistTheme"
             />
           </div>
         </div>
@@ -65,30 +57,26 @@
 import { useColors } from "vuestic-ui";
 import { useAuthStore } from "@/stores/auth";
 import config from "@/config";
+import { useNavStore } from "@/stores/nav";
 
 const auth = useAuthStore();
-const { applyPreset, currentPresetName, colors } = useColors();
+const { colors } = useColors();
+const nav = useNavStore();
 
-const palette = ["#2c82e0", "#ef476f", "#ffd166", "#06d6a0", "#8338ec"];
-
-const switchValue = computed({
-  get() {
-    return currentPresetName.value;
+nav.setNavItems([
+  {
+    label: "Profile",
   },
-  set(value) {
-    applyPreset(value);
-  },
-});
+]);
 
+const palette = ["#154ec1", "#ef476f", "#ffd166", "#06d6a0", "#8338ec"];
 const profile = auth.user;
 
-watch([colors, switchValue], () => {
+function persistTheme() {
   auth.setTheme({
     primary: colors.primary,
-    mode: switchValue.value
   });
-}, { deep: true })
-
+}
 </script>
 
 <route lang="yaml">

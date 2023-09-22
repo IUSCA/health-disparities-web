@@ -1,23 +1,7 @@
 <template>
   <va-inner-loading :loading="loading">
-    <!-- Title -->
-    <div>
-      <span class="text-2xl capitalize" v-if="dataset.type">
-        {{ dataset.type.replace("_", " ").toLowerCase() }} :
-      </span>
-      <span class="text-3xl"> {{ dataset.name }} </span>
-      <va-divider />
-    </div>
-
     <!-- Content -->
     <div class="flex flex-col gap-3">
-      <!-- Associated datasets -->
-
-      <assoc-datasets
-        :source_datasets_meta="dataset?.source_datasets"
-        :derived_datasets_meta="dataset?.derived_datasets"
-      />
-
       <!-- Dataset Info + Status Cards -->
       <div class="grid gird-cols-1 lg:grid-cols-2 gap-3">
         <!-- Dataset Info -->
@@ -26,18 +10,16 @@
             <va-card-title>
               <span class="text-xl">Info</span>
             </va-card-title>
-            <va-card-content v-if="Object.keys(dataset || {}).length > 0">
-              <dataset-info :dataset="dataset"></dataset-info>
+            <va-card-content>
+              <DatasetInfo :dataset="dataset"></DatasetInfo>
               <div class="flex justify-end mt-3 pr-3 gap-3">
                 <!-- file browser -->
                 <va-button
-                  v-if="dataset.num_files"
+                  :disabled="!dataset.num_files"
                   preset="primary"
-                  @click="
-                    router.push(`/datasets/filebrowser/${props.datasetId}`)
-                  "
+                  @click="navigateToFileBrowser"
                   class="flex-none"
-                  color="#A020F0"
+                  :color="isDark ? '#9171f8' : '#A020F0'"
                 >
                   <i-mdi-folder-open class="pr-2 text-xl" /> Browse Files
                 </va-button>
@@ -75,10 +57,7 @@
           </div>
 
           <!-- Staged for processing -->
-          <div
-            class="flex-none"
-            v-if="DatasetService.is_staged(dataset?.states)"
-          >
+          <div class="flex-none" v-if="dataset.is_staged">
             <va-card>
               <va-card-title>
                 <span class="text-lg">Staged for Processing</span>
@@ -124,7 +103,7 @@
                   <!-- Stage Action Button-->
                   <va-button
                     v-if="dataset.archive_path"
-                    :disabled="is_stage_pending"
+                    :disabled="is_stage_pending || dataset.is_staged"
                     color="primary"
                     border-color="primary"
                     preset="secondary"
@@ -137,7 +116,7 @@
 
                   <!-- Delete Action Button-->
                   <va-button
-                    v-if="dataset.archive_path"
+                    v-if="config.enable_delete_archive && dataset.archive_path"
                     :disabled="is_delete_pending"
                     color="danger"
                     border-color="danger"
@@ -181,17 +160,14 @@
             </template>
 
             <div>
-              <p class="text-lg font-semibold">
-                Delete
-                <span class="capitalize"> {{ dataset.type }} </span>
-                : <span class="uppercase"> {{ dataset.name }} </span>
-              </p>
+              <p class="text-lg font-bold">Delete Archive?</p>
 
               <va-divider class="my-2" />
 
               <div class="flex flex-col items-center gap-2">
                 <div><i-mdi-zip-box-outline class="text-3xl" /></div>
-                <span class="text-xl font-semibold tracking-wide">
+                <span class="text-xl tracking-wide">
+                  {{ config.dataset.types[dataset.type]?.label }} /
                   {{ dataset.name }}
                 </span>
                 <div class="flex items-center gap-5">
@@ -201,7 +177,7 @@
                   </div>
                   <div class="flex items-center gap-1">
                     <i-mdi-file-multiple class="text-xl" />
-                    <span> {{ dataset.num_genome_files }} </span>
+                    <span> {{ dataset.metadata?.num_genome_files }} </span>
                   </div>
                 </div>
               </div>
@@ -223,8 +199,8 @@
                   <li>
                     This will permanently delete the
                     <b> {{ dataset.name }} </b> archive on the SDA at
-                    <span class="path bg-slate-200">
-                      {{ DatasetService.get_staged_path(dataset) }}
+                    <span class="path bg-slate-200 dark:bg-slate-800">
+                      {{ dataset.archive_path }}
                     </span>
                     , its associated workflows and task runs.
                   </li>
@@ -253,6 +229,12 @@
         </div>
       </div>
 
+      <!-- Associated datasets -->
+      <assoc-datasets
+        :source_datasets_meta="dataset?.source_datasets"
+        :derived_datasets_meta="dataset?.derived_datasets"
+      />
+
       <!-- Audit logs -->
       <div v-if="dataset.audit_logs && dataset.audit_logs.length > 0">
         <va-card>
@@ -270,16 +252,14 @@
         <span class="flex text-xl my-2 font-bold">WORKFLOWS</span>
         <!-- TODO: add filter based on workflow status -->
         <!-- TODO: remove delete workflow feature. Instead have delete archive feature -->
-        <div v-if="(dataset.workflows || []).length > 0">
+        <div v-if="(dataset.workflows || []).length > 0" class="space-y-2">
           <collapsible
             v-for="workflow in dataset.workflows"
             :key="workflow.id"
             v-model="workflow.collapse_model"
           >
             <template #header-content>
-              <div class="flex-[0_0_90%]">
-                <workflow-compact :workflow="workflow" />
-              </div>
+              <WorkflowCompact :workflow="workflow" />
             </template>
 
             <div>
@@ -290,7 +270,10 @@
             </div>
           </collapsible>
         </div>
-        <div v-else class="text-center bg-slate-200 py-2 rounded shadow">
+        <div
+          v-else
+          class="text-center bg-slate-200 dark:bg-slate-800 py-2 rounded shadow"
+        >
           <i-mdi-card-remove-outline class="inline-block text-4xl pr-3" />
           <span class="text-lg">
             There are no workflows associated with this datatset.
@@ -309,7 +292,6 @@
 </template>
 
 <script setup>
-import moment from "moment";
 import DatasetService from "@/services/dataset";
 import workflowService from "@/services/workflow";
 import config from "@/config";
@@ -317,8 +299,10 @@ import { formatBytes } from "@/services/utils";
 import { useToastStore } from "@/stores/toast";
 const toast = useToastStore();
 const router = useRouter();
+const route = useRoute();
+const isDark = useDark();
 
-const props = defineProps({ datasetId: String });
+const props = defineProps({ datasetId: String, appendFileBrowserUrl: Boolean });
 
 const dataset = ref({});
 const loading = ref(false);
@@ -386,7 +370,7 @@ watch(
   () => {
     fetch_dataset(true);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 /**
@@ -406,7 +390,7 @@ watch(active_wf, (newVal, _) => {
 
 function workflow_compare_fn(a, b) {
   /* compareFn: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
-   * sort by status, created_at
+   * sort by status and created_at
    * not done status has higher precedence
    */
   const is_a_done = workflowService.is_workflow_done(a);
@@ -414,7 +398,7 @@ function workflow_compare_fn(a, b) {
   const order_by_done = is_a_done - is_b_done;
 
   if (!order_by_done) {
-    return moment.duration(moment(b.created_at) - moment(a.created_at));
+    return new Date(b.created_at) - new Date(a.created_at);
   }
   return order_by_done;
 }
@@ -424,12 +408,7 @@ function stage_dataset() {
   loading.value = true;
   DatasetService.stage_dataset(dataset.value.id)
     .then(() => {
-      toast.success("A workflow has started to stage the dataset");
       fetch_dataset(true);
-    })
-    .catch((err) => {
-      console.error("unable to stage the dataset", err);
-      toast.error("Unable to stage the dataset");
     })
     .finally(() => {
       loading.value = false;
@@ -457,6 +436,14 @@ const editModal = ref(null);
 
 function openModalToEditDataset() {
   editModal.value.show();
+}
+
+function navigateToFileBrowser() {
+  if (props.appendFileBrowserUrl) {
+    router.push(route.path + "/filebrowser");
+  } else {
+    router.push(`/datasets/${props.datasetId}/filebrowser`);
+  }
 }
 </script>
 
