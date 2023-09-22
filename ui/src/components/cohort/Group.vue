@@ -80,7 +80,7 @@ const addGroup = (join) => {
   emit('update:modelValue', params.modelValue)
 } 
   
-const includeAddGroup = ref(null)
+const includeAddGroup = ref("")
 const resultsByDetails = ref({NEW: []})
 
 onMounted(async () => {
@@ -119,13 +119,13 @@ const changeValue = () => {
   groupChanged.value = true
 }
 
-const selectedValue = ref(null)
+const selectedValue = ref("")
 const changeSelected = ( group, index, category, field, search) => {
   selectedValue.value = { group: group, index: index, category: category, field: field, search: ''}
 }
 
 const showRemove = ref(false)
-const removeVal = ref(null)
+const removeVal = ref("")
 
 // Ask user if they really wanted to remove
 const removeDialog = ( group, index) => {
@@ -195,26 +195,26 @@ const groupChanged = ref(false)
     </va-divider>
     <div v-if="grouping.group && index === 0" class="flex flex-col items-center">
 
-        <va-select class="mb-2 border-gray-500 border border-solid w-full rounded" v-model="grouping.group" label="Group" :options="group_options" searchable highlight-matched-text allow-create="unique" @create-new="addNewGroup" @update:modelValue="showGroup(grouping.group, group)"  />
+        <va-select class="mb-2 w-full rounded" v-model="grouping.group" label="Group" :options="group_options" searchable highlight-matched-text allow-create="unique" @create-new="addNewGroup" @update:modelValue="showGroup(grouping.group, group)"  />
 
     </div>
     
     <div v-if="include.edit" class="border-gray-500 border border-solid p-4">
       
       <!-- Category -->
-      <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.category" :options="cohortStore.categories" label="Category" @update:modelValue="getFields(group, index, include.category)"  />
+      <va-select class="w-full  rounded" v-model="include.category" :options="cohortStore.categories" label="Category" @update:modelValue="getFields(group, index, include.category)"  />
 
       <div v-if="include.category" class="mb-2">
         <!-- Fields -->
-        <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.field" :options="include.options" label="Field" 
+        <va-select class="w-full  rounded" v-model="include.field" :options="include.options" label="Field" 
         @update:modelValue="getInitialValues( group, index, include.category, include.field, include.val)" />
 
         <!-- Operator -->
-        <va-select class="w-full border-gray-800 border border-solid rounded" v-model="include.op" :options="include.operators[include.field]" label="Operator" />
+        <va-select class="w-full  rounded" v-model="include.op" :options="include.operators[include.field]" label="Operator" />
         
         <!-- Values -->
-        <va-input v-if="include.field in include.operators && include.operators[include.field].length > 1" class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" />
-        <va-select v-if="include.field in include.operators && ! (include.operators[include.field].length > 1)"  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text @updateSearch="updateVal" @focus="changeSelected( group, index, include.category, include.field, include.val)" :loading="Array.isArray(include.values) && include.values.length === 0" @update:modelValue="changeValue()" />
+        <va-input v-if="include.field in include.operators && include.operators[include.field].length > 1" class="w-2 w-full rounded" v-model="include.val" label="Value" />
+        <va-select v-if="include.field in include.operators && ! (include.operators[include.field].length > 1)"  class="w-2 w-full rounded" v-model="include.val" label="Value" :options="include.values"  searchable highlight-matched-text @updateSearch="updateVal" @focus="changeSelected( group, index, include.category, include.field, include.val)" :loading="Array.isArray(include.values) && include.values.length === 0" @update:modelValue="changeValue()" />
 
 
         <!-- Actions -->

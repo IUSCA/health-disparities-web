@@ -5,9 +5,17 @@ import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, Li
 import { useCohortStore } from "@/stores/cohort"
 import cohortService from '@/services/cohort'
 import { useToastStore } from "@/stores/toast";
+import { useNavStore } from "@/stores/nav";
+const nav = useNavStore();
+nav.setNavItems([
+  {
+    label: `Cohort`,
+  },
+]);
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
+// INIT
 const cohortStore = useCohortStore()
 cohortStore.getCategories()
 
@@ -19,10 +27,10 @@ const toast = useToastStore();
 const loading = ref(false)
 
 const results = ref({})
-const chart_data = ref(null)
-const chart_category = ref(null)
+const chart_data = ref("")
+const chart_category = ref("")
 const chart_options = ref([])
-const resultsBy = ref(null)
+const resultsBy = ref("")
 const resultsByDetails = ref({NEW: []})
 
 onMounted(async () => {
@@ -213,8 +221,8 @@ const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d)
   <div class="flex flex-col">
   
       <div class="flex flex-row mb-4">
-        <!-- <va-input class="w-2 border-gray-500 border border-solid  w-full rounded" v-model="cohort_name" label="Cohort"  /> -->
-        <va-select  class="w-2 border-gray-500 border border-solid w-full rounded" v-model="cohort_name" label="Cohort" :options="cohort_options" searchable highlight-matched-text allow-create="unique" @create-new="addNewOption" @update:modelValue="showCohort(cohort_name)" />
+        <!-- <va-input class="w-2   w-full rounded" v-model="cohort_name" label="Cohort"  /> -->
+        <va-select  class="w-2  w-full rounded" v-model="cohort_name" label="Cohort" :options="cohort_options" searchable highlight-matched-text allow-create="unique" @create-new="addNewOption" @update:modelValue="showCohort(cohort_name)" />
       </div>
       <div class=" grid gap-4 grid-cols-3 w-full mb-12">
         <va-card stripe stripe-color="success" >
@@ -240,7 +248,7 @@ const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d)
             </div>
             <div class="flex">
               
-              <va-select class="w-full border-gray-800 border border-solid rounded" v-model="resultsBy" :options="Object.keys(resultsByDetails)" />
+              <va-select class="w-full rounded" v-model="resultsBy" :options="Object.keys(resultsByDetails)" />
               <va-button class="flex flex-row   ml-2 pl-2" preset="secondary" border-color="primary" @click="showSettings = !showSettings"><Icon icon="mdi:cog" /> &nbsp; </va-button>
             </div>
             <div v-if="chart_data">

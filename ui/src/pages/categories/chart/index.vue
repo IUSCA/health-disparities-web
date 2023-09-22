@@ -2,6 +2,13 @@
 import ParticipantChart from "@/components/participants/ParticipantChart.vue";
 import router from "@/router";
 import participantService from '@/services/participant'
+import { useNavStore } from "@/stores/nav";
+const nav = useNavStore();
+nav.setNavItems([
+  {
+    label: `Categories Chart`,
+  },
+]);
 
 const search = ref(null)
 const display = ref('Chart')
@@ -36,7 +43,7 @@ const demographic = ref('demographic')
 
       <div class="w-full  mb-2 mr-4 flex flex-col">
         <div class="flex">  
-            <va-input v-model="search"  class="border-gray-500 border border-solid w-full mb-4 rounded" label="Search"  clearable> 
+            <va-input v-model="search"  class=" w-full mb-4 rounded" label="Search"  clearable> 
               <template #prependInner> <Icon icon="material-symbols:search" class="text-xl" /> </template> 
             </va-input>
         </div>

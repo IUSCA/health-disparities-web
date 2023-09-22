@@ -1,6 +1,13 @@
 <script setup>
 // import igv from "https://cdn.jsdelivr.net/npm/igv@2.15.10/dist/igv.esm.min.js"
 import igv from "../../../node_modules/igv/dist/igv.esm.min.js"
+import { useNavStore } from "@/stores/nav";
+const nav = useNavStore();
+nav.setNavItems([
+  {
+    label: `Analysis`,
+  },
+]);
 var igvDiv = document.getElementById("igv-div");
 var options =
   {

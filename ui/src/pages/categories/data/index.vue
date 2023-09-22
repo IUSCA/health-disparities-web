@@ -1,6 +1,15 @@
 <script setup>
 import { useParticipantStore } from "@/stores/participant"
 import router from "@/router";
+import { useNavStore } from "@/stores/nav";
+const nav = useNavStore();
+nav.setNavItems([
+  {
+    label: `Categories Data`,
+  },
+]);
+
+
 const participantStore = useParticipantStore()
 
 
@@ -37,6 +46,8 @@ watch(() => display.value, () => {
 const navigateToParticipant = (category) => { router.push(`/participants/${category}`) }
 const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) { return ($1 && ' ') + $2.toUpperCase(); })
 const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",")
+
+
 </script>
 
 <template>
@@ -45,7 +56,7 @@ const numFormat = (num) => num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d)
 
       <div class="w-full  mb-2 mr-4 flex flex-col">
         <div class="flex">  
-            <va-input v-model="search"  class="border-gray-500 border border-solid w-full mb-4 rounded" label="Search"  clearable> 
+            <va-input v-model="search"  class=" w-full mb-4 rounded" label="Search"  clearable> 
               <template #prependInner> <Icon icon="material-symbols:search" class="text-xl" /> </template> 
             </va-input>
         </div>
