@@ -157,7 +157,7 @@ const checkValues = (obj) => {
 watchDebounced([resultsBy, includes, excludes], () => {
   
   // If required fields are not filled out, return
-  if(resultsBy.value === null || !checkValues(includes.value))
+  if(resultsBy.value === "" || !checkValues(includes.value))
     return
 
   // Reset

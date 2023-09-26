@@ -21,9 +21,7 @@ const chart_options = ref([])
 
 
 onMounted(() => {
-
   participantService.getFacetOptions({table: params.category}).then(result => {
-    console.log('OPTIONS', result.data)
     chart_options.value = result.data
     chart_category.value = result.data[0]
   })
@@ -32,9 +30,6 @@ onMounted(() => {
 
 watch(options, () => {
   if('facets' in participantStore.details) {
-    console.log("FACETS", participantStore.details.facets)
-    // chart_category.value = Object.keys(participantStore.details.facets)[0]
-
     let labels = []
     let dataset = {data: []}
 
@@ -94,11 +89,11 @@ watch([chart_category], () => {
 <template>
 
 
-    <div v-if="! loading" class="h-1/4 w-full items-center flex flex-col border border-black border-solid">
+    <div v-if="! loading" class="h-2/4 w-full items-center flex flex-col border border-black border-solid">
       <div>
       <h1 class="text-2xl">{{ params.category }}</h1>
       </div>
-      <!-- <va-button-toggle class="mx-auto" v-model="chart_category" :options="chart_options" preset="secondary" border-color="primary" /> -->
+      <va-button-toggle class="mx-auto" v-model="chart_category" :options="chart_options" preset="secondary" border-color="primary" />
 
       <Bar  id="my-chart-id" :key="chart_data" :options="{ responsive: true, indexAxis: 'y', plugins: {legend: {display: false}}, backgroundColor: [
         'rgba(255, 99, 132, 0.2)',

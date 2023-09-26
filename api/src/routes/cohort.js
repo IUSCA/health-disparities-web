@@ -214,6 +214,8 @@ router.get('/mine', isPermittedTo('read'), asyncHandler(async (req, res, next) =
 router.get('/groups', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
   
     const result = await prisma.group.findMany()
+
+    console.log("GROUPS", result)
   
     return res.json(result)
   

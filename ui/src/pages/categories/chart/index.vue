@@ -52,7 +52,7 @@ const demographic = ref('demographic')
 
         <div class="grid grid-rows-4 grid-flow-col gap-4" >
           <va-card class="" v-for="category in categories">
-            <va-card-content class="bold text-2xl w-1/2">
+            <va-card-content class="bold text-2xl w-2/3 mx-auto">
               <ParticipantChart  :category="category" :search="search" />
             </va-card-content>
           </va-card>

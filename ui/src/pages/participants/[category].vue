@@ -2,6 +2,8 @@
 import participantService from "@/services/participant"
 import cohortService from "@/services/cohort"
 import router from "@/router";
+import { useStorage } from '@vueuse/core'
+
 const cat = defineProps({ category: String });
 import { useNavStore } from "@/stores/nav";
 const nav = useNavStore();
@@ -34,7 +36,6 @@ onMounted(() => {
       addNewGroup(data.name, data.id, data.query)
     }
   })
-  
 })
 
 const group_options = ref([])
@@ -86,7 +87,7 @@ const pageOptions = [1, 5, 10, 25, 50, 100]
 const pages = computed(() => Math.floor(participant_count.value / options.value.numPerPage))
 
 // Search Options
-const options = ref({
+const options = useStorage('options', {
   category: cat.category,
   search: "",
   sortBy: "id",
@@ -142,8 +143,8 @@ const updateCategory = (cat) => {
   console.log(cat)
   options.value.category = cat
   options.value.page = 1
-  options.value.sortBy = "id"
-  router.replace({ path: `/participants/${cat}` })
+  options.value.sortBy = `participant_id`
+  router.push({ path: `/participants/${cat}`, replace: true })
   searchParticipants()
 }
 
@@ -204,7 +205,7 @@ const save = (index) => {
 const makeLabel = (label) => label.replace(/(^|_)(\w)/g, function ($0, $1, $2) { return ($1 && ' ') + $2.toUpperCase(); })
 
 const current_fields = ref([])
-const group = ref(group_options.value[0])
+const group = ref("")
 
   
 const groupChanged = ref(false)
@@ -332,6 +333,10 @@ const showGroup = (option) => {
 
       <va-button v-if="isNaN(group) && groupChanged" class="w-full mt-2" @click="saveGroup(group)" preset="primary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >
         <Icon icon="material-symbols:save-sharp" />Save Group
+      </va-button>
+
+      <va-button class="w-full mt-2" @click="clear()"  hover-behavior="opacity" :hover-opacity="0.4" >
+        <Icon icon="ant-design:clear-outlined" />Clear
       </va-button>
     </div>
   </div>
