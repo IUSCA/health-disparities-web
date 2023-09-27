@@ -6,6 +6,8 @@ const { asyncForEach, parseDate, dateFilename } = require('./utils.js');
 const prisma = new PrismaClient();
 
 async function importDxData() {
+  // Delete all existing dx records
+  await prisma.dx.deleteMany()
   // Set up a file to write any malformed rows to:
   const filename = await dateFilename("errors-dx.csv");
   console.log("Filename set to", filename)
@@ -19,7 +21,7 @@ async function importDxData() {
 
   const parser = Papa.parse(Papa.NODE_STREAM_INPUT);
   parser.on('data', async (row) => {
-    // Process each row here
+
 
     // // Parse the CSV data
     // const { data } = Papa.parse(csvData, {
@@ -38,7 +40,7 @@ async function importDxData() {
       console.log(`Missing study id ${STUDY_ID} or ib_id ${IB_ID}`)
       errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID},${row.DEID_DX_DATE},${row.DX_CODE},${row.DX_CODE_SYSTEM},${row.DX_NAME},\n`);
     } else {
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID, study_id: Number(STUDY_ID) } });
+      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
 
       // If the participant does not exist, create a new participant record
       if (!participant) {
@@ -67,8 +69,6 @@ async function importDxData() {
       try {
         await prisma.dx.create({
           data: {
-            study_id: Number(STUDY_ID),
-            ib_id: IB_ID,
             name: DX_NAME,
             date: dxDate, // Use the converted date object
             code: DX_CODE,

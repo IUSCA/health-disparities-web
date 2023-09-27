@@ -236,6 +236,22 @@ const showGroup = (option) => {
   }
 }
 
+const clear = () => {
+  options.value.filters = [{
+    edit: true,
+    join: "",
+    category: "",
+    op: "",
+    operators: [],
+    field: "",
+    options: [],
+    val: "",
+    values: []
+  }]
+  group.value = ""
+  searchParticipants()
+}
+
 </script>
 
 <template>
@@ -272,6 +288,7 @@ const showGroup = (option) => {
       </div>
       <div>
         <h1 class="text-xl text-center my-2">Filters</h1>
+        <hr class="mt-4 mb-2" />
         <va-select class="mb-2  w-full rounded" v-model="group" label="Group" :options="group_options" searchable highlight-matched-text allow-create="unique" @create-new="addNewGroup" @update:modelValue="showGroup(group)"  />
         <div v-for="(include, index) in options.filters" class="flex flex-col">
           <va-divider v-if="include.join">
@@ -328,8 +345,10 @@ const showGroup = (option) => {
       </div>
 
 
-      <va-select v-model="criteria" class="w-full mt-4" :options="['AND', 'OR']" @update:modelValue="add(criteria)"
+      <va-select v-model="criteria" class="w-full mt-2" :options="['AND', 'OR']" @update:modelValue="add(criteria)"
         label="Add Criteria" />
+
+      <hr class="mt-4 mb-2" />
 
       <va-button v-if="isNaN(group) && groupChanged" class="w-full mt-2" @click="saveGroup(group)" preset="primary" border-color="primary" hover-behavior="opacity" :hover-opacity="0.4" >
         <Icon icon="material-symbols:save-sharp" />Save Group

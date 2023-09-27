@@ -6,6 +6,9 @@ const { asyncForEach, parseDate, dateFilename } = require('./utils.js');
 const prisma = new PrismaClient();
 
 async function importCovidVaxData() {
+  // Delete all existing covid_vax records
+  await prisma.covid_vax.deleteMany()
+
   // Set up a file to write any malformed rows to:
   const filename = await dateFilename("errors-covid_vax.csv");
   console.log("Filename set to", filename)
@@ -26,7 +29,7 @@ async function importCovidVaxData() {
       errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID},${row.VACCINE_TEXT},${row.MANUFACTURER_SHORT},${row.DEID_IM_DATE},${row.DOSE_NUMBER},${row.SERIES_DOSES},${row.IS_BOOSTER_YN}\n`);
     } else {
 
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID, study_id: Number(STUDY_ID) } });
+      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
 
       // If the participant does not exist, create a new participant record
       if (!participant) {
@@ -58,8 +61,6 @@ async function importCovidVaxData() {
       try {
         await prisma.covid_vax.create({
           data: {
-            study_id: Number(STUDY_ID),
-            ib_id: IB_ID,
             name: VACCINE_TEXT,
             date: covidVaxDate, // Use the converted date object
             manufacturer: MANUFACTURER_SHORT,

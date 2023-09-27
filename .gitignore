@@ -21,6 +21,7 @@ api/yarn-error.log
 api/.vscode
 api/node_modules
 api/.env
+api/src/scripts/data/
 
 api/config/auth*
 

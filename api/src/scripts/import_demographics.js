@@ -36,7 +36,7 @@ async function importDemographicData() {
 
       // Check if the participant exists by IB_ID
       // let participant = await prisma.participant.findUnique({ where: { ib_id: 
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID, study_id: Number(STUDY_ID) } });
+      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
 
       // If the participant does not exist, create a new participant record
       if (!participant) {
@@ -67,8 +67,6 @@ async function importDemographicData() {
       try {
         await prisma.demographic.create({
           data: {
-            study_id: Number(STUDY_ID),
-            ib_id: IB_ID,
             gender: GENDER,
             race: RACE,
             ethnicity: ETHNICITY,

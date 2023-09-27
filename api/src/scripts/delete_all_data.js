@@ -5,12 +5,14 @@ const { PrismaClient } = require('@prisma/client');
 async function main() {
   const prisma = new PrismaClient();
   
+  let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication', 'participant']
+
   // Delete all records from all tables
   await Promise.all(
-    Object.values(prisma._schema.modelMap)
-      .map((model) => {
-        console.log("Deleting from", model.name)
-        prisma[model.name].deleteMany()
+    tables
+      .map((table) => {
+        console.log("Deleting from", table)
+        prisma[table].deleteMany()
       })
   );
   

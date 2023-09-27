@@ -6,6 +6,9 @@ const { asyncForEach, parseDate, dateFilename } = require('./utils.js');
 const prisma = new PrismaClient();
 
 async function importLabData() {
+  // Delete all existing lab records
+  await prisma.lab.deleteMany()
+
   // Set up a file to write any malformed rows to:
   const filename = await dateFilename("errors-labs.csv");
   console.log("Filename set to", filename)
@@ -25,7 +28,7 @@ async function importLabData() {
     if (!STUDYID || !IB_ID) {
       errorStream.write(`${index},${row.STUDYID},${row.IB_ID},${row.DEID_LABDATE},${row.CATEGORY},${row.LAB_NAME},${row.NUMERIC_RESULT},${row.UNIT}\n`);
     } else {
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID, study_id: Number(STUDYID) } });
+      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
 
       // If the participant does not exist, create a new participant record
       if (!participant) {
@@ -53,8 +56,6 @@ async function importLabData() {
       try {
         await prisma.lab.create({
           data: {
-            study_id: Number(STUDYID),
-            ib_id: IB_ID,
             name: LAB_NAME,
             date: labDate, // Use the converted date object
             category: CATEGORY,

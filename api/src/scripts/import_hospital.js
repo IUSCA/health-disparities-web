@@ -6,6 +6,9 @@ const { asyncForEach, parseDate, dateFilename } = require('./utils.js');
 const prisma = new PrismaClient();
 
 async function importHospitalData() {
+  // Delete all existing hospital records
+  await prisma.hospital.deleteMany()
+
   // Set up a file to write any malformed rows to:
   const filename = await dateFilename("errors-hospital.csv");
   console.log("Filename set to", filename)
@@ -27,7 +30,7 @@ async function importHospitalData() {
       errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID_LONG},${row.DEID_ADMIT},${row.DEID_DISCHARGE},${row.DX_CODE},${row.DX_CODE_SYSTEM}\n`);
     } else {
 
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID_LONG, study_id: Number(STUDY_ID) } });
+      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID_LONG } });
 
       // If the participant does not exist, create a new participant record
       if (!participant) {
@@ -37,6 +40,18 @@ async function importHospitalData() {
       // Convert date string to JavaScript Date object
       const admitDate = await parseDate(DEID_ADMIT);
       const dischargeDate = await parseDate(DEID_DISCHARGE);
+
+      let data = {
+        enc_id: ENC_ID,
+        admit_date: admitDate,
+        dx_code: DX_CODE,
+        dx_code_system: DX_CODE_SYSTEM,
+        participant_id: participant.id
+      }
+
+      if(!isNaN(dischargeDate)) data['discharge_date'] = dischargeDate
+
+      console.log(data)
 
       // It is faster to drop everything 
       // and start fresh from the beginning 
@@ -57,16 +72,7 @@ async function importHospitalData() {
       // If the hospital record does not exist, create a new hospital record
       try {
         await prisma.hospital.create({
-          data: {
-            study_id: Number(STUDY_ID),
-            ib_id: IB_ID_LONG,
-            enc_id: ENC_ID,
-            admit_date: admitDate,
-            discharge_date: dischargeDate,
-            dx_code: DX_CODE,
-            dx_code_system: DX_CODE_SYSTEM,
-            participant_id: participant.id
-          }
+          data: data
         });
       } catch (err) {
         console.error(`Error creating hospital record: ${err}`);
