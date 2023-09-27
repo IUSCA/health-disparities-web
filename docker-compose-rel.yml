@@ -66,3 +66,10 @@ volumes:
 
   api_modules:
     external: false
+
+
+networks:
+  network:
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
