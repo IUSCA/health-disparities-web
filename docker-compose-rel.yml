@@ -26,8 +26,7 @@ services:
     networks:
       network:
         ipv4_address: 172.19.0.2
-    extra_hosts:
-      - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
+
     depends_on:
      - postgres
 
