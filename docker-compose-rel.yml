@@ -50,7 +50,7 @@ services:
 
   meilisearch:
     container_name: meilisearch
-    image: getmeili/meilisearch:v1.2
+    image: getmeili/meilisearch:v1.3.2
     volumes:
       - /opt/sca/docker/biobank/data/biobank-meilisearch/:/meili_data
     environment:
