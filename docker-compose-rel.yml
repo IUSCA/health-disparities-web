@@ -1,0 +1,69 @@
+version: "3"
+name: bioloop
+services:
+  ui:
+    restart: unless-stopped
+    image: node:19
+    volumes:
+      - ./ui/:/opt/sca/app
+      - ui_modules:/opt/sca/app/node_modules
+    working_dir: /opt/sca/app
+    command: sh -c "npm install && npm run builddev"
+    
+  api:
+    restart: unless-stopped
+    build:
+      context: ./api
+      args:
+        APP_UID: ${APP_UID} # read from .env file
+        APP_GID: ${APP_GID} # read from .env file
+    volumes:
+      - ./api/:/opt/sca/app
+      - api_modules:/opt/sca/app/node_modules
+    expose:
+      - 3030
+    # entrypoint: [ "tail", "-f", "/dev/null" ]
+    networks:
+      network:
+        ipv4_address: 172.19.0.2
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
+    depends_on:
+     - postgres
+
+  postgres:
+    container_name: postgres
+    image: postgres:14.5
+    # restart: unless-stopped
+    environment:
+      - POSTGRES_USER=appuser
+      - POSTGRES_PASSWORD=example
+      - POSTGRES_DB=app
+    volumes:
+      - /opt/sca/docker/biobank/data/biobank-postgres/:/var/lib/postgresql/data
+      - ./db/postgres/scripts:/docker-entrypoint-initdb.d
+    ports:
+      - 127.0.0.1:5432:5432
+    expose:
+      - 5432
+
+  meilisearch:
+    container_name: meilisearch
+    image: getmeili/meilisearch:v1.2
+    volumes:
+      - /opt/sca/docker/biobank/data/biobank-meilisearch/:/meili_data
+    environment:
+      - MEILI_HTTP_PAYLOAD_SIZE_LIMIT=10Gb
+    ports:
+      - 127.0.0.1:7700:7700
+    expose:
+      - 7700
+
+
+
+volumes:
+  ui_modules:
+    external: false
+
+  api_modules:
+    external: false

@@ -2,6 +2,8 @@
 set -e
 set -o pipefail
 
+RELEASE=$1
+
 { 
   echo "Finding the UID and GID of the provided user '"$APP_USER"' and group '"$APP_GROUP"'."
   APP_UID=$(id -u $APP_USER) && 
@@ -19,5 +21,10 @@ echo "APP_UID:$APP_UID,APP_GID:$APP_GID"
 echo APP_UID=$APP_UID > .env
 echo APP_GID=$APP_GID >> .env
 
-sudo docker compose -f "docker-compose-prod.yml" build api
-sudo docker compose -f "docker-compose-prod.yml" up -d
+if [ -z "$RELEASE" ]; then
+  sudo docker compose -f "docker-compose-prod.yml" build api
+  sudo docker compose -f "docker-compose-prod.yml" up -d
+else
+  sudo docker compose -f "docker-compose-rel.yml" build api
+  sudo docker compose -f "docker-compose-rel.yml" up -d
+fi
