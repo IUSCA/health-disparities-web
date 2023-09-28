@@ -21,10 +21,13 @@ const main = async () => {
   console.log(`Indexing ${count} ${table}...`)
   let x = 0
   while(x <= count) {
+    console.log(`x = ${x}`)
     const data = await prisma[table].findMany({
       skip: x,
       take: 1000,
     });
+
+    console.log(data)
 
     await client.index(table).addDocuments(data, { primaryKey: 'id' })
     x += 1000
