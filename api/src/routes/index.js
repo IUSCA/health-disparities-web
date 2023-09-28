@@ -19,5 +19,6 @@ router.use('/projects', require('./projects') /* #swagger.security = [{"BearerAu
 
 router.use('/cohort', require('./cohort'));
 router.use('/participant', require('./participant'));
+router.use('/variants', require('./variants') /* #swagger.security = [{"BearerAuth": []}] */);
 
 module.exports = router;

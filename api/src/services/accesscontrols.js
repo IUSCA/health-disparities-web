@@ -32,6 +32,9 @@ const grantsObject = {
     auth: {
       'create:any': ['*'],
     },
+    variant: {
+      'read:any': ['*'],
+    },
   },
 
   // user role permissions
@@ -74,6 +77,9 @@ const grantsObject = {
       'delete:any': ['*'],
     },
     project_dataset_files: {
+      'read:any': ['*'],
+    },
+    variant: {
       'read:any': ['*'],
     },
   },
