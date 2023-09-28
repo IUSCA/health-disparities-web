@@ -68,7 +68,7 @@ docker-compose up queue mongo -d
 Start Workers
 
 ```bash
-python -m celery -A tests.celery_app worker --loglevel INFO -O fair --pidfile celery_worker.pid --hostname 'bioloop-celery-w1@%h' --autoscale=2,1 --queues 'bioloop-dev.sca.iu.edu.q'
+python -m celery -A tests.celery_app worker --loglevel INFO -O fair --pidfile celery_worker.pid --hostname 'biobank-celery-w1@%h' --autoscale=2,1 --queues 'biobank-dev.sca.iu.edu.q'
 ```
 
 `--concurrency 1`: number of worker processed to pre-fork
@@ -79,7 +79,7 @@ when they are actually available.
 Use `--hostname '<app_name>-celery-<worker_name>@%h'` to distinguish multiple workers running on the same machine either
 for the same app or different apps.
 
-- replace `<app_name>` with app name (ex: bioloop)
+- replace `<app_name>` with app name (ex: biobank)
 - replace `<worker_name>` with worker name (ex: w1)
 
 Auto-scaling - max_concurrency,min_concurrency
@@ -138,7 +138,7 @@ ssh \
   -R 3130:localhost:3030 \
   -R 28017:localhost:27017 \
   -R 5772:localhost:5672 \
-  bioloopuser@colo23.carbonate.uits.iu.edu
+  biobankuser@colo23.carbonate.uits.iu.edu
 ```
 
 - pull latest changes in dev branch to `<bioloop_dev>`
