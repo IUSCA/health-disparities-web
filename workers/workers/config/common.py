@@ -15,7 +15,7 @@ ONE_GIGABYTE = 1024 * 1024 * 1024
 FIVE_MINUTES = 5 * 60
 
 config = {
-    'app_id': 'bioloop-dev.sca.iu.edu',
+    'app_id': 'biobank-dev.sca.iu.edu',
     'genome_file_types': ['.cbcl', '.bcl', '.bcl.gz', '.bgzf', '.fastq.gz', '.bam', '.bam.bai', '.vcf.gz',
                           '.vcf.gz.tbi', '.vcf'],
     'api': {
@@ -52,7 +52,7 @@ config = {
         'wait_between_stability_checks_seconds': FIVE_MINUTES,
         'poll_interval_seconds': 10
     },
-    'service_user': 'bioloopuser',
+    'service_user': 'biobankuser',
     'stage': {
         'purge': {
             'days_to_live': 20,

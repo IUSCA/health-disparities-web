@@ -17,7 +17,7 @@ const exports = {
       RAW_DATA: "/path/to/staged/raw_data",
       DATA_PRODUCT: "/path/to/staged/data_products",
     },
-    download: "/N/scratch/bioloop/production/download",
+    download: "/N/scratch/biobank/production/download",
   },
   file_browser: {
     enable_downloads: true,
