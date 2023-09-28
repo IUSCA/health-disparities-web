@@ -24,7 +24,6 @@ services:
       - api_modules:/opt/sca/app/node_modules
     expose:
       - 3030
-    # entrypoint: [ "tail", "-f", "/dev/null" ]
     networks:
       network:
         ipv4_address: 172.19.0.2
@@ -35,7 +34,6 @@ services:
   postgres:
     container_name: postgres
     image: postgres:14.5
-    # restart: unless-stopped
     environment:
       - POSTGRES_USER=${DATABASE_USER}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
