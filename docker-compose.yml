@@ -1,5 +1,5 @@
 version: "3"
-name: biobank
+name: bioloop
 services:
   ui:
     container_name: ui

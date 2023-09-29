@@ -29,12 +29,12 @@ const main = async () => {
 
     console.log(data)
 
-    await client.index(table).addDocuments(data, { primaryKey: 'id' })
+    // await client.index(table).addDocuments(data, { primaryKey: 'id' })
     x += 1000
   }
 
-  console.log(`Enabling filtering and sorting for ${table}...`)
-  enableFiltering(table)
+  // console.log(`Enabling filtering and sorting for ${table}...`)
+  // enableFiltering(table)
 
 }
 }
