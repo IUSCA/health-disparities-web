@@ -16,27 +16,27 @@ const main = async () => {
   let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
 
   for(let table of tables) {
-  const count = await prisma[table].count();
+    const count = await prisma[table].count();
 
-  console.log(`Indexing ${count} ${table}...`)
-  let x = 0
-  while(x <= count) {
-    console.log(`x = ${x}`)
-    const data = await prisma[table].findMany({
-      skip: x,
-      take: 1000,
-    });
+    console.log(`Indexing ${count} ${table}...`)
+    let x = 0
+    while(x <= count) {
+      console.log(`x = ${x}`)
+      const data = await prisma[table].findMany({
+        skip: x,
+        take: 1000,
+      });
 
-    console.log(data)
+      console.log(data)
 
-    // await client.index(table).addDocuments(data, { primaryKey: 'id' })
-    x += 1000
+      await client.index(table).addDocuments(data, { primaryKey: 'id' })
+      x += 1000
+    }
+
+    console.log(`Enabling filtering and sorting for ${table}...`)
+    enableFiltering(table)
+
   }
-
-  // console.log(`Enabling filtering and sorting for ${table}...`)
-  // enableFiltering(table)
-
-}
 }
 
 // Enable filtering  and sorting for everything in the model
