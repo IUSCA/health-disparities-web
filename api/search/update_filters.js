@@ -17,12 +17,12 @@ const main = async () => {
   await updateParticipants()
 
 
-  // let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
+  let tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication']
 
-  // for(let table of tables) {
+  for(let table of tables) {
 
-  //   await enableFiltering(table)
-  // }
+    await enableFiltering(table)
+  }
 }
 
 // Enable filtering  and sorting for everything in the model
