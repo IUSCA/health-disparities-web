@@ -108,7 +108,7 @@ router.beforeEach(() => {
 });
 
 const user_items = ref([
-{
+  {
     icon: "solar:chart-bold",
     title: "Categories",
     path: "/categories/data",
@@ -127,6 +127,11 @@ const user_items = ref([
     icon: "tabler:analyze",
     title: "Analysis",
     path: "/igv",
+  },
+  {
+    icon: "mdi:chart-sankey-variant", //"mdi:puzzle",
+    title: "Variant Xplorer",
+    path: "/variantXplorer",
   },
   // {
   //   icon: "carbon:ibm-process-mining",
