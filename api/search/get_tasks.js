@@ -12,7 +12,7 @@ const client = new MeiliSearch({
 const main = async () => {
   console.log('Getting indexes...')
 
-  let results = await client.getTasks(17724)
+  let results = await client.getTasks()
 
   console.log(JSON.stringify(results))
 
