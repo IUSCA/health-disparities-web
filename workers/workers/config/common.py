@@ -52,7 +52,7 @@ config = {
         'wait_between_stability_checks_seconds': FIVE_MINUTES,
         'poll_interval_seconds': 10
     },
-    'service_user': 'biobankuser',
+    'service_user': 'biouser',
     'stage': {
         'purge': {
             'days_to_live': 20,
@@ -86,10 +86,6 @@ config = {
                 {
                     'name': 'setup_download',
                     'task': 'setup_dataset_download'
-                },
-                {
-                    'name': 'generate_qc',
-                    'task': 'generate_qc'
                 }
             ]
         }

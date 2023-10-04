@@ -136,14 +136,14 @@ if __name__ == "__main__":
         callback=Register('RAW_DATA').register,
         interval=config['registration']['poll_interval_seconds']
     )
-    obs2 = Observer(
-        name='data_products_obs',
-        dir_path=config['registration']['DATA_PRODUCT']['source_dir'],
-        callback=RegisterDataProduct().register,
-        interval=config['registration']['poll_interval_seconds']
-    )
+    # obs2 = Observer(
+    #     name='data_products_obs',
+    #     dir_path=config['registration']['DATA_PRODUCT']['source_dir'],
+    #     callback=RegisterDataProduct().register,
+    #     interval=config['registration']['poll_interval_seconds']
+    # )
 
     poller = Poller()
     poller.register(obs1)
-    poller.register(obs2)
+    # poller.register(obs2)
     poller.poll()

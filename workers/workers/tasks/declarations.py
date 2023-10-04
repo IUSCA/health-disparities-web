@@ -17,13 +17,13 @@ def archive_dataset(celery_task, dataset_id, **kwargs):
     return task_body(celery_task, dataset_id, **kwargs)
 
 
-@app.task(base=WorkflowTask, bind=True, name='delete_dataset',
-          autoretry_for=(Exception,),
-          max_retries=3,
-          default_retry_delay=5)
-def delete_dataset(celery_task, dataset_id, **kwargs):
-    from workers.tasks.delete import delete_dataset as task_body
-    return task_body(celery_task, dataset_id, **kwargs)
+# @app.task(base=WorkflowTask, bind=True, name='delete_dataset',
+#           autoretry_for=(Exception,),
+#           max_retries=3,
+#           default_retry_delay=5)
+# def delete_dataset(celery_task, dataset_id, **kwargs):
+#     from workers.tasks.delete import delete_dataset as task_body
+#     return task_body(celery_task, dataset_id, **kwargs)
 
 
 @app.task(base=WorkflowTask, bind=True, name='download_illumina_dataset',
@@ -103,11 +103,10 @@ def await_stability(celery_task, dataset_id, **kwargs):
     from workers.tasks.await_stability import await_stability as task_body
     return task_body(celery_task, dataset_id, **kwargs)
 
-
-@app.task(base=WorkflowTask, bind=True, name='delete_source',
-          autoretry_for=(Exception,),
-          max_retries=3,
-          default_retry_delay=5)
-def delete_source(celery_task, dataset_id, **kwargs):
-    from workers.tasks.delete_source import delete_source as task_body
-    return task_body(celery_task, dataset_id, **kwargs)
+# @app.task(base=WorkflowTask, bind=True, name='delete_source',
+#           autoretry_for=(Exception,),
+#           max_retries=3,
+#           default_retry_delay=5)
+# def delete_source(celery_task, dataset_id, **kwargs):
+#     from workers.tasks.delete_source import delete_source as task_body
+#     return task_body(celery_task, dataset_id, **kwargs)

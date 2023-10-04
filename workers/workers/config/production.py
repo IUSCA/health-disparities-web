@@ -9,6 +9,24 @@ config = {
     'api': {
         'base_url': 'https://biobank.sca.iu.edu/api/',  # trailing slash is required
     },
+    'paths': {
+        'scratch': '/N/scratch/biouser/biobank/production/scratch',
+        'RAW_DATA': {
+            'archive': f'production/{YEAR}/raw_data',
+            'stage': '/N/scratch/biouser/biobank/production/stage/raw_data',
+        },
+        'DATA_PRODUCT': {
+            'archive': f'production/{YEAR}/data_products',
+            'stage': '/N/scratch/biouser/biobank/production/stage/data_products',
+        },
+        'download_dir': '/N/scratch/biouser/biobank/production/download',
+        'root': '/N/scratch/biouser/'
+    },
+    'registration': {
+        'RAW_DATA': {
+            'source_dir': '/N/project/biobank/phi_ingest_biobank_regeneron_KEEPTRXyunlong/WES/originalData/regeneron_grouped'
+        },
+    },
     'celery': {
         'queue': {
             'url': 'commons3.sca.iu.edu:5672/celery_api',

@@ -222,5 +222,8 @@ def post_worker_logs(process_id: str, logs: list[dict]):
         r.raise_for_status()
 
 
-if __name__ == '__main__':
-    pass
+def find_participants_by_ib_id(ib_id):
+    with APIServerSession() as s:
+        r = s.get(f'participant/ib_id/{ib_id}')
+        r.raise_for_status()
+        return r.json()

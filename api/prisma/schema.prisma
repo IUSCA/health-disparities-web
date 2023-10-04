@@ -23,6 +23,7 @@ model dataset {
   is_deleted       Boolean             @default(false)
   is_staged        Boolean             @default(false)
   metadata         Json?
+  participant_id   Int?
   workflows        workflow[]
   files            dataset_file[]
   audit_logs       dataset_audit[]
@@ -30,6 +31,7 @@ model dataset {
   derived_datasets dataset_hierarchy[] @relation("source_datasets")
   source_datasets  dataset_hierarchy[] @relation("derived_datasets")
   projects         project_dataset[]
+  participant      participant?        @relation(fields: [participant_id], references: [id])
 
   @@unique([name, type])
 }
@@ -110,8 +112,8 @@ model user {
   projects      project_user[]
   password      user_password?
   login         user_login?
-  groups   group_user[]
-  cohorts  cohort_user[]
+  groups        group_user[]
+  cohorts       cohort_user[]
 }
 
 model user_password {
@@ -242,25 +244,26 @@ model participant {
   dxs          dx[]
   hospitals    hospital[]
   medications  medication[]
+  datasets     dataset[]
 
   @@unique([ib_id, study_id])
 }
 
 model stats {
-  id           Int           @id @default(autoincrement())
-  name         String
-  stats        Json
+  id    Int    @id @default(autoincrement())
+  name  String
+  stats Json
 }
 
 model demographic {
-  id           Int       @id @default(autoincrement())
-  gender       String
-  race         String
-  ethnicity    String?
-  max_enc_date DateTime
-  chs_flag     Int
-  dob          DateTime
-  enroll_date  DateTime?
+  id             Int         @id @default(autoincrement())
+  gender         String
+  race           String
+  ethnicity      String?
+  max_enc_date   DateTime
+  chs_flag       Int
+  dob            DateTime
+  enroll_date    DateTime?
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
 
@@ -268,12 +271,12 @@ model demographic {
 }
 
 model lab {
-  id       Int      @id @default(autoincrement())
-  name     String
-  date     DateTime
-  category String   @db.VarChar(100)
-  result   Decimal
-  unit     String   @db.VarChar(100)
+  id             Int         @id @default(autoincrement())
+  name           String
+  date           DateTime
+  category       String      @db.VarChar(100)
+  result         Decimal
+  unit           String      @db.VarChar(100)
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
 
@@ -282,10 +285,10 @@ model lab {
 }
 
 model covid_test {
-  id   Int      @id @default(autoincrement())
-  name String
-  date DateTime
-  result String
+  id             Int         @id @default(autoincrement())
+  name           String
+  date           DateTime
+  result         String
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
 
@@ -293,13 +296,13 @@ model covid_test {
 }
 
 model covid_vax {
-  id           Int      @id @default(autoincrement())
-  name         String   @db.VarChar(100)
-  date         DateTime
-  manufacturer String
-  dose_number  Int
-  series_doses Int
-  is_booster   String
+  id             Int         @id @default(autoincrement())
+  name           String      @db.VarChar(100)
+  date           DateTime
+  manufacturer   String
+  dose_number    Int
+  series_doses   Int
+  is_booster     String
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
 
@@ -308,11 +311,11 @@ model covid_vax {
 
 // AKA diagnosis
 model dx {
-  id   Int    @id @default(autoincrement())
-  name String
-  date        DateTime
-  code        String
-  code_system String
+  id             Int         @id @default(autoincrement())
+  name           String
+  date           DateTime
+  code           String
+  code_system    String
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
 
@@ -321,7 +324,7 @@ model dx {
 
 // e.g. hospital visit, admission
 model hospital {
-  id             Int       @id @default(autoincrement())
+  id             Int         @id @default(autoincrement())
   enc_id         String
   admit_date     DateTime
   discharge_date DateTime?
@@ -332,7 +335,7 @@ model hospital {
 }
 
 model medication {
-  id                 Int      @id @default(autoincrement())
+  id                 Int         @id @default(autoincrement())
   name               String
   category           String
   start_date         DateTime
@@ -341,53 +344,53 @@ model medication {
   nbr_refills        Int?
   strength_dose      String?
   strength_dose_unit String?
-  participant_id Int
-  participant    participant @relation(fields: [participant_id], references: [id])
+  participant_id     Int
+  participant        participant @relation(fields: [participant_id], references: [id])
 }
 
 model results_by {
-  id      Int    @id @default(autoincrement())
-  name    String
+  id     Int    @id @default(autoincrement())
+  name   String
   fields Json
 }
 
 model cohort {
-  id       Int               @id @default(autoincrement())
-  name     String
-  query    Json
+  id           Int                   @id @default(autoincrement())
+  name         String
+  query        Json
   participants cohort_participants[]
-  users    cohort_user[]
+  users        cohort_user[]
 }
 
 model cohort_user {
-  cohort_id  Int
-  user_id    Int
-  cohorts    cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users      user   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cohort_id Int
+  user_id   Int
+  cohorts   cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users     user   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([cohort_id, user_id])
 }
 
 model group {
-  id       Int               @id @default(autoincrement())
-  name     String
-  query    Json
-  users    group_user[]
+  id    Int          @id @default(autoincrement())
+  name  String
+  query Json
+  users group_user[]
 }
 
 model group_user {
-  group_id  Int
-  user_id   Int
-  groups    group @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users     user  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  group_id Int
+  user_id  Int
+  groups   group @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users    user  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([group_id, user_id])
 }
 
 model cohort_participants {
-  cohort_id  Int
+  cohort_id      Int
   participant_id Int
-  cohorts    cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cohorts        cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([cohort_id, participant_id])
 }
