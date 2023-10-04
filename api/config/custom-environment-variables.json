@@ -11,6 +11,9 @@
     "db": "DATABASE_DB",
     "schema": "DATABASE_SCHEMA"
   },
+  "variant_db": {
+    "password": "VARIANT_DB_PASSWORD"
+  },
   "mode": "NODE_ENV",
   "workflow_server": {
     "auth_token": "WORKFLOW_AUTH_TOKEN"
