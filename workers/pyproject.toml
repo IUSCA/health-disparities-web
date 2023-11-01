@@ -13,6 +13,10 @@ sca-rhythm = "^0.6.11"
 requests = "^2.31.0"
 urllib3 = "<2"           # because of ssl conflicts
 glom = "^23.3.0"
+cyvcf2 = "^0.30.22"
+tqdm = "^4.66.1"
+psycopg2 = "^2.9.9"
+pytest = "^7.4.2"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.0.7"

@@ -9,6 +9,7 @@ APP_API_TOKEN = os.environ['APP_API_TOKEN']
 QUEUE_PASSWORD = os.environ['QUEUE_PASS']
 MONGO_PASSWORD = os.environ['MONGO_PASS']
 ALIAS_SALT = os.environ['ALIAS_SALT']
+POSTGRES_PASSWORD = os.environ['POSTGRES_PASSWORD']
 
 ONE_HOUR = 60 * 60
 ONE_GIGABYTE = 1024 * 1024 * 1024
@@ -101,5 +102,12 @@ config = {
             'username': 'root',
             'password': MONGO_PASSWORD
         }
+    },
+    'variant_database': {
+        'database': 'app',
+        'user': 'appuser',
+        'password': POSTGRES_PASSWORD,
+        'host': 'localhost',
+        'port': '5532',
     }
 }

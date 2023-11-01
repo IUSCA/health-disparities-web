@@ -87,7 +87,6 @@ def inspect_dataset(celery_task, dataset_id, **kwargs):
     num_files, num_directories, size, num_genome_files, metadata = generate_metadata(celery_task, source)
 
     participant_id = get_participant_id(source.name)
-    vendor = 'REGENERON' if participant_id is not None else 'GASTRO'
 
     update_data = {
         'du_size': du_size,
@@ -96,10 +95,8 @@ def inspect_dataset(celery_task, dataset_id, **kwargs):
         'num_directories': num_directories,
         'metadata': {
             'num_genome_files': num_genome_files,
-            'vendor': vendor
         },
         'participant_id': participant_id
-
     }
     api.update_dataset(dataset_id=dataset_id, update_data=update_data)
     api.add_files_to_dataset(dataset_id=dataset_id, files=metadata)
