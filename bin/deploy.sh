@@ -24,7 +24,9 @@ echo APP_GID=$APP_GID >> .env
 if [ -z "$RELEASE" ]; then
   sudo docker compose -f "docker-compose-prod.yml" build api
   sudo docker compose -f "docker-compose-prod.yml" up -d
+  sudo docker compose -f "docker-compose-prod.yml" restart
 else
   sudo docker compose -f "docker-compose-rel.yml" build api
   sudo docker compose -f "docker-compose-rel.yml" up -d
+  sudo docker compose -f "docker-compose-rel.yml" restart
 fi

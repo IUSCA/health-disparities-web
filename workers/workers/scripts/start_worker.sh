@@ -7,5 +7,5 @@ python -m celery \
   --pidfile celery_worker.pid \
   --hostname 'biobank-celery-w1@%h' \
   --autoscale 8,3 \
-  --queues 'biobank-dev.sca.iu.edu.q' \
+  --queues 'biobank-dev.sca.iu.edu.q'
   # --detach

@@ -35,6 +35,14 @@
           </td>
         </tr>
         <tr>
+          <td>Storage Allocation</td>
+          <td>
+            <span class="spacing-wider">
+              {{ formatBytes(project_space_occupied) }}
+            </span>
+          </td>
+        </tr>
+        <tr>
           <td>Genome Browser</td>
           <td>
             <BinaryStatusChip :status="props.project.browser_enabled" />
@@ -64,7 +72,15 @@
 
 <script setup>
 import * as datetime from "@/services/datetime";
+import { formatBytes } from "@/services/utils";
 const props = defineProps({ project: Object });
+
+const project_space_occupied = computed(() => {
+  return (props.project?.datasets || []).reduce(
+    (acc, curr) => acc + (parseInt(curr?.dataset?.size) || 0),
+    0,
+  );
+});
 </script>
 
 <style lang="scss" scoped>

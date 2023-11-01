@@ -8,7 +8,7 @@
     <div class="">
       <!-- sm:w-full -->
       <span class="va-text-secondary">
-        There are multiple methods available to access the project data. Please
+        There are multiple methods available to access the dataset. Please
         select the option that best fits your needs. Use care when downloading
         datasets outside of the IU network; large datasets can consume a
         significant portion of a home ISP's monthly data cap. Transfers within
@@ -27,7 +27,7 @@
           <!-- Name and caption -->
           <va-list-item-section>
             <va-list-item-label>
-              <span class="text-lg">Direct Download</span>
+              <span class="text-lg">Direct Download (Individual Files)</span>
               <span class="px-1"> - </span>
               <span class="">
                 Transfer of all files will use
@@ -51,6 +51,37 @@
                 class="self-end"
               />
             </a>
+          </va-list-item-section>
+        </va-list-item>
+
+        <!-- Direct Download -->
+        <va-list-item>
+          <!-- icon -->
+          <va-list-item-section avatar>
+            <i-mdi:folder-zip-outline class="text-2xl" />
+          </va-list-item-section>
+
+          <!-- .tar file download -->
+          <va-list-item-section>
+            <va-list-item-label>
+              <span class="text-lg">Download Archive</span>
+              <span class="px-1"> - </span>
+              <span class="">
+                Size: {{ formatBytes(dataset.bundle_size) }}
+              </span>
+            </va-list-item-label>
+          </va-list-item-section>
+
+          <!-- Action icon -->
+          <va-list-item-section class="flex-none">
+            <va-button
+              preset="secondary"
+              icon="download"
+              color="primary"
+              round
+              class="self-end"
+              @click="initiate_dataset_download"
+            />
           </va-list-item-section>
         </va-list-item>
 
@@ -80,7 +111,11 @@
 
           <!-- Action icon -->
           <va-list-item-section class="flex-none">
-            <CopyButton :text="downloadPath" preset="secondary" />
+            <CopyButton
+              :text="downloadPath"
+              preset="secondary"
+              @text-copied="log_data_access"
+            />
           </va-list-item-section>
         </va-list-item>
       </va-list>
@@ -97,16 +132,16 @@
 </template>
 
 <script setup>
+import statisticsService from "@/services/statistics";
+import datasetService from "@/services/dataset";
 import config from "@/config";
-import { formatBytes } from "@/services/utils";
+import { formatBytes, downloadFile } from "@/services/utils";
+import { useToastStore } from "@/stores/toast";
 
 const props = defineProps({
   dataset: {
     type: Object,
     default: () => ({}),
-  },
-  projectId: {
-    type: String,
   },
 });
 // const emit = defineEmits(["update"]);
@@ -117,13 +152,47 @@ defineExpose({
   hide,
 });
 
+const toast = useToastStore();
+
 const downloadURL = computed(() => {
-  return `${window.location.origin}/datasets/filebrowser/${props.dataset?.id}`;
+  return `${window.location.origin}/datasets/${props.dataset?.id}/filebrowser`;
 });
 
 const downloadPath = computed(() => {
   return `${config.paths.download}/${props.dataset.metadata?.stage_alias}`;
 });
+
+const log_data_access = () => {
+  statisticsService
+    .log_data_access({
+      access_type: config.download_types.SLATE_SCRATCH,
+      file_id: null,
+      dataset_id: props.dataset.id,
+    })
+    .catch((e) => {
+      console.log("Unable to log data access attempt", e);
+      toast.error("Unable to log data access attempt");
+    });
+};
+
+const initiate_dataset_download = () => {
+  datasetService
+    .get_file_download_data({
+      dataset_id: props.dataset.id,
+    })
+    .then((res) => {
+      const url = new URL(res.data.url);
+      url.searchParams.set("token", res.data.bearer_token);
+      downloadFile({
+        url: url.toString(),
+        filename: props.dataset.name,
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error("Unable to initiate dataset download");
+    });
+};
 
 const visible = ref(false);
 

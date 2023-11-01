@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-4">
     <!-- Storage -->
     <div class="">
-      <span class="text-xl font-bold block my-1">RESOURCE USAGE</span>
+      <span class="text-xl font-bold block mb-1">RESOURCE USAGE</span>
       <Storage></Storage>
     </div>
 
@@ -62,6 +62,7 @@ import workflowService from "@/services/workflow";
 import DatasetService from "@/services/dataset";
 import { useToastStore } from "@/stores/toast";
 import { useNavStore } from "@/stores/nav";
+import _ from "lodash";
 
 const toast = useToastStore();
 const nav = useNavStore();
@@ -73,9 +74,10 @@ const raw_data_stats = ref({});
 const data_products_stats = ref({});
 
 workflowService
-  .getAll({ last_task_run: true, only_active: true })
+  .getAll({ last_task_run: true, status: "ACTIVE" })
   .then((res) => {
-    workflows.value = res.data;
+    workflows.value = res.data.results;
+    console.log("workflows", workflows.value);
   })
   .catch((err) => {
     console.error(err);

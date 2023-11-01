@@ -1,7 +1,4 @@
 {
-  "express": {
-    "port": "PORT"
-  },
   "postgres": {
     
     "hostname": "DATABASE_HOST",

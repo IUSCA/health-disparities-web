@@ -18,6 +18,7 @@ const datasetService = require('../services/dataset');
 const authService = require('../services/auth');
 
 const isPermittedTo = accessControl('datasets');
+
 const router = express.Router();
 const prisma = new PrismaClient();
 
@@ -105,6 +106,65 @@ const assoc_body_schema = {
     toInt: true,
   },
 };
+
+const buildQueryObject = ({
+  deleted, processed, archived, staged, type, name, days_since_last_staged,
+}) => {
+  const query_obj = _.omitBy(_.isUndefined)({
+    is_deleted: deleted,
+    archive_path: archived ? { not: null } : {},
+    is_staged: staged,
+    type,
+    name: {
+      contains: name,
+      mode: 'insensitive', // case-insensitive search
+    },
+  });
+
+  // processed=true: datasets with one or more workflows associated
+  // processed=false: datasets with no workflows associated
+  // processed=undefined/null: no query based on workflow association
+  if (!_.isNil(processed)) {
+    query_obj.workflows = { [processed ? 'some' : 'none']: {} };
+  }
+
+  // staged datasets where there is no STAGED state in last x days
+  if (_.isNumber(days_since_last_staged)) {
+    const xDaysAgo = new Date();
+    xDaysAgo.setDate(xDaysAgo.getDate() - days_since_last_staged);
+
+    query_obj.is_staged = true;
+    query_obj.NOT = {
+      states: {
+        some: {
+          state: 'STAGED',
+          timestamp: {
+            gte: xDaysAgo,
+          },
+        },
+      },
+    };
+  }
+
+  return query_obj;
+};
+
+const buildOrderByObject = (field, sortOrder, nullsLast = true) => {
+  const nullable_order_by_fields = ['num_directories', 'num_files', 'du_size', 'size'];
+
+  if (!field || !sortOrder) {
+    return {};
+  }
+  if (nullable_order_by_fields.includes(field)) {
+    return {
+      [field]: { sort: sortOrder, nulls: nullsLast ? 'last' : 'first' },
+    };
+  }
+  return {
+    [field]: sortOrder,
+  };
+};
+
 router.post(
   '/associations',
   isPermittedTo('update'),
@@ -121,61 +181,62 @@ router.post(
   }),
 );
 
-// get all - worker + UI
+// Get all datasets, and the count of datasets. Results can optionally be filtered and sorted by
+// the criteria specified.
+// Used by workers + UI.
 router.get(
   '/',
   isPermittedTo('read'),
   validate([
-    query('deleted').toBoolean().optional(),
+    query('deleted').toBoolean().default(false),
     query('processed').toBoolean().optional(),
+    query('archived').toBoolean().optional(),
+    query('staged').toBoolean().optional(),
     query('type').isIn(config.dataset_types).optional(),
-    query('name').optional(),
+    query('name').notEmpty().escape().optional(),
     query('days_since_last_staged').isInt().toInt().optional(),
+    query('limit').isInt().toInt().optional(),
+    query('offset').isInt().toInt().optional(),
+    query('sortBy').isObject().optional(),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['datasets']
-    const query_obj = _.omitBy(_.isUndefined)({
-      is_deleted: req.query.deleted,
+
+    const sortBy = req.query.sortBy || {};
+
+    const query_obj = buildQueryObject({
+      deleted: req.query.deleted,
+      processed: req.query.processed,
+      archived: req.query.archived,
+      staged: req.query.staged,
       type: req.query.type,
       name: req.query.name,
+      days_since_last_staged: req.query.days_since_last_staged,
     });
 
-    // processed=true: datasets with one or more workflows associated
-    // processed=false: datasets with no workflows associated
-    // processed=undefined/null: no query based on workflow association
-    if (!_.isNil(req.query.processed)) {
-      query_obj.workflows = { [req.query.processed ? 'some' : 'none']: {} };
-    }
-
-    // staged datasets where there is no STAGED state in last x days
-    if (_.isNumber(req.query.days_since_last_staged)) {
-      const xDaysAgo = new Date();
-      xDaysAgo.setDate(xDaysAgo.getDate() - req.query.days_since_last_staged);
-
-      query_obj.is_staged = true;
-      query_obj.NOT = {
-        states: {
-          some: {
-            state: 'STAGED',
-            timestamp: {
-              gte: xDaysAgo,
-            },
-          },
-        },
-      };
-    }
-
-    const datasets = await prisma.dataset.findMany({
-      where: query_obj,
+    const filterQuery = { where: query_obj };
+    const datasetRetrievalQuery = {
+      skip: req.query.offset,
+      take: req.query.limit,
+      ...filterQuery,
+      orderBy: buildOrderByObject(Object.keys(sortBy)[0], Object.values(sortBy)[0]),
       include: {
         ...datasetService.INCLUDE_WORKFLOWS,
         ...datasetService.INCLUDE_STATES,
         source_datasets: true,
         derived_datasets: true,
       },
-    });
+    };
 
-    res.json(datasets);
+    const [datasets, count] = await prisma.$transaction([
+      prisma.dataset.findMany({ ...datasetRetrievalQuery }),
+      prisma.dataset.count({ ...filterQuery }),
+    ]);
+
+    res.json({
+      metadata: { count },
+      datasets,
+    });
   }),
 );
 
@@ -234,6 +295,7 @@ router.post(
   validate([
     body('du_size').optional().notEmpty().customSanitizer(BigInt), // convert to BigInt
     body('size').optional().notEmpty().customSanitizer(BigInt),
+    body('bundle_size').optional().notEmpty().customSanitizer(BigInt),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['datasets']
@@ -285,6 +347,8 @@ router.patch(
     body('du_size').optional().notEmpty().bail()
       .customSanitizer(BigInt), // convert to BigInt
     body('size').optional().notEmpty().bail()
+      .customSanitizer(BigInt),
+    body('bundle_size').optional().notEmpty().bail()
       .customSanitizer(BigInt),
   ]),
   asyncHandler(async (req, res, next) => {
@@ -392,29 +456,19 @@ router.delete(
   isPermittedTo('delete'),
   validate([
     param('id').isInt().toInt(),
-    query('soft_delete').toBoolean().default(true),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['datasets']
-    // #swagger.summary = For soft delete, starts a delete archive workflow and
-    // marks the dataset as deleted on success. Dataset is hard deleted only when there are no
-    // workflow association
+    // #swagger.summary = starts a delete archive workflow which will
+    // mark the dataset as deleted on success.
     const _dataset = await datasetService.get_dataset({
       id: req.params.id,
       workflows: true,
     });
 
     if (_dataset) {
-      if (req.query.soft_delete) {
-        await datasetService.soft_delete(_dataset, req.user?.id);
-        res.send();
-      } else if ((_dataset.workflows?.length || 0) === 0) {
-        // no workflows - safe to delete
-        await datasetService.hard_delete(_dataset.id);
-        res.send();
-      } else {
-        next(createError.Conflict('Unable to delete as one or more workflows are associated with this bacth'));
-      }
+      await datasetService.soft_delete(_dataset, req.user?.id);
+      res.send();
     } else {
       next(createError(404));
     }
@@ -433,6 +487,21 @@ router.post(
     // #swagger.tags = ['datasets']
     // #swagger.summary = Create and start a workflow and associate it.
     // Allowed names are stage, integrated
+
+    // Log the staging attempt first.
+    // Catch errors to ensure that logging does not get in the way of the rest of the method.
+    if (req.params.wf === 'stage') {
+      try {
+        await prisma.stage_request_log.create({
+          data: {
+            dataset_id: req.params.id,
+            user_id: req.user.id,
+          },
+        });
+      } catch (e) {
+      // console.log()
+      }
+    }
 
     const dataset = await datasetService.get_dataset({
       id: req.params.id,
@@ -534,22 +603,42 @@ router.get(
 );
 
 router.get(
-  '/:id/files/:file_id/download',
+  '/download/:id',
   validate([
     param('id').isInt().toInt(),
-    param('file_id').isInt().toInt(),
+    query('file_id').isInt().toInt().optional(),
   ]),
   dataset_access_check,
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['datasets']
     // #swagger.summary = Get file download URL and token
 
-    const file = await prisma.dataset_file.findFirstOrThrow({
-      where: {
-        id: req.params.file_id,
-        dataset_id: req.params.id,
-      },
-    });
+    const isFileDownload = !!req.query.file_id;
+
+    // Log the data access attempt first.
+    // Catch errors to ensure that logging does not get in the way of the rest of the method.
+    try {
+      await prisma.data_access_log.create({
+        data: {
+          access_type: 'BROWSER',
+          file_id: isFileDownload ? req.query.file_id : undefined,
+          dataset_id: !isFileDownload ? req.params.id : undefined,
+          user_id: req.user.id,
+        },
+      });
+    } catch (e) {
+      // console.log();
+    }
+
+    let file;
+    if (isFileDownload) {
+      file = await prisma.dataset_file.findFirstOrThrow({
+        where: {
+          id: req.query.file_id,
+          dataset_id: req.params.id,
+        },
+      });
+    }
 
     const dataset = await prisma.dataset.findFirstOrThrow({
       where: {
@@ -558,7 +647,9 @@ router.get(
     });
 
     if (dataset.metadata.stage_alias) {
-      const download_file_path = `${dataset.metadata.stage_alias}/${file.path}`;
+      const download_file_path = isFileDownload
+        ? `${dataset.metadata.stage_alias}/${file.path}`
+        : `${dataset.metadata.stage_alias}/${dataset.name}.tar`;
       const download_token = await authService.get_download_token(download_file_path);
 
       const url = new URL(download_file_path, config.get('download_server.base_url'));

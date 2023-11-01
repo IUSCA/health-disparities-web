@@ -121,21 +121,22 @@ def dataset_getter(dataset: dict):
 def dataset_setter(dataset: dict):
     # convert du_size and size from int to string
     if dataset is not None:
-        for key in ['du_size', 'size']:
+        for key in ['du_size', 'size', 'bundle_size']:
             int_to_str(dataset, key)
     return dataset
 
 
-def get_all_datasets(dataset_type=None, name=None, days_since_last_staged=None):
+def get_all_datasets(dataset_type=None, name=None, days_since_last_staged=None, deleted=False):
     with APIServerSession() as s:
         payload = {
             'type': dataset_type,
             'name': name,
-            'days_since_last_staged': days_since_last_staged
+            'days_since_last_staged': days_since_last_staged,
+            'deleted': deleted
         }
         r = s.get('datasets', params=payload)
         r.raise_for_status()
-        datasets = r.json()
+        datasets = r.json()['datasets']
         return [dataset_getter(dataset) for dataset in datasets]
 
 

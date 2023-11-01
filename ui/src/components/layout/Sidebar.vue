@@ -1,5 +1,10 @@
 <template>
-  <va-sidebar :minimized="props.isSidebarCollapsed" class="pt-2">
+  <va-sidebar
+    :minimized="props.isSidebarCollapsed"
+    class="pt-2"
+    width="13rem"
+    minimizedWidth="0"
+  >
     <va-sidebar-item
       v-for="(item, i) in user_items"
       :key="i"
@@ -186,6 +191,16 @@ const operator_items = ref([
     title: "User Management",
     path: "/users",
   },
+  {
+    icon: "mdi-format-list-bulleted",
+    title: "Stats/Tracking",
+    path: "/stats",
+  },
+  {
+    icon: "mdi:map-marker-path",
+    title: "Workflows",
+    path: "/workflows",
+  },
   // {
   //   icon: "mdi-account-multiple",
   //   title: "Group Management",
@@ -195,11 +210,6 @@ const operator_items = ref([
   //   icon: 'mdi-delete-empty-outline',
   //   title: 'Data Cleanup',
   //   path: '/clean',
-  // },
-  // {
-  //   icon: "mdi-format-list-bulleted",
-  //   title: "Stats/Tracking",
-  //   path: "/stats",
   // },
 ]);
 

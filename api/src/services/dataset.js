@@ -92,7 +92,26 @@ async function create_workflow(dataset, wf_name) {
 }
 
 async function soft_delete(dataset, user_id) {
-  await create_workflow(dataset, 'delete');
+  if (dataset.archive_path) {
+    // if archived, starts a delete archive workflow which will
+    // mark the dataset as deleted on success.
+    await create_workflow(dataset, 'delete');
+  } else {
+    // if not archived, mark the dataset as deleted
+    await prisma.dataset.update({
+      data: {
+        is_deleted: true,
+        states: {
+          create: {
+            state: 'DELETED',
+          },
+        },
+      },
+      where: {
+        id: dataset.id,
+      },
+    });
+  }
 
   await prisma.dataset_audit.create({
     data: {
@@ -101,55 +120,6 @@ async function soft_delete(dataset, user_id) {
       dataset_id: dataset.id,
     },
   });
-}
-
-async function hard_delete(id) {
-  const deleteFiles = prisma.dataset_file.deleteMany({
-    where: {
-      dataset_id: id,
-    },
-  });
-  const deleteWorkflows = prisma.workflow.deleteMany({
-    where: {
-      dataset_id: id,
-    },
-  });
-  const deleteAudit = prisma.dataset_audit.deleteMany({
-    where: {
-      dataset_id: id,
-    },
-  });
-  const deleteStates = prisma.dataset_state.deleteMany({
-    where: {
-      dataset_id: id,
-    },
-  });
-  const deleteAssociations = prisma.dataset_hierarchy.deleteMany({
-    where: {
-      OR: [
-        {
-          source_id: id,
-        },
-        {
-          derived_id: id,
-        },
-      ],
-    },
-  });
-  const deleteDataset = prisma.dataset.delete({
-    where: {
-      id,
-    },
-  });
-
-  await prisma.$transaction([
-    deleteFiles,
-    deleteWorkflows,
-    deleteAudit,
-    deleteStates,
-    deleteAssociations,
-    deleteDataset,
-  ]);
 }
 
 async function get_dataset({
@@ -193,7 +163,7 @@ async function get_dataset({
         prev_task_runs,
         workflow_ids: dataset.workflows.map((x) => x.id),
       });
-      dataset.workflows = wf_res.data;
+      dataset.workflows = wf_res.data.results;
     } catch (error) {
       log_axios_error(error);
       dataset.workflows = [];
@@ -511,7 +481,6 @@ async function add_files({ dataset_id, data }) {
 
 module.exports = {
   soft_delete,
-  hard_delete,
   INCLUDE_STATES,
   INCLUDE_WORKFLOWS,
   get_dataset,
