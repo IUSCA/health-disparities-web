@@ -1,0 +1,58 @@
+// database
+datasource db {
+  provider = "postgresql"
+  url      = "file:database.db"
+}
+
+// generator
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+}
+
+model annotation {
+  id            Int               @id @default(autoincrement())
+  chr           Int
+  start         BigInt
+  end           BigInt
+  ref           String            @db.Char(1)
+  alt           String            @db.Char(1)
+  func          String?
+  genes         annotation_gene[]
+  exonic_func   String?
+  aa_change     String?
+  af_afr        Float?
+  af_sas        Float?
+  af_amr        Float?
+  af_eas        Float?
+  af_nfe        Float?
+  af_fin        Float?
+  af_asj        Float?
+  af_oth        Float?
+  cln_allele_id Int?
+  cln_rev_stat  String?
+}
+
+model gene {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  annotations annotation_gene[]
+}
+
+model annotation_gene {
+  id            Int    @id @default(autoincrement())
+  annotation_id Int
+  gene_id       Int
+  pos           Int
+  dist          Float?
+
+  annotation annotation @relation(fields: [annotation_id], references: [id])
+  gene       gene       @relation(fields: [gene_id], references: [id])
+}
+
+model annotation_metadata {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+}
