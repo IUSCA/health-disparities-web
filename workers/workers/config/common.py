@@ -108,6 +108,6 @@ config = {
         'user': 'appuser',
         'password': POSTGRES_PASSWORD,
         'host': 'localhost',
-        'port': '5532',
+        'port': '5432',
     }
 }

@@ -17,6 +17,7 @@ cyvcf2 = "^0.30.22"
 tqdm = "^4.66.1"
 psycopg2 = "^2.9.9"
 pytest = "^7.4.2"
+pandas = "^2.1.2"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.0.7"

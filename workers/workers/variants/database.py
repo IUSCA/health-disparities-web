@@ -10,13 +10,13 @@ conn = None
 def initialize_db_connection():
     global conn
     print('connecting to the database')
-    conn = psycopg2.connect(**config['database'], gssencmode='disable')
+    conn = psycopg2.connect(**config['variant_database'], gssencmode='disable')
     return conn
 
 
 def connect_to_database():
     try:
-        connection = psycopg2.connect(**config['database'], gssencmode='disable')
+        connection = psycopg2.connect(**config['variant_database'], gssencmode='disable')
         return connection
     except Exception as e:
         print(f"Error connecting to the database: {e}")

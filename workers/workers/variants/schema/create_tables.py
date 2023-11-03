@@ -1,6 +1,5 @@
 from workers.variants.database import conn
 
-# Create a cursor
 cur = conn.cursor()
 
 # SQL statements to create the parent table and partitions
@@ -8,8 +7,8 @@ create_parent_table_sql = """
 CREATE TABLE IF NOT EXISTS variant (
     chromosome smallint NOT NULL,
     position bigint NOT NULL,
-    reference char(1) NOT NULL,
-    alternate char(1) NOT NULL,
+    reference text NOT NULL,
+    alternate text NOT NULL,
     genotype smallint[],
     PRIMARY KEY (chromosome, position, reference, alternate)
 ) PARTITION BY LIST (chromosome);
