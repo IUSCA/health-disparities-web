@@ -63,3 +63,5 @@ backup
 meili_data/*
 typesense-data/*
 annotations
+variants/*
+todo.md

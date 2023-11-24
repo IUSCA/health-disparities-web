@@ -265,9 +265,9 @@ model project_contact {
 model participant {
   id                    Int                    @id @default(autoincrement())
   ib_id                 String
-  study_id              Int
-  enroll_snapshot_id  Int?
-  enroll_snapshot     snapshot?              @relation(name: "enrolls", fields: [enroll_snapshot_id], references: [id])
+  study_id              Int?
+  enroll_snapshot_id    Int?
+  enroll_snapshot       snapshot?              @relation(name: "enrolls", fields: [enroll_snapshot_id], references: [id])
   disenroll_snapshot_id Int?
   disenroll_snapshot    snapshot?              @relation(name: "disenrolls", fields: [disenroll_snapshot_id], references: [id])
   demographics          demographic[]
@@ -280,7 +280,7 @@ model participant {
   datasets              dataset[]
   protocols             participant_protocol[]
 
-  @@unique([ib_id, study_id])
+  @@unique([ib_id])
 }
 
 model stats {
@@ -463,6 +463,8 @@ model variant {
   position      BigInt
   ref           String
   alt           String
+  source        String
+  phased        Boolean
   genotype      Int[]   @db.SmallInt
   allele_count  Int?
   allele_number Int?
@@ -484,7 +486,7 @@ model variant {
   cln_rev_stat  String?
   cln_sig       String?
 
-  @@id([chr, position, ref, alt])
+  @@id([chr, position, ref, alt, source])
   @@index([genes])
   @@index([cln_sig])
 }

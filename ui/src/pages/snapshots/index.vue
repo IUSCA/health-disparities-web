@@ -7,7 +7,7 @@
         <va-input
           v-model="filterInput"
           class="w-full"
-          placeholder="Search snapshots by name, id, or description..."
+          placeholder="Search snapshots by id, name, author, or description..."
           outline
           clearable
         >
@@ -153,15 +153,17 @@ const row_items = computed(() => {
         id: s.id,
         name: s.name,
         description: s.description,
+        author: s.author?.username,
       })
     );
   });
 });
 
-function customFilteringFn(searchText, { id, name, description }) {
+function customFilteringFn(searchText, { id, name, description, author }) {
   return (
     (name || "").toLowerCase().includes(searchText) ||
     (description || "").toLowerCase().includes(searchText) ||
+    (author || "").toLowerCase().includes(searchText) ||
     `${id}` === searchText
   );
 }

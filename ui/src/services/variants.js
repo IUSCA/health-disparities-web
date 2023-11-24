@@ -9,6 +9,23 @@ class VariantService {
       },
     });
   }
+
+  getAnnotations({ query, offset = 0, limit = 50, sortOptions = null }) {
+    return api.get(`/variants/annotations`, {
+      params: {
+        ...query,
+        offset,
+        limit,
+        sortOptions,
+      },
+    });
+  }
+
+  getAnnotationFilters({ query }) {
+    return api.get(`/variants/annotations/filters`, {
+      params: query,
+    });
+  }
 }
 
 export default new VariantService();

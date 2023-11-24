@@ -7,7 +7,7 @@
         <va-input
           v-model="filterInput"
           class="w-full"
-          placeholder="Search protocols by name or description..."
+          placeholder="Search protocols by name, author or description..."
           outline
           clearable
         >
@@ -131,19 +131,19 @@ const row_items = computed(() => {
     return (
       searchText === "" ||
       customFilteringFn(searchText, {
-        id: s.id,
         name: s.name,
         description: s.description,
+        author: s.author?.username,
       })
     );
   });
 });
 
-function customFilteringFn(searchText, { id, name, description }) {
+function customFilteringFn(searchText, { name, description, author }) {
   return (
     (name || "").toLowerCase().includes(searchText) ||
     (description || "").toLowerCase().includes(searchText) ||
-    `${id}` === searchText
+    (author || "").toLowerCase().includes(searchText)
   );
 }
 

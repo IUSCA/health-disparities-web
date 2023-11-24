@@ -1,56 +1,65 @@
 import numpy as np
 
 
-def merge_genotype_arrays(existing: list[int], subject_ids: list[int], max_subject_id: int,
+def merge_genotype_arrays(previous_genotype: list[int],
+                          participant_ids: list[int],
+                          max_participant_id: int,
                           genotype_vals: list[int]):
-    ne = len(existing)
+    """
+
+    @param previous_genotype: array of {0,1,2} where position in array corresponds to participant_id
+    @param participant_ids: participant_ids from current vcf
+    @param max_participant_id:
+    @param genotype_vals: genotypes from current vcf
+    @return:
+    """
+    n = len(previous_genotype)
 
     # create an array so that it fits all available subject_ids
-    x = np.array([None] * max(ne, max_subject_id))
+    x = np.array([None] * max(n, max_participant_id))
 
-    # set first ne elements with existing values
-    x[np.arange(ne)] = np.array(existing)
+    # set first n elements with previous values
+    x[np.arange(n)] = np.array(previous_genotype)
 
     # convert subject_ids to zero based indices
-    _ids = np.array(subject_ids) - 1
+    _ids = np.array(participant_ids) - 1
 
     # set values at these indices - existing values will get overwritten
     x[_ids] = genotype_vals
     return x
 
 
-def encode_genotype(genotype: tuple[int, int, bool]) -> int:
+def encode_genotype(genotype: tuple[int, int, bool]) -> int | None:
     """
-    all values of genotypes should be either 0 or 1 - not validated
+    assumptions:
+    - unphased data
+    - all values of genotypes should be either 0 or 1
 
     :param genotype:
     :return:
 
+    ./. - -1
+    ./0 - -1 ?
+    ./1 - -1 ?
     0/0 - 0
-    0/1 - 1 (+3) = 4
-    1/0 - 1 (+3) = 4
-    1/1 - 3 (+3) = 6
+    0/1 - 1
+    1/0 - 1
+    1/1 - 2
 
+    .|. - -1
+    .|* - -1 ?
+    *|. - -1 ?
     0|0 - 0
     0|1 - 1
     1|0 - 2
     1|1 - 3
 
     """
-    phase = genotype[2]
     a, b = genotype[:2]
-    if phase == 0:
-        if a == 0 and b == 0:
-            return 0
-        elif a + b == 1:
-            return 4
-        else:
-            return 6
-    else:
-        if a == 0 and b == 0:
-            return 0
-        else:
-            return a * 2 + b
+    if a is None or b is None:
+        return None
+    assert 0 <= a <= 1 and 0 <= b <= 1, f'a={a}, b={b} should be either 0 or 1'
+    return a + b
 
 
 def decode_genotype(enc_genotype) -> tuple[int, int, int]:

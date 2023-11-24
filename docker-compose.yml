@@ -56,7 +56,7 @@ services:
     image: postgres:14.5
     # restart: unless-stopped
     environment:
-      - POSTGRES_USER=dgluser
+      - POSTGRES_USER=appuser
       - POSTGRES_PASSWORD=example
       - POSTGRES_DB=dgl
     volumes:

@@ -31,8 +31,14 @@ def update(chromosome, position, reference, alternate, genotypes: list[int]):
 
 
 def find_many(params) -> dict:
+    """
+
+    @param params:
+    @return: variant_id to row mapping
+    """
     with conn.cursor() as cursor:
-        select_query = f"SELECT * FROM VARIANT WHERE (chromosome, position, reference, alternate) IN %s"
+        select_query = f"SELECT chromosome, position, reference, alternate FROM VARIANT" \
+                       f" WHERE (chromosome, position, reference, alternate) IN %s"
         cursor.execute(select_query, (params,))
         rows = cursor.fetchall()
 
@@ -58,8 +64,8 @@ def create_many(data) -> None:
 
 def update_many(data) -> None:
     with conn.cursor() as cursor:
-        update_query = f'UPDATE VARIANT SET genotype = %s WHERE chromosome = %s and position = %s and reference = %s ' \
-                       f'and alternate = %s'
+        update_query = f'UPDATE VARIANT SET genotype[%d:%d] = %s WHERE chromosome = %s and position = %s ' \
+                       f'and reference = %s and alternate = %s'
         try:
             cursor.exexecutemanyecute(update_query, data)
             conn.commit()
