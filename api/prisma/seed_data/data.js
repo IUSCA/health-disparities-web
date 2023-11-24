@@ -314,6 +314,108 @@ const project_contact_assoc = [
   },
 ];
 
+const protocols = [
+  {
+    id: 1,
+    name: 'protocol-1',
+    description: 'description of the protocol',
+    author_id: 1,
+  },
+  {
+    id: 2,
+    name: 'protocol-2',
+    author_id: 2,
+  },
+  {
+    id: 3,
+    name: 'protocol-3',
+  },
+];
+
+const snapshots = [
+  {
+    id: 1,
+    name: 'initial snapshot',
+    description: 'add 5 participants',
+    date: '2023-10-16T05:00:00.000Z',
+    published: true,
+    author_id: 1,
+  },
+  {
+    id: 2,
+    name: 'snapshot-2',
+    description: 'add 3 participants and remove 2 participants',
+    date: '2023-11-16T05:00:00.000Z',
+    published: true,
+  },
+  {
+    id: 3,
+    name: 'snapshot-3',
+    description: 'add 2 participants and remove 3 participants',
+    date: '2023-12-16T05:00:00.000Z',
+    published: true,
+    author_id: 3,
+  },
+];
+
+const participants = [
+  {
+    id: 1, ib_id: 'IB_1', study_id: 1, enroll_snapshot_id: 1,
+  },
+  {
+    id: 2, ib_id: 'IB_2', study_id: 1, enroll_snapshot_id: 1, disenroll_snapshot_id: 2,
+  },
+  {
+    id: 3, ib_id: 'IB_3', study_id: 1, enroll_snapshot_id: 1, disenroll_snapshot_id: 3,
+  },
+  {
+    id: 4, ib_id: 'IB_4', study_id: 1, enroll_snapshot_id: 1, disenroll_snapshot_id: 2,
+  },
+  {
+    id: 5, ib_id: 'IB_5', study_id: 1, enroll_snapshot_id: 1,
+  },
+  {
+    id: 6, ib_id: 'IB_6', study_id: 1, enroll_snapshot_id: 2, disenroll_snapshot_id: 3,
+  },
+  {
+    id: 7, ib_id: 'IB_7', study_id: 1, enroll_snapshot_id: 2,
+  },
+  {
+    id: 8, ib_id: 'IB_8', study_id: 1, enroll_snapshot_id: 2, disenroll_snapshot_id: 3,
+  },
+  {
+    id: 9, ib_id: 'IB_9', study_id: 1, enroll_snapshot_id: 3,
+  },
+  {
+    id: 10, ib_id: 'IB_10', study_id: 1, enroll_snapshot_id: 3,
+  },
+];
+
+const protocol_users_map = {
+  1: [1, 2, 3, 7, 8, 9],
+  2: [4, 5, 6],
+  3: [2, 4, 5, 6, 7],
+};
+const user_protocol_assoc = Object.entries(protocol_users_map)
+  .map((curr) => {
+    const protocol_id = parseInt(curr[0], 10);
+    const user_ids = curr[1];
+    return user_ids.map((uid) => ({ user_id: uid, protocol_id }));
+  })
+  .flat();
+
+const protocol_participants_map = {
+  1: [1, 2, 3, 4, 5, 6, 7],
+  2: [8, 9, 10],
+  3: [3, 4, 5, 9, 10],
+};
+const participant_protocol_assoc = Object.entries(protocol_participants_map)
+  .map((curr) => {
+    const protocol_id = parseInt(curr[0], 10);
+    const participants_ids = curr[1];
+    return participants_ids.map((pid) => ({ participant_id: pid, protocol_id }));
+  })
+  .flat();
 module.exports = {
   roles,
   admins,
@@ -328,4 +430,9 @@ module.exports = {
   project_user_assoc,
   project_dataset_assoc,
   project_contact_assoc,
+  protocols,
+  snapshots,
+  participants,
+  user_protocol_assoc,
+  participant_protocol_assoc,
 };

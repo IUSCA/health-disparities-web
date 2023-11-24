@@ -22,4 +22,7 @@ router.use('/cohort', require('./cohort'));
 router.use('/participant', require('./participant'));
 router.use('/variants', require('./variants') /* #swagger.security = [{"BearerAuth": []}] */);
 
+router.use('/snapshots', require('./snapshots'));
+router.use('/protocols', require('./protocols'));
+
 module.exports = router;

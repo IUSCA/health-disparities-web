@@ -43,6 +43,18 @@ const grantsObject = {
     variant: {
       'read:any': ['*'],
     },
+    snapshot: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
+    protocol: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
   },
 
   // user role permissions
@@ -95,6 +107,18 @@ const grantsObject = {
     },
     metrics: {
       'read:any': ['*'],
+    },
+    snapshot: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
+    protocol: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
     },
   },
 };

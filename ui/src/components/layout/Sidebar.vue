@@ -201,11 +201,16 @@ const operator_items = ref([
     title: "Workflows",
     path: "/workflows",
   },
-  // {
-  //   icon: "mdi-account-multiple",
-  //   title: "Group Management",
-  //   path: "/groups",
-  // },
+  {
+    icon: "mdi-account-multiple",
+    title: "Protocols",
+    path: "/protocols",
+  },
+  {
+    icon: "mdi:camera",
+    title: "Data Snapshots",
+    path: "/snapshots",
+  },
   // {
   //   icon: 'mdi-delete-empty-outline',
   //   title: 'Data Cleanup',

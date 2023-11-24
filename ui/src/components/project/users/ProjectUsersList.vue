@@ -8,9 +8,7 @@
       class="col-span-1"
     >
       <va-list-item-section avatar>
-        <va-avatar :color="stringToRGB(user.name || '')" size="small">
-          <span class="text-sm uppercase">{{ initials(user.name) }}</span>
-        </va-avatar>
+        <UserAvatar :username="user.name" :name="user.name" />
       </va-list-item-section>
 
       <va-list-item-section>
@@ -48,9 +46,7 @@
 </template>
 
 <script setup>
-import { stringToRGB } from "@/services/colors";
 import * as datetime from "@/services/datetime";
-import { initials } from "@/services/utils";
 
 const props = defineProps({
   users: {

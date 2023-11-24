@@ -78,7 +78,7 @@ function createRandomUsers(num) {
 }
 
 async function main() {
-  await Promise.allSettled(data.roles.map((role) => prisma.role.upsert({
+  await Promise.all(data.roles.map((role) => prisma.role.upsert({
     where: { id: role.id },
     create: role,
     update: role,
@@ -103,7 +103,7 @@ async function main() {
 
   await Promise.all(admin_promises);
 
-  // create test user
+  // create users
   const user_data = insert_random_dates(
     data.users.concat(createRandomUsers(50)), // mock some extra users
   );
@@ -143,6 +143,7 @@ async function main() {
 
   await Promise.all(operator_promises);
 
+  // create datasets
   const datasetPromises = data.datasets.map((dataset) => {
     const { workflows, ...dataset_obj } = dataset;
     if (workflows) {
@@ -247,8 +248,63 @@ async function main() {
   await put_dataset_files({ dataset_id: 7, num_files: 100, max_depth: 1 });
   await put_dataset_files({ dataset_id: 8, num_files: 100 });
 
+  // upsert protocols
+  await Promise.all(
+    data.protocols.map((proto) => prisma.protocol.upsert({
+      where: {
+        id: proto.id,
+      },
+      update: {},
+      create: proto,
+    })),
+  );
+
+  // upsert snapshots
+  await Promise.all(
+    data.snapshots.map((snapshot) => prisma.snapshot.upsert({
+      where: {
+        id: snapshot.id,
+      },
+      update: {},
+      create: snapshot,
+    })),
+  );
+
+  // upsert participants
+  await Promise.all(
+    data.participants.map((prt) => prisma.participant.upsert({
+      where: {
+        id: prt.id,
+      },
+      update: {},
+      create: prt,
+    })),
+  );
+
+  // upsert protocol user assoc
+  await Promise.all(
+    data.user_protocol_assoc.map((up) => prisma.user_protocol.upsert({
+      where: {
+        user_id_protocol_id: up,
+      },
+      update: {},
+      create: up,
+    })),
+  );
+
+  // upsert protocol participant assoc
+  await Promise.all(
+    data.participant_protocol_assoc.map((pp) => prisma.participant_protocol.upsert({
+      where: {
+        participant_id_protocol_id: pp,
+      },
+      update: {},
+      create: pp,
+    })),
+  );
+
   // update the auto increment id's sequence numbers
-  const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact'];
+  const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot', 'participant'];
   await Promise.all(tables.map(update_seq));
 
   // add metrics

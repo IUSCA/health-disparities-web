@@ -198,6 +198,18 @@ function numericStringsToNumbers(arr, numericStringFields = []) {
   })(arr);
 }
 
+const isIntegerArray = (value) => {
+  if (!Array.isArray(value)) {
+    throw new Error('value must be an array');
+  }
+
+  if (value.some((id) => !Number.isInteger(id))) {
+    throw new Error('Each element in the array must be an integer');
+  }
+
+  return true;
+};
+
 module.exports = {
   renameKey,
   setDifference,
@@ -207,4 +219,5 @@ module.exports = {
   sanitize_timestamp,
   groupByAndAggregate,
   numericStringsToNumbers,
+  isIntegerArray,
 };
