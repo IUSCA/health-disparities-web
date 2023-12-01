@@ -8,14 +8,6 @@
   "logger": {
     "level": "debug"
   },
-  "variant_db": {
-    "hostname": "localhost",
-    "port": "5532",
-    "user": "appuser",
-    "password": "",
-    "db": "app",
-    "schema": "public"
-  },
   "typesense": {
     "host": "typesense",
     "port": "8108",

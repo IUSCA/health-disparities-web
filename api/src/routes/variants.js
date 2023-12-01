@@ -6,7 +6,6 @@ const _ = require('lodash/fp');
 const { validate } = require('../middleware/validators');
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
-// const sql = require('../variant_db');
 
 const isPermittedTo = accessControl('variant');
 const router = express.Router();
