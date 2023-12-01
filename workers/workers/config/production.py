@@ -36,5 +36,10 @@ config = {
             'url': 'commons3.sca.iu.edu:27017/celery_api?authSource=celery_api',
             'username': 'celery_api',
         }
+    },
+    'variant_database': {
+        'database': 'biobank',
+        'user': 'biobank',
+        'host': 'biobank-pg1.sca.iu.edu',
     }
 }
