@@ -114,6 +114,6 @@ def delete_source(celery_task, dataset_id, **kwargs):
 
 
 @app.task(base=WorkflowTask, bind=True, name='ingest_vcf', max_retries=0)
-def ingest_vcf(celery_task, vcf_file_path, **kwargs):
+def ingest_vcf(celery_task, dummy, **kwargs):
     from workers.variants.ingest_vcf import ingest_vcf as task_body
-    return task_body(celery_task, vcf_file_path, **kwargs)
+    return task_body(celery_task, dummy, **kwargs)

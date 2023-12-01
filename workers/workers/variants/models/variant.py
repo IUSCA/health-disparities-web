@@ -1,73 +1,69 @@
+from collections import namedtuple
+
+from psycopg2 import sql
+
 from workers.variants.database import conn
 
-
-# Variant = named_tuple('Variant', )
-
-
-def find_one(chromosome, position, reference, alternate):
-    with conn.cursor() as cursor:
-        select_query = f"SELECT * FROM VARIANT WHERE chromosome = %s and position = %s and reference = %s and " \
-                       f"alternate = %s"
-        cursor.execute(select_query, (chromosome, position, reference, alternate))
-        return cursor.fetchone()
+Variant = namedtuple('Variant', ['chr', 'position', 'ref', 'alt', 'source_id'])
 
 
-def create_one(chromosome, position, reference, alternate, genotypes):
-    cursor = conn.cursor()
-    insert_query = f"INSERT INTO VARIANT (chromosome, position, reference, alternate, genotype) VALUES (" \
-                   f"%s, %s, %s, %s, %s) RETURNING *"
-    cursor.execute(insert_query, (chromosome, position, reference, alternate, genotypes))
-    created_record = cursor.fetchone()
-    conn.commit()
-    return created_record
-
-
-def update(chromosome, position, reference, alternate, genotypes: list[int]):
-    with conn.cursor() as cursor:
-        update_query = f'UPDATE VARIANT SET genotype = %s WHERE chromosome = %s and position = %s and reference = %s ' \
-                       f'and alternate = %s'
-        cursor.execute(update_query, (genotypes, chromosome, position, reference, alternate))
-        conn.commit()
-
-
-def find_many(params) -> dict:
+def find_many(variants: list[Variant]) -> list[Variant]:
     """
 
-    @param params:
-    @return: variant_id to row mapping
+    @param variants: list of Variants to search
+    @return: found Variants
     """
     with conn.cursor() as cursor:
-        select_query = f"SELECT chromosome, position, reference, alternate FROM VARIANT" \
-                       f" WHERE (chromosome, position, reference, alternate) IN %s"
-        cursor.execute(select_query, (params,))
+        query = sql.SQL(
+            "SELECT chr, position, ref, alt, source_id FROM VARIANT WHERE (chr, position, ref, alt, source_id) IN ({})"
+        ).format(sql.SQL(',').join(map(sql.Literal, variants)))
+        cursor.execute(query)
         rows = cursor.fetchall()
-
-        # Populate the result dictionary
-        result_dict = {}
-        for row in rows:
-            key = (row[0], row[1], row[2], row[3])
-            result_dict[key] = row
-        return result_dict
+        return [Variant(*r) for r in rows]
 
 
-def create_many(data) -> None:
+def create_many(data: list[dict]) -> None:
+    """
+
+    @param data: data of rows to create - list of dicts with following structure:
+    {
+        'variant': Variant,
+        'phase': Bool,
+        'genotype': list[int]
+    }
+    @return: None
+    """
     with conn.cursor() as cursor:
-        insert_query = f"INSERT INTO VARIANT (chromosome, position, reference, alternate, genotype) VALUES (" \
-                       f"%s, %s, %s, %s, %s)"
+        insert_query = f"INSERT INTO VARIANT (chr, position, ref, alt, source_id, phase, genotype)" \
+                       f"VALUES (%s, %s, %s, %s, %s, %s, %s)"
         try:
-            cursor.executemany(insert_query, data)
+            ins_data = [(*d['variant'], d['phase'], d['genotype']) for d in data]
+            cursor.executemany(insert_query, ins_data)
             conn.commit()
         except Exception as e:
             conn.rollback()
             raise e
 
 
-def update_many(data) -> None:
+def update_many(data: list[dict]) -> None:
+    """
+
+    @param data: data of rows to update - list of dicts with following structure
+    {
+        'lower_bound': int,
+        'upper_bound': int,
+        'genotype': list[int],
+        'variant': Variant,
+    }
+    @return: None
+    """
     with conn.cursor() as cursor:
-        update_query = f'UPDATE VARIANT SET genotype[%d:%d] = %s WHERE chromosome = %s and position = %s ' \
-                       f'and reference = %s and alternate = %s'
+        update_query = f'UPDATE VARIANT SET genotype[%s:%s] = %s WHERE chr = %s and position = %s ' \
+                       f'and ref = %s and alt = %s and source_id = %s'
         try:
-            cursor.exexecutemanyecute(update_query, data)
+            up_data = [(d['lower_bound'], d['upper_bound'], d['genotype'], *d['variant']) for d in data]
+            print(up_data)
+            cursor.executemany(update_query, up_data)
             conn.commit()
         except Exception as e:
             conn.rollback()

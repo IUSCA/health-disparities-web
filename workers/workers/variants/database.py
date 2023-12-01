@@ -11,6 +11,7 @@ def initialize_db_connection():
     global conn
     print('connecting to the database')
     conn = psycopg2.connect(**config['variant_database'], gssencmode='disable')
+    conn.autocommit = False
     return conn
 
 

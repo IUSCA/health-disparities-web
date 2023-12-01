@@ -1,6 +1,16 @@
+/*
+  Warnings:
+
+  - A unique constraint covering the columns `[ib_id]` on the table `participant` will be added. If there are existing duplicate values, this will fail.
+
+*/
+-- DropIndex
+DROP INDEX "participant_ib_id_study_id_key";
+
 -- AlterTable
 ALTER TABLE "participant" ADD COLUMN     "disenroll_snapshot_id" INTEGER,
-ADD COLUMN     "enroll_snapshot_id" INTEGER;
+ADD COLUMN     "enroll_snapshot_id" INTEGER,
+ALTER COLUMN "study_id" DROP NOT NULL;
 
 -- CreateTable
 CREATE TABLE "variant" (
@@ -8,28 +18,11 @@ CREATE TABLE "variant" (
     "position" BIGINT NOT NULL,
     "ref" TEXT NOT NULL,
     "alt" TEXT NOT NULL,
+    "source_id" INTEGER NOT NULL,
+    "phase" BOOLEAN NOT NULL,
     "genotype" SMALLINT[],
-    "allele_count" INTEGER,
-    "allele_number" INTEGER,
-    "func" TEXT,
-    "genes" TEXT,
-    "exonic_func" TEXT,
-    "aa_change" TEXT,
-    "af_afr" DOUBLE PRECISION,
-    "af_sas" DOUBLE PRECISION,
-    "af_amr" DOUBLE PRECISION,
-    "af_eas" DOUBLE PRECISION,
-    "af_nfe" DOUBLE PRECISION,
-    "af_fin" DOUBLE PRECISION,
-    "af_asj" DOUBLE PRECISION,
-    "af_oth" DOUBLE PRECISION,
-    "cln_allele_id" INTEGER,
-    "cln_cond" TEXT,
-    "cln_dis_db" TEXT,
-    "cln_rev_stat" TEXT,
-    "cln_sig" TEXT,
 
-    CONSTRAINT "variant_pkey" PRIMARY KEY ("chr","position","ref","alt")
+    CONSTRAINT "variant_pkey" PRIMARY KEY ("chr","position","ref","alt","source_id")
 ) PARTITION BY LIST (chr);
 
 CREATE TABLE IF NOT EXISTS variant_default_partition PARTITION OF variant
@@ -123,14 +116,24 @@ CREATE TABLE IF NOT EXISTS variant_chromosome_21 PARTITION OF variant
 CREATE TABLE IF NOT EXISTS variant_chromosome_22 PARTITION OF variant
     FOR VALUES IN (22);
     
-
+-- chromosome XX or X
 CREATE TABLE IF NOT EXISTS variant_chromosome_23 PARTITION OF variant
     FOR VALUES IN (23);
     
-
+-- chromosome XY or Y
 CREATE TABLE IF NOT EXISTS variant_chromosome_24 PARTITION OF variant
     FOR VALUES IN (24);
 
+
+-- CreateTable
+CREATE TABLE "source" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "created_at" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "source_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "snapshot" (
@@ -173,20 +176,30 @@ CREATE TABLE "participant_protocol" (
     CONSTRAINT "participant_protocol_pkey" PRIMARY KEY ("participant_id","protocol_id")
 );
 
--- CreateIndex
-CREATE INDEX "variant_genes_idx" ON "variant"("genes");
+-- CreateTable
+CREATE TABLE "vcf_subject" (
+    "id" SERIAL NOT NULL,
+    "ib_id" TEXT NOT NULL,
+    "enroll_snapshot_id" INTEGER,
+    "disenroll_snapshot_id" INTEGER,
 
--- CreateIndex
-CREATE INDEX "variant_cln_sig_idx" ON "variant"("cln_sig");
+    CONSTRAINT "vcf_subject_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateIndex
 CREATE INDEX "snapshot_date_idx" ON "snapshot"("date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "participant_ib_id_key" ON "participant"("ib_id");
 
 -- AddForeignKey
 ALTER TABLE "participant" ADD CONSTRAINT "participant_enroll_snapshot_id_fkey" FOREIGN KEY ("enroll_snapshot_id") REFERENCES "snapshot"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "participant" ADD CONSTRAINT "participant_disenroll_snapshot_id_fkey" FOREIGN KEY ("disenroll_snapshot_id") REFERENCES "snapshot"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "variant" ADD CONSTRAINT "variant_source_id_fkey" FOREIGN KEY ("source_id") REFERENCES "source"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "snapshot" ADD CONSTRAINT "snapshot_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;

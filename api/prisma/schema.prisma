@@ -459,36 +459,26 @@ enum access_type {
 
 /// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
 model variant {
-  chr           Int     @db.SmallInt
-  position      BigInt
-  ref           String
-  alt           String
-  source        String
-  phased        Boolean
-  genotype      Int[]   @db.SmallInt
-  allele_count  Int?
-  allele_number Int?
-  func          String?
-  genes         String?
-  exonic_func   String?
-  aa_change     String?
-  af_afr        Float?
-  af_sas        Float?
-  af_amr        Float?
-  af_eas        Float?
-  af_nfe        Float?
-  af_fin        Float?
-  af_asj        Float?
-  af_oth        Float?
-  cln_allele_id Int?
-  cln_cond      String?
-  cln_dis_db    String?
-  cln_rev_stat  String?
-  cln_sig       String?
+  chr       Int     @db.SmallInt
+  position  BigInt
+  ref       String
+  alt       String
+  source_id Int
+  source    source  @relation(fields: [source_id], references: [id])
+  phase     Boolean
+  genotype  Int[]   @db.SmallInt
 
-  @@id([chr, position, ref, alt, source])
-  @@index([genes])
-  @@index([cln_sig])
+  @@id([chr, position, ref, alt, source_id])
+}
+
+
+
+model source {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  created_at  DateTime     @default(now()) @db.Timestamp(6)
+  variant     variant[]
 }
 
 model snapshot {
@@ -534,4 +524,11 @@ model participant_protocol {
   protocol_id    Int
 
   @@id([participant_id, protocol_id])
+}
+
+model vcf_subject {
+  id                    Int    @id @default(autoincrement())
+  ib_id                 String
+  enroll_snapshot_id    Int?
+  disenroll_snapshot_id Int?
 }
