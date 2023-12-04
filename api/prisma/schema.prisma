@@ -498,6 +498,10 @@ model annotation {
   cln_sig       String?
 
   @@id([chr, position, ref, alt, source_id])
+  @@index([func])
+  @@index([genes])
+  @@index([exonic_func])
+  @@index([cln_sig])
 }
 
 model source {
