@@ -97,6 +97,10 @@
             `${rowData.chr}-${rowData.position}-${rowData.ref}-${rowData.alt}`
           }}
         </template>
+
+        <template #cell(allele_freq)="{ rowData }">
+          {{ _.round(rowData.allele_count / rowData.allele_number, 6) }}
+        </template>
       </va-data-table>
 
       <!-- pagination -->
@@ -255,6 +259,7 @@
 </template>
 
 <script setup>
+import _ from "lodash";
 import { useNavStore } from "@/stores/nav";
 import snapshotsService from "@/services/snapshots";
 import variantService from "@/services/variants";
@@ -293,7 +298,7 @@ watch(
   filters,
   () => {
     filterAccordian.value = Object.values(filters.value).map(
-      (v) => v.length > 0,
+      (v, idx) => filterAccordian.value[idx] || v?.length || 0 > 0,
     );
   },
   { deep: true },
@@ -321,9 +326,10 @@ snapshotsService.getAll().then((res) => {
 });
 
 const columns = [
-  { key: "chr", label: "Variant ID" },
+  { key: "chr", label: "Variant ID", width: "150px" },
   { key: "allele_number" },
   { key: "allele_count" },
+  { key: "allele_freq" },
   { key: "func", label: "Function" },
   { key: "genes" },
   { key: "exonic_func", label: "Exonic Function" },

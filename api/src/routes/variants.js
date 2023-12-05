@@ -247,7 +247,7 @@ router.get(
     const filterQuery = buildFilterQuery(req.query);
 
     const cols = ['genes', 'cln_sig', 'func', 'exonic_func'];
-    const promises = cols.map((col) => prisma.annotation.groupBy({
+    const promises = cols.map((col) => prisma.variant_annotation.groupBy({
       where: {
         [col]: { not: { equals: null } },
         ...filterQuery,
