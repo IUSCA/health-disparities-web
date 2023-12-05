@@ -468,7 +468,6 @@ model variant {
   source     source      @relation(fields: [source_id], references: [id])
   phase      Boolean
   genotype   Int[]       @db.SmallInt
-  annotation annotation? @relation(fields: [chr, position, ref, alt, source_id], references: [chr, position, ref, alt, source_id])
 
   @@id([chr, position, ref, alt, source_id])
 }
@@ -498,7 +497,6 @@ model annotation {
   cln_dis_db    String?
   cln_rev_stat  String?
   cln_sig       String?
-  variant       variant?
 
   @@id([chr, position, ref, alt, source_id])
   @@index([func])

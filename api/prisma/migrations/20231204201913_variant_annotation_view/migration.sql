@@ -1,8 +1,8 @@
 -- AddForeignKey
-ALTER TABLE
-  "variant"
-ADD
-  CONSTRAINT "variant_chr_position_ref_alt_source_id_fkey" FOREIGN KEY ("chr", "position", "ref", "alt", "source_id") REFERENCES "annotation"("chr", "position", "ref", "alt", "source_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ALTER TABLE
+--   "variant"
+-- ADD
+--   CONSTRAINT "variant_chr_position_ref_alt_source_id_fkey" FOREIGN KEY ("chr", "position", "ref", "alt", "source_id") REFERENCES "annotation"("chr", "position", "ref", "alt", "source_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 CREATE VIEW variant_annotation AS
 SELECT
