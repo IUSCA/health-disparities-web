@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -459,26 +460,27 @@ enum access_type {
 
 /// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
 model variant {
-  chr       Int     @db.SmallInt
-  position  BigInt
-  ref       String
-  alt       String
-  source_id Int
-  source    source  @relation(fields: [source_id], references: [id])
-  phase     Boolean
-  genotype  Int[]   @db.SmallInt
+  chr        Int         @db.SmallInt
+  position   BigInt
+  ref        String
+  alt        String
+  source_id  Int
+  source     source      @relation(fields: [source_id], references: [id])
+  phase      Boolean
+  genotype   Int[]       @db.SmallInt
+  annotation annotation? @relation(fields: [chr, position, ref, alt, source_id], references: [chr, position, ref, alt, source_id])
 
   @@id([chr, position, ref, alt, source_id])
 }
 
 /// This table is a partition table.
 model annotation {
-  chr           Int     @db.SmallInt
+  chr           Int      @db.SmallInt
   position      BigInt
   ref           String
   alt           String
   source_id     Int
-  source        source  @relation(fields: [source_id], references: [id])
+  source        source   @relation(fields: [source_id], references: [id])
   func          String?
   genes         String?
   exonic_func   String?
@@ -496,6 +498,7 @@ model annotation {
   cln_dis_db    String?
   cln_rev_stat  String?
   cln_sig       String?
+  variant       variant?
 
   @@id([chr, position, ref, alt, source_id])
   @@index([func])
@@ -505,12 +508,13 @@ model annotation {
 }
 
 model source {
-  id          Int          @id @default(autoincrement())
-  name        String
-  description String?
-  created_at  DateTime     @default(now()) @db.Timestamp(6)
-  variant     variant[]
-  annotation  annotation[]
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  description        String?
+  created_at         DateTime             @default(now()) @db.Timestamp(6)
+  variant            variant[]
+  annotation         annotation[]
+  variant_annotation variant_annotation[]
 }
 
 model snapshot {
@@ -563,4 +567,34 @@ model vcf_subject {
   ib_id                 String
   enroll_snapshot_id    Int?
   disenroll_snapshot_id Int?
+}
+
+view variant_annotation {
+  chr           Int     @db.SmallInt
+  position      BigInt
+  ref           String
+  alt           String
+  source_id     Int
+  source        source  @relation(fields: [source_id], references: [id])
+  phase         Boolean
+  allele_counts Json
+  func          String?
+  genes         String?
+  exonic_func   String?
+  aa_change     String?
+  af_afr        Float?
+  af_sas        Float?
+  af_amr        Float?
+  af_eas        Float?
+  af_nfe        Float?
+  af_fin        Float?
+  af_asj        Float?
+  af_oth        Float?
+  cln_allele_id Int?
+  cln_cond      String?
+  cln_dis_db    String?
+  cln_rev_stat  String?
+  cln_sig       String?
+
+  @@id([chr, position, ref, alt, source_id])
 }

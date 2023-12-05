@@ -32,6 +32,9 @@ router.get(
         },
         author: true,
       },
+      orderBy: {
+        date: 'desc',
+      },
     });
     const snapshots = _snapshots.map((snapshot) => {
       const { enrolls, disenrolls, ...rest } = snapshot;

@@ -1,28 +1,18 @@
 import api from "./api";
 
 class VariantService {
-  search({ chromosome, start, end = null }) {
-    return api.get(`/variants/${chromosome}`, {
-      params: {
-        start,
-        end: end || start,
-      },
-    });
-  }
-
-  getAnnotations({ query, offset = 0, limit = 50, sortOptions = null }) {
-    return api.get(`/variants/annotations`, {
+  search({ query, offset = 0, limit = 50 }) {
+    return api.get(`/variants`, {
       params: {
         ...query,
         offset,
         limit,
-        sortOptions,
       },
     });
   }
 
-  getAnnotationFilters({ query }) {
-    return api.get(`/variants/annotations/filters`, {
+  getFilters({ query }) {
+    return api.get(`/variants/filters`, {
       params: query,
     });
   }

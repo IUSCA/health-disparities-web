@@ -1,168 +1,444 @@
 <template>
+  <!-- search -->
   <va-form class="flex flex-wrap gap-3 items-start min-h-[76px]" ref="formRef">
+    <va-input
+      v-model="query"
+      label="search"
+      placeholder="Search by gene, variant, or genomic region"
+      outline
+      clearable
+      @clear="resetFilters"
+    >
+      <template #prependInner>
+        <Icon icon="material-symbols:search" class="text-xl" />
+      </template>
+
+      <template #appendInner>
+        <VaPopover>
+          <Icon icon="mdi:help-circle" class="text-base va-text-secondary" />
+          <template #title>
+            <i>Examples by query type:</i>
+          </template>
+          <template #body>
+            <p>
+              <span class="font-bold"> Gene </span> :
+              {{ example_searches["gene"] }}
+            </p>
+            <p>
+              <span class="font-bold"> Variant </span>:
+              {{ example_searches["variant"] }}
+            </p>
+            <p>
+              <span class="font-bold"> Genomic Region </span>:
+              {{ example_searches["genomic_region"] }}
+            </p>
+          </template>
+        </VaPopover>
+      </template>
+    </va-input>
+
     <va-select
-      class="flex-none"
-      v-model="chromosome"
-      :options="chromosome_options"
-      placeholder="Select a chromosome"
-      label="Chromosome"
+      class="flex-none w-[180px]"
+      v-model="source"
+      :options="data_source_options"
+      placeholder="Select a source"
+      label="Data Source"
+      searchable
+      text-by="name"
+      value-by="id"
+      :highlight-matched-text="false"
+    >
+      <template #appendInner>
+        <VaPopover message="todo">
+          <Icon icon="mdi:help-circle" class="text-base va-text-secondary" />
+        </VaPopover>
+      </template>
+    </va-select>
+
+    <va-select
+      class="flex-none w-[180px]"
+      v-model="snapshot"
+      :options="snapshot_options"
+      placeholder="Select a snapshot"
+      label="Snapshot"
       searchable
       :highlight-matched-text="false"
-      :rules="[(v) => v || 'Field is required']"
-    />
-    <va-input
-      v-model="start"
-      label="Start Poisition"
-      placeholder="ex: 44324727"
-      :rules="[(v) => !!v || 'Field is required']"
-    />
-    <va-input v-model="end" label="End Poisition" placeholder="Optional" />
+    >
+      <template #appendInner>
+        <VaPopover message="todo">
+          <Icon icon="mdi:help-circle" class="text-base va-text-secondary" />
+        </VaPopover>
+      </template>
+    </va-select>
+
     <va-button
       icon="search"
-      class="mt-[18px]"
+      class="mt-[18px] flex-none w-[250px]"
       color="success"
       @click="handleSearch"
-      :disabled="!isValid"
     >
       Search
     </va-button>
   </va-form>
 
-  <va-divider v-if="results" />
-
-  <div class="flex" v-if="results">
-    <!-- Left Side (List of Rows) -->
-    <div class="w-2/3 p-3 border-r border-solid border-gray-500">
+  <!-- results and filter -->
+  <div class="flex" v-if="resultsView">
+    <!-- results -->
+    <div class="w-10/12 p-3 border-r border-solid border-gray-500">
       <va-data-table
         :items="results"
         :columns="columns"
+        :loading="loading"
         hoverable
-        clickable
-        @row:click="handleClick"
-        :row-bind="getRowBind"
-        virtual-scroller
-        sticky-header
-        style="height: calc(100vh - 15rem)"
-        class="varianttable"
+        class="annotationtable"
       >
-        <template #cell(subjects)="{ source }">
-          <span> {{ source.length }} </span>
-        </template>
-
-        <template #cell(export)="{}">
-          <div class="flex gap-2">
-            <va-button class="flex-initial" size="small" preset="primary">
-              <i-mdi:export-variant />
-            </va-button>
-          </div>
+        <template #cell(chr)="{ rowData }">
+          {{
+            `${rowData.chr}-${rowData.position}-${rowData.ref}-${rowData.alt}`
+          }}
         </template>
       </va-data-table>
+
+      <!-- pagination -->
+      <va-pagination
+        v-if="total_pages > 1"
+        v-model="page"
+        class="my-3 justify-center"
+        :pages="total_pages"
+        :visible-pages="5"
+      />
+      <!-- <div>
+        <span>Results from {{  }} to {{  }} out of {{ total_count.value }}</span>
+      </div> -->
     </div>
 
-    <!-- Right Side (Sub Items of Selected Item) -->
-    <div class="w-1/3 p-3">
-      <div v-if="selectedItem">
-        <div class="text-lg font-semibold text-center pb-1">
-          Subjects with the selected variant
-        </div>
+    <!-- sidebar -->
+    <div class="w-2/12 p-3">
+      <VaAccordion v-model="filterAccordian" class="max-w-sm" multiple>
+        <!-- Genes Options -->
+        <VaCollapse
+          :header="filterLabels[idx]"
+          v-for="(attr, idx) in filterKeys"
+          :key="attr"
+        >
+          <template #content>
+            <va-option-list
+              v-model="filters[attr]"
+              :options="
+                Object.entries(filterGroups[attr]).map(([label, value]) => ({
+                  label: `${label} (${value})`,
+                  value: label,
+                }))
+              "
+              text-by="label"
+              value-by="value"
+            />
+          </template>
+        </VaCollapse>
 
-        <ul style="height: calc(100vh - 16.5rem)" class="overflow-y-scroll">
-          <li v-for="(subject, index) in selectedItem.subjects" :key="index">
-            {{ subject }}
-          </li>
-        </ul>
-      </div>
-      <div v-else class="flex items-center h-full">
-        <p class="text-center">Select a varaint to view its subjects.</p>
-      </div>
+        <!-- clinvar significance Options -->
+        <!-- <VaCollapse
+          :header="`ClinVar Significance (${
+            (filterGroups.cln_sig || []).length
+          })`"
+        >
+          <template #content>
+            <va-option-list
+              v-model="filters.cln_sig"
+              :options="
+                filterGroups['cln_sig'].map((v) => `${v.cln_sig} (${v._count})`)
+              "
+            />
+          </template>
+        </VaCollapse> -->
+
+        <!-- function Options -->
+        <!-- <VaCollapse :header="`Function (${(filterGroups.func || []).length})`">
+          <template #content>
+            <va-option-list
+              v-model="filters.func"
+              :options="
+                filterGroups['func'].map((v) => `${v.func} (${v._count})`)
+              "
+            />
+          </template>
+        </VaCollapse> -->
+
+        <!-- exonic_func Options -->
+        <!-- <VaCollapse
+          :header="`Exonic Function (${
+            (filterGroups.exonic_func || []).length
+          })`"
+        >
+          <template #content>
+            <va-option-list
+              v-model="filters.exonic_func"
+              :options="
+                filterGroups['exonic_func'].map(
+                  (v) => `${v.exonic_func} (${v._count})`,
+                )
+              "
+            />
+          </template>
+        </VaCollapse> -->
+      </VaAccordion>
+
+      <!-- <div v-if="(filterGroups.genes || []).length > 0">
+        <p class="capitalize font-semibold mb-2">Genes</p>
+        <va-option-list
+          v-model="filters.genes"
+          :options="
+            filterGroups['genes'].map((v) => `${v.genes} (${v._count})`)
+          "
+        />
+      </div> -->
+
+      <!-- <va-divider /> -->
+
+      <!-- clinvar significance Options -->
+      <!-- <div v-if="(filterGroups.cln_sig || []).length > 0">
+        <p class="capitalize font-semibold mb-2">ClinVar Significance</p>
+        <va-option-list
+          v-model="filters.cln_sig"
+          :options="
+            filterGroups['cln_sig'].map((v) => `${v.cln_sig} (${v._count})`)
+          "
+        />
+      </div> -->
+    </div>
+  </div>
+
+  <!-- search examples -->
+  <div class="flex justify-center items-center mt-24" v-else>
+    <div class="flex-none text-lg">
+      <p>
+        Enter a query in the search bar or get started with an example query:
+      </p>
+      <p>
+        <span class="font-bold"> Gene </span> :
+        <span
+          class="va-link underline"
+          @click="
+            query = example_searches['gene'];
+            handleSearch();
+          "
+        >
+          {{ example_searches["gene"] }}
+        </span>
+      </p>
+      <p>
+        <span class="font-bold"> Variant </span>:
+        <span
+          class="va-link underline"
+          @click="
+            query = example_searches['variant'];
+            handleSearch();
+          "
+        >
+          {{ example_searches["variant"] }}
+        </span>
+      </p>
+      <p>
+        <span class="font-bold"> Genomic Region </span>:
+        <span
+          class="va-link underline"
+          @click="
+            query = example_searches['genomic_region'];
+            handleSearch();
+          "
+        >
+          {{ example_searches["genomic_region"] }}
+        </span>
+      </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useForm } from "vuestic-ui";
-
 import { useNavStore } from "@/stores/nav";
+import snapshotsService from "@/services/snapshots";
 import variantService from "@/services/variants";
 
-const { isValid, validate } = useForm("formRef");
-
 const nav = useNavStore();
-
-const chromosome_options = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-  23,
-];
-const chromosome = ref(null);
-const start = ref(null);
-const end = ref(null);
-const results = ref(null);
-const loading = ref(false);
-const selectedItem = ref(null);
-
-const columns = [
-  { key: "chromosome" },
-  { key: "position", sortable: true },
-  { key: "reference" },
-  { key: "alternate" },
-  { key: "genotype", sortable: true },
-  { key: "subjects", sortable: true, sortingFn: (a, b) => a.length - b.length },
-  { key: "export" },
-];
-
 nav.setNavItems([
   {
     label: "Variant Xplorer",
   },
 ]);
 
+const query = ref("");
+const source = ref(2);
+const snapshot = ref("");
+const resultsView = ref(false);
+const loading = ref(false);
+const results = ref([]);
+const total_count = ref(0);
+const page = ref(1);
+const filterGroups = ref({});
+const filterKeys = ["genes", "cln_sig", "func", "exonic_func"];
+const filterLabels = [
+  "Genes",
+  "ClinVar Significance",
+  "Function",
+  "Exonic Function",
+];
+const filters = ref({
+  genes: [],
+  cln_sig: [],
+  func: [],
+  exonic_func: [],
+});
+const filterAccordian = ref([true, false, false, false]);
+watch(
+  filters,
+  () => {
+    filterAccordian.value = Object.values(filters.value).map(
+      (v) => v.length > 0,
+    );
+  },
+  { deep: true },
+);
+
+const PAGE_SIZE = 50;
+const example_searches = {
+  gene: "GAB4",
+  variant: "22-17311348-C-A",
+  genomic_region: "chr22:17455700-17575000",
+};
+const data_source_options = [
+  { name: "Regeneron", id: 1 },
+  { name: "Imputed", id: 2 },
+];
+const snapshot_options = ref([]);
+
+const total_pages = computed(() => {
+  return Math.ceil(total_count.value / PAGE_SIZE);
+});
+
+snapshotsService.getAll().then((res) => {
+  snapshot_options.value = res.data.map((s) => s.name);
+  snapshot.value = snapshot_options.value[0];
+});
+
+const columns = [
+  { key: "chr", label: "Variant ID" },
+  { key: "allele_number" },
+  { key: "allele_count" },
+  { key: "func", label: "Function" },
+  { key: "genes" },
+  { key: "exonic_func", label: "Exonic Function" },
+  { key: "aa_change", label: "Protien Change" },
+  { key: "cln_sig", label: "ClinVar Significance" },
+];
+
+watch([page, filters], handleSearch, { deep: true });
+
 function handleSearch() {
-  if (validate()) {
-    loading.value = true;
-    variantService
-      .search({
-        chromosome: chromosome.value,
-        start: start.value,
-        end: end.value,
-      })
-      .then((res) => {
-        results.value = res.data;
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        loading.value = false;
-      });
+  const parsedQuery = parseQuery(query.value);
+
+  // validate that parsedQuery is not empty
+  if (Object.keys(parsedQuery).length === 0) {
+    console.error("invalid query");
+    return;
   }
+
+  const skip = PAGE_SIZE * (page.value - 1);
+  const query_opts = {
+    ...parsedQuery,
+    source_id: source.value,
+    // snapshot: snapshot.value,
+    ...filters.value,
+  };
+  console.log("searching", query_opts);
+
+  loading.value = true;
+
+  variantService
+    .search({
+      query: query_opts,
+      offset: skip,
+      limit: PAGE_SIZE,
+    })
+    .then((res) => {
+      results.value = res.data?.results || [];
+      total_count.value = res.data?.metadata?.count || 0;
+    })
+    .catch((err) => {
+      console.error(err);
+    })
+    .finally(() => {
+      loading.value = false;
+      resultsView.value = true;
+    });
+
+  variantService
+    .getFilters({
+      query: query_opts,
+    })
+    .then((res) => {
+      filterGroups.value = res.data;
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 }
 
-function handleClick({ item }) {
-  selectedItem.value = item;
-}
+function parseQuery(text) {
+  /*
+  Text can be in the following formats:
 
-function eq(a, b) {
-  if (!a || !b) return false;
-  return (
-    a.chromosome === b.chromosome &&
-    a.position === b.position &&
-    a.genotype === b.genotype
-  );
-}
+  Gene: BRCA2
+  Variant: 13-32355250-T-C
+  Genomic region: chr13:32355000-32375000
 
-function getRowBind(row) {
-  if (eq(row, selectedItem.value)) {
+  If text starts with a number, assume it is a variant
+  If text starts with chr, assume it is a genomic region
+  Otherwise, assume it is a gene
+  */
+
+  const variantRegex = /^(\d+)-(\d+)-([A-Z])-([A-Z])$/;
+  const genomicRegionRegex = /^chr(\d+):(\d+)-(\d+)$/;
+  const geneRegex = /^([a-zA-Z0-9]+)$/;
+
+  if (variantRegex.test(text)) {
+    const match = text.match(variantRegex);
     return {
-      class: [
-        "bg-blue-100 dark:bg-blue-800 border-blue-500 border-l-4 border-solid",
-      ],
+      chr: match[1],
+      start: match[2],
+      ref: match[3],
+      alt: match[4],
     };
+  } else if (genomicRegionRegex.test(text)) {
+    const match = text.match(genomicRegionRegex);
+    return {
+      chr: match[1],
+      start: match[2],
+      end: match[3],
+    };
+  } else if (geneRegex.test(text)) {
+    return {
+      gene: text,
+    };
+  } else {
+    return {};
   }
+}
+
+function resetFilters() {
+  filters.value = {
+    genes: null,
+    cln_sig: null,
+    func: null,
+    exonic_func: null,
+  };
+  query.value = "";
+  resultsView.value = false;
+  filterAccordian.value = [true, false, false, false];
 }
 </script>
 
 <style scoped>
-.varianttable {
-  --va-data-table-cell-padding: 6px;
+.annotationtable {
+  --va-data-table-cell-padding: 4px;
 }
 </style>
