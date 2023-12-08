@@ -12,6 +12,12 @@
           label="Date"
           :rules="[(v) => !!v || 'Field is required']"
         />
+        <VaTimeInput
+          v-model="data.time"
+          label="Time"
+          ampm
+          :rules="[(v) => !!v || 'Field is required']"
+        />
         <va-textarea
           v-model="data.description"
           label="Description"
@@ -73,19 +79,32 @@ const title = computed(() => {
   return props.edit ? "Edit Snapshot" : "Create Snapshot";
 });
 
-const data = ref({
+const make_default_data = () => ({
   name: "",
   description: "",
-  date: null,
+  date: new Date(),
+  time: new Date(),
   published: false,
 });
 
+const data = ref(make_default_data());
+
 watch([() => props.snapshot, () => props.edit], () => {
   if (props.edit) {
-    const { name, description, date, published } = props.snapshot;
-    data.value = { name, description, date, published };
+    const { name, description, timestamp, published } = props.snapshot;
+    data.value = {
+      name,
+      description,
+      published,
+      date: new Date(timestamp),
+      time: new Date(timestamp),
+    };
+  } else {
+    data.value = make_default_data();
   }
 });
+
+watch(data, () => console.log(data.value), { deep: true });
 
 function hide() {
   loading.value = false;
@@ -96,13 +115,30 @@ function show() {
   visible.value = true;
 }
 
+function mergeDateAndTime(date, time) {
+  if (date && time) {
+    const datetime = new Date(date);
+    datetime.setHours(time.getHours());
+    datetime.setMinutes(time.getMinutes());
+    datetime.setSeconds(time.getSeconds());
+    return datetime;
+  }
+}
+
 function handle() {
   if (validate()) {
     loading.value = true;
 
+    const params = {
+      name: data.value.name,
+      description: data.value.description,
+      timestamp: mergeDateAndTime(data.value.date, data.value.time),
+      published: data.value.published,
+    };
+
     const promise = props.edit
-      ? snapshotService.update(props.snapshot.id, data.value)
-      : snapshotService.create(data.value);
+      ? snapshotService.update(props.snapshot.id, params)
+      : snapshotService.create(params);
     promise
       .catch((err) => {
         // todo show toast

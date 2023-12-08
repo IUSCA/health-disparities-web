@@ -33,7 +33,7 @@ router.get(
         author: true,
       },
       orderBy: {
-        date: 'desc',
+        timestamp: 'desc',
       },
     });
     const snapshots = _snapshots.map((snapshot) => {
@@ -53,14 +53,13 @@ router.post(
   isPermittedTo('create'),
   validate([
     body('name').exists(),
-    body('date').optional().isISO8601({ strict: true }),
+    body('timestamp').optional().isISO8601({ strict: true }).customSanitizer((value) => dayjs(value).toDate()),
     body('published').toBoolean(),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['snapshots']
-    req.body.date = dayjs(req.body.date).toDate();
     const data = _.flow([
-      _.pick(['name', 'description', 'date', 'published']),
+      _.pick(['name', 'description', 'timestamp', 'published']),
       _.omitBy(_.isNil),
     ])(req.body);
     const snapshot = await prisma.snapshot.create({
@@ -78,16 +77,17 @@ router.patch(
   isPermittedTo('update'),
   validate([
     param('id').isInt().toInt(),
-    body('date').optional().isISO8601({ strict: true }),
+    body('timestamp').optional().isISO8601({ strict: true }).customSanitizer((value) => dayjs(value).toDate()),
     body('published').toBoolean(),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['snapshots']
+    const data = _.pick(['name', 'description', 'timestamp', 'published'])(req.body);
     const snapshot = await prisma.snapshot.update({
       where: {
         id: req.params.id,
       },
-      data: req.body,
+      data,
     });
     res.json(snapshot);
   }),

@@ -145,6 +145,7 @@ model user {
   protocols          user_protocol[]
   authored_snapshots snapshot[]
   authored_protocols protocol[]
+  authored_sources   source[]
 }
 
 model user_password {
@@ -460,26 +461,26 @@ enum access_type {
 
 /// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
 model variant {
-  chr        Int         @db.SmallInt
-  position   BigInt
-  ref        String
-  alt        String
-  source_id  Int
-  source     source      @relation(fields: [source_id], references: [id])
-  phase      Boolean
-  genotype   Int[]       @db.SmallInt
+  chr       Int     @db.SmallInt
+  position  BigInt
+  ref       String
+  alt       String
+  source_id Int
+  source    source  @relation(fields: [source_id], references: [id])
+  phase     Boolean
+  genotype  Int[]   @db.SmallInt
 
   @@id([chr, position, ref, alt, source_id])
 }
 
 /// This table is a partition table.
 model annotation {
-  chr           Int      @db.SmallInt
+  chr           Int     @db.SmallInt
   position      BigInt
   ref           String
   alt           String
   source_id     Int
-  source        source   @relation(fields: [source_id], references: [id])
+  source        source  @relation(fields: [source_id], references: [id])
   func          String?
   genes         String?
   exonic_func   String?
@@ -510,6 +511,9 @@ model source {
   name               String
   description        String?
   created_at         DateTime             @default(now()) @db.Timestamp(6)
+  published          Boolean              @default(false)
+  author_id          Int?
+  author             user?                @relation(fields: [author_id], references: [id])
   variant            variant[]
   annotation         annotation[]
   variant_annotation variant_annotation[]
@@ -519,14 +523,14 @@ model snapshot {
   id          Int           @id @default(autoincrement())
   name        String
   description String?
-  date        DateTime      @default(now()) @db.Timestamp(6)
+  timestamp   DateTime      @default(now()) @db.Timestamp(6)
   published   Boolean       @default(false)
   author_id   Int?
   author      user?         @relation(fields: [author_id], references: [id])
   enrolls     participant[] @relation("enrolls")
   disenrolls  participant[] @relation("disenrolls")
 
-  @@index([date])
+  @@index([timestamp])
 }
 
 model protocol {

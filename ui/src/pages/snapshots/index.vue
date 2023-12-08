@@ -40,8 +40,8 @@
         hoverable
         :loading="data_loading"
       >
-        <template #cell(date)="{ value }">
-          <span>{{ datetime.date(value) }}</span>
+        <template #cell(timestamp)="{ value }">
+          <span>{{ datetime.absolute(value) }}</span>
         </template>
 
         <template #cell(author)="{ rowData }">
@@ -121,7 +121,7 @@ const columns = [
   { key: "name", sortable: true },
   { key: "description", sortable: true },
   { key: "author", sortable: true },
-  { key: "date", sortable: true, width: "120px" },
+  { key: "timestamp", sortable: true, width: "200px" },
   {
     key: "enrolls",
     sortable: true,
@@ -141,8 +141,8 @@ const columns = [
 ];
 
 // initial sorting order
-const sortBy = ref("date");
-const sortingOrder = ref("asc");
+const sortBy = ref("timestamp");
+const sortingOrder = ref("desc");
 
 const row_items = computed(() => {
   const searchText = debouncedFilterInput.value?.toLowerCase() || "";
