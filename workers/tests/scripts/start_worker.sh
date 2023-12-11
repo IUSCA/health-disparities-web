@@ -7,4 +7,4 @@ python -m celery \
   --pidfile celery_worker.pid \
   --hostname 'tests-celery@%h' \
   --autoscale 1,1 \
-  --queues 'bioloop-dev.sca.iu.edu.q'
+  --queues 'biobank-dev.sca.iu.edu.q'

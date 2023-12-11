@@ -1,5 +1,5 @@
 version: "3"
-name: bioloop
+name: biobank
 services:
   ui:
     image: node:19
