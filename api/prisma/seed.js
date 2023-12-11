@@ -303,8 +303,18 @@ async function main() {
     })),
   );
 
+  // upsert cohort data
+  await Promise.all(
+    data.cohorts.map((c) => prisma.cohort.upsert({
+      where: {
+        id: c.id,
+      },
+      update: {},
+      create: c,
+    })),
+  );
   // update the auto increment id's sequence numbers
-  const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot', 'participant'];
+  const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot', 'participant', 'cohort'];
   await Promise.all(tables.map(update_seq));
 
   // add metrics

@@ -20,13 +20,9 @@ function decode_chromosome(encoded) {
 }
 
 function encode_chromosome(decoded) {
-  // validate if decoded is a non null string
   // 1-22 should be converted to int
   // X or XX should be converted to 23
   // Y or XY should be converted to 24
-  if (!decoded) {
-    return null;
-  }
   const mapping = {
     X: 23,
     Y: 24,
@@ -59,9 +55,6 @@ function decode_genotype(encoded, phase) {
   };
   return unphased_mapping[encoded];
 }
-
-// TODO: move chromosome validation to a validation middleware
-// TODO: validate ref and alt are valid nucleotides
 
 function buildFilterQuery(_query) {
   // at least one of chromosome or gene must be provided
@@ -99,14 +92,20 @@ function buildFilterQuery(_query) {
   });
 }
 
+function isValidNucleotide(nucleotide) {
+  if (!['A', 'C', 'G', 'T'].includes(nucleotide)) {
+    throw createError(400, 'Invalid nucleotide');
+  }
+}
+
 const annotation_validators = [
   query('source_id').isInt().toInt(),
   query('chr').isString().notEmpty().optional(),
   query('start').isInt().toInt().optional(),
   query('end').isInt().toInt().optional(),
-  query('ref').isString().optional(),
-  query('alt').isString().optional(),
-  query('gene').isString().optional(),
+  query('ref').custom(isValidNucleotide).optional(),
+  query('alt').custom(isValidNucleotide).optional(),
+  query('gene').isString().notEmpty().optional(),
 
   query('func').isArray().optional(),
   query('genes').isArray().optional(),

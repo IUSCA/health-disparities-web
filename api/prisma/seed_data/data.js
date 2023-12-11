@@ -337,7 +337,7 @@ const snapshots = [
     id: 1,
     name: 'initial snapshot',
     description: 'add 5 participants',
-    date: '2023-10-16T05:00:00.000Z',
+    timestamp: '2023-10-16T05:00:00.000Z',
     published: true,
     author_id: 1,
   },
@@ -345,14 +345,14 @@ const snapshots = [
     id: 2,
     name: 'snapshot-2',
     description: 'add 3 participants and remove 2 participants',
-    date: '2023-11-16T05:00:00.000Z',
+    timestamp: '2023-11-16T05:00:00.000Z',
     published: true,
   },
   {
     id: 3,
     name: 'snapshot-3',
     description: 'add 2 participants and remove 3 participants',
-    date: '2023-12-16T05:00:00.000Z',
+    timestamp: '2023-12-16T05:00:00.000Z',
     published: true,
     author_id: 3,
   },
@@ -416,6 +416,13 @@ const participant_protocol_assoc = Object.entries(protocol_participants_map)
     return participants_ids.map((pid) => ({ participant_id: pid, protocol_id }));
   })
   .flat();
+
+const cohorts = [
+  { id: 1, name: 'cohort-1', query: {} },
+  { id: 2, name: 'cohort-2', query: {} },
+  { id: 3, name: 'cohort-3', query: {} },
+];
+
 module.exports = {
   roles,
   admins,
@@ -435,4 +442,5 @@ module.exports = {
   participants,
   user_protocol_assoc,
   participant_protocol_assoc,
+  cohorts,
 };
