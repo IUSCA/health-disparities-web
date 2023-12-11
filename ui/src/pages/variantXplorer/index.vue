@@ -1,12 +1,13 @@
 <template>
   <!-- search -->
-  <va-form class="flex flex-wrap gap-3 items-start min-h-[76px]" ref="formRef">
+  <va-form class="flex flex-wrap gap-3 items-start" ref="formRef">
     <va-input
       v-model="query"
       label="search"
       placeholder="Search by gene, variant, or genomic region"
       outline
       clearable
+      inner-label
       @clear="resetFilters"
     >
       <template #prependInner>
@@ -44,6 +45,7 @@
       placeholder="Select a source"
       label="Data Source"
       searchable
+      inner-label
       text-by="name"
       value-by="id"
       :highlight-matched-text="false"
@@ -62,6 +64,7 @@
       placeholder="Select a snapshot"
       label="Snapshot"
       searchable
+      inner-label
       :highlight-matched-text="false"
     >
       <template #appendInner>
@@ -73,7 +76,7 @@
 
     <va-button
       icon="search"
-      class="mt-[18px] flex-none w-[250px]"
+      class="flex-none w-[250px]"
       color="success"
       @click="handleSearch"
     >

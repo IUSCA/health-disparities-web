@@ -109,6 +109,7 @@ watch(data, () => console.log(data.value), { deep: true });
 function hide() {
   loading.value = false;
   visible.value = false;
+  data.value = make_default_data();
 }
 
 function show() {
