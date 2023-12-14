@@ -132,8 +132,8 @@ class RegisterDataProduct(Register):
 if __name__ == "__main__":
     obs1 = Observer(
         name='raw_data_obs',
-        dir_path=config['registration']['RAW_DATA']['source_dir'],
-        callback=Register('RAW_DATA').register,
+        dir_path=config['registration']['DATA_PRODUCT']['source_dir'],
+        callback=Register('DATA_PRODUCT').register,
         interval=config['registration']['poll_interval_seconds']
     )
     # obs2 = Observer(

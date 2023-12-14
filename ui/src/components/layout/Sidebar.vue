@@ -72,10 +72,10 @@
 </template>
 
 <script setup>
+import config from "@/config";
 import { useAuthStore } from "@/stores/auth";
 import { useNavStore } from "@/stores/nav";
 import { storeToRefs } from "pinia";
-import config from "@/config";
 
 const props = defineProps({ isSidebarCollapsed: Boolean });
 
@@ -181,11 +181,11 @@ const operator_items = ref([
   //   title: "Raw Data",
   //   path: "/rawdata",
   // },
-  // {
-  //   icon: "mdi-package-variant-closed",
-  //   title: "Data Products",
-  //   path: "/dataproducts",
-  // },
+  {
+    icon: "mdi-package-variant-closed",
+    title: "Data Products",
+    path: "/dataproducts",
+  },
   {
     icon: "mdi-table-account",
     title: "User Management",

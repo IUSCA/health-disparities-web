@@ -85,8 +85,12 @@ config = {
                     'task': 'validate_dataset'
                 },
                 {
-                    'name': 'setup_download',
+                    'name': 'setup download',
                     'task': 'setup_dataset_download'
+                },
+                {
+                    'name': 'delete source',
+                    'task': 'delete_source'
                 }
             ]
         }

@@ -65,19 +65,19 @@ def generate_metadata(celery_task, source: Path):
     return num_files, num_directories, size, num_genome_files, metadata
 
 
-def get_participant_id(dir_name):
-    parts = dir_name.split('_')
-    if len(parts) == 3:
-        ib_id = parts[1]
-        participants = api.find_participants_by_ib_id(ib_id)
-
-        if len(participants) == 1:
-            return participants[0]['id']
-        else:
-            # participants are either not found or more than one are found
-            return None
-    else:
-        return None
+# def get_participant_id(dir_name: str) -> str | None:
+#     parts = dir_name.split('_')
+#     if len(parts) == 3:
+#         ib_id = parts[1]
+#         participants = api.find_participants_by_ib_id(ib_id)
+#
+#         if len(participants) == 1:
+#             return participants[0]['id']
+#         else:
+#             # participants are either not found or more than one are found
+#             return None
+#     else:
+#         return None
 
 
 def inspect_dataset(celery_task, dataset_id, **kwargs):
@@ -86,7 +86,7 @@ def inspect_dataset(celery_task, dataset_id, **kwargs):
     du_size = cmd.total_size(source)
     num_files, num_directories, size, num_genome_files, metadata = generate_metadata(celery_task, source)
 
-    participant_id = get_participant_id(source.name)
+    # participant_id = get_participant_id(source.name)
 
     update_data = {
         'du_size': du_size,
@@ -95,9 +95,11 @@ def inspect_dataset(celery_task, dataset_id, **kwargs):
         'num_directories': num_directories,
         'metadata': {
             'num_genome_files': num_genome_files,
-        },
-        'participant_id': participant_id
+        }
     }
+    # if participant_id:
+    #     update_data['participant_id'] = participant_id
+
     api.update_dataset(dataset_id=dataset_id, update_data=update_data)
     api.add_files_to_dataset(dataset_id=dataset_id, files=metadata)
 

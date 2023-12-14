@@ -23,7 +23,7 @@ config = {
         'root': '/N/scratch/biouser/'
     },
     'registration': {
-        'RAW_DATA': {
+        'DATA_PRODUCT': {
             'source_dir': '/N/project/biobank/phi_ingest_biobank_regeneron_KEEPTRXyunlong/WES/originalData/regeneron_grouped'
         },
     },
