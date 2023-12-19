@@ -4,7 +4,7 @@ import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, Li
 
 import { useCohortStore } from "@/stores/cohort"
 import cohortService from '@/services/cohort'
-import { useToastStore } from "@/stores/toast";
+import toast from "@/services/toast";
 import { useNavStore } from "@/stores/nav";
 const nav = useNavStore();
 nav.setNavItems([
@@ -23,7 +23,6 @@ const showSettings = ref(false)
 const participants = ref(0)
 const cohort_name = ref("")
 const cohort_options = ref([])
-const toast = useToastStore();
 const loading = ref(false)
 
 const results = ref({})
