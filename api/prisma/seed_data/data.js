@@ -433,6 +433,19 @@ const cohorts = [
   { id: 3, name: 'cohort-3', query: {} },
 ];
 
+const sources = [
+  {
+    id: 1,
+    name: 'source-1',
+    author_id: 1,
+  },
+  {
+    id: 2,
+    name: 'source-2',
+    author_id: 2,
+  },
+];
+
 module.exports = {
   roles,
   admins,
@@ -453,4 +466,5 @@ module.exports = {
   user_protocol_assoc,
   participant_protocol_assoc,
   cohorts,
+  sources,
 };

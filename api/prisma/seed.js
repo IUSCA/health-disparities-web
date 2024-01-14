@@ -270,6 +270,17 @@ async function main() {
     })),
   );
 
+  // upsert sources
+  await Promise.all(
+    data.sources.map((source) => prisma.source.upsert({
+      where: {
+        id: source.id,
+      },
+      update: {},
+      create: source,
+    })),
+  );
+
   // upsert participants
   await Promise.all(
     data.participants.map((prt) => prisma.participant.upsert({
