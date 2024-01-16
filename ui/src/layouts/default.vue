@@ -22,14 +22,15 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
-import { useBreakpoint } from "vuestic-ui";
 import { useUIStore } from "@/stores/ui";
+import { storeToRefs } from "pinia";
+import { watch } from "vue";
+import { useBreakpoint } from "vuestic-ui";
 
 const breakpoint = useBreakpoint();
 const ui = useUIStore();
 
-let isSidebarCollapsed = ref(false);
+const { isSidebarCollapsed } = storeToRefs(ui);
 
 watch(
   () => breakpoint.current,

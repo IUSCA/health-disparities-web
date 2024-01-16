@@ -143,75 +143,34 @@
           </template>
         </VaCollapse>
 
-        <!-- clinvar significance Options -->
-        <!-- <VaCollapse
-          :header="`ClinVar Significance (${
-            (filterGroups.cln_sig || []).length
-          })`"
+        <!-- Numeric Filters -->
+        <VaCollapse
+          :header="numericFilterLabels[idx]"
+          v-for="(attr, idx) in numericFilterKeys"
+          :key="attr"
         >
           <template #content>
-            <va-option-list
-              v-model="filters.cln_sig"
-              :options="
-                filterGroups['cln_sig'].map((v) => `${v.cln_sig} (${v._count})`)
-              "
-            />
+            <div class="flex flex-col gap-2">
+              <va-input
+                v-model="numericFilters[attr]['min']"
+                placeholder="min"
+                class="flex-1"
+                :rules="[
+                  (v) => !isNaN(parseFloat(v || 1)) || 'Must be a number',
+                ]"
+              />
+              <va-input
+                v-model="numericFilters[attr]['max']"
+                placeholder="max"
+                class="flex-1"
+                :rules="[
+                  (v) => !isNaN(parseFloat(v || 1)) || 'Must be a number',
+                ]"
+              />
+            </div>
           </template>
-        </VaCollapse> -->
-
-        <!-- function Options -->
-        <!-- <VaCollapse :header="`Function (${(filterGroups.func || []).length})`">
-          <template #content>
-            <va-option-list
-              v-model="filters.func"
-              :options="
-                filterGroups['func'].map((v) => `${v.func} (${v._count})`)
-              "
-            />
-          </template>
-        </VaCollapse> -->
-
-        <!-- exonic_func Options -->
-        <!-- <VaCollapse
-          :header="`Exonic Function (${
-            (filterGroups.exonic_func || []).length
-          })`"
-        >
-          <template #content>
-            <va-option-list
-              v-model="filters.exonic_func"
-              :options="
-                filterGroups['exonic_func'].map(
-                  (v) => `${v.exonic_func} (${v._count})`,
-                )
-              "
-            />
-          </template>
-        </VaCollapse> -->
+        </VaCollapse>
       </VaAccordion>
-
-      <!-- <div v-if="(filterGroups.genes || []).length > 0">
-        <p class="capitalize font-semibold mb-2">Genes</p>
-        <va-option-list
-          v-model="filters.genes"
-          :options="
-            filterGroups['genes'].map((v) => `${v.genes} (${v._count})`)
-          "
-        />
-      </div> -->
-
-      <!-- <va-divider /> -->
-
-      <!-- clinvar significance Options -->
-      <!-- <div v-if="(filterGroups.cln_sig || []).length > 0">
-        <p class="capitalize font-semibold mb-2">ClinVar Significance</p>
-        <va-option-list
-          v-model="filters.cln_sig"
-          :options="
-            filterGroups['cln_sig'].map((v) => `${v.cln_sig} (${v._count})`)
-          "
-        />
-      </div> -->
     </div>
   </div>
 
@@ -265,6 +224,7 @@
 import snapshotsService from "@/services/snapshots";
 import variantService from "@/services/variants";
 import { useNavStore } from "@/stores/nav";
+import { useUIStore } from "@/stores/ui";
 import _ from "lodash";
 
 const nav = useNavStore();
@@ -273,6 +233,8 @@ nav.setNavItems([
     label: "Variant Xplorer",
   },
 ]);
+
+const ui = useUIStore();
 
 const query = ref("");
 const source = ref(1);
@@ -290,12 +252,32 @@ const filterLabels = [
   "Function",
   "Exonic Function",
 ];
+const numericFilterKeys = [
+  "cadd_phred",
+  "polyphen_max",
+  "revel_max",
+  "sift_max",
+];
+const numericFilterLabels = [
+  "cadd_phred",
+  "polyphen_max",
+  "revel_max",
+  "sift_max",
+];
 const filters = ref({
   genes: [],
   cln_sig: [],
   func: [],
   exonic_func: [],
 });
+const numericFilters = ref({
+  cadd_phred: { min: null, max: null },
+  polyphen_max: { min: null, max: null },
+  revel_max: { min: null, max: null },
+  sift_max: { min: null, max: null },
+});
+
+// accordian state
 const filterAccordian = ref([true, false, false, false]);
 watch(
   filters,
@@ -338,9 +320,16 @@ const columns = [
   { key: "exonic_func", label: "Exonic Function" },
   { key: "aa_change", label: "Protien Change" },
   { key: "cln_sig", label: "ClinVar Significance" },
+  { key: "cadd_phred" },
+  { key: "polyphen_max" },
+  { key: "revel_max" },
+  { key: "sift_max" },
 ];
 
-watch([page, filters], handleSearch, { deep: true });
+watchDebounced([page, filters, numericFilters], handleSearch, {
+  deep: true,
+  debounce: 500,
+});
 
 function handleSearch() {
   const parsedQuery = parseQuery(query.value);
@@ -352,11 +341,13 @@ function handleSearch() {
   }
 
   const skip = PAGE_SIZE * (page.value - 1);
+
   const query_opts = {
     ...parsedQuery,
     source_id: source.value,
     // snapshot: snapshot.value,
     ...filters.value,
+    ...numericFilters.value,
   };
   console.log("searching", query_opts);
 
@@ -371,6 +362,7 @@ function handleSearch() {
     .then((res) => {
       results.value = res.data?.results || [];
       total_count.value = res.data?.metadata?.count || 0;
+      ui.setSidebarCollapsed(true);
     })
     .catch((err) => {
       console.error(err);

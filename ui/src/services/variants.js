@@ -2,19 +2,15 @@ import api from "./api";
 
 class VariantService {
   search({ query, offset = 0, limit = 50 }) {
-    return api.get(`/variants`, {
-      params: {
-        ...query,
-        offset,
-        limit,
-      },
+    return api.post(`/variants`, {
+      ...query,
+      offset,
+      limit,
     });
   }
 
   getFilters({ query }) {
-    return api.get(`/variants/filters`, {
-      params: query,
-    });
+    return api.post(`/variants/filters`, query);
   }
 }
 
