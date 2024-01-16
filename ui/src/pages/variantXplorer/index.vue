@@ -107,12 +107,13 @@
       </va-data-table>
 
       <!-- pagination -->
-      <va-pagination
-        v-if="total_pages > 1"
-        v-model="page"
-        class="my-3 justify-center"
-        :pages="total_pages"
-        :visible-pages="5"
+      <Pagination
+        class="px-1 lg:px-3"
+        v-model:page="currPage"
+        v-model:page_size="pageSize"
+        :total_results="total_count"
+        :curr_items="results.length"
+        :page_size_options="PAGE_SIZE_OPTIONS"
       />
       <!-- <div>
         <span>Results from {{  }} to {{  }} out of {{ total_count.value }}</span>
@@ -243,7 +244,11 @@ const resultsView = ref(false);
 const loading = ref(false);
 const results = ref([]);
 const total_count = ref(0);
-const page = ref(1);
+
+const pageSize = ref(50);
+const currPage = ref(1);
+const PAGE_SIZE_OPTIONS = [20, 50, 100];
+
 const filterGroups = ref({});
 const filterKeys = ["genes", "cln_sig", "func", "exonic_func"];
 const filterLabels = [
@@ -289,7 +294,6 @@ watch(
   { deep: true },
 );
 
-const PAGE_SIZE = 50;
 const example_searches = {
   gene: "GAB4",
   variant: "22-17311348-C-A",
@@ -300,10 +304,6 @@ const data_source_options = [
   { name: "Imputed", id: 2 },
 ];
 const snapshot_options = ref([]);
-
-const total_pages = computed(() => {
-  return Math.ceil(total_count.value / PAGE_SIZE);
-});
 
 snapshotsService.getAll().then((res) => {
   snapshot_options.value = res.data.map((s) => s.name);
@@ -326,7 +326,7 @@ const columns = [
   { key: "sift_max" },
 ];
 
-watchDebounced([page, filters, numericFilters], handleSearch, {
+watchDebounced([currPage, pageSize, filters, numericFilters], handleSearch, {
   deep: true,
   debounce: 500,
 });
@@ -340,7 +340,7 @@ function handleSearch() {
     return;
   }
 
-  const skip = PAGE_SIZE * (page.value - 1);
+  const offset = computed(() => (currPage.value - 1) * pageSize.value);
 
   const query_opts = {
     ...parsedQuery,
@@ -356,8 +356,8 @@ function handleSearch() {
   variantService
     .search({
       query: query_opts,
-      offset: skip,
-      limit: PAGE_SIZE,
+      offset: offset.value,
+      limit: pageSize.value,
     })
     .then((res) => {
       results.value = res.data?.results || [];
