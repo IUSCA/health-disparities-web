@@ -262,10 +262,10 @@
 </template>
 
 <script setup>
-import _ from "lodash";
-import { useNavStore } from "@/stores/nav";
 import snapshotsService from "@/services/snapshots";
 import variantService from "@/services/variants";
+import { useNavStore } from "@/stores/nav";
+import _ from "lodash";
 
 const nav = useNavStore();
 nav.setNavItems([
@@ -275,7 +275,7 @@ nav.setNavItems([
 ]);
 
 const query = ref("");
-const source = ref(2);
+const source = ref(1);
 const snapshot = ref("");
 const resultsView = ref(false);
 const loading = ref(false);

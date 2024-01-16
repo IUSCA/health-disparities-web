@@ -2000,6 +2000,42 @@ files = [
 ]
 
 [[package]]
+name = "pysam"
+version = "0.22.0"
+description = "Package for reading, manipulating, and writing genomic data"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "pysam-0.22.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:116278a7caa122b2b8acc56d13b3599be9b1236f27a12488bffc306858ff0d57"},
+    {file = "pysam-0.22.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:da2f1af461e44d5c2c7210d458ee216f8ab98486adf1eea6c88eea5c1058a62f"},
+    {file = "pysam-0.22.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:021fbf6874ad998aba19be33828ad9d23d52273643793488ac4b12917d714c68"},
+    {file = "pysam-0.22.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:26199e403855b9da45341d25682e0df27013687d9cb1b4fd328136fbd506292b"},
+    {file = "pysam-0.22.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:9bfebf89b1dc2ff6f88d64b5f05d8630deb89562b22764f8ee7f6fa9e677bb91"},
+    {file = "pysam-0.22.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:942dd4a2263996bc2daa21200886e9fde027f32ce8820e7832b20bbdb97eb393"},
+    {file = "pysam-0.22.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:83776ba587eb9575a209efed1cedb49d69c5fa6cc520dd722a0a09d0bb4e9b87"},
+    {file = "pysam-0.22.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:4779a99d1ece17a98724d87a5c10c455cf212b3baa3a8399d3d072e4d0ae5ba0"},
+    {file = "pysam-0.22.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:bb61bf30c15f6767403b423b04c293e96fd7635457b506c849aafcf48fc13242"},
+    {file = "pysam-0.22.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:32042e0bf3c5dd8554769442c2e1f7b6ada902c33ee44c616d0403e7acd12ee3"},
+    {file = "pysam-0.22.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:f23b2f47528b94e8abe3b700103fb1214c623ae1c1b8125ecf22d4d33d76720f"},
+    {file = "pysam-0.22.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:cfd2b858c7405cf38c730cba779ddf9f8cff28b4842c6440e64781650dcb9a52"},
+    {file = "pysam-0.22.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:87dbf72f3e61fd6d3f92b1b683d9a9e797b6cc213ffcd971899f24a16f9f6e8f"},
+    {file = "pysam-0.22.0-cp36-cp36m-manylinux_2_28_aarch64.whl", hash = "sha256:9af1cd3d07fd4c84e9b3d8a46c65b25f95278185bc6d44c4a48951679d5189ac"},
+    {file = "pysam-0.22.0-cp36-cp36m-manylinux_2_28_x86_64.whl", hash = "sha256:f73d7923c89618fb7024875ed8eddc5fb0c911f430e3495de482fcee48143e45"},
+    {file = "pysam-0.22.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:6ffe5c98725fea54b1b2aa8f14a60ee9ceaed32c04460d1b861a62603dcd7153"},
+    {file = "pysam-0.22.0-cp37-cp37m-manylinux_2_28_aarch64.whl", hash = "sha256:34f5653a82138d28a8e86205785a0398eb6c89f776b4145ff42783168757323c"},
+    {file = "pysam-0.22.0-cp37-cp37m-manylinux_2_28_x86_64.whl", hash = "sha256:9d3ebb1515c2fd9b11823469e5b211ca3cc89e976c00c284a2190804c9f11726"},
+    {file = "pysam-0.22.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:9b8e18520e7a79bad91b44cf9199c7fa42cec5c3020024d7ef9a7161d0099bf8"},
+    {file = "pysam-0.22.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a98d1ddca64943f3ead507721e52466aea2f7303e549d4960a2eb1d9fff8e3d7"},
+    {file = "pysam-0.22.0-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:6d6aa2346b11ad35e88c65eb0067321318c25c7f35f75c98061173eabefcf8b0"},
+    {file = "pysam-0.22.0-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:4f6657a09c81333adb5545cf9a20d4c2ca1686acf8609ad58f13b3ec1b52a9cf"},
+    {file = "pysam-0.22.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:93eb12be3822fb387e5438811f62a0f5e56c1edd5c830aaa316fb50d3d0bc181"},
+    {file = "pysam-0.22.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:9ba53f9b0b2c5cb57908855cdb35a31b34c5211d215aa01bdb3e9b3d05c659cc"},
+    {file = "pysam-0.22.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:1b84f99aa04e30bd1cc35c01bd41c2b7680131f56c71a740805aff8086f24b56"},
+    {file = "pysam-0.22.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:481e4efbfbc07b6b92194a005cb9a98006c8378024f41c7b66c58b14f6e77f9c"},
+    {file = "pysam-0.22.0.tar.gz", hash = "sha256:ab7a46973cf0ab8c6ac327f4c3fb67698d7ccbeef8631a716898c6ba01ef3e45"},
+]
+
+[[package]]
 name = "pytest"
 version = "7.4.3"
 description = "pytest: simple powerful testing with Python"
@@ -2087,6 +2123,19 @@ files = [
     {file = "pytz-2023.3.post1-py2.py3-none-any.whl", hash = "sha256:ce42d816b81b68506614c11e8937d3aa9e41007ceb50bfdcb0749b921bf646c7"},
     {file = "pytz-2023.3.post1.tar.gz", hash = "sha256:7b4fddbeb94a1eba4b557da24f19fdf9db575192544270a9101d8509f9f43d7b"},
 ]
+
+[[package]]
+name = "pyvcf3"
+version = "1.0.3"
+description = "Variant Call Format (VCF) parser for Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "PyVCF3-1.0.3.tar.gz", hash = "sha256:4b16d71c8b97010487e2c939fb4d5707b7bbfa4e2b313df9dba3e372c5ba031d"},
+]
+
+[package.dependencies]
+setuptools = "*"
 
 [[package]]
 name = "pywin32"
@@ -2491,6 +2540,22 @@ objc = ["pyobjc-framework-Cocoa"]
 win32 = ["pywin32"]
 
 [[package]]
+name = "setuptools"
+version = "69.0.3"
+description = "Easily download, build, install, upgrade, and uninstall Python packages"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "setuptools-69.0.3-py3-none-any.whl", hash = "sha256:385eb4edd9c9d5c17540511303e39a147ce2fc04bc55289c322b9e5904fe2c05"},
+    {file = "setuptools-69.0.3.tar.gz", hash = "sha256:be1af57fc409f93647f2e8e4573a142ed38724b8cdd389706a867bb4efcf1e78"},
+]
+
+[package.extras]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
+testing = ["build[virtualenv]", "filelock (>=3.4.0)", "flake8-2020", "ini2toml[lite] (>=0.9)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "pip (>=19.1)", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy (>=0.9.1)", "pytest-perf", "pytest-ruff", "pytest-timeout", "pytest-xdist", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
+testing-integration = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "packaging (>=23.1)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -2852,4 +2917,4 @@ test = ["websockets"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "4b459cd81f29c76473a0f86b00906705fd663dcc63743e8067c1415380474f53"
+content-hash = "b6cbafad2bd71b0a4b483c99a108a0c90012f0d0fa3f50ee5fa0a1b72ca27bab"

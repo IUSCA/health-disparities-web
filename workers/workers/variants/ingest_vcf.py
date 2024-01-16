@@ -87,50 +87,6 @@ def infer_phase(vcf_file_path: str) -> bool:
     return bool(var.gt_phases[0])
 
 
-def ingest_data(data_dir, source_id, snapshot_id, batch_size=100):
-    """
-    Ingests the data in VCFs in data_dir and associate with snapshot_id.
-
-    Launches a sequential workflow with as many steps as VCFs in the data_dir.
-    Each step creates participants and variants if not already in the DB and updates corresponding genotype data.
-
-    @param data_dir: path to directory with VCFs
-    @param source_id: the database id of the data source to associate with variants
-    @param snapshot_id: new participants are created using this snapshot_id
-    @param batch_size: size of the batch create or updates issued to database
-    @return: None
-    """
-    data_dir = Path(data_dir).resolve()
-    assert data_dir.exists(), f'{data_dir} does not exist'
-
-    vcf_paths = list(data_dir.glob('*.vcf.gz'))
-
-    assert len(vcf_paths) > 0, f'No .vcf.gz files in {data_dir}'
-
-    steps = []
-    for vcf_path in vcf_paths:
-        steps.append({
-            'name': vcf_path.name,
-            'task': 'ingest_vcf',
-            'queue': f'{config["app_id"]}.q',
-            'kwargs': {
-                'vcf_file_path': str(vcf_path),
-                'source_id': source_id,
-                'snapshot_id': snapshot_id,
-                'batch_size': batch_size
-            },
-        }, )
-
-    wf_body = {
-        'name': 'Ingest VCFs',
-        'app_id': config['app_id'],
-        'steps': steps
-    }
-
-    int_wf = Workflow(celery_app=app, **wf_body)
-    int_wf.start(None)
-
-
 class VCFIngestor:
     def __init__(self, celery_task, vcf_file_path: str, source_id: int, snapshot_id: int, batch_size: int = 100):
         """
@@ -352,10 +308,69 @@ class VCFIngestor:
 
 
 def ingest_vcf(celery_task, dummy, vcf_file_path=None, source_id=None, snapshot_id=None, batch_size=100, **kwargs):
+    """
+    Ingest VCF data into the database.
+
+    Args:
+      celery_task (object): The Celery task object.
+      dummy: Dummy positional argument.
+      vcf_file_path (str): Path to the VCF file.
+      source_id (int): ID of the data source.
+      snapshot_id (int): ID of the snapshot.
+      batch_size (int, optional): Batch size for ingestion. Defaults to 100.
+      **kwargs: Additional keyword arguments.
+
+    Returns:
+      tuple: A tuple containing the dummy argument and statistics of the ingestion process.
+    """
     vcfIngestor = VCFIngestor(celery_task, vcf_file_path, source_id, snapshot_id, batch_size)
     vcfIngestor.create_new_participants()
     stats = vcfIngestor.ingest()
     return dummy, stats
+
+
+def ingest_data(data_dir, source_id, snapshot_id, batch_size=100):
+    """
+    Ingests the data in VCFs in data_dir and associate with snapshot_id.
+
+    Launches a sequential workflow with as many steps as VCFs in the data_dir.
+    Each step creates participants and variants if not already in the DB and updates corresponding genotype data.
+
+    @param data_dir: path to directory with VCFs
+    @param source_id: the database id of the data source to associate with variants
+    @param snapshot_id: new participants are created using this snapshot_id
+    @param batch_size: size of the batch create or updates issued to database
+    @return: None
+    """
+    data_dir = Path(data_dir).resolve()
+    assert data_dir.exists(), f'{data_dir} does not exist'
+
+    vcf_paths = list(data_dir.glob('*.vcf.gz'))
+
+    assert len(vcf_paths) > 0, f'No .vcf.gz files in {data_dir}'
+
+    steps = []
+    for vcf_path in vcf_paths:
+        steps.append({
+            'name': vcf_path.name,
+            'task': 'ingest_vcf',
+            'queue': f'{config["app_id"]}.q',
+            'kwargs': {
+                'vcf_file_path': str(vcf_path),
+                'source_id': source_id,
+                'snapshot_id': snapshot_id,
+                'batch_size': batch_size
+            },
+        }, )
+
+    wf_body = {
+        'name': 'Ingest VCFs',
+        'app_id': config['app_id'],
+        'steps': steps
+    }
+
+    int_wf = Workflow(celery_app=app, **wf_body)
+    int_wf.start(None)
 
 
 if __name__ == '__main__':

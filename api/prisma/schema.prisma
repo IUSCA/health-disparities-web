@@ -499,6 +499,10 @@ model annotation {
   cln_dis_db    String?
   cln_rev_stat  String?
   cln_sig       String?
+  cadd_phred    Float?
+  revel_max     Float?
+  polyphen_max  Float?
+  sift_max      Float?
 
   @@id([chr, position, ref, alt, source_id])
   @@index([func])
@@ -598,6 +602,10 @@ view variant_annotation {
   cln_dis_db    String?
   cln_rev_stat  String?
   cln_sig       String?
+  cadd_phred    Float?
+  revel_max     Float?
+  polyphen_max  Float?
+  sift_max      Float?
 
   @@id([chr, position, ref, alt, source_id])
 }
