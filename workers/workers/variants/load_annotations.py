@@ -5,6 +5,7 @@ from typing import Iterable
 
 import fire
 import vcf
+from tqdm import tqdm
 from vcf.model import _Record
 
 from workers.utils import batched
@@ -164,7 +165,6 @@ class Loader:
                     position=_ann['POS'],
                     ref=_ann['REF'],
                     alt=_ann['ALT'],
-                    source_id=1,
                     af_afr=_ann['AF_afr'],
                     af_amr=_ann['AF_amr'],
                     af_eas=_ann['AF_eas'],
@@ -207,7 +207,7 @@ def main(sites_csv: str, gnomad_root_dir: str, batch_size: int = 100):
             Site(chrom=int(row['chr']), pos=int(row['position']), ref=row['ref'], alt=row['alt'])
             for row in reader
         )
-        loader.load(sites)
+        loader.load(tqdm(sites))
 
 
 if __name__ == '__main__':

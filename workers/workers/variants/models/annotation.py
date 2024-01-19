@@ -9,7 +9,6 @@ class Annotation:
     position: int
     ref: str
     alt: str
-    source_id: int
     af_afr: float
     af_amr: float
     af_eas: float
@@ -23,7 +22,8 @@ class Annotation:
     @property
     def insert_query(cls):
         keys = cls.__annotations__.keys()
-        return f'INSERT INTO ANNOTATION ({", ".join(keys)}) VALUES ({", ".join(["%s" for _ in keys])})'
+        return f'INSERT INTO ANNOTATION ({", ".join(keys)}) VALUES ({", ".join(["%s" for _ in keys])}) ' \
+               f'ON CONFLICT DO NOTHING'
 
 
 def create_many(rows: list[Annotation]):
