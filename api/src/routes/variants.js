@@ -177,11 +177,11 @@ router.post(
       prisma.variant_annotation.count({ where: filterQuery }),
     ]);
 
-    //  transform allele_counts to allele_number and allle_count
+    //  transform allele_counts to allele_number and allele_count
     //  transform encoded values to human readable values
     const results2 = results.map((result) => {
       const { chr, allele_counts, ...rest } = result;
-      // example allele_counts
+      // example allele_counts - phased: true
       // [
       //   {
       //     "v": 1,
@@ -200,10 +200,16 @@ router.post(
       //     "count": 80
       //   }
       // ],
-      const allele_number = allele_counts.reduce(
-        (total, x) => (x.v >= 0 ? (total + x.count) * 2 : 0),
-        0,
-      );
+
+      // allele_number referes to total number of alleles observed for a particular variant across
+      // all individuals in the sample population.
+      const allele_number = allele_counts
+        .filter((x) => x.v >= 0)
+        .map((x) => x.count * 2)
+        .reduce((total, x) => total + x, 0);
+
+      // allele_count refers to total number of alleles observed for a
+      // particular variant (the alt allele) across all individuals in the sample population.
       const allele_count = result.phase
         ? allele_counts.reduce((total, x) => { // phased
           if (x.v === 1) {

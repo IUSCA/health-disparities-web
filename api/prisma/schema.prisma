@@ -480,8 +480,6 @@ model annotation {
   position      BigInt
   ref           String
   alt           String
-  source_id     Int
-  source        source  @relation(fields: [source_id], references: [id])
   func          String?
   genes         String?
   exonic_func   String?
@@ -504,7 +502,7 @@ model annotation {
   polyphen_max  Float?
   sift_max      Float?
 
-  @@id([chr, position, ref, alt, source_id])
+  @@id([chr, position, ref, alt])
   @@index([func])
   @@index([genes])
   @@index([exonic_func])
@@ -520,7 +518,6 @@ model source {
   author_id          Int?
   author             user?                @relation(fields: [author_id], references: [id])
   variant            variant[]
-  annotation         annotation[]
   variant_annotation variant_annotation[]
 }
 
@@ -607,5 +604,5 @@ view variant_annotation {
   polyphen_max  Float?
   sift_max      Float?
 
-  @@id([chr, position, ref, alt, source_id])
+  @@id([chr, position, ref, alt])
 }
