@@ -93,18 +93,6 @@ config = {
                     'task': 'delete_source'
                 }
             ]
-        },
-        'reingest': {
-            'steps': [
-                {
-                    'name': 'inspect',
-                    'task': 'inspect_dataset'
-                },
-                {
-                    'name': 'mock archive',
-                    'task': 'mark_archived_and_delete'
-                },
-            ]
         }
     },
     'celery': {
