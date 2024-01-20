@@ -35,3 +35,4 @@ reports
 test.js
 src/test.js
 data/
+coverage

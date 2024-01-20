@@ -228,3 +228,14 @@ def find_participants_by_ib_id(ib_id):
         r = s.get(f'participant/ib_id/{ib_id}')
         r.raise_for_status()
         return r.json()
+
+
+def get_all_workflows():
+    with APIServerSession() as s:
+        r = s.get('workflows/current')
+        r.raise_for_status()
+        return r.json()
+
+
+if __name__ == '__main__':
+    pass

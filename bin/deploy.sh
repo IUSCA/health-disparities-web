@@ -18,15 +18,43 @@ RELEASE=$1
 
 echo "APP_UID:$APP_UID,APP_GID:$APP_GID"
 
-echo APP_UID=$APP_UID > .env
-echo APP_GID=$APP_GID >> .env
+# Check if .env file exists
+if [ ! -f .env ]; then
+  # If it doesn't exist, create it
+  touch .env
+fi
+
+# Check if APP_UID exists in the .env file
+if grep -q "APP_UID" .env; then
+  # If it exists, update it
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i "" "s/^APP_UID=.*/APP_UID=$APP_UID/" .env
+  else
+    sed -i "s/^APP_UID=.*/APP_UID=$APP_UID/" .env
+  fi
+else
+  # If it doesn't exist, add it
+  echo "" >> .env
+  echo "APP_UID=$APP_UID" >> .env
+fi
+
+# Check if APP_GID exists in the .env file
+if grep -q "APP_GID" .env; then
+  # If it exists, update it
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i "" "s/^APP_GID=.*/APP_GID=$APP_GID/" .env
+  else
+    sed -i "s/^APP_GID=.*/APP_GID=$APP_GID/" .env
+  fi
+else
+  # If it doesn't exist, add it
+  echo "APP_GID=$APP_GID" >> .env
+fi
 
 if [ -z "$RELEASE" ]; then
   sudo docker compose -f "docker-compose-prod.yml" build api
-  sudo docker compose -f "docker-compose-prod.yml" up -d
-  sudo docker compose -f "docker-compose-prod.yml" restart
+  sudo docker compose -f "docker-compose-prod.yml" up -d --force-recreate ui api
 else
   sudo docker compose -f "docker-compose-rel.yml" build api
-  sudo docker compose -f "docker-compose-rel.yml" up -d
-  sudo docker compose -f "docker-compose-rel.yml" restart
+  sudo docker compose -f "docker-compose-rel.yml" up -d --force-recreate ui api
 fi
