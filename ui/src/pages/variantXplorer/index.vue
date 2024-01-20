@@ -87,12 +87,26 @@
   <!-- results and filter -->
   <div class="flex" v-if="resultsView">
     <!-- results -->
-    <div class="w-10/12 p-3 border-r border-solid border-gray-500">
+    <div class="w-10/12 py-3 border-r border-solid border-gray-500">
+      <div v-if="results.length > 0" class="mb-2 flex gap-2">
+        <va-button
+          @click="columnsModal = true"
+          class="flex-none"
+          preset="primary"
+        >
+          Columns
+        </va-button>
+        <va-button class="flex-none" preset="primary">
+          Selected ({{ selected.length }})
+        </va-button>
+      </div>
       <va-data-table
         :items="results"
-        :columns="columns"
+        :columns="table_columns"
         :loading="loading"
         hoverable
+        selectable
+        @selectionChange="handleSelectionChange"
         class="annotationtable"
       >
         <template #cell(chr)="{ rowData }">
@@ -102,7 +116,12 @@
         </template>
 
         <template #cell(allele_freq)="{ rowData }">
-          {{ _.round(rowData.allele_count / rowData.allele_number, 6) }}
+          {{
+            _.round(
+              rowData.allele_count / rowData.allele_number,
+              NUMERIC_PRECISION,
+            )
+          }}
         </template>
       </va-data-table>
 
@@ -219,6 +238,37 @@
       </p>
     </div>
   </div>
+
+  <!-- columns selection and ordering modal -->
+  <va-modal
+    v-model="columnsModal"
+    close-button
+    hide-default-actions
+    size="large"
+  >
+    <span>Drag &amp; Drop to rearrange columns</span>
+    <Ordering
+      v-model="table_columns"
+      id-by="key"
+      label-by="label"
+      class="border border-solid rounded border-gray-400 mt-2"
+    />
+    <div class="mt-3">
+      <div class="flex flex-row gap-2">
+        <div v-for="cat in Object.keys(colums_by_category)" :key="cat">
+          <span class="font-semibold tracking-wide text-lg"> {{ cat }} </span>
+          <div class="flex flex-col gap-1 mt-2">
+            <div v-for="col in colums_by_category[cat]" :key="col.key">
+              <va-checkbox
+                v-model="columns[col.key]._show"
+                :label="col.label"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </va-modal>
 </template>
 
 <script setup>
@@ -236,6 +286,8 @@ nav.setNavItems([
 ]);
 
 const ui = useUIStore();
+
+const NUMERIC_PRECISION = 3;
 
 const query = ref("");
 const source = ref(1);
@@ -310,21 +362,180 @@ snapshotsService.getAll().then((res) => {
   snapshot.value = snapshot_options.value[0];
 });
 
-const columns = [
-  { key: "chr", label: "Variant ID", width: "150px" },
-  { key: "allele_number" },
-  { key: "allele_count" },
-  { key: "allele_freq" },
-  { key: "func", label: "Function" },
-  { key: "genes" },
-  { key: "exonic_func", label: "Exonic Function" },
-  { key: "aa_change", label: "Protien Change" },
-  { key: "cln_sig", label: "ClinVar Significance" },
-  { key: "cadd_phred" },
-  { key: "polyphen_max" },
-  { key: "revel_max" },
-  { key: "sift_max" },
-];
+const columns = ref({
+  chr: {
+    label: "Variant ID",
+    _show: true,
+    _reorder: false,
+  },
+  allele_number: {
+    label: "AN",
+    category: "Indiana Biobank",
+    _show: true,
+    numeric: true,
+  },
+  allele_count: {
+    label: "AC",
+    category: "Indiana Biobank",
+    _show: true,
+    numeric: true,
+  },
+  allele_freq: {
+    label: "AF",
+    category: "Indiana Biobank",
+    _show: true,
+  },
+  func: {
+    label: "Func.",
+    category: "Genes",
+    _show: true,
+  },
+  genes: {
+    label: "Genes",
+    category: "Genes",
+    _show: true,
+  },
+  exonic_func: {
+    label: "Exonic Func.",
+    category: "Genes",
+    _show: true,
+  },
+  aa_change: {
+    label: "Protien Change",
+    category: "Genes",
+    _show: true,
+  },
+  cln_sig: {
+    label: "ClinVar Sig.",
+    category: "ClinVAR",
+    _show: true,
+  },
+  cadd_phred: {
+    label: "CADD",
+    category: "Info",
+    _show: true,
+    numeric: true,
+  },
+  polyphen_max: {
+    label: "Polyphen",
+    category: "Info",
+    _show: true,
+    numeric: true,
+  },
+  revel_max: {
+    label: "Revel",
+    category: "Info",
+    _show: true,
+    numeric: true,
+  },
+  sift_max: {
+    label: "SIFT",
+    category: "Info",
+    _show: true,
+    numeric: true,
+  },
+  af_afr: {
+    label: "AF AFR",
+    category: "AF",
+    _show: false,
+    numeric: true,
+  },
+  af_sas: {
+    label: "AF SAS",
+    category: "AF",
+    _show: false,
+    numeric: true,
+  },
+  af_amr: {
+    label: "AF AMR",
+    category: "AF",
+    _show: false,
+    numeric: true,
+  },
+  af_eas: {
+    label: "AF EAS",
+    category: "AF",
+    _show: false,
+    numeric: true,
+  },
+  af_nfe: {
+    label: "AF NFE",
+    category: "AF",
+    _show: false,
+    numeric: true,
+  },
+  af_fin: {
+    label: "AF FIN",
+    category: "AF",
+    _show: false,
+    numeric: true,
+  },
+  af_asj: {
+    label: "AF ASJ",
+    category: "AF",
+    _show: false,
+    numeric: true,
+  },
+  af_oth: {
+    label: "AF OTH",
+    category: "AF",
+    _show: false,
+    numeric: true,
+  },
+  cln_allele_id: {
+    label: "CLN Allele ID",
+    category: "ClinVAR",
+    _show: false,
+  },
+  cln_cond: {
+    label: "CLN Cond.",
+    category: "ClinVAR",
+    _show: false,
+  },
+  cln_dis_db: {
+    label: "CLN Dis. DB",
+    category: "ClinVAR",
+    _show: false,
+  },
+  cln_rev_stat: {
+    label: "CLN Rev. Stat.",
+    category: "ClinVAR",
+    _show: false,
+  },
+});
+
+const table_columns = ref([]);
+watch(
+  columns,
+  () => {
+    // add or remove columns from table_columns preserving the existing order
+    const filtered_columns = table_columns.value.filter(
+      (col) => columns.value[col.key]?._show,
+    );
+    const current_col_keys = new Set(filtered_columns.map((col) => col.key));
+    console.log("current_col_keys", current_col_keys);
+
+    // columns that are not in table_columns but have _show = true
+    const new_columns = Object.entries(columns.value)
+      .filter(([key, col]) => col._show && !current_col_keys.has(key))
+      .map(([key, col]) => ({ key, ...col }));
+    table_columns.value = filtered_columns.concat(new_columns);
+  },
+  { deep: true, immediate: true },
+);
+
+// non-reactive
+const colums_by_category = Object.entries(columns.value).reduce(
+  (acc, [key, col]) => {
+    if (!col.category) return acc;
+    acc[col.category] = (acc[col.category] || []).concat({ key, ...col });
+    return acc;
+  },
+  {},
+);
+
+const columnsModal = ref(false);
+const selected = ref([]);
 
 watchDebounced([currPage, pageSize, filters, numericFilters], handleSearch, {
   deep: true,
@@ -436,10 +647,14 @@ function resetFilters() {
   resultsView.value = false;
   filterAccordian.value = [true, false, false, false];
 }
+
+function handleSelectionChange(ev) {
+  selected.value = ev.currentSelectedItems;
+}
 </script>
 
 <style scoped>
 .annotationtable {
-  --va-data-table-cell-padding: 4px;
+  --va-data-table-cell-padding: 2px;
 }
 </style>
