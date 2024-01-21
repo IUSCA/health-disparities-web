@@ -91,10 +91,11 @@
   </va-form>
 
   <!-- results and filter -->
-  <div class="flex" v-if="resultsView">
+  <div class="flex pt-3" v-if="resultsView">
     <!-- results -->
-    <div class="w-10/12 py-3 border-r border-solid border-gray-500">
-      <div v-if="results.length > 0" class="mb-2 flex gap-2">
+    <div class="w-10/12 border-r border-solid border-gray-500">
+      <!-- table top buttons -->
+      <div class="mb-2 flex gap-2">
         <va-button
           @click="columnsModal = true"
           class="flex-none"
@@ -106,6 +107,8 @@
           Selected ({{ selected.length }})
         </va-button>
       </div>
+
+      <!-- table -->
       <va-data-table
         :items="results"
         :columns="table_columns"
@@ -133,20 +136,17 @@
 
       <!-- pagination -->
       <Pagination
-        class="px-1 lg:px-3"
+        class="px-1 lg:px-3 mt-3"
         v-model:page="currPage"
         v-model:page_size="pageSize"
         :total_results="total_count"
         :curr_items="results.length"
         :page_size_options="PAGE_SIZE_OPTIONS"
       />
-      <!-- <div>
-        <span>Results from {{  }} to {{  }} out of {{ total_count.value }}</span>
-      </div> -->
     </div>
 
     <!-- sidebar -->
-    <div class="w-2/12 p-3">
+    <div class="w-2/12 pl-3">
       <VaAccordion v-model="filterAccordian" class="max-w-sm" multiple>
         <!-- Genes Options -->
         <VaCollapse
@@ -280,16 +280,8 @@
 <script setup>
 import snapshotsService from "@/services/snapshots";
 import variantService from "@/services/variants";
-import { useNavStore } from "@/stores/nav";
 import { useUIStore } from "@/stores/ui";
 import _ from "lodash";
-
-const nav = useNavStore();
-nav.setNavItems([
-  {
-    label: "Variant Xplorer",
-  },
-]);
 
 const ui = useUIStore();
 
@@ -662,5 +654,18 @@ function handleSelectionChange(ev) {
 <style scoped>
 .annotationtable {
   --va-data-table-cell-padding: 2px;
+
+  /* in Vuestic v1.8.7 va-virtual-scroller css class is applied to table even
+  *  when virtual scrolling is disabled. This causes the table to occupy 100% of 
+  * the height of the parent container. This is a workaround to override that
+  * behavior.
+  */
+  height: auto;
 }
 </style>
+
+<route lang="yaml">
+meta:
+  title: Variant Xplorer
+  nav: [{ label: "Variant Xplorer" }]
+</route>
