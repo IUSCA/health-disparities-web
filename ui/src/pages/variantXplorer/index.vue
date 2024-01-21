@@ -1,6 +1,7 @@
 <template>
   <!-- search -->
   <va-form class="flex flex-wrap gap-3 items-start" ref="formRef">
+    <!-- variant search input -->
     <va-input
       v-model="query"
       label="search"
@@ -9,6 +10,8 @@
       clearable
       inner-label
       @clear="resetFilters"
+      @keypress.enter="handleSearch"
+      class="flex-1"
     >
       <template #prependInner>
         <Icon icon="material-symbols:search" class="text-xl" />
@@ -38,6 +41,7 @@
       </template>
     </va-input>
 
+    <!-- source select -->
     <va-select
       class="flex-none w-[180px]"
       v-model="source"
@@ -57,6 +61,7 @@
       </template>
     </va-select>
 
+    <!-- snapshot select -->
     <va-select
       class="flex-none w-[180px]"
       v-model="snapshot"
@@ -74,6 +79,7 @@
       </template>
     </va-select>
 
+    <!-- search button -->
     <va-button
       icon="search"
       class="flex-none w-[250px]"
