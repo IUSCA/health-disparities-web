@@ -9,7 +9,7 @@
       outline
       clearable
       inner-label
-      @clear="resetFilters"
+      @clear="reset"
       @keypress.enter="handleSearch"
       class="flex-1"
     >
@@ -297,6 +297,7 @@
 
 <script setup>
 import snapshotsService from "@/services/snapshots";
+import toast from "@/services/toast";
 import variantService from "@/services/variants";
 import { useUIStore } from "@/stores/ui";
 import _ from "lodash";
@@ -310,12 +311,22 @@ const source = ref(1);
 const snapshot = ref("");
 const resultsView = ref(false);
 const loading = ref(false);
+
 const results = ref([]);
 const total_count = ref(0);
+function resetResults() {
+  results.value = [];
+  total_count.value = 0;
+}
 
 const pageSize = ref(50);
 const currPage = ref(1);
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
+const offset = computed(() => (currPage.value - 1) * pageSize.value);
+function resetPagination() {
+  currPage.value = 1;
+  pageSize.value = 50;
+}
 
 const filterGroups = ref({});
 const filterKeys = ["genes", "cln_sig", "func", "exonic_func"];
@@ -325,6 +336,17 @@ const filterLabels = [
   "Function",
   "Exonic Function",
 ];
+const filterDefaults = () => ({
+  genes: [],
+  cln_sig: [],
+  func: [],
+  exonic_func: [],
+});
+const filters = ref(filterDefaults());
+const resetFilters = () => {
+  filters.value = filterDefaults();
+};
+
 const numericFilterKeys = [
   "cadd_phred",
   "polyphen_max",
@@ -337,18 +359,16 @@ const numericFilterLabels = [
   "revel_max",
   "sift_max",
 ];
-const filters = ref({
-  genes: [],
-  cln_sig: [],
-  func: [],
-  exonic_func: [],
-});
-const numericFilters = ref({
+const numericFilterDefaults = () => ({
   cadd_phred: { min: null, max: null },
   polyphen_max: { min: null, max: null },
   revel_max: { min: null, max: null },
   sift_max: { min: null, max: null },
 });
+const numericFilters = ref(numericFilterDefaults());
+const resetNumericFilters = () => {
+  numericFilters.value = numericFilterDefaults();
+};
 
 // accordian state
 const filterAccordian = ref([true, false, false, false]);
@@ -543,7 +563,6 @@ watch(
       (col) => columnsSelected.value[col.key],
     );
     const current_col_keys = new Set(filtered_columns.map((col) => col.key));
-    console.log("current_col_keys", current_col_keys);
 
     // columns that are not in table_columns but are selected
     const new_columns = Object.entries(columnsSelected.value)
@@ -585,8 +604,6 @@ function handleSearch() {
     return;
   }
 
-  const offset = computed(() => (currPage.value - 1) * pageSize.value);
-
   const query_opts = {
     ...parsedQuery,
     source_id: source.value,
@@ -610,7 +627,12 @@ function handleSearch() {
       ui.setSidebarCollapsed(true);
     })
     .catch((err) => {
-      console.error(err);
+      // if 400 status, show error message
+      if (err.response.status === 400) {
+        toast.error("Invalid query. Please check your query and try again.");
+      } else {
+        return err;
+      }
     })
     .finally(() => {
       loading.value = false;
@@ -670,16 +692,16 @@ function parseQuery(text) {
   }
 }
 
-function resetFilters() {
-  filters.value = {
-    genes: null,
-    cln_sig: null,
-    func: null,
-    exonic_func: null,
-  };
+function reset() {
+  resetResults();
+  resetPagination();
+  resetFilters();
+  resetNumericFilters();
+
   query.value = "";
   resultsView.value = false;
   filterAccordian.value = [true, false, false, false];
+  selected.value = [];
 }
 
 function handleSelectionChange(ev) {

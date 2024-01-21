@@ -25,6 +25,9 @@ function encode_chromosome(decoded) {
   // 1-22 should be converted to int
   // X or XX should be converted to 23
   // Y or XY should be converted to 24
+  if (!decoded) {
+    return null;
+  }
   const mapping = {
     X: 23,
     Y: 24,
@@ -117,8 +120,9 @@ function buildFilterQuery(_query) {
 
 function isValidNucleotide(nucleotide) {
   if (!['A', 'C', 'G', 'T'].includes(nucleotide)) {
-    throw createError(400, 'Invalid nucleotide');
+    throw new Error('Invalid nucleotide');
   }
+  return true;
 }
 
 function rangeValidator(fieldName) {
