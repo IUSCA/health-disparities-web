@@ -201,47 +201,73 @@
   </div>
 
   <!-- search examples -->
-  <div class="flex justify-center items-center mt-24" v-else>
-    <div class="flex-none text-lg">
-      <p>
-        Enter a query in the search bar or get started with an example query:
-      </p>
-      <p>
-        <span class="font-bold"> Gene </span> :
-        <span
-          class="va-link underline"
-          @click="
-            query = example_searches['gene'];
-            handleSearch();
-          "
-        >
-          {{ example_searches["gene"] }}
+  <div class="flex flex-col justify-center items-center mt-24" v-else>
+    <!-- No results found message -->
+    <div
+      v-if="total_count == 0 && !loading && searchPerformed"
+      class="flex flex-col justify-center items-center text-center"
+    >
+      <i-mdi-magnify class="text-6xl text-red-500" />
+      <p class="text-2xl tracking-wide font-semibold">No Results Found</p>
+      <p class="va-text-secondary">
+        <span @click="reset" class="underline cursor-pointer">
+          Try a different search query or reset your filter selections
         </span>
       </p>
-      <p>
-        <span class="font-bold"> Variant </span>:
-        <span
-          class="va-link underline"
-          @click="
-            query = example_searches['variant'];
-            handleSearch();
-          "
-        >
-          {{ example_searches["variant"] }}
-        </span>
-      </p>
-      <p>
-        <span class="font-bold"> Genomic Region </span>:
-        <span
-          class="va-link underline"
-          @click="
-            query = example_searches['genomic_region'];
-            handleSearch();
-          "
-        >
-          {{ example_searches["genomic_region"] }}
-        </span>
-      </p>
+    </div>
+
+    <div v-else>
+      <!-- loading spinner -->
+      <div v-if="loading" class="flex justify-center items-center mt-24">
+        <semipolar-spinner
+          :animation-duration="2000"
+          :size="65"
+          :color="colors.primary"
+        />
+      </div>
+
+      <!-- search examples -->
+      <div class="flex-none text-lg" v-else>
+        <p>
+          Enter a query in the search bar or get started with an example query:
+        </p>
+        <p>
+          <span class="font-bold"> Gene </span> :
+          <span
+            class="va-link underline"
+            @click="
+              query = example_searches['gene'];
+              handleSearch();
+            "
+          >
+            {{ example_searches["gene"] }}
+          </span>
+        </p>
+        <p>
+          <span class="font-bold"> Variant </span>:
+          <span
+            class="va-link underline"
+            @click="
+              query = example_searches['variant'];
+              handleSearch();
+            "
+          >
+            {{ example_searches["variant"] }}
+          </span>
+        </p>
+        <p>
+          <span class="font-bold"> Genomic Region </span>:
+          <span
+            class="va-link underline"
+            @click="
+              query = example_searches['genomic_region'];
+              handleSearch();
+            "
+          >
+            {{ example_searches["genomic_region"] }}
+          </span>
+        </p>
+      </div>
     </div>
   </div>
 
@@ -300,9 +326,12 @@ import snapshotsService from "@/services/snapshots";
 import toast from "@/services/toast";
 import variantService from "@/services/variants";
 import { useUIStore } from "@/stores/ui";
+import { SemipolarSpinner } from "epic-spinners";
 import _ from "lodash";
+import { useColors } from "vuestic-ui";
 
 const ui = useUIStore();
+const { colors } = useColors();
 
 const NUMERIC_PRECISION = 3;
 
@@ -311,6 +340,7 @@ const source = ref(1);
 const snapshot = ref("");
 const resultsView = ref(false);
 const loading = ref(false);
+const searchPerformed = ref(false);
 
 const results = ref([]);
 const total_count = ref(0);
@@ -597,10 +627,8 @@ watchDebounced([currPage, pageSize, filters, numericFilters], handleSearch, {
 
 function handleSearch() {
   const parsedQuery = parseQuery(query.value);
-
   // validate that parsedQuery is not empty
   if (Object.keys(parsedQuery).length === 0) {
-    console.error("invalid query");
     return;
   }
 
@@ -625,18 +653,19 @@ function handleSearch() {
       results.value = res.data?.results || [];
       total_count.value = res.data?.metadata?.count || 0;
       ui.setSidebarCollapsed(true);
+      resultsView.value = total_count.value > 0;
+      searchPerformed.value = true;
     })
     .catch((err) => {
       // if 400 status, show error message
-      if (err.response.status === 400) {
+      if (err?.response?.status === 400) {
         toast.error("Invalid query. Please check your query and try again.");
       } else {
-        return err;
+        throw err;
       }
     })
     .finally(() => {
       loading.value = false;
-      resultsView.value = true;
     });
 
   variantService
@@ -698,6 +727,7 @@ function reset() {
   resetFilters();
   resetNumericFilters();
 
+  searchPerformed.value = false;
   query.value = "";
   resultsView.value = false;
   filterAccordian.value = [true, false, false, false];
