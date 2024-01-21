@@ -279,7 +279,9 @@
     size="large"
   >
     <div>
-      <span>Drag &amp; Drop to rearrange columns</span>
+      <span class="font-semibold text-lg">
+        Drag &amp; Drop to rearrange columns
+      </span>
       <Ordering
         v-model="table_columns"
         id-by="key"
@@ -304,6 +306,21 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Column Legend -->
+      <div class="gap-2 mt-2">
+        <va-data-table
+          :items="Object.values(columns)"
+          :columns="[
+            { key: 'label', label: 'Name', sortable: true },
+            { key: 'thTitle', label: 'Description', sortable: true },
+            { key: 'category', label: 'Category', sortable: true },
+          ]"
+          striped
+          style="height: 200px; overflow-y: scroll"
+          class="annotationtable"
+        />
       </div>
     </div>
 
@@ -428,26 +445,31 @@ snapshotsService.getAll().then((res) => {
   snapshot.value = snapshot_options.value[0];
 });
 
+// thTile is used to set the column header tooltip
 const columns = {
   chr: {
     label: "Variant ID",
+    thTitle: "chromosome-position-ref-alt",
     _show: true,
   },
   allele_number: {
     label: "AN",
     category: "Indiana Biobank",
+    thTitle: "Allele Number",
     _show: true,
     numeric: true,
   },
   allele_count: {
     label: "AC",
     category: "Indiana Biobank",
+    thTitle: "Allele Count",
     _show: true,
     numeric: true,
   },
   allele_freq: {
     label: "AF",
     category: "Indiana Biobank",
+    thTitle: "Allele Frequency",
     _show: true,
   },
   func: {
@@ -568,6 +590,11 @@ const columns = {
     _show: false,
   },
 };
+
+// add thStyle: "cursor: help;", to each column
+Object.values(columns).forEach((col) => {
+  col.thStyle = "cursor: help;";
+});
 
 function getDefaultColumns() {
   // return an object with the same keys as columns with the value of _show (boolean)
