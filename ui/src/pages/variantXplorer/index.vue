@@ -252,28 +252,46 @@
     hide-default-actions
     size="large"
   >
-    <span>Drag &amp; Drop to rearrange columns</span>
-    <Ordering
-      v-model="table_columns"
-      id-by="key"
-      label-by="label"
-      class="border border-solid rounded border-gray-400 mt-2"
-    />
-    <div class="mt-3">
-      <div class="flex flex-row gap-2">
-        <div v-for="cat in Object.keys(colums_by_category)" :key="cat">
-          <span class="font-semibold tracking-wide text-lg"> {{ cat }} </span>
-          <div class="flex flex-col gap-1 mt-2">
-            <div v-for="col in colums_by_category[cat]" :key="col.key">
-              <va-checkbox
-                v-model="columns[col.key]._show"
-                :label="col.label"
-              />
+    <div>
+      <span>Drag &amp; Drop to rearrange columns</span>
+      <Ordering
+        v-model="table_columns"
+        id-by="key"
+        label-by="label"
+        class="border border-solid rounded border-gray-400 mt-2"
+      />
+      <div class="mt-3">
+        <div class="flex flex-row gap-2">
+          <div
+            v-for="cat in Object.keys(colums_by_category)"
+            :key="cat"
+            class="flex-auto"
+          >
+            <span class="font-semibold tracking-wide text-lg"> {{ cat }} </span>
+            <div class="flex flex-col gap-1 mt-2">
+              <div v-for="col in colums_by_category[cat]" :key="col.key">
+                <va-checkbox
+                  v-model="columnsSelected[col.key]"
+                  :label="col.label"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <template #footer>
+      <div class="flex justify-start w-full">
+        <va-button
+          preset="primary"
+          @click="restoreColumnDefaults"
+          class="flex-none"
+        >
+          Restore Defaults
+        </va-button>
+      </div>
+    </template>
   </va-modal>
 </template>
 
@@ -360,11 +378,10 @@ snapshotsService.getAll().then((res) => {
   snapshot.value = snapshot_options.value[0];
 });
 
-const columns = ref({
+const columns = {
   chr: {
     label: "Variant ID",
     _show: true,
-    _reorder: false,
   },
   allele_number: {
     label: "AN",
@@ -500,40 +517,59 @@ const columns = ref({
     category: "ClinVAR",
     _show: false,
   },
-});
+};
 
+function getDefaultColumns() {
+  // return an object with the same keys as columns with the value of _show (boolean)
+  return Object.entries(columns).reduce((acc, [key, col]) => {
+    acc[key] = col._show;
+    return acc;
+  }, {});
+}
+// reactive object key: boolean
+const columnsSelected = ref(getDefaultColumns());
+
+// reactive array intended to be used as the columns prop for va-data-table
 const table_columns = ref([]);
+
+// watch columnsSelected and update table_columns
 watch(
-  columns,
+  columnsSelected,
   () => {
     // add or remove columns from table_columns preserving the existing order
+
+    // remove from current columns that are no longer selected
     const filtered_columns = table_columns.value.filter(
-      (col) => columns.value[col.key]?._show,
+      (col) => columnsSelected.value[col.key],
     );
     const current_col_keys = new Set(filtered_columns.map((col) => col.key));
     console.log("current_col_keys", current_col_keys);
 
-    // columns that are not in table_columns but have _show = true
-    const new_columns = Object.entries(columns.value)
-      .filter(([key, col]) => col._show && !current_col_keys.has(key))
-      .map(([key, col]) => ({ key, ...col }));
+    // columns that are not in table_columns but are selected
+    const new_columns = Object.entries(columnsSelected.value)
+      .filter(([key, shown]) => shown && !current_col_keys.has(key))
+      .map(([key, _]) => ({ key, ...columns[key] }));
     table_columns.value = filtered_columns.concat(new_columns);
   },
   { deep: true, immediate: true },
 );
 
 // non-reactive
-const colums_by_category = Object.entries(columns.value).reduce(
-  (acc, [key, col]) => {
-    if (!col.category) return acc;
-    acc[col.category] = (acc[col.category] || []).concat({ key, ...col });
-    return acc;
-  },
-  {},
-);
+const colums_by_category = Object.entries(columns).reduce((acc, [key, col]) => {
+  if (!col.category) return acc;
+  acc[col.category] = (acc[col.category] || []).concat({ key, ...col });
+  return acc;
+}, {});
 
 const columnsModal = ref(false);
 const selected = ref([]);
+
+function restoreColumnDefaults() {
+  columnsSelected.value = getDefaultColumns();
+  table_columns.value = Object.entries(columns)
+    .filter(([_, col]) => col._show)
+    .map(([key, col]) => ({ key, ...col }));
+}
 
 watchDebounced([currPage, pageSize, filters, numericFilters], handleSearch, {
   deep: true,
