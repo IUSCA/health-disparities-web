@@ -95,17 +95,25 @@
     <!-- results -->
     <div class="w-10/12 border-r border-solid border-gray-500">
       <!-- table top buttons -->
-      <div class="mb-2 flex gap-2">
+      <div class="mb-2 px-5 flex items-center gap-5 justify-end">
+        <div class="">
+          <span class="text-xl font-bold va-text-info">
+            <NumberTransition :target="total_count" />
+            {{ maybePluralize(total_count, "Variant", "s", false) }}
+          </span>
+        </div>
+
         <va-button
           @click="columnsModal = true"
           class="flex-none"
-          preset="primary"
+          preset="secondary"
         >
+          <i-mdi-drag-variant class="mr-1" />
           Columns
         </va-button>
-        <va-button class="flex-none" preset="primary">
+        <!-- <va-button class="flex-none" preset="primary">
           Selected ({{ selected.length }})
-        </va-button>
+        </va-button> -->
       </div>
 
       <!-- table -->
@@ -114,7 +122,6 @@
         :columns="table_columns"
         :loading="loading"
         hoverable
-        selectable
         @selectionChange="handleSelectionChange"
         class="annotationtable"
       >
@@ -341,6 +348,7 @@
 <script setup>
 import snapshotsService from "@/services/snapshots";
 import toast from "@/services/toast";
+import { maybePluralize } from "@/services/utils";
 import variantService from "@/services/variants";
 import { useUIStore } from "@/stores/ui";
 import { SemipolarSpinner } from "epic-spinners";
