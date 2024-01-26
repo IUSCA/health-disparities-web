@@ -111,9 +111,9 @@
           <i-mdi-drag-variant class="mr-1" />
           Columns
         </va-button>
-        <!-- <va-button class="flex-none" preset="primary">
+        <va-button class="flex-none" preset="primary">
           Selected ({{ selected.length }})
-        </va-button> -->
+        </va-button>
       </div>
 
       <!-- table -->
@@ -122,6 +122,7 @@
         :columns="table_columns"
         :loading="loading"
         hoverable
+        selectable
         @selectionChange="handleSelectionChange"
         class="annotationtable"
       >
@@ -660,6 +661,20 @@ watchDebounced([currPage, pageSize, filters, numericFilters], handleSearch, {
   debounce: 500,
 });
 
+function formatNumericData(data) {
+  // data is column_key: value object, value is sometimes a number
+  // columns is column_key: column object
+  // for each column, if it is a numeric column, format the number
+  return Object.entries(data).reduce((acc, [key, value]) => {
+    if (columns[key]?.numeric) {
+      acc[key] = _.round(value, NUMERIC_PRECISION);
+    } else {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+}
+
 function handleSearch() {
   const parsedQuery = parseQuery(query.value);
   // validate that parsedQuery is not empty
@@ -685,7 +700,7 @@ function handleSearch() {
       limit: pageSize.value,
     })
     .then((res) => {
-      results.value = res.data?.results || [];
+      results.value = (res.data?.results || []).map(formatNumericData);
       total_count.value = res.data?.metadata?.count || 0;
       ui.setSidebarCollapsed(true);
       resultsView.value = total_count.value > 0;
