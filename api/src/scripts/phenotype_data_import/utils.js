@@ -9,7 +9,7 @@ async function dateFilename(suffix) {
   // Create the filename using the extracted year, month, and day
   const filename = `${year}${month}${day}-${suffix}`; // Change the file extension as needed
 
-  return filename
+  return filename;
 }
 
 async function asyncForEach(array, callback) {
@@ -21,12 +21,12 @@ async function asyncForEach(array, callback) {
 async function parseDate(dateStr) {
   // Extract the individual date components from the string
   // console.log(`Parsing date: ${dateStr}`  )
-  const day = parseInt(dateStr.slice(0, 2));
+  const day = parseInt(dateStr.slice(0, 2), 10);
   const monthStr = dateStr.slice(2, 5);
-  const year = parseInt(dateStr.slice(5, 9));
-  const hours = parseInt(dateStr.slice(10, 12));
-  const minutes = parseInt(dateStr.slice(13, 15));
-  const seconds = parseInt(dateStr.slice(16, 18));
+  const year = parseInt(dateStr.slice(5, 9), 10);
+  const hours = parseInt(dateStr.slice(10, 12), 10);
+  const minutes = parseInt(dateStr.slice(13, 15), 10);
+  const seconds = parseInt(dateStr.slice(16, 18), 10);
 
   // Define a mapping from month abbreviations to month numbers
   const monthMap = {
@@ -41,7 +41,7 @@ async function parseDate(dateStr) {
     SEP: 8,
     OCT: 9,
     NOV: 10,
-    DEC: 11
+    DEC: 11,
   };
 
   // Get the month number from the month abbreviation
@@ -53,7 +53,9 @@ async function parseDate(dateStr) {
   // console.log("Parsing date string:", dateStr)
   // console.log("Created date:", date)
 
-  return date
+  return date;
 }
 
-module.exports = { asyncForEach, parseDate, dateFilename };
+module.exports = {
+  asyncForEach, parseDate, dateFilename,
+};

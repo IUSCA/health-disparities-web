@@ -1,13 +1,14 @@
+/* eslint-disable no-console */
 const fs = require('fs');
 const Papa = require('papaparse');
 const { PrismaClient } = require('@prisma/client');
-const { asyncForEach, parseDate, dateFilename } = require('./utils.js');
+const { asyncForEach, parseDate, dateFilename } = require('./utils');
 
 const prisma = new PrismaClient();
 
 async function importDemographicData() {
   // Set up a file to write any malformed rows to:
-  filename = await dateFilename("errors-demographics.csv")
+  const filename = await dateFilename('errors-demographics.csv');
 
   const errorStream = fs.createWriteStream(filename);
 
@@ -20,12 +21,21 @@ async function importDemographicData() {
 
   // Loop through each row in the CSV data
   await asyncForEach(data, async (row, index) => {
-    const { STUDY_ID, IB_ID, GENDER, RACE, ETHNICITY, DEID_MAX_ENC_DATE, CHS_FLAG, DEID_DOB, DEID_ENROLL_DATE } = row;
+    const {
+      STUDY_ID,
+      IB_ID,
+      GENDER,
+      RACE,
+      ETHNICITY,
+      DEID_MAX_ENC_DATE,
+      CHS_FLAG,
+      DEID_DOB,
+      DEID_ENROLL_DATE,
+    } = row;
 
     if (!STUDY_ID || !IB_ID) {
       errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID},${row.GENDER},${row.RACE},${row.ETHNICITY},${row.DEID_MAX_ENC_DATE},${row.CHS_FLAG},${row.DEID_DOB},${row.DEID_ENROLL_DATE}\n`);
     } else {
-
       // Check if the study exists by STUDY_ID
       // const existingStudy = await prisma.study.findUnique({ where: { id: Number(STUDY_ID) } });
 
@@ -35,12 +45,17 @@ async function importDemographicData() {
       // }
 
       // Check if the participant exists by IB_ID
-      // let participant = await prisma.participant.findUnique({ where: { ib_id: 
+      // let participant = await prisma.participant.findUnique({ where: { ib_id:
       let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
 
       // If the participant does not exist, create a new participant record
       if (!participant) {
-        participant = await prisma.participant.create({ data: { ib_id: IB_ID, study_id: Number(STUDY_ID) } });
+        participant = await prisma.participant.create({
+          data: {
+            ib_id: IB_ID,
+            study_id: Number(STUDY_ID),
+          },
+        });
       }
 
       // Check if the demographic record exists by study_id and ib_id
@@ -52,7 +67,7 @@ async function importDemographicData() {
       //     }
       //   }
       // });
-      console.log("Participant:", participant)
+      console.log('Participant:', participant);
 
       // Convert date strings to JavaScript Date objects
       const maxEncDate = await parseDate(DEID_MAX_ENC_DATE);
@@ -71,19 +86,17 @@ async function importDemographicData() {
             race: RACE,
             ethnicity: ETHNICITY,
             max_enc_date: maxEncDate, // Use the converted date object
-            chs_flag: parseInt(CHS_FLAG),
-            dob: dob, // Use the converted date object
-            enroll_date: enrollDate,  // Use the converted date object
-            participant_id: participant.id
+            chs_flag: parseInt(CHS_FLAG, 10),
+            dob, // Use the converted date object
+            enroll_date: enrollDate, // Use the converted date object
+            participant_id: participant.id,
           },
         });
-      }
-      catch {
+      } catch {
         errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID},${row.GENDER},${row.RACE},${row.ETHNICITY},${row.DEID_MAX_ENC_DATE},${row.CHS_FLAG},${row.DEID_DOB},${row.DEID_ENROLL_DATE}\n`);
       }
     }
-
-  })
+  });
 
   // Close Prisma connection
   await prisma.$disconnect();

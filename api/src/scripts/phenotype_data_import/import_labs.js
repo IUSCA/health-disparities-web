@@ -1,17 +1,18 @@
+/* eslint-disable no-console */
 const fs = require('fs');
 const Papa = require('papaparse');
 const { PrismaClient } = require('@prisma/client');
-const { asyncForEach, parseDate, dateFilename } = require('./utils.js');
+const { asyncForEach, parseDate, dateFilename } = require('./utils');
 
 const prisma = new PrismaClient();
 
 async function importLabData() {
   // Delete all existing lab records
-  await prisma.lab.deleteMany()
+  await prisma.lab.deleteMany();
 
   // Set up a file to write any malformed rows to:
-  const filename = await dateFilename("errors-labs.csv");
-  console.log("Filename set to", filename)
+  const filename = await dateFilename('errors-labs.csv');
+  console.log('Filename set to', filename);
   const errorStream = fs.createWriteStream(filename);
 
   // Read CSV file
@@ -23,7 +24,9 @@ async function importLabData() {
 
   // Loop through each row in the CSV data
   await asyncForEach(data, async (row, index) => {
-    const { STUDYID, IB_ID, DEID_LABDATE, CATEGORY, LAB_NAME, NUMERIC_RESULT, UNIT } = row;
+    const {
+      STUDYID, IB_ID, DEID_LABDATE, CATEGORY, LAB_NAME, NUMERIC_RESULT, UNIT,
+    } = row;
 
     if (!STUDYID || !IB_ID) {
       errorStream.write(`${index},${row.STUDYID},${row.IB_ID},${row.DEID_LABDATE},${row.CATEGORY},${row.LAB_NAME},${row.NUMERIC_RESULT},${row.UNIT}\n`);
@@ -32,7 +35,12 @@ async function importLabData() {
 
       // If the participant does not exist, create a new participant record
       if (!participant) {
-        participant = await prisma.participant.create({ data: { ib_id: IB_ID, study_id: Number(STUDYID) } });
+        participant = await prisma.participant.create({
+          data: {
+            ib_id: IB_ID,
+            study_id: Number(STUDYID),
+          },
+        });
       }
 
       // Convert date string to JavaScript Date object
@@ -61,8 +69,8 @@ async function importLabData() {
             category: CATEGORY,
             result: Number(NUMERIC_RESULT),
             unit: UNIT,
-            participant_id: participant.id
-          }
+            participant_id: participant.id,
+          },
         });
       } catch (err) {
         console.error(`Error creating lab record: ${err}`);
@@ -73,14 +81,12 @@ async function importLabData() {
       //   console.log("skipping existing record for row", index)
       // }
     }
-
-  })
+  });
   // Close the error stream
   errorStream.end();
   // Close Prisma connection
   await prisma.$disconnect();
   console.log('Lab data import complete');
-
 }
 
 importLabData();
