@@ -62,7 +62,7 @@ backup
 
 meili_data/*
 typesense-data/*
-annotations
+annotations/*
 variants/*
 todo.md
-phenotype
+phenotype/*

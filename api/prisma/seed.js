@@ -260,37 +260,37 @@ async function main() {
   );
 
   // upsert snapshots
-  await Promise.all(
-    data.snapshots.map((snapshot) => prisma.snapshot.upsert({
-      where: {
-        id: snapshot.id,
-      },
-      update: {},
-      create: snapshot,
-    })),
-  );
+  // await Promise.all(
+  //   data.snapshots.map((snapshot) => prisma.snapshot.upsert({
+  //     where: {
+  //       id: snapshot.id,
+  //     },
+  //     update: {},
+  //     create: snapshot,
+  //   })),
+  // );
 
   // upsert sources
-  await Promise.all(
-    data.sources.map((source) => prisma.source.upsert({
-      where: {
-        id: source.id,
-      },
-      update: {},
-      create: source,
-    })),
-  );
+  // await Promise.all(
+  //   data.sources.map((source) => prisma.source.upsert({
+  //     where: {
+  //       id: source.id,
+  //     },
+  //     update: {},
+  //     create: source,
+  //   })),
+  // );
 
   // upsert participants
-  await Promise.all(
-    data.participants.map((prt) => prisma.participant.upsert({
-      where: {
-        id: prt.id,
-      },
-      update: {},
-      create: prt,
-    })),
-  );
+  // await Promise.all(
+  //   data.participants.map((prt) => prisma.participant.upsert({
+  //     where: {
+  //       id: prt.id,
+  //     },
+  //     update: {},
+  //     create: prt,
+  //   })),
+  // );
 
   // upsert protocol user assoc
   await Promise.all(
@@ -304,26 +304,27 @@ async function main() {
   );
 
   // upsert protocol participant assoc
-  await Promise.all(
-    data.participant_protocol_assoc.map((pp) => prisma.participant_protocol.upsert({
-      where: {
-        participant_id_protocol_id: pp,
-      },
-      update: {},
-      create: pp,
-    })),
-  );
+  // await Promise.all(
+  //   data.participant_protocol_assoc.map((pp) => prisma.participant_protocol.upsert({
+  //     where: {
+  //       participant_id_protocol_id: pp,
+  //     },
+  //     update: {},
+  //     create: pp,
+  //   })),
+  // );
 
   // upsert cohort data
-  await Promise.all(
-    data.cohorts.map((c) => prisma.cohort.upsert({
-      where: {
-        id: c.id,
-      },
-      update: {},
-      create: c,
-    })),
-  );
+  // await Promise.all(
+  //   data.cohorts.map((c) => prisma.cohort.upsert({
+  //     where: {
+  //       id: c.id,
+  //     },
+  //     update: {},
+  //     create: c,
+  //   })),
+  // );
+
   // update the auto increment id's sequence numbers
   const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot', 'participant', 'cohort'];
   await Promise.all(tables.map(update_seq));

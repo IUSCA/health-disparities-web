@@ -24,5 +24,6 @@ router.use('/variants', require('./variants') /* #swagger.security = [{"BearerAu
 
 router.use('/snapshots', require('./snapshots'));
 router.use('/protocols', require('./protocols'));
+router.use('/phenotype_files', require('./phenotype_files'));
 
 module.exports = router;

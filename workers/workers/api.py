@@ -236,6 +236,11 @@ def get_all_workflows():
         r.raise_for_status()
         return r.json()
 
+def create_phenotype_file(data):
+    with APIServerSession() as s:
+        r = s.post('phenotype_file', json=data)
+        r.raise_for_status()
+        return r.json()
 
 if __name__ == '__main__':
     pass
