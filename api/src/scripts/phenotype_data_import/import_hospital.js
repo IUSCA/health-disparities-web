@@ -6,7 +6,7 @@ const { asyncForEach, parseDate, dateFilename } = require('./utils');
 
 const prisma = new PrismaClient();
 
-async function importHospitalData() {
+async function importHospitalData(csvFilePath, enroll_snapshot_id) {
   // Delete all existing hospital records
   await prisma.hospital.deleteMany();
 
@@ -16,7 +16,6 @@ async function importHospitalData() {
   const errorStream = fs.createWriteStream(filename);
 
   // Read CSV file
-  const csvFilePath = 'data/rdrp4699_hosp.csv';
   const csvData = fs.readFileSync(csvFilePath, 'utf-8');
 
   // Parse the CSV data
@@ -29,20 +28,18 @@ async function importHospitalData() {
     } = row;
 
     if (!STUDY_ID || !IB_ID_LONG) {
-      console.log(`Missing study id ${STUDY_ID} or ib_id ${IB_ID_LONG}`);
+      // console.log(`Missing study id ${STUDY_ID} or ib_id ${IB_ID_LONG}`);
       errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID_LONG},${row.DEID_ADMIT},${row.DEID_DISCHARGE},${row.DX_CODE},${row.DX_CODE_SYSTEM}\n`);
     } else {
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID_LONG } });
-
-      // If the participant does not exist, create a new participant record
-      if (!participant) {
-        participant = await prisma.participant.create({
-          data: {
-            ib_id: IB_ID_LONG,
-            study_id: Number(STUDY_ID),
-          },
-        });
-      }
+      const participant = await prisma.participant.upsert({
+        where: { ib_id: IB_ID_LONG },
+        update: {},
+        create: {
+          ib_id: IB_ID_LONG,
+          study_id: Number(STUDY_ID),
+          enroll_snapshot_id,
+        },
+      });
 
       // Convert date string to JavaScript Date object
       const admitDate = await parseDate(DEID_ADMIT);
@@ -94,4 +91,4 @@ async function importHospitalData() {
   console.log('Hospital data import complete');
 }
 
-importHospitalData();
+module.exports = { importHospitalData };

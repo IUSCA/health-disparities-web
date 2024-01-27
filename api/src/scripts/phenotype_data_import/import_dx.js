@@ -6,7 +6,7 @@ const { parseDate, dateFilename } = require('./utils');
 
 const prisma = new PrismaClient();
 
-async function importDxData() {
+async function importDxData(csvFilePath, enroll_snapshot_id) {
   // Delete all existing dx records
   await prisma.dx.deleteMany();
   // Set up a file to write any malformed rows to:
@@ -15,9 +15,6 @@ async function importDxData() {
   const errorStream = fs.createWriteStream(filename);
 
   // Read CSV file
-  const csvFilePath = 'data/rdrp4699_dx.csv';
-  // const csvData = fs.readFileSync(csvFilePath, 'utf-8');
-
   const csvData = fs.createReadStream(csvFilePath, 'utf-8');
 
   const parser = Papa.parse(Papa.NODE_STREAM_INPUT);
@@ -29,27 +26,24 @@ async function importDxData() {
 
     // // Loop through each row in the CSV data
     // await asyncForEach(data, async (row, index) => {
-
-    console.log('Current row', row);
+    // console.log('Current row', row);
 
     const [STUDY_ID, IB_ID, DEID_DX_DATE, DX_CODE, DX_CODE_SYSTEM, DX_NAME] = row;
 
     const index = -1;
     if (!Number(STUDY_ID) || !IB_ID) {
-      console.log(`Missing study id ${STUDY_ID} or ib_id ${IB_ID}`);
+      // console.log(`Missing study id ${STUDY_ID} or ib_id ${IB_ID}`);
       errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID},${row.DEID_DX_DATE},${row.DX_CODE},${row.DX_CODE_SYSTEM},${row.DX_NAME},\n`);
     } else {
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
-
-      // If the participant does not exist, create a new participant record
-      if (!participant) {
-        participant = await prisma.participant.create({
-          data: {
-            ib_id: IB_ID,
-            study_id: Number(STUDY_ID),
-          },
-        });
-      }
+      const participant = await prisma.participant.upsert({
+        where: { ib_id: IB_ID },
+        update: {},
+        create: {
+          ib_id: IB_ID,
+          study_id: Number(STUDY_ID),
+          enroll_snapshot_id,
+        },
+      });
 
       // Convert date string to JavaScript Date object
       const dxDate = await parseDate(DEID_DX_DATE);
@@ -108,4 +102,4 @@ async function importDxData() {
   console.log('Dx data import complete');
 }
 
-importDxData();
+module.exports = { importDxData };

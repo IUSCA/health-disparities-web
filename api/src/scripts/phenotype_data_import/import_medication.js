@@ -6,7 +6,7 @@ const { asyncForEach, parseDate, dateFilename } = require('./utils');
 
 const prisma = new PrismaClient();
 
-async function importMedicationData() {
+async function importMedicationData(csvFilePath, enroll_snapshot_id) {
   // Delete all existing medication records
   await prisma.medication.deleteMany();
 
@@ -16,7 +16,6 @@ async function importMedicationData() {
   const errorStream = fs.createWriteStream(filename);
 
   // Read CSV file
-  const csvFilePath = 'data/rdrp4699_meds.csv';
   const csvData = fs.readFileSync(csvFilePath, 'utf-8');
 
   // Parse the CSV data
@@ -40,17 +39,15 @@ async function importMedicationData() {
     if (!STUDY_ID || !IB_ID) {
       errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID},${row.DRUG_CATEGORY},${row.DRUG_NAME},${row.DEID_START_DATE},${row.DISPENSEQTY},${row.DISPENSEQTYUNIT},${row.NBRREFILLS},${row.STRENGTHDOSE},${row.STRENGTHDOSEUNIT}\n`);
     } else {
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
-
-      // If the participant does not exist, create a new participant record
-      if (!participant) {
-        participant = await prisma.participant.create({
-          data: {
-            ib_id: IB_ID,
-            study_id: Number(STUDY_ID),
-          },
-        });
-      }
+      const participant = await prisma.participant.upsert({
+        where: { ib_id: IB_ID },
+        update: {},
+        create: {
+          ib_id: IB_ID,
+          study_id: Number(STUDY_ID),
+          enroll_snapshot_id,
+        },
+      });
 
       // Convert date string to JavaScript Date object
       const medicationDate = await parseDate(DEID_START_DATE);
@@ -102,4 +99,4 @@ async function importMedicationData() {
   console.log('Medication data import complete');
 }
 
-importMedicationData();
+module.exports = { importMedicationData };

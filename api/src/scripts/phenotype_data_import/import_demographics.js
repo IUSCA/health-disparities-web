@@ -6,14 +6,13 @@ const { asyncForEach, parseDate, dateFilename } = require('./utils');
 
 const prisma = new PrismaClient();
 
-async function importDemographicData() {
+async function importDemographicData(csvFilePath, enroll_snapshot_id) {
   // Set up a file to write any malformed rows to:
   const filename = await dateFilename('errors-demographics.csv');
 
   const errorStream = fs.createWriteStream(filename);
 
   // Read CSV file
-  const csvFilePath = 'data/rdrp4699_demogv2.csv'; // Replace with your CSV file path
   const csvData = fs.readFileSync(csvFilePath, 'utf-8');
 
   // Parse the CSV data
@@ -36,27 +35,15 @@ async function importDemographicData() {
     if (!STUDY_ID || !IB_ID) {
       errorStream.write(`${index},${row.STUDY_ID},${row.IB_ID},${row.GENDER},${row.RACE},${row.ETHNICITY},${row.DEID_MAX_ENC_DATE},${row.CHS_FLAG},${row.DEID_DOB},${row.DEID_ENROLL_DATE}\n`);
     } else {
-      // Check if the study exists by STUDY_ID
-      // const existingStudy = await prisma.study.findUnique({ where: { id: Number(STUDY_ID) } });
-
-      // // If the study does not exist, create a new study record
-      // if (!existingStudy) {
-      //   await prisma.study.create({ data: { id: Number(STUDY_ID) } });
-      // }
-
-      // Check if the participant exists by IB_ID
-      // let participant = await prisma.participant.findUnique({ where: { ib_id:
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
-
-      // If the participant does not exist, create a new participant record
-      if (!participant) {
-        participant = await prisma.participant.create({
-          data: {
-            ib_id: IB_ID,
-            study_id: Number(STUDY_ID),
-          },
-        });
-      }
+      const participant = await prisma.participant.upsert({
+        where: { ib_id: IB_ID },
+        update: {},
+        create: {
+          ib_id: IB_ID,
+          study_id: Number(STUDY_ID),
+          enroll_snapshot_id,
+        },
+      });
 
       // Check if the demographic record exists by study_id and ib_id
       // const existingDemographic = await prisma.demographic.findUnique({
@@ -102,4 +89,4 @@ async function importDemographicData() {
   await prisma.$disconnect();
 }
 
-importDemographicData();
+module.exports = { importDemographicData };

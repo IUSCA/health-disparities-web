@@ -1,3 +1,8 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
+// eslint-disable-next-line import/no-extraneous-dependencies
+const tqdm = require('tqdm');
+
 async function dateFilename(suffix) {
   const today = new Date();
 
@@ -13,8 +18,8 @@ async function dateFilename(suffix) {
 }
 
 async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array);
+  for (const [index, item] of tqdm(Object.entries(array))) {
+    await callback(item, index, array);
   }
 }
 

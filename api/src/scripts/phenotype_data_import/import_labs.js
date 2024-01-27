@@ -6,7 +6,7 @@ const { asyncForEach, parseDate, dateFilename } = require('./utils');
 
 const prisma = new PrismaClient();
 
-async function importLabData() {
+async function importLabData(csvFilePath, enroll_snapshot_id) {
   // Delete all existing lab records
   await prisma.lab.deleteMany();
 
@@ -16,7 +16,6 @@ async function importLabData() {
   const errorStream = fs.createWriteStream(filename);
 
   // Read CSV file
-  const csvFilePath = 'data/rdrp4661_labs.csv';
   const csvData = fs.readFileSync(csvFilePath, 'utf-8');
 
   // Parse the CSV data
@@ -31,17 +30,15 @@ async function importLabData() {
     if (!STUDYID || !IB_ID) {
       errorStream.write(`${index},${row.STUDYID},${row.IB_ID},${row.DEID_LABDATE},${row.CATEGORY},${row.LAB_NAME},${row.NUMERIC_RESULT},${row.UNIT}\n`);
     } else {
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
-
-      // If the participant does not exist, create a new participant record
-      if (!participant) {
-        participant = await prisma.participant.create({
-          data: {
-            ib_id: IB_ID,
-            study_id: Number(STUDYID),
-          },
-        });
-      }
+      const participant = await prisma.participant.upsert({
+        where: { ib_id: IB_ID },
+        update: {},
+        create: {
+          ib_id: IB_ID,
+          study_id: Number(STUDYID),
+          enroll_snapshot_id,
+        },
+      });
 
       // Convert date string to JavaScript Date object
       const labDate = await parseDate(DEID_LABDATE);
@@ -89,4 +86,4 @@ async function importLabData() {
   console.log('Lab data import complete');
 }
 
-importLabData();
+module.exports = { importLabData };
