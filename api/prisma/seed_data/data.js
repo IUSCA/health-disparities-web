@@ -345,26 +345,10 @@ const protocols = [
 const snapshots = [
   {
     id: 1,
-    name: 'initial snapshot',
-    description: 'add 5 participants',
-    timestamp: '2023-10-16T05:00:00.000Z',
-    published: true,
+    name: 'initial',
+    description: '',
+    published: false,
     author_id: 1,
-  },
-  {
-    id: 2,
-    name: 'snapshot-2',
-    description: 'add 3 participants and remove 2 participants',
-    timestamp: '2023-11-16T05:00:00.000Z',
-    published: true,
-  },
-  {
-    id: 3,
-    name: 'snapshot-3',
-    description: 'add 2 participants and remove 3 participants',
-    timestamp: '2023-12-16T05:00:00.000Z',
-    published: true,
-    author_id: 3,
   },
 ];
 

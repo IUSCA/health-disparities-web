@@ -6,8 +6,11 @@ from workers.variants.database import conn
 
 def get_participants_from_csv(csv_file):
     """
-    Read ib_id and study_id columns from csv file. Group by ib_id and return the first study_id for each ib_id.
-    If ib_id or study_id is missing or empty, the row is considered invalid and is returned in a separate dataframe.
+    1. Read ib_id and study_id columns from csv file.
+    2. If ib_id or study_id is missing or empty, the row is considered invalid and is returned in a separate dataframe.
+    3. Transform IB ID to uppercase
+    4. Group by ib_id and consider only the last study_id for each ib_id.
+   
     Return a dataframe of ib_id and study_id columns and a dataframe of invalid rows.
     """
     df = pd.read_csv(csv_file)
@@ -15,8 +18,10 @@ def get_participants_from_csv(csv_file):
     study_id_col = next(col for col in df.columns if col in ['STUDY_ID', 'STUDYID'])
 
     valid_idx = df[ib_id_col].notna() & (df[ib_id_col] != '') & df[study_id_col].notna() & (df[study_id_col] != '')
-    invalid_df = df[~valid_idx]
-    participant_df = df[valid_idx].groupby(ib_id_col)[study_id_col].first().reset_index().set_index(ib_id_col)
+    valid_df, invalid_df = df[valid_idx], df[~valid_idx]
+
+    valid_df[ib_id_col] = valid_df[ib_id_col].str.upper()
+    participant_df = df[valid_idx].groupby(ib_id_col)[study_id_col].last().reset_index().set_index(ib_id_col)
 
     participant_df.rename(columns={ib_id_col: 'IB_ID', study_id_col: 'STUDY_ID'}, inplace=True)
 
@@ -53,7 +58,7 @@ def load_participants(csv_file):
     create_table_sql = """
     CREATE TEMP TABLE tmp_table 
     (LIKE participant INCLUDING DEFAULTS)
-    ON COMMIT DROP;;
+    ON COMMIT DROP;
     """
 
     copy_data_sql = """

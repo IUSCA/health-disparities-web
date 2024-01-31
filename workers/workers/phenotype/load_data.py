@@ -58,7 +58,7 @@ class PhenotypeDataLoader(ABC):
         # rows with null/na in one or more given columns
         invalid_idx = df[self.non_null_columns].isna().any(axis=1)
 
-        return df[~invalid_idx], df[invalid_idx]
+        return ~invalid_idx
 
     def load(self, csv_file):
         copy_data_sql = f"""
@@ -98,7 +98,8 @@ class PhenotypeDataLoader(ABC):
         """
         df = pd.read_csv(self.csv_file)
         df2 = self.transform(df, self.ib_id_map)
-        valid_df, invalid_df = self.filter(df2)
+        valid_idx = self.filter(df2)
+        valid_df, invalid_df = df2[valid_idx], df[~valid_idx]
 
         num_valid, num_invalid = valid_df.shape[0], invalid_df.shape[0]
         print(f'{self.csv_file.stem}: transformed rows: {num_valid}. error rows: {num_invalid}')
@@ -278,7 +279,7 @@ def main(data_dir,
                 loader = Loader(csv_file, ib_id_map, out_dir, enroll_snapshot_id, dry_run)
                 break
         else:
-            # loop ends without encountering a break statement
+            # this runs when the above loop ends without encountering a break statement
             print(f'unknown file {csv_file}')
             continue
         try:

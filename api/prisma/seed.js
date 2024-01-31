@@ -260,26 +260,26 @@ async function main() {
   );
 
   // upsert snapshots
-  // await Promise.all(
-  //   data.snapshots.map((snapshot) => prisma.snapshot.upsert({
-  //     where: {
-  //       id: snapshot.id,
-  //     },
-  //     update: {},
-  //     create: snapshot,
-  //   })),
-  // );
+  await Promise.all(
+    data.snapshots.map((snapshot) => prisma.snapshot.upsert({
+      where: {
+        id: snapshot.id,
+      },
+      update: {},
+      create: snapshot,
+    })),
+  );
 
   // upsert sources
-  // await Promise.all(
-  //   data.sources.map((source) => prisma.source.upsert({
-  //     where: {
-  //       id: source.id,
-  //     },
-  //     update: {},
-  //     create: source,
-  //   })),
-  // );
+  await Promise.all(
+    data.sources.map((source) => prisma.source.upsert({
+      where: {
+        id: source.id,
+      },
+      update: {},
+      create: source,
+    })),
+  );
 
   // upsert participants
   // await Promise.all(

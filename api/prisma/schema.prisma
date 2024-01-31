@@ -284,7 +284,7 @@ model participant {
   medications           medication[]
   datasets              dataset[]
   protocols             participant_protocol[]
-  genotype_subject      genotype_subject[]
+  genotype_smaples      genotype_sample[]
 
   @@unique([ib_id])
   @@unique([genotype_idx])
@@ -523,7 +523,7 @@ model source {
   author             user?                @relation(fields: [author_id], references: [id])
   variant            variant[]
   variant_annotation variant_annotation[]
-  genotype_file      genotype_file[]
+  genotype_set       genotype_set[]
 }
 
 model snapshot {
@@ -537,7 +537,7 @@ model snapshot {
   enrolls        participant[]    @relation("enrolls")
   disenrolls     participant[]    @relation("disenrolls")
   phenotype_file phenotype_file[]
-  genotype_file  genotype_file[]
+  genotype_set   genotype_set[]
 
   @@index([timestamp])
 }
@@ -573,31 +573,44 @@ model participant_protocol {
   @@id([participant_id, protocol_id])
 }
 
-model genotype_file {
-  id               Int                @id @default(autoincrement())
-  name             String
-  source_id        Int
-  source           source             @relation(fields: [source_id], references: [id])
-  snapshot_id      Int
-  snapshot         snapshot           @relation(fields: [snapshot_id], references: [id])
-  path             String
-  description      String?
-  metadata         Json?
-  md5              String
-  size             BigInt
-  genotype_subject genotype_subject[]
+model genotype_set {
+  id          Int               @id @default(autoincrement())
+  name        String
+  source_id   Int
+  source      source            @relation(fields: [source_id], references: [id])
+  snapshot_id Int
+  snapshot    snapshot          @relation(fields: [snapshot_id], references: [id])
+  path        String
+  description String?
+  samples     genotype_sample[]
+  files       genotype_file[]
+
+  @@unique([name, snapshot_id, source_id])
 }
 
-model genotype_subject {
-  subject          String
-  genotype_file    genotype_file @relation(fields: [genotype_file_id], references: [id])
-  genotype_file_id Int
-  participant_id   Int?
-  participant      participant?  @relation(fields: [participant_id], references: [id])
-  description      String?
+model genotype_file {
+  id          Int          @id @default(autoincrement())
+  name        String
+  chr         Int          @db.SmallInt
+  path        String
+  description String?
+  md5         String
+  size        BigInt
+  set_id      Int
+  set         genotype_set @relation(fields: [set_id], references: [id])
 
-  @@id([genotype_file_id, subject])
-  @@index([participant_id])
+  @@unique([name, set_id])
+}
+
+model genotype_sample {
+  sample         String
+  set            genotype_set @relation(fields: [set_id], references: [id])
+  set_id         Int
+  participant_id Int?
+  participant    participant? @relation(fields: [participant_id], references: [id])
+  description    String?
+
+  @@id([set_id, sample])
 }
 
 model phenotype_file {
@@ -605,7 +618,6 @@ model phenotype_file {
   name        String
   path        String
   description String?
-  metadata    Json?
   md5         String
   size        BigInt
   snapshot_id Int
