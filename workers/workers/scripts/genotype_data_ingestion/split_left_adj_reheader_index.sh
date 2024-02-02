@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# This script is used to split, left-align, reorder and index the vcf files
+# This script is used to split, left-align, reheader and index the vcf files
 # First argument is the directory where the vcf files are located
 # Second argument is the output directory where the split and left-aligned vcf files will be stored
 # The third argument is the path to the reference genome
@@ -17,9 +17,9 @@ set -e
 # echo "bgzip chr-2" && bgzip INDIANA-CHALASANI_Freeze_Two.2.GL.split.left_adj.vcf && 
 # rm -f INDIANA-CHALASANI_Freeze_Two.2.GL.split.vcf INDIANA-CHALASANI_Freeze_Two.2.GL.split.left_adj.vcf
 # echo "reheader chr-2" &&
-# bcftools reheader -s SAMPLEFILE.tab -o INDIANA-CHALASANI_Freeze_Two.2.GL.split.reorder.left_adj.vcf.gz INDIANA-CHALASANI_Freeze_Two.2.GL.split.left_adj.vcf.gz
+# bcftools reheader -s SAMPLEFILE.tab -o INDIANA-CHALASANI_Freeze_Two.2.GL.split.reheader.left_adj.vcf.gz INDIANA-CHALASANI_Freeze_Two.2.GL.split.left_adj.vcf.gz
 # echo "indexing chr-2" && 
-# tabix -p vcf INDIANA-CHALASANI_Freeze_Two.2.GL.split.reorder.left_adj.vcf.gz
+# tabix -p vcf INDIANA-CHALASANI_Freeze_Two.2.GL.split.reheader.left_adj.vcf.gz
 
 
 # Check if the number of arguments is correct
@@ -66,7 +66,7 @@ fi
 for file in $1/*.vcf.gz; do
     # Get the filename without the extension
     filename=$(basename -- "$file")
-    filename="${filename%.*}"
+    filename="${filename%.vcf.gz}"
 
     # Split the vcf file
     echo "splitting $filename"

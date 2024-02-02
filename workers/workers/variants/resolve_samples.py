@@ -92,8 +92,7 @@ def create_sample_mappings(sample_pid_map, set_id):
     api.create_sample_mappings(data)
 
 
-def main(data_dir: str, mapping: str = None, snapshot_id: int = None,
-         source_id: int = None, output_dir: str = None):
+def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, output_dir: str = None):
     """
     A program to resolve samples in VCF to participants
 
@@ -114,8 +113,6 @@ def main(data_dir: str, mapping: str = None, snapshot_id: int = None,
     """
     # When sample_mapping_path is provided, snapshot_id and source_id must be provided as well
     sample_mapping_path = mapping
-    if sample_mapping_path and (snapshot_id is None or source_id is None):
-        raise Exception('enroll_snapshot_id and source_id must be provided when sample_mapping_path is provided')
 
     csv_mapping_file_path = Path(output_dir or '').resolve() / CSV_MAPPING_FILE_NAME
     tab_mapping_file_path = Path(output_dir or '').resolve() / TAB_MAPPING_FILE_NAME
@@ -179,7 +176,6 @@ def main(data_dir: str, mapping: str = None, snapshot_id: int = None,
 
     # If there are no unmatched samples,
     # it means all sample_ids are resolved into either existing participants and new participants to create
-
     if len(new_sample_map) > 0:
         try:
             with conn.cursor() as cursor:

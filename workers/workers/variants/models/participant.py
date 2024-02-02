@@ -19,3 +19,22 @@ def fetch_all(cursor):
     """
     cursor.execute('select id, ib_id from participant')
     return {row[1]: row[0] for row in cursor}
+
+
+def fetch_all_gt_idx(cursor):
+    """
+    Returns a dict of participant_id -> genotype_idx
+    """
+    cursor.execute('select id, genotype_idx from participant')
+    return {row[0]: row[1] for row in cursor}
+
+
+def update_many_idx(cursor, updates: list[dict[str, int]]):
+    """
+    Update genotype_idx for participants
+
+    @param cursor: cursor
+    @param updates: list of dict of participant_id -> genotype_idx ex: [{'id': pid, 'genotype_idx': idx}, ...]
+    """
+    update_query = 'UPDATE participant SET genotype_idx = %(genotype_idx)s WHERE id = %(id)s'
+    cursor.executemany(update_query, updates)
