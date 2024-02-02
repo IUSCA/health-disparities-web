@@ -484,118 +484,146 @@ const columns = {
   func: {
     label: "Func.",
     category: "Genes",
+    thTitle: "Function",
     _show: true,
   },
   genes: {
     label: "Genes",
     category: "Genes",
+    thTitle: "Genes",
     _show: true,
   },
   exonic_func: {
     label: "Exonic Func.",
     category: "Genes",
+    thTitle: "Exonic Function",
     _show: true,
   },
   aa_change: {
     label: "Protien Change",
     category: "Genes",
+    thTitle: "Amino Acid Change",
     _show: true,
   },
   cln_sig: {
     label: "ClinVar Sig.",
     category: "ClinVAR",
+    thTitle: "ClinVar Significance",
     _show: true,
   },
   cadd_phred: {
     label: "CADD",
     category: "Info",
+    thTitle:
+      "Cadd Phred-like scores ('scaled C-scores') ranging from 1 to 99, based on the rank of each variant relative to all possible 8.6 billion substitutions in the human reference genome. Larger values are more deleterious.",
     _show: true,
     numeric: true,
   },
   polyphen_max: {
     label: "Polyphen",
     category: "Info",
+    thTitle:
+      "Score that predicts the possible impact of an amino acid substitution on the structure and function of a human protein, ranging from 0.0 (tolerated) to 1.0 (deleterious).  We prioritize max scores for MANE Select transcripts where possible and otherwise report a score for the canonical transcript.",
     _show: true,
     numeric: true,
   },
   revel_max: {
     label: "Revel",
     category: "Info",
+    thTitle:
+      "The maximum REVEL score at a site's MANE Select or canonical transcript. It's an ensemble score for predicting the pathogenicity of missense variants (based on 13 other variant predictors). Scores ranges from 0 to 1. Variants with higher scores are predicted to be more likely to be deleterious.",
     _show: true,
     numeric: true,
   },
   sift_max: {
     label: "SIFT",
     category: "Info",
+    thTitle:
+      "Score reflecting the scaled probability of the amino acid substitution being tolerated, ranging from 0 to 1. Scores below 0.05 are predicted to impact protein function. We prioritize max scores for MANE Select transcripts where possible and otherwise report a score for the canonical transcript.",
     _show: true,
     numeric: true,
   },
   af_afr: {
     label: "AF AFR",
     category: "AF",
+    thTitle:
+      "Alternate allele frequency in samples of African/African-American ancestry",
     _show: false,
     numeric: true,
   },
   af_sas: {
     label: "AF SAS",
     category: "AF",
+    thTitle: "Alternate allele frequency in samples of South Asian ancestry",
     _show: false,
     numeric: true,
   },
   af_amr: {
     label: "AF AMR",
     category: "AF",
+    thTitle: "Alternate allele frequency in samples of Latino ancestry",
     _show: false,
     numeric: true,
   },
   af_eas: {
     label: "AF EAS",
     category: "AF",
+    thTitle: "Alternate allele frequency in samples of East Asian ancestry",
     _show: false,
     numeric: true,
   },
   af_nfe: {
     label: "AF NFE",
     category: "AF",
+    thTitle:
+      "Alternate allele frequency in samples of Non-Finnish European ancestry",
     _show: false,
     numeric: true,
   },
   af_fin: {
     label: "AF FIN",
     category: "AF",
+    thTitle: "Alternate allele frequency in samples of Finnish ancestry",
     _show: false,
     numeric: true,
   },
   af_asj: {
     label: "AF ASJ",
     category: "AF",
+    thTitle:
+      "Alternate allele frequency in samples of Ashkenazi Jewish ancestry",
     _show: false,
     numeric: true,
   },
   af_oth: {
     label: "AF OTH",
     category: "AF",
+    thTitle: "Alternate allele frequency in samples of other ancestry",
     _show: false,
     numeric: true,
   },
   cln_allele_id: {
     label: "CLN Allele ID",
     category: "ClinVAR",
+    thTitle: "ClinVar Allele ID",
     _show: false,
   },
   cln_cond: {
     label: "CLN Cond.",
     category: "ClinVAR",
+    thTitle: "ClinVar Condition",
     _show: false,
   },
   cln_dis_db: {
     label: "CLN Dis. DB",
     category: "ClinVAR",
+    thTitle: "ClinVar Disease Database Name and Identifier",
     _show: false,
   },
   cln_rev_stat: {
     label: "CLN Rev. Stat.",
     category: "ClinVAR",
+    thTitle: "ClinVar Review Status",
     _show: false,
   },
 };
