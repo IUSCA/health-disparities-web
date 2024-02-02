@@ -38,10 +38,14 @@ module load gcc/9.3.0 python/3.9.8 bcftools tabix
 ```
 
 ### VCF Processing
-Step 1 - Split 
+Step 1 - Split
+
 Step 2 - Left Adjust
+
 Step 3 - bzip
+
 Step-4 - Reheader
+
 Step-5 - Build Index
 
 ```bash

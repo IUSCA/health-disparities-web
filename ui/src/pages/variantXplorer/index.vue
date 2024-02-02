@@ -66,6 +66,7 @@
       class="flex-none w-[180px]"
       v-model="snapshot"
       :options="snapshot_options"
+      text-by="name"
       placeholder="Select a snapshot"
       label="Snapshot"
       searchable
@@ -132,14 +133,14 @@
           }}
         </template>
 
-        <template #cell(allele_freq)="{ rowData }">
+        <!-- <template #cell(allele_frequency)="{ rowData }">
           {{
             _.round(
               rowData.allele_count / rowData.allele_number,
               NUMERIC_PRECISION,
             )
           }}
-        </template>
+        </template> -->
       </va-data-table>
 
       <!-- pagination -->
@@ -157,7 +158,7 @@
     <div class="w-2/12 pl-3">
       <VaAccordion v-model="filterAccordian" class="max-w-sm" multiple>
         <!-- Genes Options -->
-        <VaCollapse
+        <!-- <VaCollapse
           :header="filterLabels[idx]"
           v-for="(attr, idx) in filterKeys"
           :key="attr"
@@ -175,7 +176,7 @@
               value-by="value"
             />
           </template>
-        </VaCollapse>
+        </VaCollapse> -->
 
         <!-- Numeric Filters -->
         <VaCollapse
@@ -384,14 +385,14 @@ function resetPagination() {
   pageSize.value = 50;
 }
 
-const filterGroups = ref({});
-const filterKeys = ["genes", "cln_sig", "func", "exonic_func"];
-const filterLabels = [
-  "Genes",
-  "ClinVar Significance",
-  "Function",
-  "Exonic Function",
-];
+// const filterGroups = ref({});
+// const filterKeys = ["genes", "cln_sig", "func", "exonic_func"];
+// const filterLabels = [
+//   "Genes",
+//   "ClinVar Significance",
+//   "Function",
+//   "Exonic Function",
+// ];
 const filterDefaults = () => ({
   genes: [],
   cln_sig: [],
@@ -404,18 +405,27 @@ const resetFilters = () => {
 };
 
 const numericFilterKeys = [
+  "allele_number",
+  "allele_count",
+  "allele_frequency",
   "cadd_phred",
   "polyphen_max",
   "revel_max",
   "sift_max",
 ];
 const numericFilterLabels = [
-  "cadd_phred",
-  "polyphen_max",
-  "revel_max",
-  "sift_max",
+  "Allele Number",
+  "Allele Count",
+  "Allele Frequency",
+  "CADD Phred",
+  "Plolyphen Max",
+  "Revel Max",
+  "SIFT Max",
 ];
 const numericFilterDefaults = () => ({
+  allele_number: { min: null, max: null },
+  allele_count: { min: null, max: null },
+  allele_frequency: { min: null, max: null },
   cadd_phred: { min: null, max: null },
   polyphen_max: { min: null, max: null },
   revel_max: { min: null, max: null },
@@ -450,7 +460,7 @@ const data_source_options = [
 const snapshot_options = ref([]);
 
 snapshotsService.getAll().then((res) => {
-  snapshot_options.value = res.data.map((s) => s.name);
+  snapshot_options.value = res.data;
   snapshot.value = snapshot_options.value[0];
 });
 
@@ -475,11 +485,12 @@ const columns = {
     _show: true,
     numeric: true,
   },
-  allele_freq: {
+  allele_frequency: {
     label: "AF",
     category: "Indiana Biobank",
     thTitle: "Allele Frequency",
     _show: true,
+    numeric: true,
   },
   func: {
     label: "Func.",
@@ -551,13 +562,7 @@ const columns = {
     _show: false,
     numeric: true,
   },
-  af_sas: {
-    label: "AF SAS",
-    category: "AF",
-    thTitle: "Alternate allele frequency in samples of South Asian ancestry",
-    _show: false,
-    numeric: true,
-  },
+
   af_amr: {
     label: "AF AMR",
     category: "AF",
@@ -565,10 +570,25 @@ const columns = {
     _show: false,
     numeric: true,
   },
+  af_asj: {
+    label: "AF ASJ",
+    category: "AF",
+    thTitle:
+      "Alternate allele frequency in samples of Ashkenazi Jewish ancestry",
+    _show: false,
+    numeric: true,
+  },
   af_eas: {
     label: "AF EAS",
     category: "AF",
     thTitle: "Alternate allele frequency in samples of East Asian ancestry",
+    _show: false,
+    numeric: true,
+  },
+  af_fin: {
+    label: "AF FIN",
+    category: "AF",
+    thTitle: "Alternate allele frequency in samples of Finnish ancestry",
     _show: false,
     numeric: true,
   },
@@ -580,18 +600,10 @@ const columns = {
     _show: false,
     numeric: true,
   },
-  af_fin: {
-    label: "AF FIN",
+  af_sas: {
+    label: "AF SAS",
     category: "AF",
-    thTitle: "Alternate allele frequency in samples of Finnish ancestry",
-    _show: false,
-    numeric: true,
-  },
-  af_asj: {
-    label: "AF ASJ",
-    category: "AF",
-    thTitle:
-      "Alternate allele frequency in samples of Ashkenazi Jewish ancestry",
+    thTitle: "Alternate allele frequency in samples of South Asian ancestry",
     _show: false,
     numeric: true,
   },
@@ -686,7 +698,7 @@ function restoreColumnDefaults() {
 
 watchDebounced([currPage, pageSize, filters, numericFilters], handleSearch, {
   deep: true,
-  debounce: 500,
+  debounce: 750,
 });
 
 function formatNumericData(data) {
@@ -695,7 +707,7 @@ function formatNumericData(data) {
   // for each column, if it is a numeric column, format the number
   return Object.entries(data).reduce((acc, [key, value]) => {
     if (columns[key]?.numeric) {
-      acc[key] = _.round(value, NUMERIC_PRECISION);
+      acc[key] = value != null ? _.round(value, NUMERIC_PRECISION) : null;
     } else {
       acc[key] = value;
     }
@@ -713,7 +725,7 @@ function handleSearch() {
   const query_opts = {
     ...parsedQuery,
     source_id: source.value,
-    // snapshot: snapshot.value,
+    snapshot_id: snapshot.value.id,
     ...filters.value,
     ...numericFilters.value,
   };
@@ -721,15 +733,23 @@ function handleSearch() {
 
   loading.value = true;
 
+  // variantService
+  //   .search2({
+  //     query: query_opts,
+  //     offset: offset.value,
+  //     limit: pageSize.value,
+  //   })
+  //   .then((res) => console.log(res));
+
   variantService
-    .search({
+    .search2({
       query: query_opts,
       offset: offset.value,
       limit: pageSize.value,
     })
     .then((res) => {
       results.value = (res.data?.results || []).map(formatNumericData);
-      total_count.value = res.data?.metadata?.count || 0;
+      total_count.value = res.data?.metadata?.count || results.value.length;
       ui.setSidebarCollapsed(true);
       resultsView.value = total_count.value > 0;
       searchPerformed.value = true;
@@ -746,16 +766,16 @@ function handleSearch() {
       loading.value = false;
     });
 
-  variantService
-    .getFilters({
-      query: query_opts,
-    })
-    .then((res) => {
-      filterGroups.value = res.data;
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+  // variantService
+  //   .getFilters({
+  //     query: query_opts,
+  //   })
+  //   .then((res) => {
+  //     filterGroups.value = res.data;
+  //   })
+  //   .catch((err) => {
+  //     console.error(err);
+  //   });
 }
 
 function parseQuery(text) {
@@ -771,10 +791,11 @@ function parseQuery(text) {
   Otherwise, assume it is a gene
   */
 
-  const variantRegex = /^(\d+)-(\d+)-([A-Z])-([A-Z])$/;
-  const genomicRegionRegex = /^chr(\d+):(\d+)-(\d+)$/;
+  const variantRegex = /^([\dXY]+)-(\d+)-([ATCG]+)-([ATCG]+)$/;
+  const genomicRegionRegex = /^CHR([\dXY]+):(\d+)-(\d+)$/;
   const geneRegex = /^([a-zA-Z0-9]+)$/;
 
+  text = text.trim().toUpperCase();
   if (variantRegex.test(text)) {
     const match = text.match(variantRegex);
     return {
