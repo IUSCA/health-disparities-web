@@ -1,21 +1,21 @@
+/* eslint-disable no-console */
 const fs = require('fs');
 const Papa = require('papaparse');
 const { PrismaClient } = require('@prisma/client');
-const { asyncForEach, parseDate, dateFilename } = require('./utils.js');
+const { asyncForEach, parseDate, dateFilename } = require('./utils');
 
 const prisma = new PrismaClient();
 
-async function importLabData() {
+async function importLabData(csvFilePath, enroll_snapshot_id) {
   // Delete all existing lab records
-  await prisma.lab.deleteMany()
+  await prisma.lab.deleteMany();
 
   // Set up a file to write any malformed rows to:
-  const filename = await dateFilename("errors-labs.csv");
-  console.log("Filename set to", filename)
+  const filename = await dateFilename('errors-labs.csv');
+  console.log('Filename set to', filename);
   const errorStream = fs.createWriteStream(filename);
 
   // Read CSV file
-  const csvFilePath = 'data/rdrp4661_labs.csv';
   const csvData = fs.readFileSync(csvFilePath, 'utf-8');
 
   // Parse the CSV data
@@ -23,17 +23,22 @@ async function importLabData() {
 
   // Loop through each row in the CSV data
   await asyncForEach(data, async (row, index) => {
-    const { STUDYID, IB_ID, DEID_LABDATE, CATEGORY, LAB_NAME, NUMERIC_RESULT, UNIT } = row;
+    const {
+      STUDYID, IB_ID, DEID_LABDATE, CATEGORY, LAB_NAME, NUMERIC_RESULT, UNIT,
+    } = row;
 
     if (!STUDYID || !IB_ID) {
       errorStream.write(`${index},${row.STUDYID},${row.IB_ID},${row.DEID_LABDATE},${row.CATEGORY},${row.LAB_NAME},${row.NUMERIC_RESULT},${row.UNIT}\n`);
     } else {
-      let participant = await prisma.participant.findFirst({ where: { ib_id: IB_ID } });
-
-      // If the participant does not exist, create a new participant record
-      if (!participant) {
-        participant = await prisma.participant.create({ data: { ib_id: IB_ID, study_id: Number(STUDYID) } });
-      }
+      const participant = await prisma.participant.upsert({
+        where: { ib_id: IB_ID },
+        update: {},
+        create: {
+          ib_id: IB_ID,
+          study_id: Number(STUDYID),
+          enroll_snapshot_id,
+        },
+      });
 
       // Convert date string to JavaScript Date object
       const labDate = await parseDate(DEID_LABDATE);
@@ -61,8 +66,8 @@ async function importLabData() {
             category: CATEGORY,
             result: Number(NUMERIC_RESULT),
             unit: UNIT,
-            participant_id: participant.id
-          }
+            participant_id: participant.id,
+          },
         });
       } catch (err) {
         console.error(`Error creating lab record: ${err}`);
@@ -73,14 +78,12 @@ async function importLabData() {
       //   console.log("skipping existing record for row", index)
       // }
     }
-
-  })
+  });
   // Close the error stream
   errorStream.end();
   // Close Prisma connection
   await prisma.$disconnect();
   console.log('Lab data import complete');
-
 }
 
-importLabData();
+module.exports = { importLabData };

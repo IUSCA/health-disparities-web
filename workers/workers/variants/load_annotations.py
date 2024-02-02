@@ -1,5 +1,4 @@
 import csv
-from collections import namedtuple
 from pathlib import Path
 from typing import Iterable
 
@@ -9,9 +8,8 @@ from tqdm import tqdm
 from vcf.model import _Record
 
 from workers.utils import batched
-from workers.variants.models.annotation import Annotation, create_many
-
-Site = namedtuple('Site', ('chrom', 'pos', 'ref', 'alt'))
+from workers.variants.models import annotation
+from workers.variants.models.annotation import Annotation, Site
 
 
 class VCF4:
@@ -72,7 +70,8 @@ class GnomadAnnotations:
         assert self.root_dir.exists()
         self.vcfs: dict[int, VCF4] = {}
 
-        self.allele_frequencies = ['AF_afr', 'AF_amr', 'AF_eas', 'AF_nfe']
+        self.allele_frequencies = ['AF_afr', 'AF_ami', 'AF_amr', 'AF_asj', 'AF_eas', 'AF_fin', 'AF_mid', 'AF_nfe',
+                                   'AF_sas']
         self.functional_info = ['cadd_phred', 'revel_max', 'polyphen_max', 'sift_max']
         self.fieldnames = ['CHROM', 'POS', 'REF', 'ALT'] + self.allele_frequencies + self.functional_info
 
@@ -83,7 +82,10 @@ class GnomadAnnotations:
     def fetch(self, site: Site):
         """
         Fetch annotations for a given site by opening a VCF file for the chromosome 
-        and fetching the variant (random access).
+        and fetching the variant entry (random access).
+
+        The keys in the returned dictionary are from GnomAD dataset (VCF headers)
+        except for 'CHROM', 'POS', 'REF', 'ALT'
         
         :param site: Site to fetch annotations for.
         :return: Dictionary of annotations.
@@ -167,8 +169,12 @@ class Loader:
                     alt=_ann['ALT'],
                     af_afr=_ann['AF_afr'],
                     af_amr=_ann['AF_amr'],
+                    af_asj=_ann['AF_asj'],
                     af_eas=_ann['AF_eas'],
+                    af_fin=_ann['AF_fin'],
                     af_nfe=_ann['AF_nfe'],
+                    af_sas=_ann['AF_sas'],
+                    af_oth=(_ann['AF_ami'] + _ann['AF_mid']),
                     cadd_phred=_ann['cadd_phred'],
                     revel_max=_ann['revel_max'],
                     polyphen_max=_ann['polyphen_max'],
@@ -184,30 +190,37 @@ class Loader:
         """
         annotations = self.fetch_annotations(sites)
         for batch in batched(annotations, self.batch_size):
-            create_many(batch)
+            annotation.create_many(batch)
 
 
 # def create_many(batch):
 #     print(batch)
 
+def read_from_csv(sites_csv: Path | str) -> Iterable[Site]:
+    with open(sites_csv, 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            yield Site(chrom=int(row['chr']), pos=int(row['position']), ref=row['ref'], alt=row['alt'])
 
-def main(sites_csv: str, gnomad_root_dir: str, batch_size: int = 100):
+
+def main(gnomad_root_dir: str, batch_size: int = 100, mode: str = 'db', sites_csv: str = None, chromosome: int = None):
     """
     Load annotations from gnomAD (and others) into the database for a given list of sites.
 
-    Args:
-      sites_csv (str): Path to the CSV file containing the sites information with header: chr, position, ref, alt.
-      gnomad_root_dir (str): Path to the directory containing the gnomAD VCF files.
-      batch_size (int, optional): Number of annotations to write into the database in a single batch. Defaults to 100.
+    @param sites_csv: Path to the CSV file containing the sites information with header: chr, position, ref, alt.
+    @param gnomad_root_dir: Path to the directory containing the gnomAD VCF files.
+    @param batch_size: Number of annotations to write into the database in a single batch. Defaults to 100.
+    @param mode: If csv, sites are read from the csv file. If db, sites in variant table but not in annotation table
+    are read from the database. Default: db
+    @param chromosome: when in db mode, add missing annotations only for this chromosome. int, 1-22,23(X), 24(Y)
     """
+    if mode == 'csv':
+        assert sites_csv, 'sites_csv is required in csv mode'
+        sites = read_from_csv(sites_csv)
+    else:
+        sites = annotation.get_missing(chromosome)
     loader = Loader(gnomad_root_dir, batch_size)
-    with open(sites_csv, 'r') as csvfile:
-        reader = csv.DictReader(csvfile)
-        sites = (
-            Site(chrom=int(row['chr']), pos=int(row['position']), ref=row['ref'], alt=row['alt'])
-            for row in reader
-        )
-        loader.load(tqdm(sites))
+    loader.load(tqdm(sites))
 
 
 if __name__ == '__main__':

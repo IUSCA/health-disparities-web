@@ -6,12 +6,13 @@ const createError = require('http-errors');
 const { validate } = require('../middleware/validators');
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
+const { standardize, buildSQLQuery, RANGE_COLS } = require('../services/variants');
 
 const isPermittedTo = accessControl('variant');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const NUMERIC_COLS = ['cadd_phred', 'polyphen_max', 'revel_max', 'sift_max'];
+// const NUMERIC_COLS = ['cadd_phred', 'polyphen_max', 'revel_max', 'sift_max'];
 
 function decode_chromosome(encoded) {
   const mapping = {
@@ -25,6 +26,9 @@ function encode_chromosome(decoded) {
   // 1-22 should be converted to int
   // X or XX should be converted to 23
   // Y or XY should be converted to 24
+  if (!decoded) {
+    return null;
+  }
   const mapping = {
     X: 23,
     Y: 24,
@@ -62,8 +66,8 @@ function rangeToQuery(rangeQuery) {
   // convert { min: 1, max: 2 } to { gte: 1, lte: 2 }
   // if min or max is NaN, exclude that condition
   const ret = _.omitBy(_.isNaN)({
-    gte: rangeQuery.min,
-    lte: rangeQuery.max,
+    gte: rangeQuery?.min,
+    lte: rangeQuery?.max,
   });
   // if there are no keys, return null
   if (Object.keys(ret).length === 0) {
@@ -72,13 +76,16 @@ function rangeToQuery(rangeQuery) {
   return ret;
 }
 
+function jointFilterValidation(req, res, next) {
+  // at least one of chromosome or gene must be provided
+  if (!(req.body.chr || req.body.gene)) {
+    next(createError(400, 'At least one of chromosome or gene must be provided'));
+  }
+  next();
+}
+
 function buildFilterQuery(_query) {
   // console.log(_query);
-  // at least one of chromosome or gene must be provided
-  if (!(_query.chr || _query.gene)) {
-    throw createError(400, 'At least one of chromosome or gene must be provided');
-  }
-
   const { start } = _query;
   const end = _query.end || start;
 
@@ -90,14 +97,14 @@ function buildFilterQuery(_query) {
     gene_filter.push({ genes: { in: _query.genes } });
   }
 
-  const numeric_filters = NUMERIC_COLS.reduce((acc, col) => {
+  const numeric_filters = RANGE_COLS.reduce((acc, col) => {
     acc[col] = rangeToQuery(_query[col]);
     return acc;
   }, {});
 
   return _.omitBy(_.isNil)({
     source_id: _query.source_id,
-    chr: encode_chromosome(_query.chr),
+    chr: _query.chr,
     ref: _query.ref,
     alt: _query.alt,
 
@@ -116,9 +123,10 @@ function buildFilterQuery(_query) {
 }
 
 function isValidNucleotide(nucleotide) {
-  if (!['A', 'C', 'G', 'T'].includes(nucleotide)) {
-    throw createError(400, 'Invalid nucleotide');
+  if (!/^[ATCG]+$/i.test(nucleotide)) {
+    throw new Error('Invalid nucleotide');
   }
+  return true;
 }
 
 function rangeValidator(fieldName) {
@@ -130,18 +138,18 @@ function rangeValidator(fieldName) {
 
 const annotation_validators = [
   body('source_id').isInt().toInt(),
-  body('chr').isString().notEmpty().optional(),
+  body('snapshot_id').isInt().toInt(),
+  body('chr').customSanitizer(encode_chromosome).optional(),
   body('start').isInt().toInt().optional(),
   body('end').isInt().toInt().optional(),
-  body('ref').custom(isValidNucleotide).optional(),
-  body('alt').custom(isValidNucleotide).optional(),
-  body('gene').isString().notEmpty().optional(),
+  body('ref').custom(isValidNucleotide).toUpperCase().optional(),
+  body('alt').custom(isValidNucleotide).toUpperCase().optional(),
 
   body('func').isArray().optional(),
   body('genes').isArray().optional(),
   body('exonic_func').isArray().optional(),
   body('cln_sig').isArray().optional(),
-  ...NUMERIC_COLS.map(rangeValidator),
+  ...RANGE_COLS.map(rangeValidator),
 ];
 
 router.post(
@@ -152,6 +160,7 @@ router.post(
     body('limit').default(100).isInt().toInt(),
     body('offset').default(0).isInt().toInt(),
   ]),
+  jointFilterValidation,
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['Variants']
     // #swagger.summary = 'Search variants'
@@ -255,6 +264,43 @@ router.post(
   }),
 );
 
+router.post(
+  '/new',
+  isPermittedTo('read'),
+  validate([
+    ...annotation_validators,
+    body('limit').default(100).isInt().toInt(),
+    body('offset').default(0).isInt().toInt(),
+  ]),
+  jointFilterValidation,
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Variants']
+    // #swagger.summary = 'Search variants'
+
+    const canon_query = {
+      ...standardize(req.body),
+      snapshot_id: req.body.snapshot_id,
+      limit: req.body.limit,
+      offset: req.body.offset,
+    };
+    // eslint-disable-next-line no-console
+    console.log({ canon_query });
+    const query = buildSQLQuery(canon_query, req.user.username);
+    // eslint-disable-next-line no-console
+    console.log(query.sql, query.values);
+
+    const results = (await prisma.$queryRaw(query)) ?? [];
+    // console.log(results[0]);
+    res.json({
+      metadata: { count: Number(results[0]?.total_count ?? 0) },
+      results: results.map((result) => ({
+        ...result,
+        chr: decode_chromosome(result.chr),
+      })),
+    });
+  }),
+);
+
 // function buildOrderByObject(sortOptions) {
 //   // TODO: multi column sort
 //   // TODO: handle no sorting case
@@ -279,6 +325,7 @@ router.post(
   '/filters',
   isPermittedTo('read'),
   validate(annotation_validators),
+  jointFilterValidation,
   asyncHandler(async (req, res, next) => {
     const filterQuery = buildFilterQuery(req.body);
 
@@ -309,13 +356,13 @@ router.post(
     // find min and max values for each numeric column given the filter
     // const minmax_result = await prisma.variant_annotation.aggregate({
     //   where: filterQuery,
-    //   _min: numeric_cols.reduce((acc, curr) => ({ ...acc, [curr]: true }), {}),
-    //   _max: numeric_cols.reduce((acc, curr) => ({ ...acc, [curr]: true }), {}),
+    //   _min: RANGE_COLS.reduce((acc, curr) => ({ ...acc, [curr]: true }), {}),
+    //   _max: RANGE_COLS.reduce((acc, curr) => ({ ...acc, [curr]: true }), {}),
     // });
 
     // .then((result) => {
     //   const { _min, _max } = result;
-    //   const numeric_filters = numeric_cols.reduce((acc, curr) => {
+    //   const numeric_filters = RANGE_COLS.reduce((acc, curr) => {
     //     acc[curr] = { min: _min[curr], max: _max[curr] };
     //     return acc;
     //   }, {});

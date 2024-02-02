@@ -1,6 +1,7 @@
 <template>
   <!-- search -->
   <va-form class="flex flex-wrap gap-3 items-start" ref="formRef">
+    <!-- variant search input -->
     <va-input
       v-model="query"
       label="search"
@@ -8,7 +9,9 @@
       outline
       clearable
       inner-label
-      @clear="resetFilters"
+      @clear="reset"
+      @keypress.enter="handleSearch"
+      class="flex-1"
     >
       <template #prependInner>
         <Icon icon="material-symbols:search" class="text-xl" />
@@ -38,6 +41,7 @@
       </template>
     </va-input>
 
+    <!-- source select -->
     <va-select
       class="flex-none w-[180px]"
       v-model="source"
@@ -57,10 +61,12 @@
       </template>
     </va-select>
 
+    <!-- snapshot select -->
     <va-select
       class="flex-none w-[180px]"
       v-model="snapshot"
       :options="snapshot_options"
+      text-by="name"
       placeholder="Select a snapshot"
       label="Snapshot"
       searchable
@@ -74,6 +80,7 @@
       </template>
     </va-select>
 
+    <!-- search button -->
     <va-button
       icon="search"
       class="flex-none w-[250px]"
@@ -85,21 +92,32 @@
   </va-form>
 
   <!-- results and filter -->
-  <div class="flex" v-if="resultsView">
+  <div class="flex pt-3" v-if="resultsView">
     <!-- results -->
-    <div class="w-10/12 py-3 border-r border-solid border-gray-500">
-      <div v-if="results.length > 0" class="mb-2 flex gap-2">
+    <div class="w-10/12 border-r border-solid border-gray-500">
+      <!-- table top buttons -->
+      <div class="mb-2 px-5 flex items-center gap-5 justify-end">
+        <div class="">
+          <span class="text-xl font-bold va-text-info">
+            <NumberTransition :target="total_count" />
+            {{ maybePluralize(total_count, "Variant", "s", false) }}
+          </span>
+        </div>
+
         <va-button
           @click="columnsModal = true"
           class="flex-none"
-          preset="primary"
+          preset="secondary"
         >
+          <i-mdi-drag-variant class="mr-1" />
           Columns
         </va-button>
         <va-button class="flex-none" preset="primary">
           Selected ({{ selected.length }})
         </va-button>
       </div>
+
+      <!-- table -->
       <va-data-table
         :items="results"
         :columns="table_columns"
@@ -115,35 +133,32 @@
           }}
         </template>
 
-        <template #cell(allele_freq)="{ rowData }">
+        <!-- <template #cell(allele_frequency)="{ rowData }">
           {{
             _.round(
               rowData.allele_count / rowData.allele_number,
               NUMERIC_PRECISION,
             )
           }}
-        </template>
+        </template> -->
       </va-data-table>
 
       <!-- pagination -->
       <Pagination
-        class="px-1 lg:px-3"
+        class="px-1 lg:px-3 mt-3"
         v-model:page="currPage"
         v-model:page_size="pageSize"
         :total_results="total_count"
         :curr_items="results.length"
         :page_size_options="PAGE_SIZE_OPTIONS"
       />
-      <!-- <div>
-        <span>Results from {{  }} to {{  }} out of {{ total_count.value }}</span>
-      </div> -->
     </div>
 
     <!-- sidebar -->
-    <div class="w-2/12 p-3">
+    <div class="w-2/12 pl-3">
       <VaAccordion v-model="filterAccordian" class="max-w-sm" multiple>
         <!-- Genes Options -->
-        <VaCollapse
+        <!-- <VaCollapse
           :header="filterLabels[idx]"
           v-for="(attr, idx) in filterKeys"
           :key="attr"
@@ -161,7 +176,7 @@
               value-by="value"
             />
           </template>
-        </VaCollapse>
+        </VaCollapse> -->
 
         <!-- Numeric Filters -->
         <VaCollapse
@@ -195,47 +210,73 @@
   </div>
 
   <!-- search examples -->
-  <div class="flex justify-center items-center mt-24" v-else>
-    <div class="flex-none text-lg">
-      <p>
-        Enter a query in the search bar or get started with an example query:
-      </p>
-      <p>
-        <span class="font-bold"> Gene </span> :
-        <span
-          class="va-link underline"
-          @click="
-            query = example_searches['gene'];
-            handleSearch();
-          "
-        >
-          {{ example_searches["gene"] }}
+  <div class="flex flex-col justify-center items-center mt-24" v-else>
+    <!-- No results found message -->
+    <div
+      v-if="total_count == 0 && !loading && searchPerformed"
+      class="flex flex-col justify-center items-center text-center"
+    >
+      <i-mdi-magnify class="text-6xl text-red-500" />
+      <p class="text-2xl tracking-wide font-semibold">No Results Found</p>
+      <p class="va-text-secondary">
+        <span @click="reset" class="underline cursor-pointer">
+          Try a different search query or reset your filter selections
         </span>
       </p>
-      <p>
-        <span class="font-bold"> Variant </span>:
-        <span
-          class="va-link underline"
-          @click="
-            query = example_searches['variant'];
-            handleSearch();
-          "
-        >
-          {{ example_searches["variant"] }}
-        </span>
-      </p>
-      <p>
-        <span class="font-bold"> Genomic Region </span>:
-        <span
-          class="va-link underline"
-          @click="
-            query = example_searches['genomic_region'];
-            handleSearch();
-          "
-        >
-          {{ example_searches["genomic_region"] }}
-        </span>
-      </p>
+    </div>
+
+    <div v-else>
+      <!-- loading spinner -->
+      <div v-if="loading" class="flex justify-center items-center mt-24">
+        <semipolar-spinner
+          :animation-duration="2000"
+          :size="65"
+          :color="colors.primary"
+        />
+      </div>
+
+      <!-- search examples -->
+      <div class="flex-none text-lg" v-else>
+        <p>
+          Enter a query in the search bar or get started with an example query:
+        </p>
+        <p>
+          <span class="font-bold"> Gene </span> :
+          <span
+            class="va-link underline"
+            @click="
+              query = example_searches['gene'];
+              handleSearch();
+            "
+          >
+            {{ example_searches["gene"] }}
+          </span>
+        </p>
+        <p>
+          <span class="font-bold"> Variant </span>:
+          <span
+            class="va-link underline"
+            @click="
+              query = example_searches['variant'];
+              handleSearch();
+            "
+          >
+            {{ example_searches["variant"] }}
+          </span>
+        </p>
+        <p>
+          <span class="font-bold"> Genomic Region </span>:
+          <span
+            class="va-link underline"
+            @click="
+              query = example_searches['genomic_region'];
+              handleSearch();
+            "
+          >
+            {{ example_searches["genomic_region"] }}
+          </span>
+        </p>
+      </div>
     </div>
   </div>
 
@@ -246,46 +287,78 @@
     hide-default-actions
     size="large"
   >
-    <span>Drag &amp; Drop to rearrange columns</span>
-    <Ordering
-      v-model="table_columns"
-      id-by="key"
-      label-by="label"
-      class="border border-solid rounded border-gray-400 mt-2"
-    />
-    <div class="mt-3">
-      <div class="flex flex-row gap-2">
-        <div v-for="cat in Object.keys(colums_by_category)" :key="cat">
-          <span class="font-semibold tracking-wide text-lg"> {{ cat }} </span>
-          <div class="flex flex-col gap-1 mt-2">
-            <div v-for="col in colums_by_category[cat]" :key="col.key">
-              <va-checkbox
-                v-model="columns[col.key]._show"
-                :label="col.label"
-              />
+    <div>
+      <span class="font-semibold text-lg">
+        Drag &amp; Drop to rearrange columns
+      </span>
+      <Ordering
+        v-model="table_columns"
+        id-by="key"
+        label-by="label"
+        class="border border-solid rounded border-gray-400 mt-2"
+      />
+      <div class="mt-3">
+        <div class="flex flex-row gap-2">
+          <div
+            v-for="cat in Object.keys(colums_by_category)"
+            :key="cat"
+            class="flex-auto"
+          >
+            <span class="font-semibold tracking-wide text-lg"> {{ cat }} </span>
+            <div class="flex flex-col gap-1 mt-2">
+              <div v-for="col in colums_by_category[cat]" :key="col.key">
+                <va-checkbox
+                  v-model="columnsSelected[col.key]"
+                  :label="col.label"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Column Legend -->
+      <div class="gap-2 mt-2">
+        <va-data-table
+          :items="Object.values(columns)"
+          :columns="[
+            { key: 'label', label: 'Name', sortable: true },
+            { key: 'thTitle', label: 'Description', sortable: true },
+            { key: 'category', label: 'Category', sortable: true },
+          ]"
+          striped
+          style="height: 200px; overflow-y: scroll"
+          class="annotationtable"
+        />
+      </div>
     </div>
+
+    <template #footer>
+      <div class="flex justify-start w-full">
+        <va-button
+          preset="primary"
+          @click="restoreColumnDefaults"
+          class="flex-none"
+        >
+          Restore Defaults
+        </va-button>
+      </div>
+    </template>
   </va-modal>
 </template>
 
 <script setup>
 import snapshotsService from "@/services/snapshots";
+import toast from "@/services/toast";
+import { maybePluralize } from "@/services/utils";
 import variantService from "@/services/variants";
-import { useNavStore } from "@/stores/nav";
 import { useUIStore } from "@/stores/ui";
+import { SemipolarSpinner } from "epic-spinners";
 import _ from "lodash";
-
-const nav = useNavStore();
-nav.setNavItems([
-  {
-    label: "Variant Xplorer",
-  },
-]);
+import { useColors } from "vuestic-ui";
 
 const ui = useUIStore();
+const { colors } = useColors();
 
 const NUMERIC_PRECISION = 3;
 
@@ -294,45 +367,74 @@ const source = ref(1);
 const snapshot = ref("");
 const resultsView = ref(false);
 const loading = ref(false);
+const searchPerformed = ref(false);
+
 const results = ref([]);
 const total_count = ref(0);
+function resetResults() {
+  results.value = [];
+  total_count.value = 0;
+}
 
 const pageSize = ref(50);
 const currPage = ref(1);
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
+const offset = computed(() => (currPage.value - 1) * pageSize.value);
+function resetPagination() {
+  currPage.value = 1;
+  pageSize.value = 50;
+}
 
-const filterGroups = ref({});
-const filterKeys = ["genes", "cln_sig", "func", "exonic_func"];
-const filterLabels = [
-  "Genes",
-  "ClinVar Significance",
-  "Function",
-  "Exonic Function",
-];
+// const filterGroups = ref({});
+// const filterKeys = ["genes", "cln_sig", "func", "exonic_func"];
+// const filterLabels = [
+//   "Genes",
+//   "ClinVar Significance",
+//   "Function",
+//   "Exonic Function",
+// ];
+const filterDefaults = () => ({
+  genes: [],
+  cln_sig: [],
+  func: [],
+  exonic_func: [],
+});
+const filters = ref(filterDefaults());
+const resetFilters = () => {
+  filters.value = filterDefaults();
+};
+
 const numericFilterKeys = [
+  "allele_number",
+  "allele_count",
+  "allele_frequency",
   "cadd_phred",
   "polyphen_max",
   "revel_max",
   "sift_max",
 ];
 const numericFilterLabels = [
-  "cadd_phred",
-  "polyphen_max",
-  "revel_max",
-  "sift_max",
+  "Allele Number",
+  "Allele Count",
+  "Allele Frequency",
+  "CADD Phred",
+  "Plolyphen Max",
+  "Revel Max",
+  "SIFT Max",
 ];
-const filters = ref({
-  genes: [],
-  cln_sig: [],
-  func: [],
-  exonic_func: [],
-});
-const numericFilters = ref({
+const numericFilterDefaults = () => ({
+  allele_number: { min: null, max: null },
+  allele_count: { min: null, max: null },
+  allele_frequency: { min: null, max: null },
   cadd_phred: { min: null, max: null },
   polyphen_max: { min: null, max: null },
   revel_max: { min: null, max: null },
   sift_max: { min: null, max: null },
 });
+const numericFilters = ref(numericFilterDefaults());
+const resetNumericFilters = () => {
+  numericFilters.value = numericFilterDefaults();
+};
 
 // accordian state
 const filterAccordian = ref([true, false, false, false]);
@@ -358,205 +460,272 @@ const data_source_options = [
 const snapshot_options = ref([]);
 
 snapshotsService.getAll().then((res) => {
-  snapshot_options.value = res.data.map((s) => s.name);
+  snapshot_options.value = res.data;
   snapshot.value = snapshot_options.value[0];
 });
 
-const columns = ref({
+// thTile is used to set the column header tooltip
+const columns = {
   chr: {
     label: "Variant ID",
+    thTitle: "chromosome-position-ref-alt",
     _show: true,
-    _reorder: false,
   },
   allele_number: {
     label: "AN",
     category: "Indiana Biobank",
+    thTitle: "Allele Number",
     _show: true,
     numeric: true,
   },
   allele_count: {
     label: "AC",
     category: "Indiana Biobank",
+    thTitle: "Allele Count",
     _show: true,
     numeric: true,
   },
-  allele_freq: {
+  allele_frequency: {
     label: "AF",
     category: "Indiana Biobank",
+    thTitle: "Allele Frequency",
     _show: true,
+    numeric: true,
   },
   func: {
     label: "Func.",
     category: "Genes",
+    thTitle: "Function",
     _show: true,
   },
   genes: {
     label: "Genes",
     category: "Genes",
+    thTitle: "Genes",
     _show: true,
   },
   exonic_func: {
     label: "Exonic Func.",
     category: "Genes",
+    thTitle: "Exonic Function",
     _show: true,
   },
   aa_change: {
     label: "Protien Change",
     category: "Genes",
+    thTitle: "Amino Acid Change",
     _show: true,
   },
   cln_sig: {
     label: "ClinVar Sig.",
     category: "ClinVAR",
+    thTitle: "ClinVar Significance",
     _show: true,
   },
   cadd_phred: {
     label: "CADD",
     category: "Info",
+    thTitle:
+      "Cadd Phred-like scores ('scaled C-scores') ranging from 1 to 99, based on the rank of each variant relative to all possible 8.6 billion substitutions in the human reference genome. Larger values are more deleterious.",
     _show: true,
     numeric: true,
   },
   polyphen_max: {
     label: "Polyphen",
     category: "Info",
+    thTitle:
+      "Score that predicts the possible impact of an amino acid substitution on the structure and function of a human protein, ranging from 0.0 (tolerated) to 1.0 (deleterious).  We prioritize max scores for MANE Select transcripts where possible and otherwise report a score for the canonical transcript.",
     _show: true,
     numeric: true,
   },
   revel_max: {
     label: "Revel",
     category: "Info",
+    thTitle:
+      "The maximum REVEL score at a site's MANE Select or canonical transcript. It's an ensemble score for predicting the pathogenicity of missense variants (based on 13 other variant predictors). Scores ranges from 0 to 1. Variants with higher scores are predicted to be more likely to be deleterious.",
     _show: true,
     numeric: true,
   },
   sift_max: {
     label: "SIFT",
     category: "Info",
+    thTitle:
+      "Score reflecting the scaled probability of the amino acid substitution being tolerated, ranging from 0 to 1. Scores below 0.05 are predicted to impact protein function. We prioritize max scores for MANE Select transcripts where possible and otherwise report a score for the canonical transcript.",
     _show: true,
     numeric: true,
   },
   af_afr: {
     label: "AF AFR",
     category: "AF",
+    thTitle:
+      "Alternate allele frequency in samples of African/African-American ancestry",
     _show: false,
     numeric: true,
   },
-  af_sas: {
-    label: "AF SAS",
-    category: "AF",
-    _show: false,
-    numeric: true,
-  },
+
   af_amr: {
     label: "AF AMR",
     category: "AF",
-    _show: false,
-    numeric: true,
-  },
-  af_eas: {
-    label: "AF EAS",
-    category: "AF",
-    _show: false,
-    numeric: true,
-  },
-  af_nfe: {
-    label: "AF NFE",
-    category: "AF",
-    _show: false,
-    numeric: true,
-  },
-  af_fin: {
-    label: "AF FIN",
-    category: "AF",
+    thTitle: "Alternate allele frequency in samples of Latino ancestry",
     _show: false,
     numeric: true,
   },
   af_asj: {
     label: "AF ASJ",
     category: "AF",
+    thTitle:
+      "Alternate allele frequency in samples of Ashkenazi Jewish ancestry",
+    _show: false,
+    numeric: true,
+  },
+  af_eas: {
+    label: "AF EAS",
+    category: "AF",
+    thTitle: "Alternate allele frequency in samples of East Asian ancestry",
+    _show: false,
+    numeric: true,
+  },
+  af_fin: {
+    label: "AF FIN",
+    category: "AF",
+    thTitle: "Alternate allele frequency in samples of Finnish ancestry",
+    _show: false,
+    numeric: true,
+  },
+  af_nfe: {
+    label: "AF NFE",
+    category: "AF",
+    thTitle:
+      "Alternate allele frequency in samples of Non-Finnish European ancestry",
+    _show: false,
+    numeric: true,
+  },
+  af_sas: {
+    label: "AF SAS",
+    category: "AF",
+    thTitle: "Alternate allele frequency in samples of South Asian ancestry",
     _show: false,
     numeric: true,
   },
   af_oth: {
     label: "AF OTH",
     category: "AF",
+    thTitle: "Alternate allele frequency in samples of other ancestry",
     _show: false,
     numeric: true,
   },
   cln_allele_id: {
     label: "CLN Allele ID",
     category: "ClinVAR",
+    thTitle: "ClinVar Allele ID",
     _show: false,
   },
   cln_cond: {
     label: "CLN Cond.",
     category: "ClinVAR",
+    thTitle: "ClinVar Condition",
     _show: false,
   },
   cln_dis_db: {
     label: "CLN Dis. DB",
     category: "ClinVAR",
+    thTitle: "ClinVar Disease Database Name and Identifier",
     _show: false,
   },
   cln_rev_stat: {
     label: "CLN Rev. Stat.",
     category: "ClinVAR",
+    thTitle: "ClinVar Review Status",
     _show: false,
   },
+};
+
+// add thStyle: "cursor: help;", to each column
+Object.values(columns).forEach((col) => {
+  col.thStyle = "cursor: help;";
 });
 
+function getDefaultColumns() {
+  // return an object with the same keys as columns with the value of _show (boolean)
+  return Object.entries(columns).reduce((acc, [key, col]) => {
+    acc[key] = col._show;
+    return acc;
+  }, {});
+}
+// reactive object key: boolean
+const columnsSelected = ref(getDefaultColumns());
+
+// reactive array intended to be used as the columns prop for va-data-table
 const table_columns = ref([]);
+
+// watch columnsSelected and update table_columns
 watch(
-  columns,
+  columnsSelected,
   () => {
     // add or remove columns from table_columns preserving the existing order
+
+    // remove from current columns that are no longer selected
     const filtered_columns = table_columns.value.filter(
-      (col) => columns.value[col.key]?._show,
+      (col) => columnsSelected.value[col.key],
     );
     const current_col_keys = new Set(filtered_columns.map((col) => col.key));
-    console.log("current_col_keys", current_col_keys);
 
-    // columns that are not in table_columns but have _show = true
-    const new_columns = Object.entries(columns.value)
-      .filter(([key, col]) => col._show && !current_col_keys.has(key))
-      .map(([key, col]) => ({ key, ...col }));
+    // columns that are not in table_columns but are selected
+    const new_columns = Object.entries(columnsSelected.value)
+      .filter(([key, shown]) => shown && !current_col_keys.has(key))
+      .map(([key, _]) => ({ key, ...columns[key] }));
     table_columns.value = filtered_columns.concat(new_columns);
   },
   { deep: true, immediate: true },
 );
 
 // non-reactive
-const colums_by_category = Object.entries(columns.value).reduce(
-  (acc, [key, col]) => {
-    if (!col.category) return acc;
-    acc[col.category] = (acc[col.category] || []).concat({ key, ...col });
-    return acc;
-  },
-  {},
-);
+const colums_by_category = Object.entries(columns).reduce((acc, [key, col]) => {
+  if (!col.category) return acc;
+  acc[col.category] = (acc[col.category] || []).concat({ key, ...col });
+  return acc;
+}, {});
 
 const columnsModal = ref(false);
 const selected = ref([]);
 
+function restoreColumnDefaults() {
+  columnsSelected.value = getDefaultColumns();
+  table_columns.value = Object.entries(columns)
+    .filter(([_, col]) => col._show)
+    .map(([key, col]) => ({ key, ...col }));
+}
+
 watchDebounced([currPage, pageSize, filters, numericFilters], handleSearch, {
   deep: true,
-  debounce: 500,
+  debounce: 750,
 });
+
+function formatNumericData(data) {
+  // data is column_key: value object, value is sometimes a number
+  // columns is column_key: column object
+  // for each column, if it is a numeric column, format the number
+  return Object.entries(data).reduce((acc, [key, value]) => {
+    if (columns[key]?.numeric) {
+      acc[key] = value != null ? _.round(value, NUMERIC_PRECISION) : null;
+    } else {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+}
 
 function handleSearch() {
   const parsedQuery = parseQuery(query.value);
-
   // validate that parsedQuery is not empty
   if (Object.keys(parsedQuery).length === 0) {
-    console.error("invalid query");
     return;
   }
-
-  const offset = computed(() => (currPage.value - 1) * pageSize.value);
 
   const query_opts = {
     ...parsedQuery,
     source_id: source.value,
-    // snapshot: snapshot.value,
+    snapshot_id: snapshot.value.id,
     ...filters.value,
     ...numericFilters.value,
   };
@@ -564,35 +733,49 @@ function handleSearch() {
 
   loading.value = true;
 
+  // variantService
+  //   .search2({
+  //     query: query_opts,
+  //     offset: offset.value,
+  //     limit: pageSize.value,
+  //   })
+  //   .then((res) => console.log(res));
+
   variantService
-    .search({
+    .search2({
       query: query_opts,
       offset: offset.value,
       limit: pageSize.value,
     })
     .then((res) => {
-      results.value = res.data?.results || [];
-      total_count.value = res.data?.metadata?.count || 0;
+      results.value = (res.data?.results || []).map(formatNumericData);
+      total_count.value = res.data?.metadata?.count || results.value.length;
       ui.setSidebarCollapsed(true);
+      resultsView.value = total_count.value > 0;
+      searchPerformed.value = true;
     })
     .catch((err) => {
-      console.error(err);
+      // if 400 status, show error message
+      if (err?.response?.status === 400) {
+        toast.error("Invalid query. Please check your query and try again.");
+      } else {
+        throw err;
+      }
     })
     .finally(() => {
       loading.value = false;
-      resultsView.value = true;
     });
 
-  variantService
-    .getFilters({
-      query: query_opts,
-    })
-    .then((res) => {
-      filterGroups.value = res.data;
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+  // variantService
+  //   .getFilters({
+  //     query: query_opts,
+  //   })
+  //   .then((res) => {
+  //     filterGroups.value = res.data;
+  //   })
+  //   .catch((err) => {
+  //     console.error(err);
+  //   });
 }
 
 function parseQuery(text) {
@@ -608,10 +791,11 @@ function parseQuery(text) {
   Otherwise, assume it is a gene
   */
 
-  const variantRegex = /^(\d+)-(\d+)-([A-Z])-([A-Z])$/;
-  const genomicRegionRegex = /^chr(\d+):(\d+)-(\d+)$/;
+  const variantRegex = /^([\dXY]+)-(\d+)-([ATCG]+)-([ATCG]+)$/;
+  const genomicRegionRegex = /^CHR([\dXY]+):(\d+)-(\d+)$/;
   const geneRegex = /^([a-zA-Z0-9]+)$/;
 
+  text = text.trim().toUpperCase();
   if (variantRegex.test(text)) {
     const match = text.match(variantRegex);
     return {
@@ -636,16 +820,17 @@ function parseQuery(text) {
   }
 }
 
-function resetFilters() {
-  filters.value = {
-    genes: null,
-    cln_sig: null,
-    func: null,
-    exonic_func: null,
-  };
+function reset() {
+  resetResults();
+  resetPagination();
+  resetFilters();
+  resetNumericFilters();
+
+  searchPerformed.value = false;
   query.value = "";
   resultsView.value = false;
   filterAccordian.value = [true, false, false, false];
+  selected.value = [];
 }
 
 function handleSelectionChange(ev) {
@@ -656,5 +841,18 @@ function handleSelectionChange(ev) {
 <style scoped>
 .annotationtable {
   --va-data-table-cell-padding: 2px;
+
+  /* in Vuestic v1.8.7 va-virtual-scroller css class is applied to table even
+  *  when virtual scrolling is disabled. This causes the table to occupy 100% of 
+  * the height of the parent container. This is a workaround to override that
+  * behavior.
+  */
+  height: auto;
 }
 </style>
+
+<route lang="yaml">
+meta:
+  title: Variant Xplorer
+  nav: [{ label: "Variant Xplorer" }]
+</route>

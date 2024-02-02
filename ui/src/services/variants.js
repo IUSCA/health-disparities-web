@@ -9,6 +9,14 @@ class VariantService {
     });
   }
 
+  search2({ query, offset = 0, limit = 50 }) {
+    return api.post(`/variants/new`, {
+      ...query,
+      offset,
+      limit,
+    });
+  }
+
   getFilters({ query }) {
     return api.post(`/variants/filters`, query);
   }

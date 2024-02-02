@@ -237,5 +237,40 @@ def get_all_workflows():
         return r.json()
 
 
+def create_phenotype_file(data):
+    with APIServerSession() as s:
+        r = s.post('phenotype_files', json=int_to_str(data, 'size'))
+        r.raise_for_status()
+        return r.json()
+
+
+def create_genotype_set(name, snapshot_id, source_id, data):
+    with APIServerSession() as s:
+        r = s.put(f'genotype_sets/{source_id}/{snapshot_id}/{name}', data)
+        r.raise_for_status()
+        return r.json()
+
+
+def create_genotype_file(data):
+    with APIServerSession() as s:
+        r = s.put('genotype_files', json=int_to_str(data, 'size'))
+        r.raise_for_status()
+        return r.json()
+
+
+def get_distinct_genotype_samples():
+    with APIServerSession() as s:
+        r = s.get('genotype_samples/distinct/participant_id')
+        r.raise_for_status()
+        return r.json()
+
+
+def create_sample_mappings(samples: list[dict]):
+    with APIServerSession() as s:
+        r = s.put('genotype_samples', json=samples)
+        r.raise_for_status()
+        return r.json()
+
+
 if __name__ == '__main__':
     pass

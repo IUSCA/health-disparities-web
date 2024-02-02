@@ -24,7 +24,8 @@
     "nodemon": "^3.0.1",
     "prisma": "^5.4.2",
     "random": "^4.1.0",
-    "random-js": "^2.1.0"
+    "random-js": "^2.1.0",
+    "tqdm": "^2.0.3"
   },
   "dependencies": {
     "@badgateway/oauth2-client": "^2.2.3",

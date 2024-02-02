@@ -270,8 +270,9 @@ model participant {
   id                    Int                    @id @default(autoincrement())
   ib_id                 String
   study_id              Int?
-  enroll_snapshot_id    Int?
-  enroll_snapshot       snapshot?              @relation(name: "enrolls", fields: [enroll_snapshot_id], references: [id])
+  genotype_idx          Int?
+  enroll_snapshot_id    Int
+  enroll_snapshot       snapshot               @relation(name: "enrolls", fields: [enroll_snapshot_id], references: [id])
   disenroll_snapshot_id Int?
   disenroll_snapshot    snapshot?              @relation(name: "disenrolls", fields: [disenroll_snapshot_id], references: [id])
   demographics          demographic[]
@@ -283,8 +284,10 @@ model participant {
   medications           medication[]
   datasets              dataset[]
   protocols             participant_protocol[]
+  genotype_smaples      genotype_sample[]
 
   @@unique([ib_id])
+  @@unique([genotype_idx])
 }
 
 model stats {
@@ -520,18 +523,21 @@ model source {
   author             user?                @relation(fields: [author_id], references: [id])
   variant            variant[]
   variant_annotation variant_annotation[]
+  genotype_set       genotype_set[]
 }
 
 model snapshot {
-  id          Int           @id @default(autoincrement())
-  name        String
-  description String?
-  timestamp   DateTime      @default(now()) @db.Timestamp(6)
-  published   Boolean       @default(false)
-  author_id   Int?
-  author      user?         @relation(fields: [author_id], references: [id])
-  enrolls     participant[] @relation("enrolls")
-  disenrolls  participant[] @relation("disenrolls")
+  id             Int              @id @default(autoincrement())
+  name           String
+  description    String?
+  timestamp      DateTime         @default(now()) @db.Timestamp(6)
+  published      Boolean          @default(false)
+  author_id      Int?
+  author         user?            @relation(fields: [author_id], references: [id])
+  enrolls        participant[]    @relation("enrolls")
+  disenrolls     participant[]    @relation("disenrolls")
+  phenotype_file phenotype_file[]
+  genotype_set   genotype_set[]
 
   @@index([timestamp])
 }
@@ -567,11 +573,55 @@ model participant_protocol {
   @@id([participant_id, protocol_id])
 }
 
-model vcf_subject {
-  id                    Int    @id @default(autoincrement())
-  ib_id                 String
-  enroll_snapshot_id    Int?
-  disenroll_snapshot_id Int?
+model genotype_set {
+  id          Int               @id @default(autoincrement())
+  name        String
+  source_id   Int
+  source      source            @relation(fields: [source_id], references: [id])
+  snapshot_id Int
+  snapshot    snapshot          @relation(fields: [snapshot_id], references: [id])
+  path        String
+  description String?
+  samples     genotype_sample[]
+  files       genotype_file[]
+
+  @@unique([name, snapshot_id, source_id])
+}
+
+model genotype_file {
+  id          Int          @id @default(autoincrement())
+  name        String
+  chr         Int          @db.SmallInt
+  path        String
+  description String?
+  md5         String
+  size        BigInt
+  set_id      Int
+  set         genotype_set @relation(fields: [set_id], references: [id])
+
+  @@unique([name, set_id])
+}
+
+model genotype_sample {
+  sample         String
+  set            genotype_set @relation(fields: [set_id], references: [id])
+  set_id         Int
+  participant_id Int?
+  participant    participant? @relation(fields: [participant_id], references: [id])
+  description    String?
+
+  @@id([set_id, sample])
+}
+
+model phenotype_file {
+  id          Int      @id @default(autoincrement())
+  name        String
+  path        String
+  description String?
+  md5         String
+  size        BigInt
+  snapshot_id Int
+  snapshot    snapshot @relation(fields: [snapshot_id], references: [id])
 }
 
 view variant_annotation {

@@ -1,6 +1,9 @@
+from collections import namedtuple
 from dataclasses import dataclass, asdict
 
 from workers.variants.database import conn
+
+Site = namedtuple('Site', ('chrom', 'pos', 'ref', 'alt'))
 
 
 @dataclass
@@ -11,8 +14,12 @@ class Annotation:
     alt: str
     af_afr: float
     af_amr: float
+    af_asj: float
     af_eas: float
+    af_fin: float
     af_nfe: float
+    af_sas: float
+    af_oth: float
     cadd_phred: float
     revel_max: float
     polyphen_max: float
@@ -37,3 +44,23 @@ def create_many(rows: list[Annotation]):
         except Exception as e:
             conn.rollback()
             raise e
+
+
+def get_missing(chromosome: int = None):
+    q = """
+        SELECT v.chr, v."position", v."ref", v.alt 
+        FROM variant v 
+        LEFT JOIN annotation a ON a.chr = v.chr AND a."position" = v."position" AND a."ref" = v."ref" AND a.alt = v.alt 
+        """
+    params = []
+
+    if chromosome is not None:
+        q += "WHERE v.chr = %s AND a.chr IS NULL"
+        params.append(chromosome)
+    else:
+        q += "WHERE a.chr IS NULL"
+
+    with conn.cursor() as cursor:
+        cursor.execute(q, params)
+        for row in cursor:
+            yield Site(chrom=int(row[0]), pos=int(row[1]), ref=row[2], alt=row[3])
