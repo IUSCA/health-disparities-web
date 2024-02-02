@@ -151,6 +151,12 @@ async function main() {
         create: workflows.map((workflow_id) => ({ id: workflow_id })),
       };
     }
+
+    // if (dataset_obj.workflows) {
+    //   console.log('WORKFLOWS');
+    //   console.log(dataset_obj);
+    //   console.log(dataset_obj.workflows);
+    // }
     return prisma.dataset.upsert({
       where: {
         id: dataset_obj.id,
