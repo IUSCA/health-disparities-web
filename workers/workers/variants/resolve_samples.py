@@ -63,11 +63,12 @@ def get_file_metadata(f: Path):
     }
 
 
-def create_genotype_set(data_dir: Path, snapshot_id, source_id):
+def create_genotype_set(data_dir: Path, snapshot_id, source_id, name):
     d = {
         'path': str(data_dir),
     }
-    row = api.create_genotype_set(name=data_dir.name, snapshot_id=snapshot_id, source_id=source_id, data=d)
+    name = name or data_dir.name
+    row = api.create_genotype_set(name=name, snapshot_id=snapshot_id, source_id=source_id, data=d)
     return row['id']
 
 
@@ -92,7 +93,7 @@ def create_sample_mappings(sample_pid_map, set_id):
     api.create_sample_mappings(data)
 
 
-def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, output_dir: str = None):
+def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, output_dir: str = None, set_name=None):
     """
     A program to resolve samples in VCF to participants
 
@@ -114,8 +115,10 @@ def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, o
     # When sample_mapping_path is provided, snapshot_id and source_id must be provided as well
     sample_mapping_path = mapping
 
-    csv_mapping_file_path = Path(output_dir or '').resolve() / CSV_MAPPING_FILE_NAME
-    tab_mapping_file_path = Path(output_dir or '').resolve() / TAB_MAPPING_FILE_NAME
+    output_dir = Path(output_dir or '').resolve()
+    output_dir.mkdir(exist_ok=True, parents=True)
+    csv_mapping_file_path = output_dir / CSV_MAPPING_FILE_NAME
+    tab_mapping_file_path = output_dir / TAB_MAPPING_FILE_NAME
 
     data_dir = Path(data_dir).resolve()
     vcf_files = list(data_dir.glob('*.vcf.gz'))
@@ -168,7 +171,8 @@ def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, o
         write_sample_mapping(user_sample_map, csv_mapping_file_path)
         print(textwrap.dedent(f'''\
             Writing the unmatched samples with their suggested IB_IDs along with user provided sample mappings 
-            to {csv_mapping_file_path}. After reviewing, rerun this program with these flags:
+            to {csv_mapping_file_path}
+            After reviewing, rerun this program with these flags:
             
             --mapping <path_to_csv> --snapshot_id <number> --source_id <number>
             '''))
@@ -196,7 +200,7 @@ def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, o
         print(f'Resolved samples after creating participants: {len(sample_pid_map)}')
 
     # create genotype_set
-    set_id = create_genotype_set(data_dir, snapshot_id, source_id)
+    set_id = create_genotype_set(data_dir, snapshot_id, source_id, set_name)
     print(f'created genotype_set. id: {set_id}')
 
     # create genotype_sample entries

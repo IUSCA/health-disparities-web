@@ -1,13 +1,11 @@
-import argparse
-import sys
 from pathlib import Path
 
+import fire
 from sca_rhythm import Workflow
 
 import workers.api as api
 import workers.workflow_utils as wf_utils
 from workers.celery_app import app as celery_app
-from workers.config import config
 
 
 class Registration:
@@ -29,25 +27,27 @@ class Registration:
         wf.start(created_dataset['id'])
 
 
-if __name__ == '__main__':
-    # argument parser
-    parser = argparse.ArgumentParser(
-        description='Register a dataset - kicks off a full workflow')
-    parser.add_argument('dataset_name', type=str, help='Dataset Name')
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-r', '--raw-data', action='store_true', help="register raw_data dataset")
-    group.add_argument('-d', '--data-product', action='store_true', help="register data_product dataset")
+def main(path, raw_data=False, data_product=False, name=None):
+    """
+    Register a dataset - kicks off a full workflow
 
-    # Parse the command line arguments
-    args = parser.parse_args()
-    dataset_type = 'RAW_DATA' if args.raw_data else 'DATA_PRODUCT'
+    @param path: full path to dataset
+    @param data_product:
+    @param raw_data:
+    @param name: dataset name, default is directory name
+    @return:
+    """
 
-    dataset_name = args.dataset_name
-    dataset_path = Path(config['registration'][dataset_type]['source_dir']) / dataset_name
+    assert raw_data ^ data_product, 'At least one or only one of raw_data or data_product should be provided'
+    dataset_type = 'RAW_DATA' if raw_data else 'DATA_PRODUCT'
 
-    if not dataset_path.exists():
-        print(f'{dataset_path} does not exist')
-        sys.exit(1)
+    dataset_path = Path(path).resolve()
+    assert dataset_path.exists() and dataset_path.is_dir(), 'Invalid path'
 
+    dataset_name = name or dataset_path.name
     reg = Registration(dataset_type)
     reg.register_candidate(dataset_name, str(dataset_path))
+
+
+if __name__ == '__main__':
+    fire.Fire(main)

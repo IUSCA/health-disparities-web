@@ -83,15 +83,15 @@ config = {
                 {
                     'name': 'validate',
                     'task': 'validate_dataset'
-                },
-                {
-                    'name': 'setup download',
-                    'task': 'setup_dataset_download'
-                },
-                {
-                    'name': 'delete source',
-                    'task': 'delete_source'
                 }
+                # {
+                #     'name': 'setup download',
+                #     'task': 'setup_dataset_download'
+                # },
+                # {
+                #     'name': 'delete source',
+                #     'task': 'delete_source'
+                # }
             ]
         }
     },

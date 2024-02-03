@@ -42,6 +42,6 @@ fi
 for file in $1/*.vcf.gz; do
     filename=$(basename -- "$file")
     filename="${filename%.vcf.gz}"
-    echo "$file $filename"
-    # bcftools reheader -s $SAMPLE_MAPPING -o $2/$filename.reheader.vcf.gz $file
+    echo "processing $filename"
+    bcftools reheader -s $SAMPLE_MAPPING -o $2/$filename.reheader.vcf.gz $file
 done
