@@ -143,7 +143,7 @@ class GnomadAnnotations:
         :param chrom: Chromosome number.
         :return: Chromosome string.
         """
-        assert 1 < chrom < 25
+        assert 1 <= chrom < 25
         if chrom <= 22:
             return str(chrom)
         elif chrom == 23:
@@ -245,7 +245,7 @@ def launch_wfs(gnomad_root_dir, batch_size=100):
     vcf_paths = list(gnomad_root_dir.glob('*.vcf.bgz'))
     assert len(vcf_paths) > 0, f'No .vcf.bgz files in {gnomad_root_dir}'
 
-    for chromosome in range(1, 3):
+    for chromosome in range(1, 25):
         steps = [{
             'name': f'chr{chromosome}',
             'task': 'ingest_annotations',

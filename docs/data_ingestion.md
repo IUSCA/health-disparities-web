@@ -102,7 +102,7 @@ python -m workers.variants.ingest_vcf \
 ### Annotation Data Ingestion
 
 ```bash
-
+python -m workers.variants.load_annotations --gnomad_root_dir /N/project/phi_ingest_biobank_regeneron/annotations/gnomAD/ --mode celery
 ```
 
 ### Archive
@@ -174,6 +174,7 @@ python -m workers.variants.ingest_vcf \
 ### Annotation Data Ingestion
 
 ```bash
+python -m workers.variants.load_annotations --gnomad_root_dir /N/project/phi_ingest_biobank_regeneron/annotations/gnomAD/ --mode celery
 ```
 
 ### Archive
