@@ -4,12 +4,19 @@ from typing import Iterable
 
 import fire
 import vcf
+from celery import Celery
+from sca_rhythm import Workflow
+from sca_rhythm.progress import Progress
 from tqdm import tqdm
 from vcf.model import _Record
 
+from workers.config import config, celeryconfig
 from workers.utils import batched
 from workers.variants.models import annotation
 from workers.variants.models.annotation import Annotation, Site
+
+app = Celery("tasks")
+app.config_from_object(celeryconfig)
 
 
 class VCF4:
@@ -42,7 +49,9 @@ class VCF4:
 
     def fetch(self, site: Site) -> _Record | None:
         """
-        Fetch a variant by site.
+        Fetch a variant by site. Only the pos, ref and alt are used to fetch the variant.
+        The vcf is assumed to be chromosome specific, i.e. only one chromosome is present in the file.
+        The specific representation of chromosome if inferred from the first variant in the file.
         
         :param site: Site to fetch variant for.
         :return: vcf.model._Record object or None if not found.
@@ -76,6 +85,14 @@ class GnomadAnnotations:
         self.fieldnames = ['CHROM', 'POS', 'REF', 'ALT'] + self.allele_frequencies + self.functional_info
 
     def get_file_name(self, chrom: int):
+        """
+        Get the file name for the given chromosome.
+
+        example: 23 -> gnomad.genomes.v4.0.sites.chrX.vcf.bgz
+
+        @param chrom: Chromosome number. 1-24
+        @return: Path to the VCF file for the chromosome.
+        """
         chrom_str = self.decode_chromosome(chrom)
         return self.root_dir / f'gnomad.genomes.v4.0.sites.chr{chrom_str}.vcf.bgz'
 
@@ -85,7 +102,7 @@ class GnomadAnnotations:
         and fetching the variant entry (random access).
 
         The keys in the returned dictionary are from GnomAD dataset (VCF headers)
-        except for 'CHROM', 'POS', 'REF', 'ALT'
+        except for 'CHROM', 'POS', 'REF', 'ALT' which are from the site tuple.
         
         :param site: Site to fetch annotations for.
         :return: Dictionary of annotations.
@@ -135,6 +152,16 @@ class GnomadAnnotations:
             return 'Y'
 
 
+class ClinVarAnnotations:
+    def __init__(self, vcf_path):
+        self.vcf = VCF4(vcf_path)
+
+
+class GeneAnnotations:
+    def __init__(self):
+        pass
+
+
 class Loader:
     """
     Load annotations from gnomAD (and others) into the database for a given list of sites.
@@ -151,7 +178,7 @@ class Loader:
 
     def fetch_annotations(self, sites: Iterable[Site]) -> Iterable[Annotation]:
         """
-        For each given site annotation data is fetched from various sources and 
+        For each given site, annotation data is fetched from various sources and
         transformed into an Annotation object.
         
 
@@ -193,6 +220,52 @@ class Loader:
             annotation.create_many(batch)
 
 
+def ingest_annotations(celery_task, chromosome, gnomad_root_dir=None, batch_size=100, **kwargs):
+    if chromosome is None:
+        print('chromosome is not provided')
+        return
+    sites = annotation.get_missing(chromosome)
+    num_records = annotation.count_missing(chromosome)
+    print(f'Found {num_records} missing annotations for chromosome {chromosome}')
+
+    loader = Loader(gnomad_root_dir, batch_size)
+    progress = Progress(celery_task=celery_task,
+                        name='ingest',
+                        units='annotations',
+                        throttle_time=10,
+                        total=num_records)
+    loader.load(progress(sites))
+    return chromosome,
+
+
+def launch_wfs(gnomad_root_dir, batch_size=100):
+    gnomad_root_dir = Path(gnomad_root_dir).resolve()
+    assert gnomad_root_dir.exists(), f'{gnomad_root_dir} does not exist'
+
+    vcf_paths = list(gnomad_root_dir.glob('*.vcf.bgz'))
+    assert len(vcf_paths) > 0, f'No .vcf.bgz files in {gnomad_root_dir}'
+
+    for chromosome in range(1, 3):
+        steps = [{
+            'name': f'chr{chromosome}',
+            'task': 'ingest_annotations',
+            'queue': f'{config["app_id"]}.q',
+            'kwargs': {
+                'gnomad_root_dir': str(gnomad_root_dir),
+                'batch_size': batch_size
+            },
+        }]
+
+        wf_body = {
+            'name': 'Ingest Annotations',
+            'app_id': config['app_id'],
+            'steps': steps
+        }
+
+        int_wf = Workflow(celery_app=app, **wf_body)
+        int_wf.start(chromosome)
+
+
 # def create_many(batch):
 #     print(batch)
 
@@ -207,13 +280,18 @@ def main(gnomad_root_dir: str, batch_size: int = 100, mode: str = 'db', sites_cs
     """
     Load annotations from gnomAD (and others) into the database for a given list of sites.
 
-    @param sites_csv: Path to the CSV file containing the sites information with header: chr, position, ref, alt.
     @param gnomad_root_dir: Path to the directory containing the gnomAD VCF files.
     @param batch_size: Number of annotations to write into the database in a single batch. Defaults to 100.
-    @param mode: If csv, sites are read from the csv file. If db, sites in variant table but not in annotation table
-    are read from the database. Default: db
+    @param mode: Options: db, csv, celery.
+    If csv, sites are read from the csv file.
+    If db, sites in variant table but not in annotation table are read from the database. Default: db
+    If celery, launch a workflow to ingest annotations for all chromosomes using db mode.
+    @param sites_csv: Path to the CSV file containing the sites information with header: chr (1-24), position, ref, alt.
     @param chromosome: when in db mode, add missing annotations only for this chromosome. int, 1-22,23(X), 24(Y)
     """
+    if mode == 'celery':
+        launch_wfs(gnomad_root_dir, batch_size)
+        return
     if mode == 'csv':
         assert sites_csv, 'sites_csv is required in csv mode'
         sites = read_from_csv(sites_csv)

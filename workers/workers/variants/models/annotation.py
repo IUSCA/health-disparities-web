@@ -32,6 +32,9 @@ class Annotation:
         return f'INSERT INTO ANNOTATION ({", ".join(keys)}) VALUES ({", ".join(["%s" for _ in keys])}) ' \
                f'ON CONFLICT DO NOTHING'
 
+    # f'ON CONFLICT (chr, "position", ref, alt) UPDATE SET ' \
+    # f'{", ".join([f"{k} = EXCLUDED.{k}" for k in keys])}'
+
 
 def create_many(rows: list[Annotation]):
     with conn.cursor() as cursor:
@@ -64,3 +67,22 @@ def get_missing(chromosome: int = None):
         cursor.execute(q, params)
         for row in cursor:
             yield Site(chrom=int(row[0]), pos=int(row[1]), ref=row[2], alt=row[3])
+
+
+def count_missing(chromosome: int = None):
+    q = """
+        SELECT count(*) 
+        FROM variant v 
+        LEFT JOIN annotation a ON a.chr = v.chr AND a."position" = v."position" AND a."ref" = v."ref" AND a.alt = v.alt 
+        """
+    params = []
+
+    if chromosome is not None:
+        q += "WHERE v.chr = %s AND a.chr IS NULL"
+        params.append(chromosome)
+    else:
+        q += "WHERE a.chr IS NULL"
+
+    with conn.cursor() as cursor:
+        cursor.execute(q, params)
+        return cursor.fetchone()[0]

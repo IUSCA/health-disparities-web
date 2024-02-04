@@ -117,3 +117,9 @@ def delete_source(celery_task, dataset_id, **kwargs):
 def ingest_vcf(celery_task, dummy, **kwargs):
     from workers.variants.ingest_vcf import ingest_vcf as task_body
     return task_body(celery_task, dummy, **kwargs)
+
+
+@app.task(base=WorkflowTask, bind=True, name='ingest_annotations', max_retries=3)
+def ingest_vcf(celery_task, chromosome, **kwargs):
+    from workers.variants.load_annotations import ingest_annotations as task_body
+    return task_body(celery_task, chromosome, **kwargs)
