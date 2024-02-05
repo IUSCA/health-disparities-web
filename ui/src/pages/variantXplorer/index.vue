@@ -98,6 +98,17 @@
       <!-- table top buttons -->
       <div class="mb-2 px-5 flex items-center gap-5 justify-end">
         <div class="">
+          <span
+            class="text-xl font-bold va-text-info"
+            v-if="selected.length > 0"
+          >
+            <NumberTransition :target="num_participants" :debounce="100" />
+            <!-- <span> {{ num_participants }} </span> -->
+            {{ maybePluralize(num_participants, "Participant", "s", false) }}
+          </span>
+        </div>
+
+        <div class="">
           <span class="text-xl font-bold va-text-info">
             <NumberTransition :target="total_count" />
             {{ maybePluralize(total_count, "Variant", "s", false) }}
@@ -368,6 +379,7 @@ const snapshot = ref("");
 const resultsView = ref(false);
 const loading = ref(false);
 const searchPerformed = ref(false);
+const num_participants = ref(0);
 
 const results = ref([]);
 const total_count = ref(0);
@@ -376,7 +388,7 @@ function resetResults() {
   total_count.value = 0;
 }
 
-const pageSize = ref(50);
+const pageSize = ref(20);
 const currPage = ref(1);
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
 const offset = computed(() => (currPage.value - 1) * pageSize.value);
@@ -732,6 +744,7 @@ function handleSearch() {
   console.log("searching", query_opts);
 
   loading.value = true;
+  selected.value = [];
 
   // variantService
   //   .search2({
@@ -835,6 +848,21 @@ function reset() {
 
 function handleSelectionChange(ev) {
   selected.value = ev.currentSelectedItems;
+  variantService
+    .getParticipantCount({
+      variant_ids: selected.value.map((row) => [
+        row.chr,
+        row.position,
+        row.ref,
+        row.alt,
+      ]),
+      snapshot_id: snapshot.value.id,
+      source_id: source.value,
+    })
+    .then((res) => {
+      console.log(res.data);
+      num_participants.value = Number(res.data?.count || 0);
+    });
 }
 </script>
 

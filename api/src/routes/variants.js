@@ -6,61 +6,17 @@ const createError = require('http-errors');
 const { validate } = require('../middleware/validators');
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
-const { standardize, buildSQLQuery, RANGE_COLS } = require('../services/variants');
+const {
+  standardize, RANGE_COLS, participants_with_variants, decode_chromosome,
+  encode_chromosome, decode_genotype, ALLELE_STATS_COLS,
+  queryVariantsWithAlleleStatsFilter, queryVariantsWithoutAlleleStatsFilter,
+} = require('../services/variants');
 
 const isPermittedTo = accessControl('variant');
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // const NUMERIC_COLS = ['cadd_phred', 'polyphen_max', 'revel_max', 'sift_max'];
-
-function decode_chromosome(encoded) {
-  const mapping = {
-    23: 'X',
-    24: 'Y',
-  };
-  return `${mapping[encoded] || encoded}`;
-}
-
-function encode_chromosome(decoded) {
-  // 1-22 should be converted to int
-  // X or XX should be converted to 23
-  // Y or XY should be converted to 24
-  if (!decoded) {
-    return null;
-  }
-  const mapping = {
-    X: 23,
-    Y: 24,
-    XX: 23,
-    XY: 24,
-  };
-  const chr_int = mapping[decoded.toUpperCase()] || parseInt(decoded, 10);
-  if (Number.isNaN(chr_int) || chr_int < 1 || chr_int > 24) {
-    throw createError(400, 'Invalid input: chromosome is not valid');
-  }
-  return chr_int;
-}
-
-function decode_genotype(encoded, phase) {
-  if (phase) {
-    const phased_mapping = {
-      0: '0|0',
-      1: '0|1',
-      2: '1|0',
-      3: '1|1',
-      '-1': '.|.',
-    };
-    return phased_mapping[encoded];
-  }
-  const unphased_mapping = {
-    0: '0/0',
-    1: '0/1',
-    2: '1/1',
-    '-1': './.',
-  };
-  return unphased_mapping[encoded];
-}
 
 function rangeToQuery(rangeQuery) {
   // convert { min: 1, max: 2 } to { gte: 1, lte: 2 }
@@ -151,6 +107,28 @@ const annotation_validators = [
   body('cln_sig').isArray().optional(),
   ...RANGE_COLS.map(rangeValidator),
 ];
+
+function variant_id_sanitizer(variant_id) {
+  if (variant_id.length !== 4) {
+    throw createError(400, 'Invalid variant_id - length is not 4');
+  }
+  const chr = variant_id[0];
+  const position = variant_id[1];
+  const ref = variant_id[2];
+  const alt = variant_id[3];
+
+  // convert position to integer
+  const pos_num = Number(position);
+  if (Number.isNaN(pos_num)) {
+    throw createError(400, 'Invalid variant_id - position is not a number');
+  }
+
+  if (!isValidNucleotide(ref) || !isValidNucleotide(alt)) {
+    throw createError(400, 'Invalid variant_id - ref or alt nucleotide is invalid');
+  }
+
+  return [encode_chromosome(chr), pos_num, ref, alt];
+}
 
 router.post(
   '/',
@@ -279,25 +257,20 @@ router.post(
 
     const canon_query = {
       ...standardize(req.body),
-      snapshot_id: req.body.snapshot_id,
       limit: req.body.limit,
       offset: req.body.offset,
     };
     // eslint-disable-next-line no-console
     console.log({ canon_query });
-    const query = buildSQLQuery(canon_query, req.user.username);
-    // eslint-disable-next-line no-console
-    console.log(query.sql, query.values);
 
-    const results = (await prisma.$queryRaw(query)) ?? [];
-    // console.log(results[0]);
-    res.json({
-      metadata: { count: Number(results[0]?.total_count ?? 0) },
-      results: results.map((result) => ({
-        ...result,
-        chr: decode_chromosome(result.chr),
-      })),
-    });
+    const hasAlleleStatsFilter = ALLELE_STATS_COLS
+      .map((col) => _.has(col, canon_query))
+      .some((x) => x);
+    const results = await (hasAlleleStatsFilter
+      ? queryVariantsWithAlleleStatsFilter(canon_query, req.user.username)
+      : queryVariantsWithoutAlleleStatsFilter(canon_query, req.user.username));
+
+    res.json(results);
   }),
 );
 
@@ -370,6 +343,30 @@ router.post(
     // });
 
     res.json(filters);
+  }),
+);
+
+router.post(
+  '/participant-count',
+  isPermittedTo('read'),
+  validate([
+    body('variant_ids').isArray().customSanitizer((xs) => xs.map(variant_id_sanitizer)),
+    body('source_id').isInt().toInt(),
+    body('snapshot_id').isInt().toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const { variant_ids, source_id, snapshot_id } = req.body;
+    if (!variant_ids?.length) {
+      return res.json({ count: 0 });
+    }
+    const count = await participants_with_variants({
+      variant_ids,
+      source_id,
+      snapshot_id,
+      username: req.user.username,
+      return_count: true,
+    });
+    res.json({ count });
   }),
 );
 

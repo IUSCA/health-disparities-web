@@ -20,6 +20,14 @@ class VariantService {
   getFilters({ query }) {
     return api.post(`/variants/filters`, query);
   }
+
+  getParticipantCount({ variant_ids, source_id, snapshot_id }) {
+    return api.post(`/variants/participant-count`, {
+      variant_ids,
+      source_id,
+      snapshot_id,
+    });
+  }
 }
 
 export default new VariantService();
