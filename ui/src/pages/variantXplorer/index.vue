@@ -10,8 +10,7 @@
       clearable
       inner-label
       @clear="reset"
-      @keypress.enter="handleSearch"
-      class="flex-1"
+      class="flex-none w-[350px]"
     >
       <template #prependInner>
         <Icon icon="material-symbols:search" class="text-xl" />
@@ -67,6 +66,7 @@
       v-model="snapshot"
       :options="snapshot_options"
       text-by="name"
+      value-by="id"
       placeholder="Select a snapshot"
       label="Snapshot"
       searchable
@@ -81,35 +81,41 @@
     </va-select>
 
     <!-- search button -->
-    <va-button
+    <!-- <va-button
       icon="search"
-      class="flex-none w-[250px]"
+      class="flex-none w-[150px]"
       color="success"
       @click="handleSearch"
     >
       Search
-    </va-button>
-  </va-form>
-
-  <!-- results and filter -->
-  <div class="flex pt-3" v-if="resultsView">
-    <!-- results -->
-    <div class="w-10/12 border-r border-solid border-gray-500">
+    </va-button> -->
+    <div class="flex-1">
       <!-- table top buttons -->
-      <div class="mb-2 px-5 flex items-center gap-5 justify-end">
-        <div class="">
-          <span
-            class="text-xl font-bold va-text-info"
-            v-if="selected.length > 0"
+      <div class="px-5 flex items-center gap-5 justify-end">
+        <va-button
+          class="flex-none"
+          preset="secondary"
+          :disabled="selected.length == 0"
+        >
+          <div
+            class="flex flex-row gap-2 items-center text-xl text-teal-600 dark:text-teal-500"
           >
-            <NumberTransition :target="num_participants" :debounce="100" />
-            <!-- <span> {{ num_participants }} </span> -->
-            {{ maybePluralize(num_participants, "Participant", "s", false) }}
-          </span>
-        </div>
+            <i-mdi:group-add class="" />
+            <div class="font-bold">
+              <NumberTransition
+                :target="num_participants"
+                :debounce="100"
+                :duration="30"
+              />
+              <!-- <span> {{ num_participants }} </span> -->
+              {{ maybePluralize(num_participants, "Participant", "s", false) }}
+            </div>
+          </div>
+        </va-button>
 
-        <div class="">
-          <span class="text-xl font-bold va-text-info">
+        <div class="flex flex-row gap-2 items-center text-xl va-text-info">
+          <i-mdi:chart-sankey-variant class="" />
+          <span class="font-bold">
             <NumberTransition :target="total_count" />
             {{ maybePluralize(total_count, "Variant", "s", false) }}
           </span>
@@ -123,11 +129,22 @@
           <i-mdi-drag-variant class="mr-1" />
           Columns
         </va-button>
-        <va-button class="flex-none" preset="primary">
-          Selected ({{ selected.length }})
-        </va-button>
-      </div>
 
+        <!-- <va-button
+          class="flex-none"
+          preset="primary"
+          :disabled="selected.length == 0"
+        >
+          Selected ({{ selected.length }})
+        </va-button> -->
+      </div>
+    </div>
+  </va-form>
+
+  <!-- results and filter -->
+  <div class="flex pt-2" v-if="resultsView">
+    <!-- results -->
+    <div class="w-10/12 border-r border-solid border-gray-500">
       <!-- table -->
       <va-data-table
         :items="results"
@@ -136,7 +153,8 @@
         hoverable
         selectable
         @selectionChange="handleSelectionChange"
-        class="annotationtable"
+        sticky-header
+        class="annotationtable text-sm"
       >
         <template #cell(chr)="{ rowData }">
           {{
@@ -144,19 +162,20 @@
           }}
         </template>
 
-        <!-- <template #cell(allele_frequency)="{ rowData }">
-          {{
-            _.round(
-              rowData.allele_count / rowData.allele_number,
-              NUMERIC_PRECISION,
-            )
-          }}
-        </template> -->
+        <!-- 1/1 (c2) when unphased, 1|1 (c3) when phased -->
+        <template #cell(homalt)="{ rowData }">
+          {{ rowData.phase ? rowData.c3 : rowData.c2 }}
+        </template>
+
+        <!-- 1|0 c2 when phased -->
+        <template #cell(hetflipped)="{ rowData }">
+          {{ rowData.phase ? rowData.c2 : null }}
+        </template>
       </va-data-table>
 
       <!-- pagination -->
       <Pagination
-        class="px-1 lg:px-3 mt-3"
+        class="px-1 lg:px-3 mt-2"
         v-model:page="currPage"
         v-model:page_size="pageSize"
         :total_results="total_count"
@@ -255,10 +274,7 @@
           <span class="font-bold"> Gene </span> :
           <span
             class="va-link underline"
-            @click="
-              query = example_searches['gene'];
-              handleSearch();
-            "
+            @click="query = example_searches['gene']"
           >
             {{ example_searches["gene"] }}
           </span>
@@ -267,10 +283,7 @@
           <span class="font-bold"> Variant </span>:
           <span
             class="va-link underline"
-            @click="
-              query = example_searches['variant'];
-              handleSearch();
-            "
+            @click="query = example_searches['variant']"
           >
             {{ example_searches["variant"] }}
           </span>
@@ -279,10 +292,7 @@
           <span class="font-bold"> Genomic Region </span>:
           <span
             class="va-link underline"
-            @click="
-              query = example_searches['genomic_region'];
-              handleSearch();
-            "
+            @click="query = example_searches['genomic_region']"
           >
             {{ example_searches["genomic_region"] }}
           </span>
@@ -375,7 +385,7 @@ const NUMERIC_PRECISION = 3;
 
 const query = ref("");
 const source = ref(1);
-const snapshot = ref("");
+const snapshot = ref();
 const resultsView = ref(false);
 const loading = ref(false);
 const searchPerformed = ref(false);
@@ -388,13 +398,14 @@ function resetResults() {
   total_count.value = 0;
 }
 
-const pageSize = ref(20);
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
+const DEFAULT_PAGE_SIZE_IDX = 0;
+const pageSize = ref(PAGE_SIZE_OPTIONS[DEFAULT_PAGE_SIZE_IDX]);
 const currPage = ref(1);
-const PAGE_SIZE_OPTIONS = [20, 50, 100];
 const offset = computed(() => (currPage.value - 1) * pageSize.value);
 function resetPagination() {
   currPage.value = 1;
-  pageSize.value = 50;
+  pageSize.value = PAGE_SIZE_OPTIONS[DEFAULT_PAGE_SIZE_IDX];
 }
 
 // const filterGroups = ref({});
@@ -449,7 +460,7 @@ const resetNumericFilters = () => {
 };
 
 // accordian state
-const filterAccordian = ref([true, false, false, false]);
+const filterAccordian = ref([false, false, false, false]);
 watch(
   filters,
   () => {
@@ -473,7 +484,7 @@ const snapshot_options = ref([]);
 
 snapshotsService.getAll().then((res) => {
   snapshot_options.value = res.data;
-  snapshot.value = snapshot_options.value[0];
+  snapshot.value = snapshot_options.value[0].id;
 });
 
 // thTile is used to set the column header tooltip
@@ -482,25 +493,67 @@ const columns = {
     label: "Variant ID",
     thTitle: "chromosome-position-ref-alt",
     _show: true,
+    tdClass: "va-text-primary",
   },
   allele_number: {
     label: "AN",
-    category: "Indiana Biobank",
+    category: "Allele Stats",
     thTitle: "Allele Number",
     _show: true,
     numeric: true,
   },
   allele_count: {
     label: "AC",
-    category: "Indiana Biobank",
+    category: "Allele Stats",
     thTitle: "Allele Count",
     _show: true,
     numeric: true,
   },
   allele_frequency: {
     label: "AF",
-    category: "Indiana Biobank",
+    category: "Allele Stats",
     thTitle: "Allele Frequency",
+    _show: true,
+    numeric: true,
+  },
+  c0: {
+    // c0 is used to represent 0/0 and 0|1
+    label: "Hom. Ref.",
+    category: "Allele Stats",
+    thTitle: "Homozygous Reference (0/0 or 0|0)",
+    _show: true,
+    numeric: true,
+  },
+  c1: {
+    // c1 is used to represent 0/1 and 0|1
+    label: "Het",
+    category: "Allele Stats",
+    thTitle: "Heterozygous (0/1 or 0|1)",
+    _show: true,
+    numeric: true,
+  },
+  hetflipped: {
+    // corresponds to c2, defined only when phase is true
+    label: "Het. Flipped",
+    category: "Allele Stats",
+    thTitle: "Flipped Heterozygous (1|0)",
+    _show: true,
+    numeric: true,
+  },
+  homalt: {
+    // corresponds to c3, when phase is true
+    // corresponds to c2, when phase is false
+    // represents 1/1 or 1|1
+    label: "Hom. Alt.",
+    category: "Allele Stats",
+    thTitle: "Homozygous Alternate (1/1 or 1|1)",
+    _show: true,
+    numeric: true,
+  },
+  missing: {
+    label: "Missing",
+    category: "Allele Stats",
+    thTitle: "./. Missing Genotypes",
     _show: true,
     numeric: true,
   },
@@ -508,31 +561,31 @@ const columns = {
     label: "Func.",
     category: "Genes",
     thTitle: "Function",
-    _show: true,
+    _show: false,
   },
   genes: {
     label: "Genes",
     category: "Genes",
     thTitle: "Genes",
-    _show: true,
+    _show: false,
   },
   exonic_func: {
     label: "Exonic Func.",
     category: "Genes",
     thTitle: "Exonic Function",
-    _show: true,
+    _show: false,
   },
   aa_change: {
     label: "Protien Change",
     category: "Genes",
     thTitle: "Amino Acid Change",
-    _show: true,
+    _show: false,
   },
   cln_sig: {
     label: "ClinVar Sig.",
     category: "ClinVAR",
     thTitle: "ClinVar Significance",
-    _show: true,
+    _show: false,
   },
   cadd_phred: {
     label: "CADD",
@@ -708,10 +761,12 @@ function restoreColumnDefaults() {
     .map(([key, col]) => ({ key, ...col }));
 }
 
-watchDebounced([currPage, pageSize, filters, numericFilters], handleSearch, {
+watchDebounced([query, filters, numericFilters], handleSearch, {
   deep: true,
   debounce: 750,
 });
+
+watch([source, snapshot, currPage, pageSize], handleSearch);
 
 function formatNumericData(data) {
   // data is column_key: value object, value is sometimes a number
@@ -737,7 +792,7 @@ function handleSearch() {
   const query_opts = {
     ...parsedQuery,
     source_id: source.value,
-    snapshot_id: snapshot.value.id,
+    snapshot_id: snapshot.value,
     ...filters.value,
     ...numericFilters.value,
   };
@@ -842,33 +897,44 @@ function reset() {
   searchPerformed.value = false;
   query.value = "";
   resultsView.value = false;
-  filterAccordian.value = [true, false, false, false];
+  filterAccordian.value = [false, false, false, false];
   selected.value = [];
 }
 
 function handleSelectionChange(ev) {
   selected.value = ev.currentSelectedItems;
-  variantService
-    .getParticipantCount({
-      variant_ids: selected.value.map((row) => [
-        row.chr,
-        row.position,
-        row.ref,
-        row.alt,
-      ]),
-      snapshot_id: snapshot.value.id,
-      source_id: source.value,
-    })
-    .then((res) => {
-      console.log(res.data);
-      num_participants.value = Number(res.data?.count || 0);
-    });
 }
+
+debouncedWatch(
+  selected,
+  () => {
+    if (selected.value.length == 0) {
+      num_participants.value = 0;
+      return;
+    }
+    variantService
+      .getParticipantCount({
+        variant_ids: selected.value.map((row) => [
+          row.chr,
+          row.position,
+          row.ref,
+          row.alt,
+        ]),
+        snapshot_id: snapshot.value,
+        source_id: source.value,
+      })
+      .then((res) => {
+        console.log(res.data);
+        num_participants.value = Number(res.data?.count || 0);
+      });
+  },
+  { debounce: 500 },
+);
 </script>
 
 <style scoped>
 .annotationtable {
-  --va-data-table-cell-padding: 2px;
+  --va-data-table-cell-padding: 1px;
 
   /* in Vuestic v1.8.7 va-virtual-scroller css class is applied to table even
   *  when virtual scrolling is disabled. This causes the table to occupy 100% of 
