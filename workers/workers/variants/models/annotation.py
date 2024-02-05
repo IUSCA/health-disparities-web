@@ -12,18 +12,18 @@ class Annotation:
     position: int
     ref: str
     alt: str
-    af_afr: float
-    af_amr: float
-    af_asj: float
-    af_eas: float
-    af_fin: float
-    af_nfe: float
-    af_sas: float
-    af_oth: float
-    cadd_phred: float
-    revel_max: float
-    polyphen_max: float
-    sift_max: float
+    af_afr: float = None
+    af_amr: float = None
+    af_asj: float = None
+    af_eas: float = None
+    af_fin: float = None
+    af_nfe: float = None
+    af_sas: float = None
+    af_oth: float = None
+    cadd_phred: float = None
+    revel_max: float = None
+    polyphen_max: float = None
+    sift_max: float = None
 
     @classmethod
     @property

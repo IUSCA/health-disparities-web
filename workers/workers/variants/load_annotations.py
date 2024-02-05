@@ -180,34 +180,36 @@ class Loader:
         """
         For each given site, annotation data is fetched from various sources and
         transformed into an Annotation object.
+        If no annotation is found, the returned object will have just chr, position, ref, and alt set
+        with others as null.
         
 
         :param sites: Iterable of sites to fetch annotations for.
         return: Iterable of Annotation objects.
         """
         for s in sites:
+            ann = Annotation(
+                chr=s.chrom,
+                position=s.pos,
+                ref=s.ref,
+                alt=s.alt
+            )
             _ann = self.gnomadAnnotations.fetch(s)
             # print(s, _ann)
             if _ann is not None:
-                ann = Annotation(
-                    chr=s.chrom,
-                    position=_ann['POS'],
-                    ref=_ann['REF'],
-                    alt=_ann['ALT'],
-                    af_afr=_ann['AF_afr'],
-                    af_amr=_ann['AF_amr'],
-                    af_asj=_ann['AF_asj'],
-                    af_eas=_ann['AF_eas'],
-                    af_fin=_ann['AF_fin'],
-                    af_nfe=_ann['AF_nfe'],
-                    af_sas=_ann['AF_sas'],
-                    af_oth=(_ann['AF_ami'] + _ann['AF_mid']),
-                    cadd_phred=_ann['cadd_phred'],
-                    revel_max=_ann['revel_max'],
-                    polyphen_max=_ann['polyphen_max'],
-                    sift_max=_ann['sift_max']
-                )
-                yield ann
+                ann.af_afr = _ann['AF_afr']
+                ann.af_amr = _ann['AF_amr']
+                ann.af_asj = _ann['AF_asj']
+                ann.af_eas = _ann['AF_eas']
+                ann.af_fin = _ann['AF_fin']
+                ann.af_nfe = _ann['AF_nfe']
+                ann.af_sas = _ann['AF_sas']
+                ann.af_oth = (_ann['AF_ami'] + _ann['AF_mid'])
+                ann.cadd_phred = _ann['cadd_phred']
+                ann.revel_max = _ann['revel_max']
+                ann.polyphen_max = _ann['polyphen_max']
+                ann.sift_max = _ann['sift_max']
+            yield ann
 
     def load(self, sites: Iterable[Site]) -> None:
         """
