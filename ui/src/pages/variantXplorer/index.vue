@@ -245,10 +245,10 @@
     </div>
   </div>
 
-  <!-- search examples -->
+  <!-- search examples and No results -->
   <div class="flex flex-col justify-center items-center mt-24" v-else>
     <!-- No results found message -->
-    <div
+    <!-- <div
       v-if="total_count == 0 && !loading && searchPerformed"
       class="flex flex-col justify-center items-center text-center"
     >
@@ -259,9 +259,9 @@
           Try a different search query or reset your filter selections
         </span>
       </p>
-    </div>
+    </div> -->
 
-    <div v-else>
+    <div>
       <!-- loading spinner -->
       <div v-if="loading" class="flex justify-center items-center mt-24">
         <semipolar-spinner
@@ -406,7 +406,7 @@ const source = ref(1);
 const snapshot = ref();
 const resultsView = ref(false);
 const loading = ref(false);
-const searchPerformed = ref(false);
+// const searchPerformed = ref(false);
 const num_participants = ref(0);
 
 const results = ref([]);
@@ -512,6 +512,8 @@ const columns = {
     thTitle: "chromosome-position-ref-alt",
     _show: true,
     tdClass: "va-text-primary",
+    width: "160px",
+    tdStyle: "white-space: pre-wrap; word-wrap: break-word;",
   },
   allele_number: {
     label: "AN",
@@ -837,8 +839,8 @@ function handleSearch() {
       results.value = (res.data?.results || []).map(formatNumericData);
       total_count.value = res.data?.metadata?.count || results.value.length;
       ui.setSidebarCollapsed(true);
-      resultsView.value = total_count.value > 0;
-      searchPerformed.value = true;
+      resultsView.value = true;
+      // searchPerformed.value = true;
     })
     .catch((err) => {
       // if 400 status, show error message
@@ -912,7 +914,7 @@ function reset() {
   resetFilters();
   resetNumericFilters();
 
-  searchPerformed.value = false;
+  // searchPerformed.value = false;
   query.value = "";
   resultsView.value = false;
   filterAccordian.value = [false, false, false, false];
