@@ -156,7 +156,7 @@ async function queryVariantsWithAlleleStatsFilter(_query, username) {
       ppu.id = p.id
     where
       p.genotype_idx is not null
-      ps.snapshot_id = ${_query.snapshot_id} 
+      and ps.snapshot_id = ${_query.snapshot_id} 
       and ppu.username = ${username}
   ),
   results as (
