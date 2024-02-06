@@ -3,7 +3,9 @@
     class="flex flex-wrap justify-center xl:justify-between items-center gap-3 xl:gap-5"
     v-if="props.curr_items > 0"
   >
-    <div class="flex-1 order-2 xl:flex-none xl:order-1">
+    <div
+      :class="`flex-1 order-2 xl:flex-none xl:order-1 ${props.size == 'small' ? 'text-sm' : ''}`"
+    >
       <span>
         Showing {{ skip + 1 }}-{{ skip + props.curr_items }} of
         {{ props.total_results }}
@@ -20,6 +22,7 @@
         v-model="page"
         :pages="total_page_count"
         :visible-pages="visiblePages"
+        :size="props.size"
       />
     </div>
 
@@ -61,6 +64,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  size: {
+    type: String,
+    default: "medium",
+  },
 });
 
 const emit = defineEmits(["update:page", "update:page_size"]);
@@ -87,6 +94,8 @@ const page_size = computed({
     return props.page_size;
   },
   set(value) {
+    // reset page to 1 when page_size changes
+    emit("update:page", 1);
     emit("update:page_size", value);
   },
 });

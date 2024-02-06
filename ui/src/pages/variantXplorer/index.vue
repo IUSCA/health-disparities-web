@@ -162,6 +162,7 @@
         @selectionChange="handleSelectionChange"
         sticky-header
         class="annotationtable text-sm"
+        style="height: calc(100vh - 13.75rem); overflow-y: scroll"
       >
         <template #cell(chr)="{ rowData }">
           {{
@@ -473,7 +474,7 @@ function resetResults() {
 }
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
-const DEFAULT_PAGE_SIZE_IDX = 0;
+const DEFAULT_PAGE_SIZE_IDX = 1;
 const pageSize = ref(PAGE_SIZE_OPTIONS[DEFAULT_PAGE_SIZE_IDX]);
 const currPage = ref(1);
 const offset = computed(() => (currPage.value - 1) * pageSize.value);
@@ -481,6 +482,11 @@ function resetPagination() {
   currPage.value = 1;
   pageSize.value = PAGE_SIZE_OPTIONS[DEFAULT_PAGE_SIZE_IDX];
 }
+watch([source, snapshot], () => {
+  // TODO: reset page when query or filters(?) change
+  // TODO: problem with this is query and filters should be debounced, changing page should not be debounced
+  currPage.value = 1;
+});
 
 // const filterGroups = ref({});
 // const filterKeys = ["genes", "cln_sig", "func", "exonic_func"];
