@@ -98,6 +98,15 @@ const grantsObject = {
     project_dataset_files: {
       'read:own': ['*'],
     },
+    variant: {
+      'read:any': ['*'],
+    },
+    snapshot: {
+      'read:any': ['*'],
+    },
+    source: {
+      'read:any': ['*'],
+    },
   },
 
   // operator role permissions

@@ -100,16 +100,8 @@
 </template>
 
 <script setup>
-import { useNavStore } from "@/stores/nav";
-import snapshotService from "@/services/snapshots";
 import * as datetime from "@/services/datetime";
-const nav = useNavStore();
-
-nav.setNavItems([
-  {
-    label: "Snapshots",
-  },
-]);
+import snapshotService from "@/services/snapshots";
 
 const snapshots = ref([]);
 const filterInput = ref("");
@@ -218,5 +210,6 @@ function openModalToDeleteSnapshot(rowData) {
 <route lang="yaml">
 meta:
   title: Snapshots
+  nav: [{ label: "Snapshots" }]
   requiresRoles: ["operator", "admin"]
 </route>

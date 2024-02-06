@@ -281,7 +281,10 @@
           <span class="font-bold"> Gene </span> :
           <span
             class="va-link underline"
-            @click="query = example_searches['gene']"
+            @click="
+              query = example_searches['gene'];
+              throttledSearch();
+            "
           >
             {{ example_searches["gene"] }}
           </span>
@@ -290,7 +293,10 @@
           <span class="font-bold"> Variant </span>:
           <span
             class="va-link underline"
-            @click="query = example_searches['variant']"
+            @click="
+              query = example_searches['variant'];
+              throttledSearch();
+            "
           >
             {{ example_searches["variant"] }}
           </span>
@@ -299,7 +305,10 @@
           <span class="font-bold"> Genomic Region </span>:
           <span
             class="va-link underline"
-            @click="query = example_searches['genomic_region']"
+            @click="
+              query = example_searches['genomic_region'];
+              throttledSearch();
+            "
           >
             {{ example_searches["genomic_region"] }}
           </span>
@@ -782,12 +791,15 @@ function restoreColumnDefaults() {
     .map(([key, col]) => ({ key, ...col }));
 }
 
-watchDebounced([query, filters, numericFilters], handleSearch, {
+// it will be called at most 1 time per 800 ms
+const throttledSearch = useThrottleFn(handleSearch, 800);
+
+watchDebounced([query, filters, numericFilters], throttledSearch, {
   deep: true,
   debounce: 750,
 });
 
-watch([source, snapshot, currPage, pageSize], handleSearch);
+watch([source, snapshot, currPage, pageSize], throttledSearch);
 
 function formatNumericData(data) {
   // data is column_key: value object, value is sometimes a number
@@ -926,7 +938,7 @@ function handleSelectionChange(ev) {
   selected.value = ev.currentSelectedItems;
 }
 
-debouncedWatch(
+watchDebounced(
   selected,
   () => {
     if (selected.value.length == 0) {

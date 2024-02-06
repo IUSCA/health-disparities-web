@@ -83,16 +83,8 @@
 </template>
 
 <script setup>
-import { useNavStore } from "@/stores/nav";
-import protocolService from "@/services/protocols";
 import * as datetime from "@/services/datetime";
-const nav = useNavStore();
-
-nav.setNavItems([
-  {
-    label: "Protocols",
-  },
-]);
+import protocolService from "@/services/protocols";
 
 const protocols = ref([]);
 const filterInput = ref("");
@@ -192,5 +184,6 @@ function openModalToDeleteProtocol(rowData) {
 <route lang="yaml">
 meta:
   title: Protocols
+  nav: [{ label: "Protocols" }]
   requiresRoles: ["operator", "admin"]
 </route>
