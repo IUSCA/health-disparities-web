@@ -1,45 +1,6 @@
 <template>
   <!-- search -->
   <va-form class="flex flex-wrap gap-3 items-start" ref="formRef">
-    <!-- variant search input -->
-    <va-input
-      v-model="query"
-      label="search"
-      placeholder="Search by gene, variant, or genomic region"
-      outline
-      clearable
-      inner-label
-      @clear="reset"
-      class="flex-none w-[350px]"
-    >
-      <template #prependInner>
-        <Icon icon="material-symbols:search" class="text-xl" />
-      </template>
-
-      <template #appendInner>
-        <VaPopover>
-          <Icon icon="mdi:help-circle" class="text-base va-text-secondary" />
-          <template #title>
-            <i>Examples by query type:</i>
-          </template>
-          <template #body>
-            <p>
-              <span class="font-bold"> Gene </span> :
-              {{ example_searches["gene"] }}
-            </p>
-            <p>
-              <span class="font-bold"> Variant </span>:
-              {{ example_searches["variant"] }}
-            </p>
-            <p>
-              <span class="font-bold"> Genomic Region </span>:
-              {{ example_searches["genomic_region"] }}
-            </p>
-          </template>
-        </VaPopover>
-      </template>
-    </va-input>
-
     <!-- source select -->
     <va-select
       class="flex-none w-[180px]"
@@ -80,6 +41,44 @@
       </template>
     </va-select>
 
+    <!-- variant search input -->
+    <va-input
+      v-model="query"
+      label="search"
+      placeholder="Search by gene, variant, or genomic region"
+      clearable
+      inner-label
+      @clear="reset"
+      class="flex-none w-[370px]"
+    >
+      <template #prependInner>
+        <Icon icon="material-symbols:search" class="text-xl" />
+      </template>
+
+      <template #appendInner>
+        <VaPopover>
+          <Icon icon="mdi:help-circle" class="text-base va-text-secondary" />
+          <template #title>
+            <i>Examples by query type:</i>
+          </template>
+          <template #body>
+            <p>
+              <span class="font-bold"> Gene </span> :
+              {{ example_searches["gene"] }}
+            </p>
+            <p>
+              <span class="font-bold"> Variant </span>:
+              {{ example_searches["variant"] }}
+            </p>
+            <p>
+              <span class="font-bold"> Genomic Region </span>:
+              {{ example_searches["genomic_region"] }}
+            </p>
+          </template>
+        </VaPopover>
+      </template>
+    </va-input>
+
     <!-- search button -->
     <!-- <va-button
       icon="search"
@@ -89,45 +88,52 @@
     >
       Search
     </va-button> -->
+
+    <!-- Participant Count, Variant Count, Column Legend Button -->
     <div class="flex-1">
-      <!-- table top buttons -->
-      <div class="px-5 flex items-center gap-5 justify-end">
+      <div class="flex items-center lg:gap-3 xl:gap-5 justify-end">
+        <!-- Participants Count-->
         <va-button
           class="flex-none"
           preset="secondary"
           :disabled="selected.length == 0"
         >
           <div
-            class="flex flex-row gap-2 items-center text-xl text-teal-600 dark:text-teal-500"
+            class="flex flex-row gap-1 items-center text-xl text-teal-600 dark:text-teal-500 font-bold"
           >
-            <i-mdi:group-add class="" />
-            <div class="font-bold">
-              <NumberTransition
-                :target="num_participants"
-                :debounce="100"
-                :duration="30"
-              />
-              <!-- <span> {{ num_participants }} </span> -->
+            <NumberTransition
+              :target="num_participants"
+              :debounce="100"
+              :duration="30"
+            />
+            <!-- <span> {{ num_participants }} </span> -->
+            <i-mdi:group-add class="" v-if="breakpoint.mdDown" />
+            <span v-else>
               {{ maybePluralize(num_participants, "Participant", "s", false) }}
-            </div>
+            </span>
           </div>
         </va-button>
 
-        <div class="flex flex-row gap-2 items-center text-xl va-text-info">
-          <i-mdi:chart-sankey-variant class="" />
-          <span class="font-bold">
-            <NumberTransition :target="total_count" />
+        <!-- Variants Count -->
+        <div
+          class="flex flex-row gap-1 items-center text-xl va-text-info font-bold"
+        >
+          <NumberTransition :target="total_count" class="mr-1" />
+
+          <i-mdi:chart-sankey-variant class="" v-if="breakpoint.mdDown" />
+          <span v-else>
             {{ maybePluralize(total_count, "Variant", "s", false) }}
           </span>
         </div>
 
+        <!-- Column legend -->
         <va-button
           @click="columnsModal = true"
           class="flex-none"
           preset="secondary"
         >
-          <i-mdi-drag-variant class="mr-1" />
-          Columns
+          <i-mdi-drag-variant />
+          <span class="ml-1" v-if="breakpoint.lgUp"> Columns </span>
         </va-button>
 
         <!-- <va-button
@@ -326,7 +332,7 @@
             class="flex-auto"
           >
             <span class="font-semibold tracking-wide text-lg"> {{ cat }} </span>
-            <div class="flex flex-col gap-1 mt-2">
+            <div class="flex flex-col mt-2">
               <div v-for="col in colums_by_category[cat]" :key="col.key">
                 <va-checkbox
                   v-model="columnsSelected[col.key]"
@@ -343,13 +349,24 @@
         <va-data-table
           :items="Object.values(columns)"
           :columns="[
-            { key: 'label', label: 'Name', sortable: true },
-            { key: 'thTitle', label: 'Description', sortable: true },
-            { key: 'category', label: 'Category', sortable: true },
+            {
+              key: 'category',
+              label: 'Category',
+              sortable: true,
+              width: '100px',
+            },
+            { key: 'label', label: 'Name', sortable: true, width: '150px' },
+            {
+              key: 'thTitle',
+              label: 'Description',
+              sortable: true,
+              tdStyle: 'white-space: pre-wrap; word-wrap: break-word;',
+            },
           ]"
           striped
+          sticky-header
           style="height: 200px; overflow-y: scroll"
-          class="annotationtable"
+          class="legendtable"
         />
       </div>
     </div>
@@ -376,10 +393,11 @@ import variantService from "@/services/variants";
 import { useUIStore } from "@/stores/ui";
 import { SemipolarSpinner } from "epic-spinners";
 import _ from "lodash";
-import { useColors } from "vuestic-ui";
+import { useBreakpoint, useColors } from "vuestic-ui";
 
 const ui = useUIStore();
 const { colors } = useColors();
+const breakpoint = useBreakpoint();
 
 const NUMERIC_PRECISION = 3;
 
@@ -942,6 +960,9 @@ debouncedWatch(
   * behavior.
   */
   height: auto;
+}
+.legendtable {
+  --va-data-table-cell-padding: 3px;
 }
 </style>
 
