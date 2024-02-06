@@ -1,5 +1,5 @@
 <template>
-  <span>
+  <span class="number-transition">
     {{ number_formatter.format(current.toFixed(0)) }}
   </span>
 </template>
