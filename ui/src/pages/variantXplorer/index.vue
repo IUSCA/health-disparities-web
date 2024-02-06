@@ -105,12 +105,13 @@
               :target="num_participants"
               :debounce="100"
               :duration="30"
+              class="mr-1"
             />
             <!-- <span> {{ num_participants }} </span> -->
             <i-mdi:group-add class="" v-if="breakpoint.mdDown" />
-            <span v-else>
+            <div class="min-w-[108px]" v-else>
               {{ maybePluralize(num_participants, "Participant", "s", false) }}
-            </span>
+            </div>
           </div>
         </va-button>
 
@@ -525,14 +526,14 @@ const columns = {
   allele_count: {
     label: "AC",
     category: "Allele Stats",
-    thTitle: "Allele Count",
+    thTitle: "Alternate Allele Count",
     _show: true,
     numeric: true,
   },
   allele_frequency: {
     label: "AF",
     category: "Allele Stats",
-    thTitle: "Allele Frequency",
+    thTitle: "Alternate Allele Frequency",
     _show: true,
     numeric: true,
   },
@@ -944,7 +945,6 @@ debouncedWatch(
         source_id: source.value,
       })
       .then((res) => {
-        console.log(res.data);
         num_participants.value = Number(res.data?.count || 0);
       });
   },

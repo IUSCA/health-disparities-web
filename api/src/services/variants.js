@@ -146,12 +146,18 @@ async function queryVariantsWithAlleleStatsFilter(_query, username) {
   const sqlQuery = Prisma.sql`
   with
   indexes as (
-    select pu.id
+    select
+      distinct p.genotype_idx as id
     from
-      participants_per_user pu
-      join  participants_per_snapshot ps on ps.id = pu.id
-    where ps.snapshot_id = ${_query.snapshot_id} 
-    and pu.username = ${username}
+      participant p
+    join participants_per_snapshot ps on
+      ps.id = p.id
+    join participants_per_user ppu on
+      ppu.id = p.id
+    where
+      p.genotype_idx is not null
+      ps.snapshot_id = ${_query.snapshot_id} 
+      and ppu.username = ${username}
   ),
   results as (
   SELECT 
@@ -219,12 +225,18 @@ async function queryVariantsWithoutAlleleStatsFilter(_query, username) {
   const results_query = Prisma.sql`
   with
   indexes as (
-    select pu.id
+    select
+      distinct p.genotype_idx as id
     from
-      participants_per_user pu
-      join  participants_per_snapshot ps on ps.id = pu.id
-    where ps.snapshot_id = ${_query.snapshot_id} 
-    and pu.username = ${username}
+      participant p
+    join participants_per_snapshot ps on
+      ps.id = p.id
+    join participants_per_user ppu on
+      ppu.id = p.id
+    where
+      p.genotype_idx is not null
+      and ps.snapshot_id = ${_query.snapshot_id} 
+      and ppu.username = ${username}
   )
   SELECT 
     v."chr", v."position", v."ref", v."alt", v.source_id, v.phase, 

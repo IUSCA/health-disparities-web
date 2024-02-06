@@ -48,6 +48,10 @@ debouncedWatch(
     if (diff === 0) {
       return;
     }
+    if (Math.abs(diff) < props.iterations) {
+      current.value = target;
+      return;
+    }
     let step = diff / props.iterations;
 
     let count = 0;
