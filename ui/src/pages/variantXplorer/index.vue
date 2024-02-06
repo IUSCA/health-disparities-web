@@ -193,6 +193,51 @@
 
     <!-- sidebar -->
     <div class="w-2/12 pl-3">
+      <!-- warning slow filters and reset button -->
+      <div class="flex flex-row-reverse justify-between items-center p-1">
+        <!-- <div v-if="slowFiltersActive" class="flex items-center">
+          <VaIcon class="material-icons mr-1 text-yellow-500">warning</VaIcon>
+          Slow Filters
+        </div> -->
+
+        <!-- reset -->
+        <va-button
+          preset="secondary"
+          @click="
+            resetNumericFilters();
+            throttledSearch();
+          "
+          class="flex-none"
+          :disabled="loading"
+        >
+          Reset
+        </va-button>
+
+        <!-- slow filter warning chip -->
+        <VaPopover placement="top">
+          <template #body>
+            <p>
+              The current query is utilizing filters that may impact
+              performance.
+            </p>
+            <p>
+              Please be aware that the response time might be slower due to
+              these filters.
+            </p>
+          </template>
+          <div>
+            <va-chip
+              v-show="slowFiltersActive"
+              icon="warning"
+              size="small"
+              color="warning"
+            >
+              Slow Filters
+            </va-chip>
+          </div>
+        </VaPopover>
+      </div>
+
       <VaAccordion v-model="filterAccordian" class="max-w-sm" multiple>
         <!-- Genes Options -->
         <!-- <VaCollapse
@@ -220,6 +265,7 @@
           :header="numericFilterLabels[idx]"
           v-for="(attr, idx) in numericFilterKeys"
           :key="attr"
+          :icon="columns[attr]?._slow ? 'running_with_errors' : ''"
         >
           <template #content>
             <div class="flex flex-col gap-2">
@@ -486,6 +532,15 @@ const numericFilters = ref(numericFilterDefaults());
 const resetNumericFilters = () => {
   numericFilters.value = numericFilterDefaults();
 };
+const slowFiltersActive = computed(() => {
+  return Object.keys(numericFilters.value).some((key) => {
+    const filterVal = numericFilters.value[key];
+    const filterActive =
+      (filterVal.min != null && filterVal.min != "") ||
+      (filterVal.max != null && filterVal.max != "");
+    return columns[key]._slow && filterActive;
+  });
+});
 
 // accordian state
 const filterAccordian = ref([false, false, false, false]);
@@ -531,6 +586,7 @@ const columns = {
     thTitle: "Allele Number",
     _show: true,
     numeric: true,
+    _slow: true,
   },
   allele_count: {
     label: "AC",
@@ -538,6 +594,7 @@ const columns = {
     thTitle: "Alternate Allele Count",
     _show: true,
     numeric: true,
+    _slow: true,
   },
   allele_frequency: {
     label: "AF",
@@ -545,6 +602,7 @@ const columns = {
     thTitle: "Alternate Allele Frequency",
     _show: true,
     numeric: true,
+    _slow: true,
   },
   c0: {
     // c0 is used to represent 0/0 and 0|1
@@ -553,6 +611,7 @@ const columns = {
     thTitle: "Homozygous Reference (0/0 or 0|0)",
     _show: true,
     numeric: true,
+    _slow: true,
   },
   c1: {
     // c1 is used to represent 0/1 and 0|1
@@ -561,6 +620,7 @@ const columns = {
     thTitle: "Heterozygous (0/1 or 0|1)",
     _show: true,
     numeric: true,
+    _slow: true,
   },
   hetflipped: {
     // corresponds to c2, defined only when phase is true
@@ -569,6 +629,7 @@ const columns = {
     thTitle: "Flipped Heterozygous (1|0)",
     _show: true,
     numeric: true,
+    _slow: true,
   },
   homalt: {
     // corresponds to c3, when phase is true
@@ -579,6 +640,7 @@ const columns = {
     thTitle: "Homozygous Alternate (1/1 or 1|1)",
     _show: true,
     numeric: true,
+    _slow: true,
   },
   missing: {
     label: "Missing",
@@ -586,6 +648,7 @@ const columns = {
     thTitle: "./. Missing Genotypes",
     _show: true,
     numeric: true,
+    _slow: true,
   },
   func: {
     label: "Func.",
