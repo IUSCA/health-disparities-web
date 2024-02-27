@@ -18,6 +18,7 @@ router.use('/workflows', require('./workflows') /* #swagger.security = [{"Bearer
 router.use('/projects', require('./projects') /* #swagger.security = [{"BearerAuth": []}] */);
 router.use('/statistics', require('./statistics'));
 
+router.use('/cohorts', require('./cohort2'));
 router.use('/cohort', require('./cohort'));
 router.use('/participant', require('./participant'));
 router.use('/variants', require('./variants') /* #swagger.security = [{"BearerAuth": []}] */);
