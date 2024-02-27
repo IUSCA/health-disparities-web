@@ -8,6 +8,8 @@
       :loading="loading"
       :max-visible-options="3"
       selected-top-shown
+      searchable
+      highlight-matched-text
     />
   </div>
 </template>

@@ -8,6 +8,7 @@
       <span class="font-semibold"> {{ props.count }} </span>
       <span> of {{ props.totalCount }} participants </span>
     </div>
+    <CohortActions class="mt-3" />
   </div>
 </template>
 

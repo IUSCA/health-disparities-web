@@ -8,13 +8,17 @@
   <VaCard class="cohort-card">
     <VaCardContent>
       <div class="flex flex-col md:flex-row gap-3">
-        <div class="md:w-3/12 md:border-r md:border-solid md:border-gray-500">
+        <div
+          class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3"
+        >
           <CohortInfo
             name="Untitled Cohort"
             :total-count="60000"
             :count="1734"
           />
         </div>
+
+        <va-divider class="md:hidden" />
 
         <div class="md:w-9/12">
           <CohortQueryBuilder />
@@ -25,7 +29,7 @@
 </template>
 
 <script setup>
-const props = defineProps({});
+// const props = defineProps({});
 </script>
 
 <route lang="yaml">

@@ -1,6 +1,20 @@
 <template>
   <div>
-    {{ query }}
+    <!-- {{ query }} -->
+    <div>
+      <VaButton
+        @click="clearFilters"
+        size="small"
+        color="danger"
+        icon="backspace"
+        outline
+        preset="primary"
+        v-if="someFilters"
+        class="absolute top-3 right-3 z-10"
+      >
+        Clear Filters
+      </VaButton>
+    </div>
 
     <QueryBuilder :config="config" v-model="query">
       <template #groupOperator="props">
@@ -16,18 +30,6 @@
             size="small"
           >
           </VaSelect>
-          <VaButton
-            @click="clearFilters"
-            size="small"
-            color="danger"
-            icon="backspace"
-            outline
-            preset="primary"
-            v-if="someFilters"
-            class="ml-auto"
-          >
-            Clear Filters
-          </VaButton>
         </div>
       </template>
 
@@ -107,7 +109,7 @@ import QBDate from "./filterComponents/QBDate.vue";
 import QBInput from "./filterComponents/QBInput.vue";
 import QBSelect from "./filterComponents/QBSelect.vue";
 
-const props = defineProps({});
+// const props = defineProps({});
 
 const filterSelectModal = ref(null);
 const query = ref(null);
@@ -199,10 +201,6 @@ const someFilters = computed(() => {
 const clearFilters = () => {
   query.value = null;
 };
-
-// cohortService.unique("demographic", "gender").then((res) => {
-//   console.log(res);
-// });
 </script>
 
 <style scoped lang="scss">
@@ -233,6 +231,7 @@ const clearFilters = () => {
 :deep(.query-builder-group) .query-builder-group {
   padding-top: 1rem;
   padding-left: 1rem;
+  padding-bottom: 1rem;
   // background-color: aqua;
 }
 </style>
