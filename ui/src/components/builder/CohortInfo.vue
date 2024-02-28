@@ -1,24 +1,39 @@
 <template>
   <div>
-    <div class="flex justify-start items-center text-lg mb-1">
-      <i-mdi-account-group class="text-2xl" :style="{ color: props.color }" />
-      <div class="ml-2">{{ name }}</div>
+    <div class="flex justify-start items-center mb-1">
+      <i-mdi-account-group
+        class="text-2xl"
+        :style="{
+          color: stringToRGB(`${props.cohort.id}-${props.cohort.name}`),
+        }"
+      />
+      <div class="ml-2 text-lg">{{ props.cohort.name }}</div>
+      <div>
+        <i-mdi-visibility
+          class="va-text-secondary ml-2"
+          v-if="props.cohort.published"
+          title="publsihed"
+        />
+        <i-mdi-visibility-off
+          class="va-text-secondary ml-2"
+          v-else
+          title="unpublished"
+        />
+      </div>
     </div>
-    <div>
-      <span class="font-semibold"> {{ props.count }} </span>
-      <span> of {{ props.totalCount }} participants </span>
+    <div class="va-text-secondary">
+      <span class="font-semibold"> {{ props.cohort.participants }} </span>
+      <span v-if="props.totalCount"> of {{ props.totalCount }} </span>
+      <span> participants </span>
     </div>
   </div>
 </template>
 
 <script setup>
+import { stringToRGB } from "@/services/colors";
+
 const props = defineProps({
-  name: String,
-  count: Number,
+  cohort: Object,
   totalCount: Number,
-  color: {
-    type: String,
-    default: "rgb(0, 150, 255)",
-  },
 });
 </script>

@@ -32,14 +32,13 @@ export const useCohortsStore = defineStore("cohorts", () => {
     operators.value.splice(idx, 1);
   }
 
-  function updateOperator(idx2, op) {
-    // idx2 is the index of the second operand / cohort
-    // set the operator given the index of the second operand
-    if (idx2 < 1 || idx2 >= cohorts.value.length) {
-      console.error("Invalid index", idx2);
+  function updateOperator(idx1, op) {
+    // idx1 is the index of the first operand / cohort
+    // set the operator given the index of the first operand
+    if (idx1 < 0 || idx1 >= cohorts.value.length - 1) {
+      console.error("Invalid index", idx1);
       return;
     }
-    const idx1 = idx2 - 1;
     operators.value[idx1] = op;
   }
 

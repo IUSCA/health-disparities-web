@@ -89,6 +89,7 @@
   </va-card>
 
   <CohortSearchModal ref="cohortSearchModal" @select="addCohort" />
+  <CombineCohortsModal ref="combineCohortsModal" />
 </template>
 
 <script setup>
@@ -97,6 +98,7 @@ import { useCohortsStore } from "@/stores/cohorts";
 import _ from "lodash";
 import { storeToRefs } from "pinia";
 import { defaultQuery } from "../queryBuilder/cohortQueryBuilder";
+import { combinations, DEFAULT_LOGICAL_OPERATOR } from "./combineCohorts";
 
 const cohortsStore = useCohortsStore();
 const {
@@ -107,30 +109,12 @@ const {
 
 // const props = defineProps({});
 
-const combinations = {
-  union: { key: "union", label: "Union", icon: "mdi-vector-union" },
-  intersection: {
-    key: "intersection",
-    label: "Intersection",
-    icon: "mdi-vector-intersection",
-  },
-  difference: {
-    key: "difference",
-    label: "Difference",
-    icon: "mdi-vector-difference",
-  },
-  symmetric_difference: {
-    key: "symmetric_difference",
-    label: "Unique",
-    icon: "mdi-delta",
-  },
-};
-const DEFAULT_LOGICAL_OPERATOR = "union";
-
 const cohortSearchModal = ref(null);
+const combineCohortsModal = ref(null);
 
-function changeCombinationLogic(idx) {
-  console.log("Change Combination Logic", idx);
+function changeCombinationLogic(left_operand_idx) {
+  console.log("Change Combination Logic", left_operand_idx);
+  combineCohortsModal.value.show(left_operand_idx);
 }
 
 function addNewCohort() {
@@ -143,16 +127,14 @@ function addNewCohort() {
 
 function addCohort(cohort) {
   // add an existing cohort
-  const sanitizedCohort = {
-    id: cohort.id,
-    name: cohort.name,
-  };
-  if (_.isEmpty(cohort.query)) {
+  const { query, participants, ...rest } = cohort;
+  const sanitizedCohort = rest;
+  if (_.isEmpty(query)) {
     sanitizedCohort.query = defaultQuery();
     sanitizedCohort.participants = totalParticipants.value;
   } else {
-    sanitizedCohort.query = cohort.query;
-    sanitizedCohort.participants = cohort.participants;
+    sanitizedCohort.query = query;
+    sanitizedCohort.participants = participants;
   }
   cohortsStore.appendCohort(sanitizedCohort, DEFAULT_LOGICAL_OPERATOR);
 }

@@ -12,11 +12,7 @@
           <div
             class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3"
           >
-            <CohortInfo
-              :name="cohort.name"
-              :total-count="totalParticipants"
-              :count="cohort.participants"
-            />
+            <CohortInfo :cohort="cohort" :total-count="totalParticipants" />
             <div class="mt-3">
               <CohortActions
                 :cohort="cohort"
