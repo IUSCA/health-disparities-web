@@ -369,13 +369,6 @@ export const operators = [
   },
 ];
 
-export const defultOperators = {
-  select: "in",
-  number: "eq",
-  text: "eq",
-  date: "lte",
-};
-
 export function filterId(category, name) {
   return `${category}.${name}`;
 }

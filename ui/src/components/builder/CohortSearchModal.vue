@@ -33,7 +33,6 @@ function show() {
 }
 
 function handleSelect(cohort) {
-  console.log("selected", cohort);
   emit("select", cohort);
   hide();
 }

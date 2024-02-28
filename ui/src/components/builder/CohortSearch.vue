@@ -105,7 +105,6 @@ cohortService
 
 function onClick(event) {
   const row = event.item;
-  console.log("Clicked", row);
   emit("select", row);
 }
 

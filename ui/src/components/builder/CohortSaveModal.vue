@@ -50,7 +50,7 @@ defineExpose({
 const props = defineProps({
   name: String,
   query: {
-    type: Object,
+    type: [Object, null],
     required: true,
   },
 });
@@ -60,14 +60,12 @@ const emit = defineEmits(["save"]);
 const _name = ref(props.name);
 const description = ref("");
 const published = ref(false);
-const _query = ref(props.query);
 const visible = ref(false);
 const loading = ref(false);
 const { isValid, validate } = useForm("formRef");
 
-watch([() => props.name, () => props.query], () => {
+watch([() => props.name], () => {
   _name.value = props.name;
-  _query.value = props.query;
 });
 
 function hide() {
@@ -83,7 +81,7 @@ function handleSave() {
     name: _name.value,
     description: description.value,
     published: published.value,
-    query: _query.value,
+    query: props.query,
   };
   if (validate()) {
     loading.value = true;

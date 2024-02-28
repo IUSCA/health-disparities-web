@@ -94,10 +94,16 @@
 <script setup>
 import { stringToRGB } from "@/services/colors";
 import { useCohortsStore } from "@/stores/cohorts";
+import _ from "lodash";
 import { storeToRefs } from "pinia";
+import { defaultQuery } from "./cohortQueryBuilder";
 
 const cohortsStore = useCohortsStore();
-const { cohorts, operators: logicalOperators } = storeToRefs(cohortsStore);
+const {
+  cohorts,
+  operators: logicalOperators,
+  totalParticipants,
+} = storeToRefs(cohortsStore);
 
 // const props = defineProps({});
 
@@ -128,6 +134,7 @@ function changeCombinationLogic(idx) {
 }
 
 function addNewCohort() {
+  // add an empty cohort
   cohortsStore.appendCohort(
     cohortsStore.makeEmptyCohort(),
     DEFAULT_LOGICAL_OPERATOR,
@@ -135,7 +142,19 @@ function addNewCohort() {
 }
 
 function addCohort(cohort) {
-  cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
+  // add an existing cohort
+  const sanitizedCohort = {
+    id: cohort.id,
+    name: cohort.name,
+  };
+  if (_.isEmpty(cohort.query)) {
+    sanitizedCohort.query = defaultQuery();
+    sanitizedCohort.participants = totalParticipants.value;
+  } else {
+    sanitizedCohort.query = cohort.query;
+    sanitizedCohort.participants = cohort.participants;
+  }
+  cohortsStore.appendCohort(sanitizedCohort, DEFAULT_LOGICAL_OPERATOR);
 }
 </script>
 

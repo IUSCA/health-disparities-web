@@ -1,3 +1,4 @@
+import { defaultQuery } from "@/components/builder/cohortQueryBuilder";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -56,7 +57,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     return {
       name: makeNewName(),
       participants: totalParticipants.value,
-      query: null,
+      query: defaultQuery(),
     };
   }
 

@@ -101,17 +101,15 @@
 import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
-import {
-cohortFilters,
-defultOperators,
-flatten,
-operators,
-} from "./cohortFilters";
+import { cohortFilters, flatten, operators } from "./cohortFilters";
+import { defaultQuery, defultOperators } from "./cohortQueryBuilder";
 import QBDate from "./filterComponents/QBDate.vue";
 import QBInput from "./filterComponents/QBInput.vue";
 import QBSelect from "./filterComponents/QBSelect.vue";
 
 // const props = defineProps({});
+// v-model:query - bidirectional binding
+// should be either null or a compatible query object. {} is not compatible.
 const query = defineModel("query");
 
 const filterSelectModal = ref(null);
@@ -194,7 +192,7 @@ const someFilters = computed(() => {
 });
 
 const clearFilters = () => {
-  query.value = null;
+  query.value = defaultQuery();
 };
 </script>
 
