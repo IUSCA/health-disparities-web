@@ -96,7 +96,7 @@ import { stringToRGB } from "@/services/colors";
 import { useCohortsStore } from "@/stores/cohorts";
 import _ from "lodash";
 import { storeToRefs } from "pinia";
-import { defaultQuery } from "./cohortQueryBuilder";
+import { defaultQuery } from "../queryBuilder/cohortQueryBuilder";
 
 const cohortsStore = useCohortsStore();
 const {
@@ -163,3 +163,4 @@ function addCohort(cohort) {
   --va-button-justify-content: left;
 }
 </style>
+../queryBuilder/cohortQueryBuilder

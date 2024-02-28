@@ -15,7 +15,7 @@
 
 <script setup>
 import { stringToRGB } from "@/services/colors";
-import { cohortFilters } from "./cohortFilters";
+import { cohortFilters } from "../cohortFilters";
 
 const props = defineProps({
   identifier: String,

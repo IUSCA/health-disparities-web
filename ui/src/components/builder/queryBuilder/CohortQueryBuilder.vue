@@ -101,7 +101,7 @@
 import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
-import { cohortFilters, flatten, operators } from "./cohortFilters";
+import { cohortFilters, flatten, operators } from "../cohortFilters";
 import { defaultQuery, defultOperators } from "./cohortQueryBuilder";
 import QBDate from "./filterComponents/QBDate.vue";
 import QBInput from "./filterComponents/QBInput.vue";

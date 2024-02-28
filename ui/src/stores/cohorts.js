@@ -1,4 +1,4 @@
-import { defaultQuery } from "@/components/builder/cohortQueryBuilder";
+import { defaultQuery } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
