@@ -2,17 +2,17 @@
   <div class="flex flex-row gap-3 justify-start">
     <va-button
       color="success"
-      @click="saveCohort"
+      @click="saveModal.show()"
       icon="save"
       preset="primary"
       size="small"
-      disabled
+      :disabled="!props.cohort.query"
     >
       Save
     </va-button>
     <va-button
       color="primary"
-      @click="exportCohort"
+      @click="emit('export')"
       preset="primary"
       icon="download"
       size="small"
@@ -23,30 +23,27 @@
 
     <va-button
       color="danger"
-      @click="removeCohort"
+      @click="emit('remove')"
       icon="close"
       preset="primary"
       size="small"
       class="ml-auto"
-      disabled
     >
       Remove
     </va-button>
   </div>
+  <CohortSaveModal
+    ref="saveModal"
+    :name="props.cohort.name"
+    :query="props.cohort.query"
+    @save="(cohort) => emit('save', cohort)"
+  />
 </template>
 
 <script setup>
-// const props = defineProps({});
-
-function saveCohort() {
-  console.log("Save Cohort");
-}
-
-function exportCohort() {
-  console.log("Export Cohort");
-}
-
-function removeCohort() {
-  console.log("Remove Cohort");
-}
+const props = defineProps({
+  cohort: Object,
+});
+const emit = defineEmits(["save", "export", "remove"]);
+const saveModal = ref(null);
 </script>

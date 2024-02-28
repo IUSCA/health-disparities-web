@@ -373,7 +373,7 @@ export const defultOperators = {
   select: "in",
   number: "eq",
   text: "eq",
-  date: "eq",
+  date: "lte",
 };
 
 export function filterId(category, name) {

@@ -1,0 +1,40 @@
+<template>
+  <va-modal
+    v-model="visible"
+    title="Search for a Cohort"
+    fixed-layout
+    close-button
+    hide-default-actions
+    @close="hide"
+  >
+    <CohortSearch @select="handleSelect" />
+  </va-modal>
+</template>
+
+<script setup>
+// const props = defineProps({});
+
+// parent component can invoke these methods through the template ref
+defineExpose({
+  show,
+  hide,
+});
+
+const emit = defineEmits(["select"]);
+
+const visible = ref(false);
+
+function hide() {
+  visible.value = false;
+}
+
+function show() {
+  visible.value = true;
+}
+
+function handleSelect(cohort) {
+  console.log("selected", cohort);
+  emit("select", cohort);
+  hide();
+}
+</script>

@@ -411,12 +411,6 @@ const participant_protocol_assoc = Object.entries(protocol_participants_map)
   })
   .flat();
 
-const cohorts = [
-  { id: 1, name: 'cohort-1', query: {} },
-  { id: 2, name: 'cohort-2', query: {} },
-  { id: 3, name: 'cohort-3', query: {} },
-];
-
 const sources = [
   {
     id: 1,
@@ -427,6 +421,28 @@ const sources = [
     id: 2,
     name: 'source-2',
     author_id: 2,
+  },
+];
+
+const cohorts = [
+  {
+    id: 1,
+    name: 'Cohort-1',
+    query: {},
+    published: true,
+    description: 'description of Cohort-1',
+  },
+  {
+    id: 2,
+    name: 'Cohort-2',
+    query: {},
+    published: true,
+  },
+  {
+    id: 3,
+    name: 'Cohort-3',
+    query: {},
+    published: false,
   },
 ];
 

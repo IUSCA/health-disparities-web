@@ -1,20 +1,21 @@
 <template>
   <div>
     <!-- {{ query }} -->
-    <div>
-      <VaButton
-        @click="clearFilters"
-        size="small"
-        color="danger"
-        icon="backspace"
-        outline
-        preset="primary"
-        v-if="someFilters"
-        class="absolute top-3 right-3 z-10"
-      >
-        Clear Filters
-      </VaButton>
-    </div>
+
+    <!-- Button positioned absolutely overlaps a div. to make it clickable z-index is set to 1 -->
+    <VaButton
+      @click="clearFilters"
+      size="small"
+      color="danger"
+      icon="backspace"
+      outline
+      preset="primary"
+      v-if="someFilters"
+      class="absolute top-3 right-3"
+      style="z-index: 1"
+    >
+      Clear All Filters
+    </VaButton>
 
     <QueryBuilder :config="config" v-model="query">
       <template #groupOperator="props">
@@ -43,7 +44,7 @@
               })
             "
             size="small"
-            color="success"
+            color="primary"
             icon="add"
             preset="primary"
           >
@@ -92,7 +93,8 @@
     </QueryBuilder>
   </div>
 
-  <FilterSelectModal ref="filterSelectModal" />
+  <!-- z-index is set to 10 to hide the absolutely positioned button with z-index 1 -->
+  <FilterSelectModal ref="filterSelectModal" style="z-index: 10" />
 </template>
 
 <script setup>
@@ -110,9 +112,10 @@ import QBInput from "./filterComponents/QBInput.vue";
 import QBSelect from "./filterComponents/QBSelect.vue";
 
 // const props = defineProps({});
+const query = defineModel("query");
 
 const filterSelectModal = ref(null);
-const query = ref(null);
+// const query = ref(null);
 const config = {
   operators: [
     {
@@ -124,16 +127,8 @@ const config = {
       identifier: "OR",
     },
     {
-      name: "OR NOT",
-      identifier: "OR_NOT",
-    },
-    {
-      name: "AND NOT",
+      name: "Exclude",
       identifier: "AND_NOT",
-    },
-    {
-      name: "NONE OF",
-      identifier: "NONE_OF",
     },
   ],
   connectors: operators,
