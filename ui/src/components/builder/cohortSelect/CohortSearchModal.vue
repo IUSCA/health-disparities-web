@@ -6,6 +6,7 @@
     close-button
     hide-default-actions
     @close="hide"
+    class="z-10"
   >
     <CohortSearch @select="handleSelect" />
   </va-modal>

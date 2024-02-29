@@ -6,7 +6,7 @@
     <VaButton
       @click="clearFilters"
       size="small"
-      color="danger"
+      color="secondary"
       icon="backspace"
       outline
       preset="primary"

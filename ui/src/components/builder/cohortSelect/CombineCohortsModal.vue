@@ -1,14 +1,26 @@
 <template>
   <va-modal
     v-model="visible"
-    title="Combine Cohorts"
+    title="Select a logical operator"
     fixed-layout
     close-button
     @ok="handleUpdate"
     @close="hide"
+    class="z-10"
   >
-    <CombineCohortsForm v-model="logicalOperator" />
-    <CohortCombinationPrecedence />
+    <div class="flex flex-col gap-7">
+      <div class="flex gap-5">
+        <span>Selected Cohorts: </span>
+        <p>
+          <span class="font-semibold"> {{ cohorts[idx].name }} </span> (A)
+        </p>
+        <p>
+          <span class="font-semibold"> {{ cohorts[idx + 1].name }} </span> (B)
+        </p>
+      </div>
+      <CombineCohortsForm v-model="logicalOperator" />
+      <CohortCombinationPrecedence />
+    </div>
   </va-modal>
 </template>
 
@@ -24,7 +36,7 @@ defineExpose({
 });
 
 const cohortsStore = useCohortsStore();
-const { operators } = storeToRefs(cohortsStore);
+const { cohorts, operators } = storeToRefs(cohortsStore);
 
 const visible = ref(false);
 const logicalOperator = ref(null);

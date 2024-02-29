@@ -1,10 +1,12 @@
 <template>
-  <div class="mt-5 mb-2">Cohorts are combined in this precise manner:</div>
-  <pre
-    class="text-sm whitespace-pre-wrap break-words p-3"
-    style="background-color: var(--va-background-element)"
-    v-html="expression"
-  ></pre>
+  <div>
+    <div class="mb-2">Cohorts are combined in this precise manner:</div>
+    <pre
+      class="text-sm whitespace-pre-wrap break-words p-3"
+      style="background-color: var(--va-background-element)"
+      v-html="expression"
+    ></pre>
+  </div>
 </template>
 
 <script setup>

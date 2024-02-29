@@ -1,5 +1,5 @@
 <template>
-  <div class="flex">
+  <div class="flex flex-wrap">
     <div class="w-1/2">
       <VaRadio
         v-model="model"

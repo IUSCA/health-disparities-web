@@ -1,12 +1,13 @@
 <template>
   <va-card>
     <va-card-content>
-      <div class="flex items-center">
+      <div class="flex flex-wrap items-center gap-y-3">
         <div
           v-for="(cohort, idx) in cohorts"
           :key="cohort.id"
           class="flex items-center"
         >
+          <!-- Cohort details -->
           <div class="flex flex-nowrap items-start gap-2">
             <!-- icon -->
             <div>
@@ -36,15 +37,17 @@
               :title="combinations[logicalOperators[idx]].label"
               preset="secondary"
               color="secondary"
+              size="small"
             >
               <Icon
                 :icon="combinations[logicalOperators[idx]].icon"
-                class="text-xl"
+                class="text-2xl"
               />
             </va-button>
           </div>
         </div>
 
+        <!-- Add cohort button -->
         <VaDropdown :offset="[0, 40]">
           <template #anchor>
             <va-button
@@ -145,4 +148,3 @@ function addCohort(cohort) {
   --va-button-justify-content: left;
 }
 </style>
-../queryBuilder/cohortQueryBuilder

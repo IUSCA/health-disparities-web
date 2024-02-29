@@ -6,6 +6,7 @@
     close-button
     hide-default-actions
     @close="hide"
+    class="z-10"
   >
     <VaForm ref="formRef" class="flex flex-col gap-3 max-w-lg">
       <VaInput
