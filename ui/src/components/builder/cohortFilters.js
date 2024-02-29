@@ -49,7 +49,7 @@ export const cohortFilters = [
     filters: [
       {
         key: "name",
-        type: "text",
+        type: "select",
         label: "Name",
         info: null,
       },
@@ -81,7 +81,7 @@ export const cohortFilters = [
   },
   {
     label: "Diagnosis",
-    key: "diagnosis",
+    key: "dx",
     icon: "mdi-stethoscope",
     filters: [
       {
@@ -104,7 +104,7 @@ export const cohortFilters = [
       },
       {
         key: "code_system",
-        type: "text",
+        type: "select",
         label: "Code System",
         info: null,
       },
@@ -117,13 +117,13 @@ export const cohortFilters = [
     filters: [
       {
         key: "name",
-        type: "text",
+        type: "select",
         label: "Name",
         info: null,
       },
       {
         key: "category",
-        type: "text",
+        type: "select",
         label: "Category",
         info: null,
       },
@@ -141,7 +141,7 @@ export const cohortFilters = [
       },
       {
         key: "dispense_qty_unit",
-        type: "text",
+        type: "select",
         label: "Dispense Quantity Unit",
         info: null,
       },
@@ -159,7 +159,7 @@ export const cohortFilters = [
       },
       {
         key: "strength_dose_unit",
-        type: "text",
+        type: "select",
         label: "Strength Dose Unit",
         info: null,
       },
@@ -258,7 +258,7 @@ export const cohortFilters = [
       },
       {
         key: "is_booster",
-        type: "text",
+        type: "select",
         label: "Is Booster",
         info: null,
       },
@@ -272,11 +272,11 @@ export const operators = [
     options: [
       {
         key: "in",
-        label: "one of",
+        label: "is one of",
       },
       {
         key: "not_in",
-        label: "none of",
+        label: "is none of",
       },
     ],
   },

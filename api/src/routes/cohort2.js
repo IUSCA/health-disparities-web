@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
+const { validateCohortQuery } = require('../services/cohort');
 
 const isPermittedTo = accessControl('cohort');
 const router = express.Router();
@@ -90,6 +91,17 @@ router.get('/participants/total', isPermittedTo('read'), async (req, res, next) 
   res.set('Cache-control', 'private, max-age=31536000');
   return res.json({ total });
 });
+
+router.post(
+  '/search',
+  validate([
+    body('query').custom(validateCohortQuery),
+  ]),
+  isPermittedTo('read'),
+  async (req, res, next) => {
+    res.json({ query: req.body.query });
+  },
+);
 
 router.get(
   '/:id',

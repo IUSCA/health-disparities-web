@@ -37,5 +37,6 @@ reports
 
 test.js
 src/test.js
+src/test2.js
 data/
 coverage

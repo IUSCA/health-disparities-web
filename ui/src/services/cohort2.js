@@ -34,6 +34,12 @@ class cohortService {
       },
     });
   }
+
+  searchParticipants(query) {
+    return api.post("/cohorts/search", {
+      query,
+    });
+  }
 }
 
 export default new cohortService();

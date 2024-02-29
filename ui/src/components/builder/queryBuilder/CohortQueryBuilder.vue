@@ -1,12 +1,24 @@
 <template>
   <div>
-    <!-- {{ query }} -->
+    <!-- {{ query }}
+    <br />
+    <br />
+    {{ transformQueryForApi(query) }}
+    <br />
+    <br />
+    {{ transformStoredQuery(transformQueryForApi(query)) }}
+    <br />
+    <br />
+    {{
+      JSON.stringify(query) ===
+      JSON.stringify(transformStoredQuery(transformQueryForApi(query)))
+    }} -->
 
     <!-- Button positioned absolutely overlaps a div. to make it clickable z-index is set to 1 -->
     <VaButton
       @click="clearFilters"
       size="small"
-      color="secondary"
+      color="gray-500"
       icon="backspace"
       outline
       preset="primary"
@@ -175,15 +187,15 @@ function getComponentByType(type) {
 function getInitialValue(type) {
   switch (type) {
     case "text":
-      return "";
+      return null;
     case "number":
-      return "";
+      return null;
     case "date":
-      return () => new Date();
+      return null;
     case "select":
       return () => [];
     default:
-      return "";
+      return null;
   }
 }
 
