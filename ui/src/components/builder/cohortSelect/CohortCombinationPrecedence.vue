@@ -15,15 +15,29 @@ import { storeToRefs } from "pinia";
 import { combinations } from "./combineCohorts";
 
 const cohortsStore = useCohortsStore();
-
 const { cohorts, operators } = storeToRefs(cohortsStore);
+
+const props = defineProps({
+  idx: Number,
+  selectedOperatorKey: String,
+});
+
+function getOperator(index) {
+  // assume that the index is always valid
+  if (index === props.idx) {
+    return props.selectedOperatorKey;
+  } else {
+    return operators.value[index];
+  }
+}
+
 const expression = computed(() => {
   const numOperators = operators.value.length;
   const leftParentheses = "(".repeat(numOperators);
   const body = cohorts.value
     .map((cohort, index) => {
       const operator =
-        index < numOperators ? combinations[operators.value[index]].html : "";
+        index < numOperators ? combinations[getOperator(index)].html : "";
       const rightParentheses = index > 0 ? ")" : "";
       return ` "${cohort.name}" ${rightParentheses} ${operator}`;
     })

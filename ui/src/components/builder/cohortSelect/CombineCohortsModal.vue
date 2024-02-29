@@ -1,7 +1,7 @@
 <template>
   <va-modal
     v-model="visible"
-    title="Select a logical operator"
+    title="Combine Cohorts"
     fixed-layout
     close-button
     @ok="handleUpdate"
@@ -9,17 +9,22 @@
     class="z-10"
   >
     <div class="flex flex-col gap-7">
-      <div class="flex gap-5">
-        <span>Selected Cohorts: </span>
-        <p>
-          <span class="font-semibold"> {{ cohorts[idx].name }} </span> (A)
+      <div class="flex flex-wrap">
+        <span>Select a logical operator to combine </span>
+        <p class="ml-5">
+          <span class="font-semibold"> {{ cohorts[idx].name }} </span>
         </p>
+        <span class="mx-5">with</span>
         <p>
-          <span class="font-semibold"> {{ cohorts[idx + 1].name }} </span> (B)
+          <span class="font-semibold"> {{ cohorts[idx + 1].name }} </span>
         </p>
       </div>
       <CombineCohortsForm v-model="logicalOperator" />
-      <CohortCombinationPrecedence />
+      <va-divider />
+      <CohortCombinationPrecedence
+        :idx="idx"
+        :selected-operator-key="logicalOperator"
+      />
     </div>
   </va-modal>
 </template>
