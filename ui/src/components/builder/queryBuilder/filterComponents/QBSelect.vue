@@ -3,7 +3,7 @@
     <VaSelect
       v-model="model"
       :options="options"
-      class="text-sm"
+      class="text-sm cohort-builder-select"
       multiple
       :loading="loading"
       :max-visible-options="3"
@@ -60,7 +60,7 @@ watch(
 </script>
 
 <style scoped lang="scss">
-:deep {
+:deep(.cohort-builder-select) {
   .va-input-wrapper__field {
     --va-input-wrapper-min-height: 24px;
   }

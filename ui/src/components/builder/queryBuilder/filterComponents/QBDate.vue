@@ -1,6 +1,6 @@
 <template>
   <div>
-    <VaDateInput v-model="model" />
+    <VaDateInput v-model="model" class="cohort-builder-date-input" />
   </div>
 </template>
 
@@ -19,7 +19,7 @@ const model = computed({
 </script>
 
 <style scoped lang="scss">
-:deep {
+:deep(.cohort-builder-date-input) {
   .va-input-wrapper__field {
     --va-input-wrapper-min-height: 24px;
   }
