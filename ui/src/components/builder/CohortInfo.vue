@@ -36,4 +36,11 @@ const props = defineProps({
   cohort: Object,
   totalCount: Number,
 });
+
+onBeforeMount(() => {
+  console.log("CohortInfo", props);
+});
+onBeforeUnmount(() => {
+  console.log("CohortInfo unmount", props);
+});
 </script>

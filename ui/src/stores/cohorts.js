@@ -1,4 +1,5 @@
 import { defaultQuery } from "@/components/builder/queryBuilder/cohortQueryBuilder";
+import _ from "lodash";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -32,6 +33,15 @@ export const useCohortsStore = defineStore("cohorts", () => {
     operators.value.splice(idx, 1);
   }
 
+  function updateCohort(idx, cohort) {
+    // idx is the index of the cohort to be updated
+    if (idx < 0 || idx >= cohorts.value.length) {
+      console.error("Invalid index", idx);
+      return;
+    }
+    cohorts.value[idx] = cohort;
+  }
+
   function updateOperator(idx1, op) {
     // idx1 is the index of the first operand / cohort
     // set the operator given the index of the first operand
@@ -54,6 +64,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
 
   function makeEmptyCohort() {
     return {
+      id: _.uniqueId("cohort_"),
       name: makeNewName(),
       participants: totalParticipants.value,
       query: defaultQuery(),
@@ -66,6 +77,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     totalParticipants,
     appendCohort,
     deleteCohort,
+    updateCohort,
     updateOperator,
     makeEmptyCohort,
   };

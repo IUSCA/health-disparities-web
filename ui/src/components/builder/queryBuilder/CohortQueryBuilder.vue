@@ -18,7 +18,7 @@
     <VaButton
       @click="clearFilters"
       size="small"
-      color="gray-500"
+      color="primary"
       icon="backspace"
       outline
       preset="primary"

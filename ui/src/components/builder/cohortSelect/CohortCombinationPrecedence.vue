@@ -39,7 +39,9 @@ const expression = computed(() => {
       const operator =
         index < numOperators ? combinations[getOperator(index)].html : "";
       const rightParentheses = index > 0 ? ")" : "";
-      return ` "${cohort.name}" ${rightParentheses} ${operator}`;
+      return [` "${cohort.name}"`, rightParentheses, operator]
+        .filter((x) => x)
+        .join(" ");
     })
     .join("");
   return leftParentheses + body;
