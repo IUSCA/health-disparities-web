@@ -22,8 +22,12 @@
       </div>
     </div>
     <div class="va-text-secondary">
-      <span class="font-semibold"> {{ props.cohort.participants }} </span>
-      <span v-if="props.totalCount"> of {{ props.totalCount }} </span>
+      <span class="font-semibold">
+        <NumberTransition :target="props.cohort.participants" :debounce="50" />
+      </span>
+      <span v-if="props.totalCount">
+        of {{ number_formatter.format(props.totalCount) }}
+      </span>
       <span> participants </span>
     </div>
   </div>
@@ -36,6 +40,8 @@ const props = defineProps({
   cohort: Object,
   totalCount: Number,
 });
+
+const number_formatter = Intl.NumberFormat("en");
 
 onBeforeMount(() => {
   console.log("CohortInfo", props);

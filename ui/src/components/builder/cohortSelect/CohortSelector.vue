@@ -21,7 +21,7 @@
             <!-- details -->
             <div>
               <div class="leading-4">{{ cohort.name }}</div>
-              <div class="text-sm va-text-secondary">
+              <div class="text-sm va-text-secondary w-[128px]">
                 <span class="font-semibold">
                   {{ cohort.participants }}
                 </span>

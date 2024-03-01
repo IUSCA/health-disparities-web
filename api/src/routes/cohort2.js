@@ -105,7 +105,7 @@ router.post(
     // eslint-disable-next-line no-console
     console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
-    res.json({ count: rows[0].count });
+    res.json({ count: Number(rows[0].count) });
   }),
 );
 
