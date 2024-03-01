@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
-const { validateCohortQuery } = require('../services/cohort');
+const { validateCohortQuery, buildCohortQuery, sanitizeCohortQuery } = require('../services/cohort');
 
 const isPermittedTo = accessControl('cohort');
 const router = express.Router();
@@ -83,24 +83,29 @@ router.get(
   }),
 );
 
-router.get('/participants/total', isPermittedTo('read'), async (req, res, next) => {
+router.get('/participants/total', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
   const total = await prisma.participant.count();
 
   // cache indefinitely - 1 year
   // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
   res.set('Cache-control', 'private, max-age=31536000');
   return res.json({ total });
-});
+}));
 
 router.post(
   '/search',
   validate([
-    body('query').custom(validateCohortQuery),
+    body('query').custom(validateCohortQuery).customSanitizer(sanitizeCohortQuery),
   ]),
   isPermittedTo('read'),
-  async (req, res, next) => {
-    res.json({ query: req.body.query });
-  },
+  asyncHandler(async (req, res, next) => {
+    const sqlQuery = buildCohortQuery(req.body.query, {
+      count: true,
+    });
+    // console.log(sqlQuery.sql, sqlQuery.values);
+    const rows = await prisma.$queryRaw(sqlQuery);
+    res.json({ count: rows[0].count });
+  }),
 );
 
 router.get(
@@ -109,7 +114,7 @@ router.get(
   validate([
     param('id').isInt().toInt(),
   ]),
-  async (req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const cohort = await prisma.cohort.findUniqueOrThrow({
       where: {
         id: req.params.id,
@@ -124,7 +129,7 @@ router.get(
       ...rest,
       participants: participants.length,
     });
-  },
+  }),
 );
 
 router.post(
@@ -157,7 +162,7 @@ router.post(
   }),
 );
 
-router.post('/:id/export', isPermittedTo('read'), async (req, res, next) => {
+router.post('/:id/export', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const cohort = await prisma.cohort.findUnique({
     where: {
@@ -170,6 +175,6 @@ router.post('/:id/export', isPermittedTo('read'), async (req, res, next) => {
   const filename = `cohort-${cohort.name}-${new Date().toISOString()}.json`;
   res.attachment(filename);
   res.json(cohort.participants);
-});
+}));
 
 module.exports = router;
