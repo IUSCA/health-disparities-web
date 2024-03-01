@@ -138,7 +138,7 @@ const config = {
     },
     {
       name: "Exclude",
-      identifier: "AND_NOT",
+      identifier: "NOT_AND",
     },
   ],
   connectors: operators,

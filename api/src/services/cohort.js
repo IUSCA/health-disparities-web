@@ -66,7 +66,7 @@ ajv.addFormat('customFieldFormat', validateField);
 const schema = {
   type: 'object',
   properties: {
-    operator: { enum: ['AND', 'OR', 'NOT_AND'] },
+    operator: { enum: ['AND', 'OR', 'NOT_AND', 'NOT_OR'] },
     children: {
       type: 'array',
       items: { anyOf: [{ $ref: '#' }, { $ref: '#/definitions/leafNode' }] },
@@ -98,7 +98,7 @@ const validate = ajv.compile(schema);
 function validateCohortQuery(query) {
   const valid = validate(query);
   if (!valid) {
-    logger.error(validate.errors);
+    logger.error(JSON.stringify(validate.errors, null, 2));
     throw new Error('Invalid query');
   }
   return true;
@@ -151,10 +151,10 @@ const sql_op_map = {
   lt: '<',
   gte: '>=',
   lte: '<=',
-  contains: 'LIKE',
-  not_contains: 'NOT LIKE',
-  starts_with: 'LIKE',
-  ends_with: 'LIKE',
+  contains: 'ILIKE',
+  not_contains: 'NOT ILIKE',
+  starts_with: 'ILIKE',
+  ends_with: 'ILIKE',
 };
 
 function buildCustomField(field, op, value) {
@@ -184,13 +184,13 @@ function buildField(field, op, value) {
     sql_value = Prisma.sql`(${Prisma.join(value)})`;
   }
   if (op === 'contains' || op === 'not_contains') {
-    sql_value = Prisma.sql`'%${value}%'`;
+    sql_value = Prisma.sql`${`%${value}%`}`;
   }
   if (op === 'starts_with') {
-    sql_value = Prisma.sql`'%${value}'`;
+    sql_value = Prisma.sql`${`%${value}`}`;
   }
   if (op === 'ends_with') {
-    sql_value = Prisma.sql`'${value}%'`;
+    sql_value = Prisma.sql`${`${value}%`}`;
   }
   return Prisma.sql`
   EXISTS (

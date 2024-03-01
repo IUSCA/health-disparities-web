@@ -102,7 +102,8 @@ router.post(
     const sqlQuery = buildCohortQuery(req.body.query, {
       count: true,
     });
-    // console.log(sqlQuery.sql, sqlQuery.values);
+    // eslint-disable-next-line no-console
+    console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
     res.json({ count: rows[0].count });
   }),
