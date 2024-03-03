@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="mb-2">Cohorts are combined in this precise manner:</div>
+    <div class="mb-2">Order of evaluation:</div>
     <pre
       class="text-sm whitespace-pre-wrap break-words p-3"
       style="background-color: var(--va-background-element)"

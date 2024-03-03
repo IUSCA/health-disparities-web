@@ -6,7 +6,7 @@
       icon="save"
       preset="primary"
       size="small"
-      :disabled="!props.cohort.query"
+      :disabled="isQueryEmpty(props.cohort.query)"
     >
       Save
     </va-button>
@@ -34,13 +34,14 @@
   </div>
   <CohortSaveModal
     ref="saveModal"
-    :name="props.cohort.name"
-    :query="props.cohort.query"
+    :cohort="props.cohort"
     @save="(cohort) => emit('save', cohort)"
   />
 </template>
 
 <script setup>
+import { isQueryEmpty } from "./queryBuilder/cohortQueryBuilder";
+
 const props = defineProps({
   cohort: Object,
 });

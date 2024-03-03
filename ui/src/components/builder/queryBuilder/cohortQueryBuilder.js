@@ -75,5 +75,6 @@ export function transformStoredQuery(query) {
 }
 
 export function isQueryEmpty(query) {
-  return !query || query.children.length === 0;
+  const query2 = transformQueryForApi(query);
+  return !query2 || query2.children.length === 0;
 }
