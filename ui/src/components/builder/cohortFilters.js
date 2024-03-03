@@ -278,6 +278,14 @@ export const operators = [
         key: "not_in",
         label: "is none of",
       },
+      {
+        key: "is_null",
+        label: "is null",
+      },
+      {
+        key: "is_not_null",
+        label: "is not null",
+      },
     ],
   },
   {
@@ -306,6 +314,14 @@ export const operators = [
       {
         key: "lte",
         label: "<=",
+      },
+      {
+        key: "is_null",
+        label: "is null",
+      },
+      {
+        key: "is_not_null",
+        label: "is not null",
       },
     ],
   },
@@ -336,6 +352,14 @@ export const operators = [
         key: "ends_with",
         label: "ends with",
       },
+      {
+        key: "is_null",
+        label: "is null",
+      },
+      {
+        key: "is_not_null",
+        label: "is not null",
+      },
     ],
   },
   {
@@ -365,6 +389,14 @@ export const operators = [
         key: "lte",
         label: "on or before",
       },
+      {
+        key: "is_null",
+        label: "is null",
+      },
+      {
+        key: "is_not_null",
+        label: "is not null",
+      },
     ],
   },
 ];
@@ -383,4 +415,8 @@ export function flatten(filters) {
       };
     }),
   );
+}
+
+export function isUnaryOperator(operator) {
+  return ["is_null", "is_not_null"].includes(operator);
 }

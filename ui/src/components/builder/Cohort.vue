@@ -29,8 +29,8 @@ import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 import {
-isQueryEmpty,
-transformQueryForApi,
+  isAPIQueryEmpty,
+  transformQueryForApi,
 } from "./queryBuilder/cohortQueryBuilder";
 
 const cohort = defineModel("cohort");
@@ -59,7 +59,7 @@ watchDebounced(
 watch(
   canon_query,
   (newQuery, oldQuery) => {
-    if (isQueryEmpty(newQuery)) {
+    if (isAPIQueryEmpty(newQuery)) {
       cohort.value.participants = totalParticipants.value;
       return;
     }

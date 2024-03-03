@@ -78,14 +78,21 @@ const schema = {
       type: 'object',
       properties: {
         field: { type: 'string', format: 'customFieldFormat' },
-        operator: { enum: ['in', 'not_in', 'eq', 'neq', 'gt', 'lt', 'gte', 'lte', 'contains', 'not_contains', 'starts_with', 'ends_with'] },
+        operator: {
+          enum: [
+            'in', 'not_in',
+            'eq', 'neq', 'gt', 'lt', 'gte', 'lte',
+            'contains', 'not_contains', 'starts_with', 'ends_with',
+            'is_null', 'is_not_null',
+          ],
+        },
         value: {
           anyOf: [{
             type: 'array',
             items: {
               anyOf: [{ type: 'string' }, { type: 'number' }],
             },
-          }, { type: 'string' }, { type: 'number' }],
+          }, { type: 'string' }, { type: 'number' }, { type: 'null' }],
         },
       },
       required: ['field', 'operator', 'value'],
@@ -155,10 +162,17 @@ const sql_op_map = {
   not_contains: 'NOT ILIKE',
   starts_with: 'ILIKE',
   ends_with: 'ILIKE',
+  is_null: 'IS NULL',
+  is_not_null: 'IS NOT NULL',
 };
+
+function isUnaryOp(op) {
+  return op === 'is_null' || op === 'is_not_null';
+}
 
 function buildCustomField(field, op, value) {
   const [category, fieldName] = field.split('.');
+  const _value = isUnaryOp(op) ? Prisma.empty : value;
   if (category === 'demographic' && fieldName === 'age') {
     // datatype is Int
     return Prisma.sql`
@@ -167,7 +181,7 @@ function buildCustomField(field, op, value) {
       FROM demographic t
       WHERE 
         t.participant_id = p.id
-        AND extract(year from age(dob)) ${Prisma.raw(sql_op_map[op])} ${value}
+        AND extract(year from age(dob)) ${Prisma.raw(sql_op_map[op])} ${_value}
     )`;
   }
   throw new Error(`Implementation for custom field not found: ${field}`);
@@ -191,6 +205,9 @@ function buildField(field, op, value) {
   }
   if (op === 'ends_with') {
     sql_value = Prisma.sql`${`${value}%`}`;
+  }
+  if (isUnaryOp(op)) {
+    sql_value = Prisma.empty;
   }
   return Prisma.sql`
   EXISTS (

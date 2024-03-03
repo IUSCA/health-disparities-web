@@ -89,6 +89,7 @@
           >
           </VaSelect>
           <component
+            v-if="!isUnaryOperator(ruleCtrl.connectorValue)"
             :is="ruleCtrl.ruleComponent"
             :identifier="ruleCtrl.ruleIdentifier"
             :model-value="ruleCtrl.ruleData"
@@ -113,7 +114,12 @@
 import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
-import { cohortFilters, flatten, operators } from "../cohortFilters";
+import {
+  cohortFilters,
+  flatten,
+  isUnaryOperator,
+  operators,
+} from "../cohortFilters";
 import { defaultQuery, defultOperators } from "./cohortQueryBuilder";
 import QBDate from "./filterComponents/QBDate.vue";
 import QBInput from "./filterComponents/QBInput.vue";

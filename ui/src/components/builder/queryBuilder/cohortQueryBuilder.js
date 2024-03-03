@@ -1,3 +1,5 @@
+import { isUnaryOperator } from "../cohortFilters";
+
 /**
  * Default operators for different data types.
  */
@@ -41,12 +43,16 @@ export function transformQueryForApi(query) {
         if (child.children) {
           return child.children.length > 0;
         }
+        // if unary operator, do not validate value, return true
+        if (isUnaryOperator(child.operator)) {
+          return true;
+        }
         // value cannot be null or undefined or empty array or empty string
         // check if value is of array type and then check if it's empty
-        return (
-          child.value != null &&
-          child.value !== "" &&
-          !(Array.isArray(child.value) && child.value.length === 0)
+        return !(
+          child.value == null ||
+          child.value === "" ||
+          (Array.isArray(child.value) && child.value.length === 0)
         );
       }),
   };
@@ -76,5 +82,9 @@ export function transformStoredQuery(query) {
 
 export function isQueryEmpty(query) {
   const query2 = transformQueryForApi(query);
-  return !query2 || query2.children.length === 0;
+  return isAPIQueryEmpty(query2);
+}
+
+export function isAPIQueryEmpty(query) {
+  return !query || query.children.length === 0;
 }
