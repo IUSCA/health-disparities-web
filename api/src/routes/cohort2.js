@@ -1,17 +1,20 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { param, body } = require('express-validator');
+const { param, body, query } = require('express-validator');
 const _ = require('lodash/fp');
 
 const prisma = new PrismaClient();
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
-const { validateCohortQuery, buildCohortQuery, sanitizeCohortQuery } = require('../services/cohort');
+const {
+  validateCohortQuery, buildCohortQuery, sanitizeCohortQuery, CATEGORIES,
+  searchCohortsQuery, getCohortByIdQuery,
+} = require('../services/cohort');
 
 const isPermittedTo = accessControl('cohort');
 const router = express.Router();
-const CATEGORIES = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication'];
+
 router.get(
   '/:category/:field/unique',
   isPermittedTo('read'),
@@ -46,56 +49,42 @@ router.get(
 router.get(
   '/',
   isPermittedTo('read'),
+  validate([
+    query('mine').optional().isBoolean(),
+    query('is_published').optional().isBoolean(),
+    query('is_locked').optional().isBoolean(),
+    query('is_protected').optional().isBoolean(),
+  ]),
   asyncHandler(async (req, res, next) => {
-    const where = {};
-    if (req.query.name) {
-      where.name = {
-        contains: req.query.name,
-        mode: 'insensitive', // case-insensitive search
-      };
+    // #swagger.tags = ['cohorts']
+    // #swagger.summary = 'Filter cohorts.'
+    const data = _.pick(['name', 'is_published', 'is_locked', 'is_protected'])(req.query);
+    if (data.mine) {
+      data.author_id = req.user.id;
     }
-    if (req.query.mine) {
-      where.users = {
-        some: {
-          id: req.user.id,
-        },
-      };
-    }
-    // {
-    //   include: {
-    //     user: true,
-    //   },
-    // },
-    const cohorts = await prisma.cohort.findMany({
-      where,
-      include: {
-        users: true,
-        participants: true,
-      },
-    });
-    return res.json(cohorts.map((cohort) => {
-      const { participants, ...rest } = cohort;
-      return {
-        ...rest,
-        participants: participants.length,
-      };
-    }));
+    const sqlQuery = searchCohortsQuery(data);
+    const cohorts = await prisma.$queryRaw(sqlQuery);
+    res.json(cohorts);
   }),
 );
 
-router.get('/participants/total', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
-  const total = await prisma.participant.count();
+router.get(
+  '/participants/total',
+  isPermittedTo('read'),
+  asyncHandler(async (req, res, next) => {
+    const total = await prisma.participant.count();
 
-  // cache indefinitely - 1 year
-  // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
-  res.set('Cache-control', 'private, max-age=31536000');
-  return res.json({ total });
-}));
+    // cache indefinitely - 1 year
+    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+    res.set('Cache-control', 'private, max-age=31536000');
+    return res.json({ total });
+  }),
+);
 
 router.post(
   '/search',
   validate([
-    body('query').custom(validateCohortQuery).customSanitizer(sanitizeCohortQuery),
+    body('query').custom(validateCohortQuery).bail().customSanitizer(sanitizeCohortQuery),
   ]),
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
@@ -116,66 +105,128 @@ router.get(
     param('id').isInt().toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
-    const cohort = await prisma.cohort.findUniqueOrThrow({
-      where: {
-        id: req.params.id,
-      },
-      include: {
-        participants: true,
-        users: true,
-      },
-    });
-    const { participants, ...rest } = cohort;
-    return res.json({
-      ...rest,
-      participants: participants.length,
-    });
+    // #swagger.tags = ['cohorts']
+    // #swagger.summary = 'Get a cohort.'
+    const sqlQuery = getCohortByIdQuery(req.params.id);
+    const cohort = await prisma.$queryRaw(sqlQuery);
+    res.json(cohort);
   }),
 );
+
+// router.post(
+//   '/',
+//   isPermittedTo('create'),
+//   validate([
+//     body('name').isString().notEmpty(),
+//     body('is_published').optional().isBoolean(),
+//     body('is_locked').optional().isBoolean(),
+//     body('is_protected').optional().isBoolean(),
+//     body('description').optional().isString(),
+//     body('metadata').optional().isObject(),
+//   ]),
+//   asyncHandler(async (req, res, next) => {
+//     // #swagger.tags = ['cohorts']
+//     // #swagger.summary = 'Create cohort.'
+
+//     // cannot save a cohort with empty query {}
+
+//     const cohort_data = _.flow([
+//       _.pick(['name', 'is_published', 'is_locked', 'is_protected', 'description', 'metadata']),
+//       _.omitBy(_.isNil),
+//     ])(req.body);
+
+//     const sqlQuery = buildCohortQuery(req.body.query);
+//     // eslint-disable-next-line no-console
+//     console.log(sqlQuery.sql, sqlQuery.values);
+//     const rows = await prisma.$queryRaw(sqlQuery);
+//     // rows is like [{participant_id: 1}, {participant_id: 2}, ...]
+//     const participants_ids = rows.map((row) => row.participant_id);
+
+//     const cohort = await prisma.cohort.create({
+//       data: {
+//         ...cohort_data,
+//         author_id: req.user.id,
+//         participants: participants_ids,
+//       },
+//     });
+
+//     return res.json(cohort);
+//   }),
+// );
+
+// router.patch(
+//   '/:id',
+//   isPermittedTo('update'),
+//   validate([
+//     body('name').optional().isString().notEmpty(),
+//     body('is_published').optional().isBoolean(),
+//     body('is_locked').optional().isBoolean(),
+//     body('is_protected').optional().isBoolean(),
+//     body('description').optional().isString(),
+//     body('metadata').optional().isObject(),
+//   ]),
+//   asyncHandler(async (req, res, next) => {
+//     // #swagger.tags = ['cohorts']
+//     // #swagger.summary = 'Modify cohort.'
+//     // TODO: user role can modify cohort if they are the author,
+// operator role can modify any cohort
+
+//     const { id } = req.params;
+
+//     const cohortToUpdate = await prisma.cohort.findFirstOrThrow({
+//       where: {
+//         id,
+//       },
+//     });
+
+//     const cohort_data = _.pick(
+// ['name', 'is_published', 'is_locked', 'is_protected', 'description', 'metadata'])(req.body);
+
+//     if (cohort_data.metadata) {
+//       cohort_data.metadata =
+// _.merge(cohortToUpdate?.metadata)(cohort_data.metadata); // deep merge
+//     }
+
+//     const updatedCohort = await prisma.cohort.update({
+//       where: {
+//         id,
+//       },
+//       data: cohort_data,
+//       select: {
+//         id: true,
+//         name: true,
+//         query: true,
+//         is_published: true,
+//         is_locked: true,
+//         is_protected: true,
+//         description: true,
+//         metadata: true,
+//       },
+//     });
+//     return res.json(updatedCohort);
+//   }),
+// );
 
 router.post(
-  '/',
-  isPermittedTo('create'),
+  '/:id/export',
+  isPermittedTo('read'),
   validate([
-    body('name').isString().notEmpty(),
-    body('query').isObject(),
-    body('published').optional().isBoolean(),
-    body('description').optional().isString(),
+    param('id').isInt().toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
-    const cohort_data = _.flow([
-      _.pick(['name', 'query', 'published', 'description']),
-      _.omitBy(_.isNil),
-    ])(req.body);
-    const cohort = await prisma.cohort.create({
-      data: {
-        ...cohort_data,
-        users: {
-          create: [
-            {
-              user_id: req.user.id,
-            },
-          ],
-        },
-      },
-    });
-    return res.json(cohort);
+    // const { id } = req.params;
+    // const cohort = await prisma.cohort.findUniqueOrThrow({
+    //   where: {
+    //     id,
+    //   },
+    //   include: {
+    //     participants: true,
+    //   },
+    // });
+    // const filename = `cohort-${cohort.name}-${new Date().toISOString()}.json`;
+    // res.attachment(filename);
+    res.json({});
   }),
 );
-
-router.post('/:id/export', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
-  const cohort = await prisma.cohort.findUnique({
-    where: {
-      id: parseInt(id, 10),
-    },
-    include: {
-      participants: true,
-    },
-  });
-  const filename = `cohort-${cohort.name}-${new Date().toISOString()}.json`;
-  res.attachment(filename);
-  res.json(cohort.participants);
-}));
 
 module.exports = router;

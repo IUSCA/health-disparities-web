@@ -141,13 +141,13 @@ model user {
   password           user_password?
   login              user_login?
   groups             group_user[]
-  cohorts            cohort_user[]
   accesses           data_access_log[]
   stage_requests     stage_request_log[]
   protocols          user_protocol[]
   authored_snapshots snapshot[]
   authored_protocols protocol[]
   authored_sources   source[]
+  authored_cohorts   cohort[]
 }
 
 model user_password {
@@ -307,9 +307,9 @@ model demographic {
   enroll_date    DateTime?
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 
   @@index([participant_id])
-  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 }
 
 model lab {
@@ -321,10 +321,10 @@ model lab {
   unit           String      @db.VarChar(100)
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
-
-  @@index([participant_id])
   // any given study_id and ib_id pair may have multiple labs associated
   // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
+
+  @@index([participant_id])
 }
 
 model covid_test {
@@ -334,9 +334,9 @@ model covid_test {
   result         String
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 
   @@index([participant_id])
-  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 }
 
 model covid_vax {
@@ -349,9 +349,9 @@ model covid_vax {
   is_booster     String
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 
   @@index([participant_id])
-  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 }
 
 // AKA diagnosis
@@ -363,9 +363,9 @@ model dx {
   code_system    String
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
+  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 
   @@index([participant_id])
-  // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 }
 
 // e.g. hospital visit, admission
@@ -405,26 +405,29 @@ model results_by {
 }
 
 model cohort {
-  id           Int                   @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   name         String
   description  String?
   query        Json
   metadata     Json?
-  created_at   DateTime              @default(now()) @db.Timestamp(6)
-  updated_at   DateTime              @default(now()) @updatedAt @db.Timestamp(6)
-  published    Boolean               @default(false)
-  participants cohort_participants[]
-  users        cohort_user[]
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  is_published Boolean  @default(false)
+  is_locked    Boolean  @default(false)
+  is_protected Boolean  @default(false)
+  participants Int[]
+  author_id    Int
+  author       user     @relation(fields: [author_id], references: [id])
 }
 
-model cohort_user {
-  cohort_id Int
-  user_id   Int
-  cohort    cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user      user   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+// model cohort_user {
+//   cohort_id Int
+//   user_id   Int
+//   cohort    cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   user      user   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([cohort_id, user_id])
-}
+//   @@id([cohort_id, user_id])
+// }
 
 model group {
   id    Int          @id @default(autoincrement())
@@ -442,13 +445,13 @@ model group_user {
   @@id([group_id, user_id])
 }
 
-model cohort_participants {
-  cohort_id      Int
-  participant_id Int
-  cohorts        cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+// model cohort_participants {
+//   cohort_id      Int
+//   participant_id Int
+//   cohorts        cohort @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([cohort_id, participant_id])
-}
+//   @@id([cohort_id, participant_id])
+// }
 
 model log {
   id                Int            @id @default(autoincrement())

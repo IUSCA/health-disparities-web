@@ -60,7 +60,7 @@ const columns = [
     sortable: false,
   },
   {
-    key: "participants",
+    key: "size",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
     width: "100px",
