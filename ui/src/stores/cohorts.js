@@ -1,4 +1,5 @@
 import { defaultQuery } from "@/components/builder/queryBuilder/cohortQueryBuilder";
+import config from "@/config";
 import _ from "lodash";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
@@ -66,8 +67,14 @@ export const useCohortsStore = defineStore("cohorts", () => {
     return {
       id: _.uniqueId("cohort_"),
       name: makeNewName(),
-      participants: totalParticipants.value,
+      is_published: false,
+      is_locked: false,
+      is_protected: false,
+      size: totalParticipants.value,
       query: defaultQuery(),
+      set_operations: null,
+      query_schema: config.cohort.phenotype_schema,
+      is_supported: true,
     };
   }
 

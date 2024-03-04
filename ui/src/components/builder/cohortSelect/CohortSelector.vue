@@ -2,6 +2,7 @@
   <va-card>
     <va-card-content>
       <div class="flex flex-wrap items-center gap-y-3">
+        <!-- array of cohorts -->
         <div
           v-for="(cohort, idx) in cohorts"
           :key="cohort.id"
@@ -21,11 +22,11 @@
             <!-- details -->
             <div>
               <div class="leading-4">{{ cohort.name }}</div>
-              <div class="text-sm va-text-secondary w-[128px]">
+              <div class="text-sm va-text-secondary w-[72px]">
                 <span class="font-semibold">
-                  {{ cohort.participants }}
+                  {{ cohort.size }}
                 </span>
-                <span> participants </span>
+                <span> pax. </span>
               </div>
             </div>
           </div>
@@ -76,13 +77,16 @@
               </va-button>
 
               <!-- Search for cohort -->
+              <!-- opens the CohortSearchModal -->
+              <!-- which emits select event when user clicks on cohort from search resutls -->
+              <!-- addCohort is the handler -->
               <va-button
                 @click="cohortSearchModal.show"
                 preset="secondary"
                 icon="search"
                 class="cohort-select-buttons"
               >
-                Search Cohort
+                Search Cohorts
               </va-button>
             </div>
           </VaDropdownContent>
@@ -96,12 +100,16 @@
 </template>
 
 <script setup>
+import config from "@/config";
 import { stringToRGB } from "@/services/colors";
 import { useCohortsStore } from "@/stores/cohorts";
 import _ from "lodash";
 import { storeToRefs } from "pinia";
-import { defaultQuery } from "../queryBuilder/cohortQueryBuilder";
-import { combinations, DEFAULT_LOGICAL_OPERATOR } from "./combineCohorts";
+import {
+defaultQuery,
+transformStoredQuery,
+} from "../queryBuilder/cohortQueryBuilder";
+import { DEFAULT_LOGICAL_OPERATOR, combinations } from "./combineCohorts";
 
 const cohortsStore = useCohortsStore();
 const {
@@ -128,16 +136,38 @@ function addNewCohort() {
   );
 }
 
+function isPhenotypeQuery({ name, namespace, version }) {
+  return (
+    name === config.cohort.phenotype_schema.name &&
+    namespace === config.cohort.phenotype_schema.namespace &&
+    version === config.cohort.phenotype_schema.version
+  );
+}
+
 function addCohort(cohort) {
   // add an existing cohort
-  const { query, participants, ...rest } = cohort;
-  const sanitizedCohort = rest;
-  if (_.isEmpty(query)) {
-    sanitizedCohort.query = defaultQuery();
-    sanitizedCohort.participants = totalParticipants.value;
+  const { query: queryContainer, size, ...rest } = cohort;
+  const { name, namespace, version, query, set_operations } = queryContainer;
+  const sanitizedCohort = {
+    ...rest,
+    set_operations,
+    query_schema: { name, namespace, version },
+  };
+
+  if (isPhenotypeQuery({ name, namespace, version })) {
+    sanitizedCohort.is_supported = true;
+    if (_.isEmpty(query)) {
+      sanitizedCohort.query = defaultQuery();
+      sanitizedCohort.size = totalParticipants.value;
+    } else {
+      sanitizedCohort.query = transformStoredQuery(query);
+      sanitizedCohort.size = size;
+    }
   } else {
+    // unsupported query type
+    sanitizedCohort.is_supported = false;
     sanitizedCohort.query = query;
-    sanitizedCohort.participants = participants;
+    sanitizedCohort.size = size;
   }
   cohortsStore.appendCohort(sanitizedCohort, DEFAULT_LOGICAL_OPERATOR);
 }

@@ -25,12 +25,21 @@
         <span>{{ datetime.date(value) }}</span>
       </template>
 
-      <template #cell(published)="{ source }">
+      <template #cell(is_published)="{ source }">
         <span v-if="source" class="flex justify-center">
           <i-mdi-check-circle-outline class="text-green-700" />
         </span>
         <span v-else class="flex justify-center">
-          <i-mdi-close-circle-outline class="text-red-700" />
+          <i-mdi-close class="text-red-700" />
+        </span>
+      </template>
+
+      <template #cell(is_locked)="{ source }">
+        <span v-if="source" class="flex justify-center">
+          <i-mdi-check-circle-outline class="text-green-700" />
+        </span>
+        <span v-else class="flex justify-center">
+          <i-mdi-close class="text-red-700" />
         </span>
       </template>
     </va-data-table>
@@ -73,7 +82,13 @@ const columns = [
     width: "100px",
   },
   {
-    key: "published",
+    key: "is_published",
+    thAlign: "center",
+    tdAlign: "center",
+    width: "80px",
+  },
+  {
+    key: "is_locked",
     thAlign: "center",
     tdAlign: "center",
     width: "80px",

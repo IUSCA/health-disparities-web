@@ -57,6 +57,13 @@ const exports = {
       refresh_interval_ms: 10000,
     },
   },
+  cohort: {
+    phenotype_schema: {
+      name: "phenotype",
+      namespace: "edu.iu.sca.biobank",
+      version: "1.0.0",
+    },
+  },
 };
 
 export default exports;

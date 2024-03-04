@@ -18,7 +18,17 @@
       <va-divider class="md:hidden" />
 
       <div class="md:w-9/12">
-        <CohortQueryBuilder v-model:query="cohort.query" />
+        <CohortQueryBuilder
+          v-model:query="cohort.query"
+          v-if="cohort.is_supported"
+          :disabled="cohort.is_locked"
+        />
+        <div v-else class="flex h-full items-center justify-center">
+          <i-mdi-alert-circle-outline class="" />
+          <span class="ml-2 va-text-secondary">
+            This cohort is not editable by the Phenotype query builder.
+          </span>
+        </div>
       </div>
     </div>
   </VaInnerLoading>
@@ -29,8 +39,8 @@ import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 import {
-  isAPIQueryEmpty,
-  transformQueryForApi,
+isAPIQueryEmpty,
+transformQueryForApi,
 } from "./queryBuilder/cohortQueryBuilder";
 
 const cohort = defineModel("cohort");
@@ -60,7 +70,7 @@ watch(
   canon_query,
   (newQuery, oldQuery) => {
     if (isAPIQueryEmpty(newQuery)) {
-      cohort.value.participants = totalParticipants.value;
+      cohort.value.size = totalParticipants.value;
       return;
     }
     if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
@@ -69,7 +79,7 @@ watch(
       cohortService
         .searchParticipants(newQuery)
         .then((response) => {
-          cohort.value.participants = response.data.count;
+          cohort.value.size = response.data.count;
         })
         .finally(() => {
           loading.value = false;

@@ -11,7 +11,7 @@
       <div>
         <i-mdi-visibility
           class="va-text-secondary ml-2"
-          v-if="props.cohort.published"
+          v-if="props.cohort.is_published"
           title="publsihed"
         />
         <i-mdi-visibility-off
@@ -20,10 +20,22 @@
           title="unpublished"
         />
       </div>
+      <div>
+        <i-mdi-lock
+          class="va-text-secondary ml-2"
+          v-if="props.cohort.is_locked"
+          title="locked"
+        />
+        <i-mdi-lock-open-variant
+          class="va-text-secondary ml-2"
+          v-else
+          title="unlocked"
+        />
+      </div>
     </div>
     <div class="va-text-secondary">
       <span class="font-semibold">
-        <NumberTransition :target="props.cohort.participants" :debounce="50" />
+        <NumberTransition :target="props.cohort.size" :debounce="50" />
       </span>
       <span v-if="props.totalCount">
         of {{ number_formatter.format(props.totalCount) }}
