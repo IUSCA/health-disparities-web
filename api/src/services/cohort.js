@@ -64,6 +64,18 @@ function validateField(fieldValue) {
 // Add custom format to validate the "field" property
 ajv.addFormat('customFieldFormat', validateField);
 
+const setOperationsSchema = {
+  type: 'object',
+  properties: {
+    cohort_ids: {
+      type: 'array', items: { type: 'number' }, uniqueItems: true, minItems: 2,
+    },
+    operators: { type: 'array', items: { enum: ['union', 'intersection', 'difference', 'symmetric_difference'] }, minItems: 1 },
+  },
+  required: ['cohort_ids', 'operators'],
+  additionalProperties: false,
+};
+
 const schema = {
   type: 'object',
   properties: {
@@ -71,17 +83,7 @@ const schema = {
     name: { type: 'string', enum: ['phenotype', 'genotype'] },
     version: { type: 'string' },
     query: { $ref: '#/definitions/query' },
-    set_operations: {
-      type: 'object',
-      properties: {
-        cohort_ids: {
-          type: 'array', items: { type: 'number' }, uniqueItems: true, minItems: 2,
-        },
-        operators: { type: 'array', items: { enum: ['union', 'intersection', 'difference', 'symmetric_difference'] }, minItems: 1 },
-      },
-      required: ['cohort_ids', 'operators'],
-      additionalProperties: false,
-    },
+    set_operations: setOperationsSchema,
   },
   required: ['namespace', 'name', 'query', 'version'],
   additionalProperties: false,
@@ -294,13 +296,16 @@ function buildQuery(query, { count = false } = {}) {
 }
 
 function cohortParticipantsQuery(cohort_id) {
-  return Prisma.sql`SELECT participant_id FROM cohort_participants WHERE cohort_id = ${cohort_id}`;
+  // return Prisma.sql`
+  // SELECT participant_id FROM cohort_participants WHERE cohort_id = ${cohort_id}
+  // `;
+  return Prisma.sql`select unnest(participants) as participant_id from cohort c where c.id=${cohort_id}`;
 }
 
 function combineTwo(q1, q2, operator) {
   const op_map = {
     union: 'UNION',
-    intersect: 'INTERSECT',
+    intersection: 'INTERSECT',
     difference: 'EXCEPT',
   };
   // union, intersect, difference
@@ -346,6 +351,16 @@ function combine(cohort_ids, operators) {
   const [rest, tail] = [_.initial(cohort_ids), _.last(cohort_ids)];
   const [rest_ops, last_op] = [_.initial(operators), _.last(operators)];
   return combineTwo(combine(rest, rest_ops), cpq(tail), last_op);
+}
+
+function combineWrapper({ cohort_ids, operators, count = false }) {
+  const sqlQuery = combine(cohort_ids, operators);
+  if (count) {
+    return Prisma.sql`
+    SELECT COUNT(*) as count FROM (${sqlQuery}) as t
+    `;
+  }
+  return sqlQuery;
 }
 
 // TODO: join with user table and return author's data
@@ -397,12 +412,28 @@ function searchCohortsQuery({
   `;
 }
 
+const validateSO = ajv.compile(setOperationsSchema);
+function validateSetOperations(query) {
+  const valid = validateSO(query);
+  if (!valid) {
+    logger.error(JSON.stringify(validate.errors, null, 2));
+    throw new Error('Invalid query');
+  }
+  const { cohort_ids, operators } = query;
+  if (cohort_ids.length !== operators.length + 1) {
+    logger.error(JSON.stringify(validate.errors, null, 2));
+    throw new Error(' Invalid query: length of cohort_ids should be one more than length of operators');
+  }
+  return true;
+}
+
 module.exports = {
   validateCohortQuery,
   buildCohortQuery: buildQuery,
   sanitizeCohortQuery,
   CATEGORIES: tables,
-  combineCohortQuery: combine,
+  combineCohortQuery: combineWrapper,
   getCohortByIdQuery,
   searchCohortsQuery,
+  validateSetOperations,
 };

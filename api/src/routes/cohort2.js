@@ -9,7 +9,7 @@ const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
 const {
   validateCohortQuery, buildCohortQuery, sanitizeCohortQuery, CATEGORIES,
-  searchCohortsQuery, getCohortByIdQuery,
+  searchCohortsQuery, getCohortByIdQuery, validateSetOperations, combineCohortQuery,
 } = require('../services/cohort');
 
 const isPermittedTo = accessControl('cohort');
@@ -97,6 +97,21 @@ router.post(
     const sqlQuery = buildCohortQuery(req.body.query.query, {
       count: true,
     });
+    // eslint-disable-next-line no-console
+    console.log(sqlQuery.sql, sqlQuery.values);
+    const rows = await prisma.$queryRaw(sqlQuery);
+    res.json({ count: Number(rows[0].count) });
+  }),
+);
+
+router.post(
+  '/search/set_operations',
+  validate([
+    body('set_operations').custom(validateSetOperations),
+  ]),
+  isPermittedTo('read'),
+  asyncHandler(async (req, res, next) => {
+    const sqlQuery = combineCohortQuery({ ...req.body.set_operations, count: true });
     // eslint-disable-next-line no-console
     console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);

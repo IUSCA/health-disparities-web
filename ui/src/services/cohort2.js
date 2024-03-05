@@ -48,6 +48,15 @@ class cohortService {
       },
     });
   }
+
+  searchParticipantsWithSetOperations(cohort_ids, operators) {
+    return api.post("/cohorts/search/set_operations", {
+      set_operations: {
+        cohort_ids,
+        operators,
+      },
+    });
+  }
 }
 
 export default new cohortService();

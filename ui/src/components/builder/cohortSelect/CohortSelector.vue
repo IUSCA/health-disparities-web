@@ -2,6 +2,8 @@
   <va-card>
     <va-card-content>
       <div class="flex flex-wrap items-center gap-y-3">
+        <!-- combination result -->
+        <CombinedCohort v-if="cohorts.length >= 2" />
         <!-- array of cohorts -->
         <div
           v-for="(cohort, idx) in cohorts"

@@ -47,6 +47,7 @@ import { transformQueryForApi } from "@/components/builder/queryBuilder/cohortQu
 import config from "@/config";
 import cohortService from "@/services/cohort2";
 import toast from "@/services/toast";
+import { useCohortsStore } from "@/stores/cohorts";
 import { useForm } from "vuestic-ui";
 
 // parent component can invoke these methods through the template ref
@@ -60,6 +61,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["save"]);
+
+const cohortsStore = useCohortsStore();
 
 const name = ref(props.cohort.name);
 const description = ref("");
@@ -87,16 +90,6 @@ function show() {
   visible.value = true;
 }
 
-function isNewCohort() {
-  // no id (null or undefined)
-  // if string and starts with "cohort_" then it's a new cohort
-  return (
-    !props.cohort.id ||
-    (typeof props.cohort.id === "string" &&
-      props.cohort.id.startsWith("cohort_"))
-  );
-}
-
 // TODO
 function handleSave() {
   const cohort_data = {
@@ -111,7 +104,7 @@ function handleSave() {
   };
   if (validate()) {
     loading.value = true;
-    (isNewCohort()
+    (cohortsStore.isNewCohort(props.cohort)
       ? cohortService.create(cohort_data)
       : cohortService.update(props.cohort.id, cohort_data)
     )

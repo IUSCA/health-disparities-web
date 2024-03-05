@@ -117,6 +117,12 @@ export const useCohortsStore = defineStore("cohorts", () => {
     return sanitizedCohort;
   }
 
+  function isNewCohort(c) {
+    // no id (null or undefined)
+    // if string and starts with "cohort_" then it's a new cohort
+    return !c.id || (typeof c.id === "string" && c.id.startsWith("cohort_"));
+  }
+
   return {
     cohorts,
     operators,
@@ -127,6 +133,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     updateOperator,
     makeEmptyCohort,
     transformStoredCohort,
+    isNewCohort,
   };
 });
 
