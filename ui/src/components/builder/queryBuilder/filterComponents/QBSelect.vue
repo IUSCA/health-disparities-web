@@ -1,16 +1,19 @@
 <template>
-  <div>
+  <div class="flex-grow">
     <VaSelect
       v-model="model"
       :options="options"
-      class="text-sm cohort-builder-select"
+      class="text-sm cohort-builder-select w-full"
       multiple
       :loading="loading"
       :max-visible-options="3"
       selected-top-shown
       searchable
-      highlight-matched-text
-    />
+      :highlight-matched-text="false"
+      :teleport="teleportOptions"
+    >
+    </VaSelect>
+    <div ref="teleportOptions" class="custom-options"></div>
   </div>
 </template>
 
@@ -39,6 +42,7 @@ const model = computed({
 
 const options = ref([]);
 const loading = ref(false);
+const teleportOptions = ref(null);
 
 watch(
   () => props.identifier,
@@ -63,6 +67,15 @@ watch(
 :deep(.cohort-builder-select) {
   .va-input-wrapper__field {
     --va-input-wrapper-min-height: 24px;
+  }
+}
+// for options in dropdown. make the font smaller and let the height be determined by the content
+:deep(.custom-options) {
+  .va-select-option {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    min-height: 1.75rem;
+    flex: none;
   }
 }
 </style>

@@ -76,7 +76,9 @@
       </template>
 
       <template #rule="ruleCtrl">
-        <div class="flex flex-wrap items-center gap-2 md:gap-3 text-sm">
+        <div
+          class="flex flex-wrap items-center gap-2 md:gap-3 text-sm w-[calc(100%-2rem)] max-w-3xl"
+        >
           <FilterChip :identifier="ruleCtrl.ruleIdentifier" />
           <VaSelect
             :model-value="ruleCtrl.connectorValue"
