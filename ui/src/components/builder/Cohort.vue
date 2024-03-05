@@ -42,8 +42,8 @@ import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 import {
-isAPIQueryEmpty,
-transformQueryForApi,
+  isAPIQueryEmpty,
+  transformQueryForApi,
 } from "./queryBuilder/cohortQueryBuilder";
 
 const cohort = defineModel("cohort");
@@ -60,7 +60,8 @@ const loading = ref(false);
 watchDebounced(
   () => cohort.value.query,
   (newQuery) => {
-    canon_query.value = transformQueryForApi(newQuery);
+    if(cohort.value?.is_supported)
+      canon_query.value = transformQueryForApi(newQuery);
   },
   {
     debounce: 200,
@@ -72,6 +73,7 @@ watchDebounced(
 watch(
   canon_query,
   (newQuery, oldQuery) => {
+    if(!cohort.value?.is_supported) return
     if (isAPIQueryEmpty(newQuery)) {
       cohort.value.size = totalParticipants.value;
       return;

@@ -49,22 +49,22 @@ defineExpose({
   hide,
 });
 
-const props = defineProps({
-  cohort: Object,
-});
+// const props = defineProps({
+//   cohort: Object,
+// });
 
 const emit = defineEmits(["save"]);
 
-const name = ref(props.cohort.name);
+const name = ref("");
 const description = ref("");
 const is_published = ref(false);
 const is_locked = ref(false);
 const visible = ref(false);
 const { isValid, validate } = useForm("formRef");
 
-watch([() => props.cohort.name], () => {
-  name.value = props.cohort.name;
-});
+// watch([() => props.cohort.name], () => {
+//   name.value = props.cohort.name;
+// });
 
 watch(is_published, (value) => {
   if (value) {

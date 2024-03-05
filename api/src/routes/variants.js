@@ -371,8 +371,7 @@ router.post(
 );
 
 router.post(
-  '/cohort',
-  isPermittedTo('create'),
+  '/cohorts',
   validate([
     body('variant_ids').isArray().customSanitizer((xs) => xs.map(variant_id_sanitizer)),
     body('source_id').isInt().toInt(),

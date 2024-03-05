@@ -92,7 +92,7 @@ const schema = {
         operator: { enum: ['AND', 'OR', 'NOT_AND', 'NOT_OR'] },
         children: {
           type: 'array',
-          items: { anyOf: [{ $ref: '#' }, { $ref: '#/definitions/leafNode' }] },
+          items: { anyOf: [{ $ref: '#/definitions/query' }, { $ref: '#/definitions/leafNode' }] },
         },
       },
       required: ['operator', 'children'],

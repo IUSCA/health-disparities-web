@@ -96,8 +96,8 @@
         <va-button
           class="flex-none"
           preset="primary"
-          :disabled="selected.length != 0"
-          @click="saveModal.value.show()"
+          :disabled="selected.length === 0"
+          @click="saveModal.show()"
         >
           <div
             class="flex flex-row gap-1 items-center text-xl text-teal-600 dark:text-teal-500 font-bold"
@@ -1040,7 +1040,7 @@ watchDebounced(
 const saveModal = ref(null);
 const cohort_id = ref(null);
 function handleOnSave(cohort_data) {
-  const isNewCohort = !!cohort_id.value;
+  const isNewCohort = !cohort_id.value;
   const req_body = {
     ...cohort_data,
     variant_ids: selected.value.map((row) => [

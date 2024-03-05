@@ -6,7 +6,7 @@
       icon="save"
       preset="primary"
       size="small"
-      :disabled="isQueryEmpty(props.cohort.query)"
+      :disabled="!props.cohort.is_supported || isQueryEmpty(props.cohort.query)"
     >
       Save
     </va-button>

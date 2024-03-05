@@ -49,8 +49,7 @@ class VariantService {
     });
   }
 
-  updateCohort({
-    cohort_id,
+  updateCohort(cohort_id, {
     variant_ids,
     source_id,
     snapshot_id,
