@@ -1,6 +1,6 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const _ = require('lodash/fp');
 const createError = require('http-errors');
 const { validate } = require('../middleware/validators');
@@ -367,6 +367,124 @@ router.post(
       return_count: true,
     });
     res.json({ count });
+  }),
+);
+
+router.post(
+  '/cohort',
+  isPermittedTo('create'),
+  validate([
+    body('variant_ids').isArray().customSanitizer((xs) => xs.map(variant_id_sanitizer)),
+    body('source_id').isInt().toInt(),
+    body('snapshot_id').isInt().toInt(),
+    body('name').isString().notEmpty(),
+    body('is_published').optional().isBoolean(),
+    body('is_locked').optional().isBoolean(),
+    body('description').optional().isString(),
+    body('metadata').optional().isObject(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const { variant_ids, source_id, snapshot_id } = req.body;
+    if (!variant_ids?.length) {
+      return res.json({ count: 0 });
+    }
+    const participants = await participants_with_variants({
+      variant_ids,
+      source_id,
+      snapshot_id,
+      username: req.user.username,
+    });
+
+    const cohort_data = _.flow([
+      _.pick(['name', 'is_published', 'description', 'metadata']),
+      _.omitBy(_.isNil),
+    ])(req.body);
+    cohort_data.query = {
+      name: 'genotype',
+      namespace: 'edu.iu.sca.biobank',
+      version: '1.0.0',
+      query: {},
+    };
+    cohort_data.metadata = {
+      ...cohort_data.metadata,
+      variant_search: {
+        source_id,
+        snapshot_id,
+      },
+    };
+
+    const cohort = await prisma.cohort.create({
+      data: {
+        ...cohort_data,
+        author_id: req.user.id,
+        participants,
+      },
+      select: {
+        id: true,
+      },
+    });
+    res.json(cohort);
+  }),
+);
+
+router.patch(
+  '/cohort/:id',
+  isPermittedTo('create'),
+  validate([
+    param('id').isInt().toInt(),
+    body('variant_ids').isArray().customSanitizer((xs) => xs.map(variant_id_sanitizer)),
+    body('source_id').isInt().toInt(),
+    body('snapshot_id').isInt().toInt(),
+    body('name').optional().isString().notEmpty(),
+    body('published').optional().isBoolean(),
+    body('description').optional().isString(),
+    body('metadata').optional().isObject(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const { variant_ids, source_id, snapshot_id } = req.body;
+    if (!variant_ids?.length) {
+      return res.json({ count: 0 });
+    }
+    const participants = await participants_with_variants({
+      variant_ids,
+      source_id,
+      snapshot_id,
+      username: req.user.username,
+    });
+
+    const cohortToUpdate = await prisma.cohort.findUniqueOrThrow({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    const cohort_data = _.pick(['name', 'published', 'description', 'metadata'])(req.body);
+
+    cohort_data.metadata = _.merge(cohortToUpdate.metadata, {
+      variant_search: {
+        source_id,
+        snapshot_id,
+      },
+    });
+
+    cohort_data.query = {
+      name: 'genotype',
+      namespace: 'edu.iu.sca.biobank',
+      version: '1.0.0',
+      query: {},
+    };
+
+    const cohort = await prisma.cohort.create({
+      data: {
+        ...cohort_data,
+        author_id: req.user.id,
+        participants,
+      },
+      select: {
+        id: true,
+      },
+    });
+    res.json(cohort);
   }),
 );
 

@@ -95,12 +95,14 @@
         <!-- Participants Count-->
         <va-button
           class="flex-none"
-          preset="secondary"
-          :disabled="selected.length == 0"
+          preset="primary"
+          :disabled="selected.length != 0"
+          @click="saveModal.value.show()"
         >
           <div
             class="flex flex-row gap-1 items-center text-xl text-teal-600 dark:text-teal-500 font-bold"
           >
+            <i-mdi-account-group />
             <NumberTransition
               :target="num_participants"
               :debounce="100"
@@ -108,10 +110,11 @@
               class="mr-1"
             />
             <!-- <span> {{ num_participants }} </span> -->
-            <i-mdi:group-add class="" v-if="breakpoint.mdDown" />
+            <!-- <i-mdi:group-add class="" v-if="breakpoint.mdDown" />
             <div class="min-w-[108px]" v-else>
               {{ maybePluralize(num_participants, "Participant", "s", false) }}
-            </div>
+            </div> -->
+            <i-mdi-content-save-edit />
           </div>
         </va-button>
 
@@ -440,6 +443,7 @@
       </div>
     </template>
   </va-modal>
+  <GenotypeCohortSaveModal ref="saveModal" @save="handleOnSave" />
 </template>
 
 <script setup>
@@ -1031,6 +1035,49 @@ watchDebounced(
   },
   { debounce: 500 },
 );
+
+// saving cohort
+const saveModal = ref(null);
+const cohort_id = ref(null);
+function handleOnSave(cohort_data) {
+  const isNewCohort = !!cohort_id.value;
+  const req_body = {
+    ...cohort_data,
+    variant_ids: selected.value.map((row) => [
+      row.chr,
+      row.position,
+      row.ref,
+      row.alt,
+    ]),
+    snapshot_id: snapshot.value,
+    source_id: source.value,
+  };
+
+  if (isNewCohort) {
+    variantService
+      .createCohort(req_body)
+      .then((res) => {
+        cohort_id.value = res.data.id;
+        toast.success("Cohort saved successfully");
+        saveModal.value.hide();
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Error saving cohort");
+      });
+  } else {
+    variantService
+      .updateCohort(cohort_id.value, req_body)
+      .then(() => {
+        toast.success("Cohort updated successfully");
+        saveModal.value.hide();
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Error updating cohort");
+      });
+  }
+}
 </script>
 
 <style scoped>

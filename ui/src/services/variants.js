@@ -28,6 +28,47 @@ class VariantService {
       snapshot_id,
     });
   }
+
+  createCohort({
+    variant_ids,
+    source_id,
+    snapshot_id,
+    name,
+    description = null,
+    is_published = null,
+    is_locked = null,
+  } = {}) {
+    return api.post(`/variants/cohorts`, {
+      variant_ids,
+      source_id,
+      snapshot_id,
+      name,
+      description,
+      is_published,
+      is_locked,
+    });
+  }
+
+  updateCohort({
+    cohort_id,
+    variant_ids,
+    source_id,
+    snapshot_id,
+    name,
+    description = null,
+    is_published = null,
+    is_locked = null,
+  } = {}) {
+    return api.put(`/variants/cohorts/${cohort_id}`, {
+      variant_ids,
+      source_id,
+      snapshot_id,
+      name,
+      description,
+      is_published,
+      is_locked,
+    });
+  }
 }
 
 export default new VariantService();
