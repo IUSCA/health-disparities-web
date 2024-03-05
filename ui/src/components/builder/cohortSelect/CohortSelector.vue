@@ -100,23 +100,13 @@
 </template>
 
 <script setup>
-import config from "@/config";
 import { stringToRGB } from "@/services/colors";
 import { useCohortsStore } from "@/stores/cohorts";
-import _ from "lodash";
 import { storeToRefs } from "pinia";
-import {
-defaultQuery,
-transformStoredQuery,
-} from "../queryBuilder/cohortQueryBuilder";
 import { DEFAULT_LOGICAL_OPERATOR, combinations } from "./combineCohorts";
 
 const cohortsStore = useCohortsStore();
-const {
-  cohorts,
-  operators: logicalOperators,
-  totalParticipants,
-} = storeToRefs(cohortsStore);
+const { cohorts, operators: logicalOperators } = storeToRefs(cohortsStore);
 
 // const props = defineProps({});
 
@@ -136,40 +126,12 @@ function addNewCohort() {
   );
 }
 
-function isPhenotypeQuery({ name, namespace, version }) {
-  return (
-    name === config.cohort.phenotype_schema.name &&
-    namespace === config.cohort.phenotype_schema.namespace &&
-    version === config.cohort.phenotype_schema.version
-  );
-}
-
 function addCohort(cohort) {
   // add an existing cohort
-  const { query: queryContainer, size, ...rest } = cohort;
-  const { name, namespace, version, query, set_operations } = queryContainer;
-  const sanitizedCohort = {
-    ...rest,
-    set_operations,
-    query_schema: { name, namespace, version },
-  };
-
-  if (isPhenotypeQuery({ name, namespace, version })) {
-    sanitizedCohort.is_supported = true;
-    if (_.isEmpty(query)) {
-      sanitizedCohort.query = defaultQuery();
-      sanitizedCohort.size = totalParticipants.value;
-    } else {
-      sanitizedCohort.query = transformStoredQuery(query);
-      sanitizedCohort.size = size;
-    }
-  } else {
-    // unsupported query type
-    sanitizedCohort.is_supported = false;
-    sanitizedCohort.query = query;
-    sanitizedCohort.size = size;
-  }
-  cohortsStore.appendCohort(sanitizedCohort, DEFAULT_LOGICAL_OPERATOR);
+  cohortsStore.appendCohort(
+    cohortsStore.transformStoredCohort(cohort),
+    DEFAULT_LOGICAL_OPERATOR,
+  );
 }
 </script>
 

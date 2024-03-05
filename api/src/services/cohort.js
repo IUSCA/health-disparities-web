@@ -136,14 +136,14 @@ function validateCohortQuery(query) {
   return true;
 }
 
-function sanitizeCohortQuery(queryJson) {
+function _sanitizeCohortQuery(queryJson) {
   // for fields that are of type numeric, convert the value to number
   const { operator, children } = queryJson;
   if (children) {
     // non-leaf node
     return {
       operator,
-      children: children.map((child) => sanitizeCohortQuery(child)),
+      children: children.map((child) => _sanitizeCohortQuery(child)),
     };
   }
   // leaf node
@@ -171,6 +171,13 @@ function sanitizeCohortQuery(queryJson) {
     field,
     operator: op,
     value: new_value,
+  };
+}
+
+function sanitizeCohortQuery(queryJson) {
+  return {
+    ...queryJson,
+    query: _sanitizeCohortQuery(queryJson.query),
   };
 }
 

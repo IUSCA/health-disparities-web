@@ -8,7 +8,10 @@
         <div class="mt-3">
           <CohortActions
             :cohort="cohort"
-            @save="(savedCohort) => (cohort = savedCohort)"
+            @save="
+              (savedCohort) =>
+                (cohort = cohortsStore.transformStoredCohort(savedCohort))
+            "
             @export="exportCohort(cohort, idx)"
             @remove="() => cohortsStore.deleteCohort(props.idx)"
           />

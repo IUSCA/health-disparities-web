@@ -1,4 +1,7 @@
-import { defaultQuery } from "@/components/builder/queryBuilder/cohortQueryBuilder";
+import {
+  defaultQuery,
+  transformStoredQuery,
+} from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import config from "@/config";
 import _ from "lodash";
 import { acceptHMRUpdate, defineStore } from "pinia";
@@ -78,6 +81,42 @@ export const useCohortsStore = defineStore("cohorts", () => {
     };
   }
 
+  function isPhenotypeQuery({ name, namespace, version }) {
+    return (
+      name === config.cohort.phenotype_schema.name &&
+      namespace === config.cohort.phenotype_schema.namespace &&
+      version === config.cohort.phenotype_schema.version
+    );
+  }
+
+  function transformStoredCohort(cohort) {
+    console.log("transformStoredCohort", cohort);
+    const { query: queryContainer, size, ...rest } = cohort;
+    const { name, namespace, version, query, set_operations } = queryContainer;
+    const sanitizedCohort = {
+      ...rest,
+      set_operations,
+      query_schema: { name, namespace, version },
+    };
+
+    if (isPhenotypeQuery({ name, namespace, version })) {
+      sanitizedCohort.is_supported = true;
+      if (_.isEmpty(query)) {
+        sanitizedCohort.query = defaultQuery();
+        sanitizedCohort.size = totalParticipants.value;
+      } else {
+        sanitizedCohort.query = transformStoredQuery(query);
+        sanitizedCohort.size = size;
+      }
+    } else {
+      // unsupported query type
+      sanitizedCohort.is_supported = false;
+      sanitizedCohort.query = query;
+      sanitizedCohort.size = size;
+    }
+    return sanitizedCohort;
+  }
+
   return {
     cohorts,
     operators,
@@ -87,6 +126,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     updateCohort,
     updateOperator,
     makeEmptyCohort,
+    transformStoredCohort,
   };
 });
 

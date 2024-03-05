@@ -10,7 +10,7 @@
   >
     <VaForm ref="formRef" class="flex flex-col gap-3 max-w-lg">
       <VaInput
-        v-model="_name"
+        v-model="name"
         label="Name"
         required
         placeholder="Enter a name for the cohort"
@@ -25,9 +25,14 @@
         :max-rows="5"
       />
       <VaCheckbox
-        v-model="published"
+        v-model="is_published"
         label="Publish Cohort"
-        description="Make this cohort public so that others can see it."
+        description="Make this cohort public so that others can see it. Publishing the cohort will also lock it."
+      />
+      <VaCheckbox
+        v-model="is_locked"
+        label="Lock Cohort"
+        description="Freeze the cohort so that it cannot be modified."
       />
     </VaForm>
     <div class="flex justify-end gap-3">
@@ -38,6 +43,8 @@
 </template>
 
 <script setup>
+import { transformQueryForApi } from "@/components/builder/queryBuilder/cohortQueryBuilder";
+import config from "@/config";
 import cohortService from "@/services/cohort2";
 import toast from "@/services/toast";
 import { useForm } from "vuestic-ui";
@@ -49,24 +56,27 @@ defineExpose({
 });
 
 const props = defineProps({
-  name: String,
-  query: {
-    type: [Object, null],
-    required: true,
-  },
+  cohort: Object,
 });
 
 const emit = defineEmits(["save"]);
 
-const _name = ref(props.name);
+const name = ref(props.cohort.name);
 const description = ref("");
-const published = ref(false);
+const is_published = ref(false);
+const is_locked = ref(false);
 const visible = ref(false);
 const loading = ref(false);
 const { isValid, validate } = useForm("formRef");
 
-watch([() => props.name], () => {
-  _name.value = props.name;
+watch([() => props.cohort.name], () => {
+  name.value = props.cohort.name;
+});
+
+watch(is_published, (value) => {
+  if (value) {
+    is_locked.value = true;
+  }
 });
 
 function hide() {
@@ -77,17 +87,34 @@ function show() {
   visible.value = true;
 }
 
+function isNewCohort() {
+  // no id (null or undefined)
+  // if string and starts with "cohort_" then it's a new cohort
+  return (
+    !props.cohort.id ||
+    (typeof props.cohort.id === "string" &&
+      props.cohort.id.startsWith("cohort_"))
+  );
+}
+
+// TODO
 function handleSave() {
   const cohort_data = {
-    name: _name.value,
+    name: name.value,
     description: description.value,
-    published: published.value,
-    query: props.query,
+    is_published: is_published.value,
+    is_locked: is_locked.value,
+    query: {
+      ...config.cohort.phenotype_schema,
+      query: transformQueryForApi(props.cohort.query),
+    },
   };
   if (validate()) {
     loading.value = true;
-    cohortService
-      .create(cohort_data)
+    (isNewCohort()
+      ? cohortService.create(cohort_data)
+      : cohortService.update(props.cohort.id, cohort_data)
+    )
       .then((res) => {
         emit("save", res.data);
         hide();
