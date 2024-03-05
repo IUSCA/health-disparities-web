@@ -138,6 +138,7 @@ function validateCohortQuery(query) {
 
 function _sanitizeCohortQuery(queryJson) {
   // for fields that are of type numeric, convert the value to number
+  // for fields that are of date type, convert the value to date
   const { operator, children } = queryJson;
   if (children) {
     // non-leaf node
@@ -164,6 +165,14 @@ function _sanitizeCohortQuery(queryJson) {
       new_value = value.map((v) => parseFloat(v));
     } else {
       new_value = parseFloat(value);
+    }
+  }
+
+  if (dbSchema[category][fieldName] === 'DateTime') {
+    if (op === 'in' || op === 'not_in') {
+      new_value = value.map((v) => new Date(v));
+    } else {
+      new_value = new Date(value);
     }
   }
 
