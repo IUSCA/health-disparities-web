@@ -424,27 +424,27 @@ const sources = [
   },
 ];
 
-const cohorts = [
-  {
-    id: 1,
-    name: 'Cohort-1',
-    query: {},
-    published: true,
-    description: 'description of Cohort-1',
-  },
-  {
-    id: 2,
-    name: 'Cohort-2',
-    query: {},
-    published: true,
-  },
-  {
-    id: 3,
-    name: 'Cohort-3',
-    query: {},
-    published: false,
-  },
-];
+// const cohorts = [
+//   {
+//     id: 1,
+//     name: 'Cohort-1',
+//     query: {},
+//     published: true,
+//     description: 'description of Cohort-1',
+//   },
+//   {
+//     id: 2,
+//     name: 'Cohort-2',
+//     query: {},
+//     published: true,
+//   },
+//   {
+//     id: 3,
+//     name: 'Cohort-3',
+//     query: {},
+//     published: false,
+//   },
+// ];
 
 module.exports = {
   roles,
@@ -465,6 +465,6 @@ module.exports = {
   participants,
   user_protocol_assoc,
   participant_protocol_assoc,
-  cohorts,
+  // cohorts,
   sources,
 };
