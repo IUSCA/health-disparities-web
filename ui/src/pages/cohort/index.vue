@@ -1,24 +1,29 @@
 <template>
-  <!-- Cohort Selector -->
-  <div class="mb-5">
-    <CohortSelector />
+  <div v-if="cohorts.length === 0">
+    <CohortBuilderLanding />
   </div>
+  <div v-else>
+    <!-- Cohort Selector -->
+    <div class="mb-5">
+      <CohortSelector />
+    </div>
 
-  <!-- Query Builder -->
-  <div class="flex flex-col gap-3">
-    <VaCard
-      class="cohort-card"
-      v-for="(cohort, idx) in cohorts"
-      :key="cohort.id"
-    >
-      <VaCardContent>
-        <Cohort
-          :idx="idx"
-          :cohort="cohort"
-          @update:cohort="(updatedCohort) => (cohorts[idx] = updatedCohort)"
-        />
-      </VaCardContent>
-    </VaCard>
+    <!-- Cohorts -->
+    <div class="flex flex-col gap-3">
+      <VaCard
+        class="cohort-card"
+        v-for="(cohort, idx) in cohorts"
+        :key="cohort.id"
+      >
+        <VaCardContent>
+          <Cohort
+            :idx="idx"
+            :cohort="cohort"
+            @update:cohort="(updatedCohort) => (cohorts[idx] = updatedCohort)"
+          />
+        </VaCardContent>
+      </VaCard>
+    </div>
   </div>
 </template>
 
