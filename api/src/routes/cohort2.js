@@ -7,10 +7,11 @@ const prisma = new PrismaClient();
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
-const {
-  validateCohortQuery, buildCohortQuery, sanitizeCohortQuery, CATEGORIES,
-  searchCohortsQuery, getCohortByIdQuery, validateSetOperations, combineCohortQuery,
-} = require('../services/cohort');
+const { searchCohortsQuery, getCohortByIdQuery } = require('../services/cohort');
+const { validateCohortQuery, sanitizeCohortQuery, validateSetOperations } = require('../services/cohort/validation');
+const { buildParticipantsQuery } = require('../services/cohort/participants');
+const { combineCohortQuery } = require('../services/cohort/combination');
+const { CATEGORIES } = require('../services/cohort/fields');
 
 const isPermittedTo = accessControl('cohort');
 const router = express.Router();
@@ -94,7 +95,7 @@ router.post(
   ]),
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
-    const sqlQuery = buildCohortQuery(req.body.query.query, {
+    const sqlQuery = buildParticipantsQuery(req.body.query.query, {
       count: true,
     });
     // eslint-disable-next-line no-console
@@ -159,7 +160,7 @@ router.post(
       _.omitBy(_.isNil),
     ])(req.body);
 
-    const sqlQuery = buildCohortQuery(req.body.query.query);
+    const sqlQuery = buildParticipantsQuery(req.body.query.query);
     // eslint-disable-next-line no-console
     console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
@@ -219,7 +220,7 @@ router.patch(
     }
 
     if (cohort_data.query) {
-      const sqlQuery = buildCohortQuery(cohort_data.query.query);
+      const sqlQuery = buildParticipantsQuery(cohort_data.query.query);
       // eslint-disable-next-line no-console
       console.log(sqlQuery.sql, sqlQuery.values);
       const rows = await prisma.$queryRaw(sqlQuery);
