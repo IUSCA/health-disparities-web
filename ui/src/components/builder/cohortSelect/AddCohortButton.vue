@@ -1,53 +1,67 @@
 <template>
-  <VaDropdown :offset="[0, 40]">
-    <template #anchor>
-      <va-button
-        color="primary"
-        icon="add"
-        round
-        class="ml-5"
-        :disabled="cohorts.length >= 5"
-        v-if="cohorts.length > 0"
-      />
-      <va-button
-        color="primary"
-        icon="add"
-        round
-        class="ml-5"
-        size="large"
-        v-else
-      >
-        Add Cohort
+  <div v-if="cohorts.length > 0">
+    <VaDropdown :offset="[0, 40]">
+      <template #anchor>
+        <va-button
+          color="primary"
+          icon="add"
+          round
+          class="ml-5"
+          :disabled="cohorts.length >= 5"
+        />
+      </template>
+
+      <VaDropdownContent>
+        <div class="flex flex-col gap-1 py-1 items-start">
+          <!-- new cohort button -->
+          <va-button
+            @click="addNewCohort"
+            preset="secondary"
+            icon="group_add"
+            class="cohort-select-buttons w-full"
+          >
+            New Cohort
+          </va-button>
+
+          <!-- Search for cohort -->
+          <!-- opens the CohortSearchModal -->
+          <!-- which emits select event when user clicks on cohort from search resutls -->
+          <!-- addCohort is the handler -->
+          <va-button
+            @click="cohortSearchModal.show"
+            preset="secondary"
+            icon="search"
+            class="cohort-select-buttons w-full"
+          >
+            Search Cohorts
+          </va-button>
+        </div>
+      </VaDropdownContent>
+    </VaDropdown>
+  </div>
+  <div v-else>
+    <div class="flex flex-wrap gap-5 items-center">
+      <!-- new cohort button -->
+      <va-button @click="addNewCohort" icon="add" class="" size="large">
+        New Cohort
       </va-button>
-    </template>
 
-    <VaDropdownContent>
-      <div class="flex flex-col gap-1 py-1 items-start">
-        <!-- new cohort button -->
-        <va-button
-          @click="addNewCohort"
-          preset="secondary"
-          icon="group_add"
-          class="cohort-select-buttons w-full"
-        >
-          New Cohort
-        </va-button>
-
-        <!-- Search for cohort -->
-        <!-- opens the CohortSearchModal -->
-        <!-- which emits select event when user clicks on cohort from search resutls -->
-        <!-- addCohort is the handler -->
-        <va-button
-          @click="cohortSearchModal.show"
-          preset="secondary"
-          icon="search"
-          class="cohort-select-buttons w-full"
-        >
-          Search Cohorts
-        </va-button>
-      </div>
-    </VaDropdownContent>
-  </VaDropdown>
+      <!-- Search for cohort -->
+      <!-- opens the CohortSearchModal -->
+      <!-- which emits select event when user clicks on cohort from search resutls -->
+      <!-- addCohort is the handler -->
+      <va-button
+        preset="primary"
+        icon="search"
+        class=""
+        size="large"
+        border-color="primary"
+        @click="() => cohortSearchModal.show()"
+      >
+        Search Cohorts
+      </va-button>
+    </div>
+  </div>
   <CohortSearchModal ref="cohortSearchModal" @select="addCohort" />
 </template>
 
