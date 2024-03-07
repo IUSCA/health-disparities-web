@@ -229,13 +229,13 @@ class Medication(PhenotypeDataLoader):
     def transform(self, df, ib_id_map):
         df['start_date'] = df['DEID_START_DATE'].map(parse_date)
         df['participant_id'] = df['IB_ID'].map(ib_id_map)
-        df['dispense_qty'] = np.floor(pd.to_numeric(df['DISPENSEQTY'], errors='coerce')).astype('Int64')
+        df['dispense_qty'] = pd.to_numeric(df['DISPENSEQTY'], errors='coerce').astype('Float64')
         df['nbr_refills'] = np.floor(pd.to_numeric(df['NBRREFILLS'], errors='coerce')).astype('Int64')
+        df['strength_dose'] = pd.to_numeric(df['STRENGTHDOSE'].str.replace(',', ''), errors='coerce').astype('Float64')
         df.rename(columns={
             'DRUG_NAME': 'name',
             'DRUG_CATEGORY': 'category',
             'DISPENSEQTYUNIT': 'dispense_qty_unit',
-            'STRENGTHDOSE': 'strength_dose',
             'STRENGTHDOSEUNIT': 'strength_dose_unit'
         }, inplace=True)
         return df[self.columns]
@@ -256,11 +256,12 @@ loaders = {
 def main(data_dir,
          enroll_snapshot_id,
          out_dir=f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_results',
-         dry_run=False):
+         glob='*.csv',
+         dry_run=False,
+         ):
     """
     Load phenotype data from csv files into the database.
     """
-
     data_dir = Path(data_dir).resolve()
     out_dir = Path(out_dir).resolve()
     out_dir.mkdir(exist_ok=True)
@@ -272,7 +273,7 @@ def main(data_dir,
 
     ib_id_map = participants.fetch_all()
 
-    for csv_file in data_dir.glob('*.csv'):
+    for csv_file in data_dir.glob(glob):
         # Find the loader class for the current file
         for stem, Loader in loaders.items():
             if stem in csv_file.stem:

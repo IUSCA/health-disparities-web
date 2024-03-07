@@ -140,7 +140,6 @@ model user {
   projects           project_user[]
   password           user_password?
   login              user_login?
-  groups             group_user[]
   accesses           data_access_log[]
   stage_requests     stage_request_log[]
   protocols          user_protocol[]
@@ -390,7 +389,7 @@ model medication {
   dispense_qty       Decimal?
   dispense_qty_unit  String?
   nbr_refills        Int?
-  strength_dose      String?
+  strength_dose      Decimal?
   strength_dose_unit String?
   participant_id     Int
   participant        participant @relation(fields: [participant_id], references: [id])
@@ -405,7 +404,7 @@ model results_by {
 }
 
 model cohort {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   name         String
   description  String?
   query        Json
@@ -415,6 +414,7 @@ model cohort {
   is_published Boolean  @default(false)
   is_locked    Boolean  @default(false)
   is_protected Boolean  @default(false)
+  is_temp      Boolean  @default(false)
   participants Int[]
   author_id    Int
   author       user     @relation(fields: [author_id], references: [id])
@@ -429,21 +429,21 @@ model cohort {
 //   @@id([cohort_id, user_id])
 // }
 
-model group {
-  id    Int          @id @default(autoincrement())
-  name  String
-  query Json
-  users group_user[]
-}
+// model group {
+//   id    Int          @id @default(autoincrement())
+//   name  String
+//   query Json
+//   users group_user[]
+// }
 
-model group_user {
-  group_id Int
-  user_id  Int
-  groups   group @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users    user  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+// model group_user {
+//   group_id Int
+//   user_id  Int
+//   groups   group @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+//   users    user  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([group_id, user_id])
-}
+//   @@id([group_id, user_id])
+// }
 
 // model cohort_participants {
 //   cohort_id      Int
