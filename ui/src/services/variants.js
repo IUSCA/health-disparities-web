@@ -49,15 +49,18 @@ class VariantService {
     });
   }
 
-  updateCohort(cohort_id, {
-    variant_ids,
-    source_id,
-    snapshot_id,
-    name,
-    description = null,
-    is_published = null,
-    is_locked = null,
-  } = {}) {
+  updateCohort(
+    cohort_id,
+    {
+      variant_ids,
+      source_id,
+      snapshot_id,
+      name,
+      description = null,
+      is_published = null,
+      is_locked = null,
+    } = {},
+  ) {
     return api.put(`/variants/cohorts/${cohort_id}`, {
       variant_ids,
       source_id,

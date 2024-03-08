@@ -8,10 +8,7 @@
         <div class="mt-3">
           <CohortActions
             :cohort="cohort"
-            @save="
-              (savedCohort) =>
-                (cohort = cohortsStore.transformStoredCohort(savedCohort))
-            "
+            @save="(savedCohort) => (cohort = savedCohort)"
             @export="exportCohort(cohort, idx)"
             @remove="() => cohortsStore.deleteCohort(props.idx)"
           />
@@ -29,7 +26,7 @@
         <div v-else class="flex h-full items-center justify-center">
           <i-mdi-alert-circle-outline class="" />
           <span class="ml-2 va-text-secondary">
-            This cohort is not editable by the Phenotype query builder.
+            Genomic variant cohort created with Variant Xplorer. (not editable)
           </span>
         </div>
       </div>
@@ -38,7 +35,6 @@
 </template>
 
 <script setup>
-import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 import {
@@ -57,6 +53,7 @@ const { totalParticipants } = storeToRefs(cohortsStore);
 const canon_query = ref(null);
 const loading = ref(false);
 
+// for every change in the query, transform it to the API query format (canonical query)
 watchDebounced(
   () => cohort.value.query,
   (newQuery) => {
@@ -64,12 +61,17 @@ watchDebounced(
       canon_query.value = transformQueryForApi(newQuery);
   },
   {
-    debounce: 200,
+    debounce: 300,
     deep: true,
-    immediate: true,
   },
 );
 
+// watch for changes in the canonical query
+// do not run on unsupported cohorts
+// if the canonical query is empty, set the cohort size to the total participants
+// deep compate old and new canonical queries to avoid unnecessary API calls
+// if the query has changed, call the API to get the count of participants
+// set cohort as dirty
 watch(
   canon_query,
   (newQuery, oldQuery) => {
@@ -80,8 +82,11 @@ watch(
     }
     if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
       console.log("Cohort query changed", newQuery, oldQuery);
+
+      cohort.value.is_dirty = true;
+
       loading.value = true;
-      cohortService
+      cohortsStore
         .searchParticipants(newQuery)
         .then((response) => {
           cohort.value.size = response.data.count;

@@ -1,12 +1,13 @@
 <template>
   <div class="flex flex-row gap-3 justify-start">
+    <!-- open save modal when clicked -->
     <va-button
       color="success"
       @click="saveModal.show()"
       icon="save"
       preset="primary"
       size="small"
-      :disabled="!props.cohort.is_supported || isQueryEmpty(props.cohort.query)"
+      :disabled="isSaveDisabled"
     >
       Save
     </va-button>
@@ -47,5 +48,12 @@ const props = defineProps({
 });
 const emit = defineEmits(["save", "export", "remove"]);
 const saveModal = ref(null);
+
+// disable save button when
+// - cohort is not supported
+// - canonical query is empty
+const isSaveDisabled = computed(() => {
+  return !props.cohort.is_supported || isQueryEmpty(props.cohort.query);
+});
 </script>
 ../queryBuilder/cohortQueryBuilder

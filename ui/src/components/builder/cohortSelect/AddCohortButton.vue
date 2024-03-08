@@ -77,7 +77,7 @@ const { cohorts } = storeToRefs(cohortsStore);
 const cohortSearchModal = ref(null);
 
 function addNewCohort() {
-  // add an empty cohort
+  // add an empty cohort - dirty: true
   cohortsStore.appendCohort(
     cohortsStore.makeEmptyCohort(),
     DEFAULT_LOGICAL_OPERATOR,
@@ -85,7 +85,7 @@ function addNewCohort() {
 }
 
 function addCohort(cohort) {
-  // add an existing cohort
+  // add an existing cohort - dirty: false
   cohortsStore.appendCohort(
     cohortsStore.transformStoredCohort(cohort),
     DEFAULT_LOGICAL_OPERATOR,
@@ -98,4 +98,3 @@ function addCohort(cohort) {
   --va-button-justify-content: left;
 }
 </style>
-./combination/combineCohorts

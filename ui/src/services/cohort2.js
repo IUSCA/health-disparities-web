@@ -58,13 +58,14 @@ class cohortService {
     });
   }
 
-  searchParticipants(query, set_operations = null) {
+  searchParticipants({ query, set_operations = null, save_results = false }) {
     return api.post("/cohorts/search", {
       query: {
         ...config.cohort.phenotype_schema,
         query,
         ...(set_operations != null && { set_operations }),
       },
+      save_results,
     });
   }
 

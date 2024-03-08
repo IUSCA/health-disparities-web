@@ -1,19 +1,28 @@
 import {
   defaultQuery,
+  transformQueryForApi,
   transformStoredQuery,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import config from "@/config";
+import cohortService from "@/services/cohort2";
 import _ from "lodash";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useCohortsStore = defineStore("cohorts", () => {
+  // maintain "dirty" state for each cohort
+  // - new cohorts are inherently dirty: makeEmptyCohort
+  // - when a cohort is saved, it gets clean: transformStoredCohort
+  // - when a cohort is loaded, it is clean: transformStoredCohort
+  // - when query of a cohort is changed, it gets dirty: Cohort Component
+
   const cohorts = ref([]);
 
   // sequence of set operations to be applied interleaved with cohorts
   const operators = ref([]);
 
   const totalParticipants = ref(0);
+  const isInCombineMode = computed(() => cohorts.value.length > 1);
 
   function appendCohort(cohort, op = null) {
     // op is the operator to be applied to the last cohort and this new cohort
@@ -56,6 +65,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     operators.value[idx1] = op;
   }
 
+  // service - no state change
   function makeNewName(baseName = "Untitled") {
     let name = baseName;
     let i = 1;
@@ -66,6 +76,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     return name;
   }
 
+  // service - no state change
   function makeEmptyCohort() {
     return {
       id: _.uniqueId("cohort_"),
@@ -78,10 +89,13 @@ export const useCohortsStore = defineStore("cohorts", () => {
       set_operations: null,
       query_schema: config.cohort.phenotype_schema,
       is_supported: true,
+      is_dirty: true,
+      search_id: null, // id of cohort results stored temporarily
     };
   }
 
-  function isPhenotypeQuery({ name, namespace, version }) {
+  // service - no state change
+  function isSupported({ name, namespace, version }) {
     return (
       name === config.cohort.phenotype_schema.name &&
       namespace === config.cohort.phenotype_schema.namespace &&
@@ -89,6 +103,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     );
   }
 
+  // service - no state change
   function transformStoredCohort(cohort) {
     console.log("transformStoredCohort", cohort);
     const { query: queryContainer, size, ...rest } = cohort;
@@ -97,9 +112,10 @@ export const useCohortsStore = defineStore("cohorts", () => {
       ...rest,
       set_operations,
       query_schema: { name, namespace, version },
+      dirty: false,
     };
 
-    if (isPhenotypeQuery({ name, namespace, version })) {
+    if (isSupported({ name, namespace, version })) {
       sanitizedCohort.is_supported = true;
       if (_.isEmpty(query)) {
         sanitizedCohort.query = defaultQuery();
@@ -117,16 +133,56 @@ export const useCohortsStore = defineStore("cohorts", () => {
     return sanitizedCohort;
   }
 
-  function isNewCohort(c) {
+  // service - no state change
+  function isNewCohort(id) {
     // no id (null or undefined)
-    // if string and starts with "cohort_" then it's a new cohort
-    return !c.id || (typeof c.id === "string" && c.id.startsWith("cohort_"));
+    // if id starts with "cohort_" then it's a new cohort
+    return !id || id.startsWith("cohort_");
+  }
+
+  // service - no state change
+  function saveCohort({
+    id,
+    name,
+    description,
+    is_published,
+    is_locked,
+    query,
+  }) {
+    const cohort_data = {
+      name,
+      description,
+      is_published,
+      is_locked,
+      query: {
+        ...config.cohort.phenotype_schema,
+        query: transformQueryForApi(query),
+      },
+    };
+    // if cohort is new, create it, otherwise update it
+    return (
+      isNewCohort(id)
+        ? cohortService.create(cohort_data)
+        : cohortService.update(id, cohort_data)
+    ).then((res) => {
+      return transformStoredCohort(res.data);
+    });
+  }
+
+  // wrapper for searchParticipants api call
+  // injects save_results parameter when in combine mode
+  function searchParticipants(query) {
+    return cohortService.searchParticipants({
+      query,
+      save_results: isInCombineMode.value,
+    });
   }
 
   return {
     cohorts,
     operators,
     totalParticipants,
+    isInCombineMode,
     appendCohort,
     deleteCohort,
     updateCohort,
@@ -134,6 +190,8 @@ export const useCohortsStore = defineStore("cohorts", () => {
     makeEmptyCohort,
     transformStoredCohort,
     isNewCohort,
+    saveCohort,
+    searchParticipants,
   };
 });
 

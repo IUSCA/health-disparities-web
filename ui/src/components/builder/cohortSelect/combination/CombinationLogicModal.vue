@@ -19,7 +19,7 @@
           <span class="font-semibold"> {{ cohorts[idx + 1].name }} </span>
         </p>
       </div>
-      <CombineCohortsForm v-model="logicalOperator" />
+      <CombinationLogicForm v-model="logicalOperator" />
       <va-divider />
       <CohortCombinationPrecedence
         :idx="idx"

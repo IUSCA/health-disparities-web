@@ -58,7 +58,7 @@
     </va-card-content>
   </va-card>
 
-  <CombineCohortsModal ref="combineCohortsModal" />
+  <CombinationLogicModal ref="combinationLogicModal" />
 </template>
 
 <script setup>
@@ -72,11 +72,10 @@ const { cohorts, operators: logicalOperators } = storeToRefs(cohortsStore);
 
 // const props = defineProps({});
 
-const combineCohortsModal = ref(null);
+const combinationLogicModal = ref(null);
 
 function changeCombinationLogic(left_operand_idx) {
   console.log("Change Combination Logic", left_operand_idx);
-  combineCohortsModal.value.show(left_operand_idx);
+  combinationLogicModal.value.show(left_operand_idx);
 }
 </script>
-./combination/combineCohorts
