@@ -117,10 +117,10 @@ import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
 import {
-cohortFilters,
-flatten,
-isUnaryOperator,
-operators,
+  cohortFilters,
+  flatten,
+  isUnaryOperator,
+  operators,
 } from "../cohortFilters";
 import { defaultQuery } from "./cohortQueryBuilder";
 import QBAsyncSelect from "./filterComponents/QBAsyncSelect.vue";

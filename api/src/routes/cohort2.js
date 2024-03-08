@@ -311,14 +311,11 @@ router.post(
   ]),
   asyncHandler(async (req, res, next) => {
     // const { id } = req.params;
-    // const cohort = await prisma.cohort.findUniqueOrThrow({
-    //   where: {
-    //     id,
-    //   },
-    //   include: {
-    //     participants: true,
-    //   },
+    // CATEGORIES.map(async (category) => {
+    //   const sqlQuery = getDataQuery(category, id);
+    //   const rows = await prisma.$queryRaw(sqlQuery);
     // });
+
     // const filename = `cohort-${cohort.name}-${new Date().toISOString()}.json`;
     // res.attachment(filename);
     res.json({});

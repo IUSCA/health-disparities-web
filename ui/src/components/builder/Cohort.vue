@@ -60,7 +60,7 @@ const loading = ref(false);
 watchDebounced(
   () => cohort.value.query,
   (newQuery) => {
-    if(cohort.value?.is_supported)
+    if (cohort.value?.is_supported)
       canon_query.value = transformQueryForApi(newQuery);
   },
   {
@@ -73,7 +73,7 @@ watchDebounced(
 watch(
   canon_query,
   (newQuery, oldQuery) => {
-    if(!cohort.value?.is_supported) return
+    if (!cohort.value?.is_supported) return;
     if (isAPIQueryEmpty(newQuery)) {
       cohort.value.size = totalParticipants.value;
       return;

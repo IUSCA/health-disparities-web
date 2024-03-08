@@ -26,8 +26,8 @@
 
 <script setup>
 import {
-isAPIQueryEmpty,
-transformQueryForApi,
+  isAPIQueryEmpty,
+  transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 // import config from "@/config";
 import cohortService from "@/services/cohort2";

@@ -5,17 +5,8 @@
 </template>
 
 <script setup>
-const props = defineProps({
-  modelValue: Date,
-});
-const emit = defineEmits(["update:modelValue"]);
-
-const model = computed({
-  get: () => props.modelValue,
-  set: (value) => {
-    emit("update:modelValue", value);
-  },
-});
+// const props = defineProps({});
+const model = defineModel();
 </script>
 
 <style scoped lang="scss">
