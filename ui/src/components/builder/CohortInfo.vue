@@ -10,24 +10,24 @@
       <div class="ml-2 text-lg">{{ props.cohort.name }}</div>
       <div>
         <i-mdi-visibility
-          class="va-text-secondary ml-2"
+          class="va-text-secondary ml-2 text-sm"
           v-if="props.cohort.is_published"
           title="publsihed"
         />
         <i-mdi-visibility-off
-          class="va-text-secondary ml-2"
+          class="va-text-secondary ml-2 text-sm"
           v-else
           title="unpublished"
         />
       </div>
       <div>
         <i-mdi-lock
-          class="va-text-secondary ml-2"
+          class="va-text-secondary ml-2 text-sm"
           v-if="props.cohort.is_locked"
           title="locked"
         />
         <i-mdi-lock-open-variant
-          class="va-text-secondary ml-2"
+          class="va-text-secondary ml-2 text-sm"
           v-else
           title="unlocked"
         />
