@@ -25,6 +25,9 @@
       </VaCard>
     </div>
   </div>
+  <!-- <div>
+    <QBDxNameSelect v-model="searchModel" />
+  </div> -->
 </template>
 
 <script setup>
@@ -35,6 +38,8 @@ import { storeToRefs } from "pinia";
 const cohortsStore = useCohortsStore();
 const { cohorts, totalParticipants } = storeToRefs(cohortsStore);
 // const props = defineProps({});
+
+// const searchModel = ref([]);
 
 cohortService.getTotalParticipants().then((res) => {
   totalParticipants.value = res.data.total;

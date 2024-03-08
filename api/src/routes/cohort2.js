@@ -54,6 +54,67 @@ router.get(
 );
 
 router.get(
+  '/:category/:field/startswith/:prefix',
+  isPermittedTo('read'),
+  validate([
+    param('category').isIn(CATEGORIES),
+    query('limit').optional().default(10).isInt({ min: 1, max: 1000 })
+      .toInt(),
+    query('offset').optional().default(0).isInt({ min: 0 })
+      .toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const { category, field } = req.params;
+    const _rows = await prisma[category].findMany({
+      where: {
+        [field]: {
+          startsWith: req.params.prefix || '',
+        },
+      },
+      orderBy: {
+        [field]: 'asc',
+      },
+      take: req.query.limit,
+      skip: req.query.offset,
+      distinct: [field],
+    });
+
+    // cache indefinitely - 1 year
+    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+    // res.set('Cache-control', 'private, max-age=31536000');
+    return res.json(_rows.map((row) => row[field]));
+  }),
+);
+
+router.get(
+  '/dxname',
+  isPermittedTo('read'),
+  validate([
+    query('limit').optional().default(10).isInt({ min: 1, max: 1000 })
+      .toInt(),
+    query('offset').optional().default(0).isInt({ min: 0 })
+      .toInt(),
+    query('text').default(''),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const searchText = req.query.text || '';
+    const _rows = await prisma.$queryRaw`
+      select name
+      from dx_unique_name dun
+      where similarity(name, ${searchText}) >= 0.1
+      order by similarity(name, ${searchText}) desc
+      limit ${req.query.limit}
+      offset ${req.query.offset}
+    `;
+
+    // cache indefinitely - 1 year
+    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+    // res.set('Cache-control', 'private, max-age=31536000');
+    return res.json(_rows.map((row) => row.name));
+  }),
+);
+
+router.get(
   '/',
   isPermittedTo('read'),
   validate([
@@ -124,7 +185,6 @@ router.get(
   '/:id',
   isPermittedTo('read'),
   validate([
-    param('id').isInt().toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['cohorts']
@@ -187,7 +247,6 @@ router.patch(
   '/:id',
   isPermittedTo('update'),
   validate([
-    param('id').isInt().toInt(),
     body('name').optional().isString().notEmpty(),
     body('query').optional()
       .custom(validateCohortQuery).bail()

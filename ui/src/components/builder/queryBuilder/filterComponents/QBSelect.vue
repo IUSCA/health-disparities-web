@@ -21,24 +21,13 @@
 import cohortService from "@/services/cohort2";
 
 const props = defineProps({
-  modelValue: {
-    type: [Array, String],
-    default: () => [],
-  },
   identifier: String,
   separator: {
     type: String,
     default: ".",
   },
 });
-const emit = defineEmits(["update:modelValue"]);
-
-const model = computed({
-  get: () => props.modelValue,
-  set: (value) => {
-    emit("update:modelValue", value);
-  },
-});
+const model = defineModel();
 
 const options = ref([]);
 const loading = ref(false);
@@ -47,8 +36,7 @@ const teleportOptions = ref(null);
 watch(
   () => props.identifier,
   () => {
-    const category = props.identifier.split(props.separator)[0];
-    const field = props.identifier.split(props.separator)[1];
+    const [category, field] = props.identifier.split(props.separator);
     loading.value = true;
     cohortService
       .unique(category, field)

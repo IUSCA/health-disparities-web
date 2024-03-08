@@ -20,6 +20,25 @@ class cohortService {
     });
   }
 
+  textFieldAutoComplete(category, field, text, limit = 100, offset = 0) {
+    return api.get(`/cohorts/${category}/${field}/startswith/${text}`, {
+      params: {
+        limit,
+        offset,
+      },
+    });
+  }
+
+  dxNameAutoComplete(text, limit = 100, offset = 0) {
+    return api.get("/cohorts/dxname", {
+      params: {
+        text,
+        limit,
+        offset,
+      },
+    });
+  }
+
   create(data) {
     return api.post("/cohorts", data);
   }

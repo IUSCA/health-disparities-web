@@ -153,7 +153,7 @@ export const cohortFilters = [
       },
       {
         key: "strength_dose",
-        type: "text",
+        type: "number",
         label: "Strength Dose",
         info: null,
       },
