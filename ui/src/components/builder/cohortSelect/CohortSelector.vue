@@ -62,10 +62,10 @@
 </template>
 
 <script setup>
+import { combinations } from "@/components/builder/cohortSelect/combination/constants";
 import { stringToRGB } from "@/services/colors";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
-import { combinations } from "./combineCohorts";
 
 const cohortsStore = useCohortsStore();
 const { cohorts, operators: logicalOperators } = storeToRefs(cohortsStore);
@@ -79,3 +79,4 @@ function changeCombinationLogic(left_operand_idx) {
   combineCohortsModal.value.show(left_operand_idx);
 }
 </script>
+./combination/combineCohorts

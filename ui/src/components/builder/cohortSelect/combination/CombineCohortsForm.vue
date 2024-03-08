@@ -25,9 +25,10 @@
 </template>
 
 <script setup>
-import { combinations } from "./combineCohorts";
+import { combinations } from "./constants";
 
 // const props = defineProps({});
 const model = defineModel();
 const combinationsList = Object.values(combinations);
 </script>
+./constants

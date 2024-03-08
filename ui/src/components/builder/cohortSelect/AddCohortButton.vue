@@ -66,9 +66,9 @@
 </template>
 
 <script setup>
+import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
-import { DEFAULT_LOGICAL_OPERATOR } from "./combineCohorts";
 
 const cohortsStore = useCohortsStore();
 const { cohorts } = storeToRefs(cohortsStore);
@@ -98,3 +98,4 @@ function addCohort(cohort) {
   --va-button-justify-content: left;
 }
 </style>
+./combination/combineCohorts

@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { isQueryEmpty } from "./queryBuilder/cohortQueryBuilder";
+import { isQueryEmpty } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 
 const props = defineProps({
   cohort: Object,
@@ -48,3 +48,4 @@ const props = defineProps({
 const emit = defineEmits(["save", "export", "remove"]);
 const saveModal = ref(null);
 </script>
+../queryBuilder/cohortQueryBuilder

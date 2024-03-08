@@ -12,7 +12,7 @@
 <script setup>
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
-import { combinations } from "./combineCohorts";
+import { combinations } from "./constants";
 
 const cohortsStore = useCohortsStore();
 const { cohorts, operators } = storeToRefs(cohortsStore);
@@ -48,3 +48,4 @@ const expression = computed(() => {
 });
 // const props = defineProps({});
 </script>
+./constants
