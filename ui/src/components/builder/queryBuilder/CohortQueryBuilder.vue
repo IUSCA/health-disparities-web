@@ -122,8 +122,10 @@ flatten,
 isUnaryOperator,
 operators,
 } from "../cohortFilters";
-import { defaultQuery, defultOperators } from "./cohortQueryBuilder";
+import { defaultQuery } from "./cohortQueryBuilder";
+import QBAsyncSelect from "./filterComponents/QBAsyncSelect.vue";
 import QBDate from "./filterComponents/QBDate.vue";
+import QBDxNameSelect from "./filterComponents/QBDxNameSelect.vue";
 import QBInput from "./filterComponents/QBInput.vue";
 import QBSelect from "./filterComponents/QBSelect.vue";
 
@@ -139,6 +141,18 @@ provide("queryBuilderDisabled", props.disabled);
 
 const filterSelectModal = ref(null);
 // const query = ref(null);
+
+/**
+ * Default operators for different data types.
+ */
+const defultOperators = {
+  select: "in",
+  number: "eq",
+  text: "eq",
+  date: "lte",
+  asyncSelect: "in",
+};
+
 const config = {
   operators: [
     {
@@ -174,7 +188,7 @@ const config = {
     return {
       identifier: field.id,
       name: field.label,
-      component: getComponentByType(field.type),
+      component: getComponent(field),
       initialValue: getInitialValue(field.type),
       connectorIdentifier: field.type,
       defaultConnectorValue: defultOperators[field.type],
@@ -182,16 +196,19 @@ const config = {
   }),
 };
 
-function getComponentByType(type) {
-  switch (type) {
-    case "text":
-      return QBInput;
+function getComponent(field) {
+  if (field.id === "dx.name") {
+    return QBDxNameSelect;
+  }
+  switch (field.type) {
     case "number":
       return QBInput;
     case "date":
       return QBDate;
     case "select":
       return QBSelect;
+    case "asyncSelect":
+      return QBAsyncSelect;
     default:
       return QBInput;
   }
@@ -206,6 +223,8 @@ function getInitialValue(type) {
     case "date":
       return null;
     case "select":
+      return () => [];
+    case "asyncSelect":
       return () => [];
     default:
       return null;

@@ -86,13 +86,13 @@ export const cohortFilters = [
     filters: [
       {
         key: "name",
-        type: "text",
+        type: "select",
         label: "Name",
         info: null,
       },
       {
         key: "code",
-        type: "text",
+        type: "asyncSelect",
         label: "Code",
         info: null,
       },
@@ -184,7 +184,7 @@ export const cohortFilters = [
       },
       {
         key: "dx_code",
-        type: "text",
+        type: "asyncSelect",
         label: "DX Code",
         info: null,
       },
@@ -269,6 +269,27 @@ export const cohortFilters = [
 export const operators = [
   {
     identifier: "select",
+    options: [
+      {
+        key: "in",
+        label: "is one of",
+      },
+      {
+        key: "not_in",
+        label: "is none of",
+      },
+      {
+        key: "is_null",
+        label: "is null",
+      },
+      {
+        key: "is_not_null",
+        label: "is not null",
+      },
+    ],
+  },
+  {
+    identifier: "asyncSelect",
     options: [
       {
         key: "in",

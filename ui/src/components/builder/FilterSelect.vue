@@ -69,6 +69,8 @@ function getTypeIcon(type) {
   switch (type) {
     case "text":
       return "mdi-abc";
+    case "asyncSelect":
+      return "mdi-format-list-group";
     case "number":
       return "mdi-numeric";
     case "date":

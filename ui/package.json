@@ -17,6 +17,7 @@
     "@fontsource/audiowide": "^5.0.11",
     "@metal_brains/query-builder-vue": "^1.3.0",
     "@vitejs/plugin-basic-ssl": "^1.0.1",
+    "@vueform/multiselect": "^2.6.6",
     "@vuestic/tailwind": "^0.1.3",
     "@vueuse/components": "^10.4.1",
     "@vueuse/core": "^10.4.1",

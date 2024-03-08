@@ -1,21 +1,20 @@
 <template>
-  <VaSelect
-    v-model="model"
-    :options="options"
-    class="text-sm cohort-builder-select w-full"
-    multiple
-    :loading="loading"
-    :max-visible-options="3"
-    selected-top-shown
-    searchable
-    :highlight-matched-text="false"
-    @updateSearch="deboundeSearch"
-    :noOptionsText="noOptionsText"
-    searchPlaceholderText="Search to see available options"
-  >
-  </VaSelect>
-  <div>
-    {{ model }}
+  <div class="flex-grow">
+    <VaSelect
+      v-model="model"
+      :options="options"
+      class="text-sm cohort-builder-select w-full"
+      multiple
+      :loading="loading"
+      :max-visible-options="3"
+      selected-top-shown
+      searchable
+      :highlight-matched-text="false"
+      @updateSearch="deboundeSearch"
+      :noOptionsText="noOptionsText"
+      searchPlaceholderText="Type to search..."
+    >
+    </VaSelect>
   </div>
 </template>
 
@@ -29,6 +28,10 @@ const props = defineProps({
     type: String,
     default: ".",
   },
+  debounceMs: {
+    type: Number,
+    default: 300,
+  },
 });
 
 const options = ref([]);
@@ -40,9 +43,9 @@ const noOptionsText = computed(() => {
     ? "Loading options..."
     : noResults.value
       ? "No options available"
-      : "";
+      : "Search to see available options";
 });
-const deboundeSearch = useDebounceFn(handleSearch, 500);
+const deboundeSearch = useDebounceFn(handleSearch, props.debounceMs);
 
 function fecthMatchingOptions(search) {
   const [category, field] = props.identifier.split(props.separator);
@@ -82,3 +85,20 @@ function handleSearch(search) {
   }
 }
 </script>
+
+<style scoped lang="scss">
+:deep(.cohort-builder-select) {
+  .va-input-wrapper__field {
+    --va-input-wrapper-min-height: 24px;
+  }
+}
+// for options in dropdown. make the font smaller and let the height be determined by the content
+:deep(.custom-options) {
+  .va-select-option {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    min-height: 1.75rem;
+    flex: none;
+  }
+}
+</style>

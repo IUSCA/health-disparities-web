@@ -1,16 +1,6 @@
 import { isUnaryOperator } from "../cohortFilters";
 
 /**
- * Default operators for different data types.
- */
-export const defultOperators = {
-  select: "in",
-  number: "eq",
-  text: "eq",
-  date: "lte",
-};
-
-/**
  * Returns a default query object.
  * @returns {Object} The default query object.
  */
