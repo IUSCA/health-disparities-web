@@ -25,21 +25,27 @@ function getCohortByIdQuery(id) {
     from
       cohort
     where
-      id = ${id}
+      id = CAST(${id} AS UUID)
   `;
 }
 
 // To not return the participants array but the count of participants
 // Why? Because the participants array can be very large and we don't need it
 function searchCohortsQuery({
-  name = null, author_id = null, is_published = null, is_locked = null, is_protected = null,
+  name = null,
+  author_id = null,
+  is_published = null,
+  is_locked = null,
+  is_protected = null,
+  is_temp = null,
 } = {}) {
   const filters = [
-    name ? Prisma.sql`name ILIKE ${`%${name}%`}` : null,
-    author_id ? Prisma.sql`author_id = ${author_id}` : null,
-    is_published ? Prisma.sql`is_published = ${is_published}` : null,
-    is_locked ? Prisma.sql`is_locked = ${is_locked}` : null,
-    is_protected ? Prisma.sql`is_protected = ${is_protected}` : null,
+    name != null ? Prisma.sql`name ILIKE ${`%${name}%`}` : null,
+    author_id != null ? Prisma.sql`author_id = ${author_id}` : null,
+    is_published != null ? Prisma.sql`is_published = ${is_published}` : null,
+    is_locked != null ? Prisma.sql`is_locked = ${is_locked}` : null,
+    is_protected != null ? Prisma.sql`is_protected = ${is_protected}` : null,
+    is_temp != null ? Prisma.sql`is_temp = ${is_temp}` : null,
   ].filter((x) => x);
 
   const where = filters.length ? Prisma.join(filters, ' AND ') : Prisma.raw('1 = 1');

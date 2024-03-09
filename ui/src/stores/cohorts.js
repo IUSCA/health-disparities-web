@@ -1,5 +1,6 @@
 import {
   defaultQuery,
+  isQueryEmpty,
   transformQueryForApi,
   transformStoredQuery,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
@@ -10,7 +11,7 @@ import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useCohortsStore = defineStore("cohorts", () => {
-  // maintain "dirty" state for each cohort
+  // maintain "dirty" state for each cohort to track which cohorts are not yet saved
   // - new cohorts are inherently dirty: makeEmptyCohort
   // - when a cohort is saved, it gets clean: transformStoredCohort
   // - when a cohort is loaded, it is clean: transformStoredCohort
@@ -22,7 +23,16 @@ export const useCohortsStore = defineStore("cohorts", () => {
   const operators = ref([]);
 
   const totalParticipants = ref(0);
-  const isInCombineMode = computed(() => cohorts.value.length > 1);
+  const combinedCount = ref(0);
+
+  const cohortsWithEmptyQueries = computed(() => {
+    return cohorts.value.filter((c) => isQueryEmpty(c.query));
+  });
+  const isInCombineMode = computed(() => {
+    return (
+      cohorts.value.length > 1 && cohortsWithEmptyQueries.value.length === 0
+    );
+  });
 
   function appendCohort(cohort, op = null) {
     // op is the operator to be applied to the last cohort and this new cohort
@@ -112,7 +122,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
       ...rest,
       set_operations,
       query_schema: { name, namespace, version },
-      dirty: false,
+      is_dirty: false,
     };
 
     if (isSupported({ name, namespace, version })) {
@@ -172,7 +182,9 @@ export const useCohortsStore = defineStore("cohorts", () => {
   return {
     cohorts,
     operators,
+    combinedCount,
     totalParticipants,
+    cohortsWithEmptyQueries,
     isInCombineMode,
     appendCohort,
     deleteCohort,

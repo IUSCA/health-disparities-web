@@ -5,7 +5,7 @@ function cohortParticipantsQuery(cohort_id) {
   // return Prisma.sql`
   // SELECT participant_id FROM cohort_participants WHERE cohort_id = ${cohort_id}
   // `;
-  return Prisma.sql`select unnest(participants) as participant_id from cohort c where c.id=${cohort_id}`;
+  return Prisma.sql`select unnest(participants) as participant_id from cohort c where c.id=CAST(${cohort_id} AS UUID)`;
 }
 
 function combineTwo(q1, q2, operator) {

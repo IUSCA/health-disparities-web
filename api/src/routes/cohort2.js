@@ -10,7 +10,7 @@ const { accessControl } = require('../middleware/auth');
 const { searchCohortsQuery, getCohortByIdQuery, saveSearchResults } = require('../services/cohort');
 const { validateCohortQuery, sanitizeCohortQuery, validateSetOperations } = require('../services/cohort/validation');
 const { buildParticipantsQuery } = require('../services/cohort/participants');
-const { combineCohortQuery } = require('../services/cohort/combination');
+const { combineQuery } = require('../services/cohort/combination');
 const { CATEGORIES } = require('../services/cohort/fields');
 
 const isPermittedTo = accessControl('cohort');
@@ -130,6 +130,7 @@ router.get(
     if (data.mine) {
       data.author_id = req.user.id;
     }
+    data.is_temp = false;
     const sqlQuery = searchCohortsQuery(data);
     const cohorts = await prisma.$queryRaw(sqlQuery);
     res.json(cohorts);
@@ -200,7 +201,7 @@ router.post(
   ]),
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
-    const sqlQuery = combineCohortQuery({ ...req.body.set_operations, count: true });
+    const sqlQuery = combineQuery({ ...req.body.set_operations, count: true });
     // eslint-disable-next-line no-console
     console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);

@@ -36,6 +36,7 @@
 
 <script setup>
 import cohortService from "@/services/cohort2";
+import toast from "@/services/toast";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 import {
@@ -48,11 +49,37 @@ const props = defineProps({
   idx: Number,
 });
 
+const emit = defineEmits(["beforeSearch", "afterSearch"]);
+
 const cohortsStore = useCohortsStore();
-const { totalParticipants, isInCombineMode } = storeToRefs(cohortsStore);
+const { totalParticipants, cohorts } = storeToRefs(cohortsStore);
 
 const canon_query = ref(transformQueryForApi(cohort.value.query));
 const loading = ref(false);
+
+function search(query) {
+  emit("beforeSearch");
+  loading.value = true;
+  cohortService
+    .searchParticipants({
+      query,
+      search_id: cohort.value.search_id,
+      save_results: cohorts.value.length > 1,
+    })
+    .then((res) => {
+      cohort.value.size = res.data.count;
+      cohort.value.search_id = res.data.search_id;
+      emit("afterSearch");
+    })
+    .catch((error) => {
+      emit("afterSearch", error);
+      console.error("Error fetching cohort size", error);
+      toast.error("Error fetching cohort size");
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+}
 
 // for every change in the query, transform it to the API query format (canonical query)
 watchDebounced(
@@ -85,27 +112,21 @@ watch(
       console.log("Cohort query changed", newQuery, oldQuery);
 
       cohort.value.is_dirty = true;
-
-      loading.value = true;
-      cohortService
-        .searchParticipants({
-          query: newQuery,
-          save_results: isInCombineMode.value,
-          search_id: cohort.value.search_id,
-        })
-        .then((response) => {
-          cohort.value.size = response.data.count;
-          cohort.value.search_id = response.data.search_id;
-        })
-        .catch((error) => {
-          console.error("Error fetching cohort size", error);
-        })
-        .finally(() => {
-          loading.value = false;
-        });
+      search(newQuery);
     }
   },
   { deep: true },
+);
+
+// when number of cohorts goes from 1 to 2, search and save results so that combine can be done
+// needed only if cohort is dirty
+watch(
+  () => cohorts.value.length,
+  (newVal, oldVal) => {
+    if (newVal === 2 && oldVal === 1 && cohort.value.is_dirty) {
+      search(canon_query.value);
+    }
+  },
 );
 
 function exportCohort() {

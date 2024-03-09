@@ -22,7 +22,7 @@ const setOperationsSchema = {
   type: 'object',
   properties: {
     cohort_ids: {
-      type: 'array', items: { type: 'number' }, uniqueItems: true, minItems: 2,
+      type: 'array', items: { type: 'string' }, uniqueItems: true, minItems: 2,
     },
     operators: { type: 'array', items: { enum: ['union', 'intersection', 'difference', 'symmetric_difference'] }, minItems: 1 },
   },
