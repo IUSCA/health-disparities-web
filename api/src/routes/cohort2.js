@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
-const { searchCohortsQuery, getCohortByIdQuery } = require('../services/cohort');
+const { searchCohortsQuery, getCohortByIdQuery, saveSearchResults } = require('../services/cohort');
 const { validateCohortQuery, sanitizeCohortQuery, validateSetOperations } = require('../services/cohort/validation');
 const { buildParticipantsQuery } = require('../services/cohort/participants');
 const { combineCohortQuery } = require('../services/cohort/combination');
@@ -149,20 +149,47 @@ router.get(
   }),
 );
 
+router.get(
+  '/:id',
+  isPermittedTo('read'),
+  validate([
+  ]),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['cohorts']
+    // #swagger.summary = 'Get a cohort.'
+    const cohort = await getCohortById(req.params.id);
+    if (!cohort) {
+      return res.sendStatus(404);
+    }
+    res.json(cohort);
+  }),
+);
+
 router.post(
   '/search',
   validate([
     body('query').custom(validateCohortQuery).bail().customSanitizer(sanitizeCohortQuery),
+    query('save_results').optional().default(false).toBoolean(),
   ]),
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
-    const sqlQuery = buildParticipantsQuery(req.body.query.query, {
-      count: true,
-    });
-    // eslint-disable-next-line no-console
-    console.log(sqlQuery.sql, sqlQuery.values);
-    const rows = await prisma.$queryRaw(sqlQuery);
-    res.json({ count: Number(rows[0].count) });
+    // if save_results is true, save the search results to the cohort table as a temporary cohort
+    // and return that cohort's id as search_id
+    if (req.query.save_results) {
+      const searchQuery = buildParticipantsQuery(req.body.query.query);
+      const createQuery = saveSearchResults(req.query.search_id, searchQuery);
+      const rows = await prisma.$queryRaw(createQuery);
+      res.json({
+        count: Number(rows[0].count),
+        search_id: rows[0].id,
+      });
+    } else {
+      const sqlQuery = buildParticipantsQuery(req.body.query.query, {
+        count: true,
+      });
+      const rows = await prisma.$queryRaw(sqlQuery);
+      res.json({ count: Number(rows[0].count) });
+    }
   }),
 );
 
@@ -178,22 +205,6 @@ router.post(
     console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
     res.json({ count: Number(rows[0].count) });
-  }),
-);
-
-router.get(
-  '/:id',
-  isPermittedTo('read'),
-  validate([
-  ]),
-  asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['cohorts']
-    // #swagger.summary = 'Get a cohort.'
-    const cohort = await getCohortById(req.params.id);
-    if (!cohort) {
-      return res.sendStatus(404);
-    }
-    res.json(cohort);
   }),
 );
 

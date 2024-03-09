@@ -35,6 +35,7 @@
 </template>
 
 <script setup>
+import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 import {
@@ -48,9 +49,9 @@ const props = defineProps({
 });
 
 const cohortsStore = useCohortsStore();
-const { totalParticipants } = storeToRefs(cohortsStore);
+const { totalParticipants, isInCombineMode } = storeToRefs(cohortsStore);
 
-const canon_query = ref(null);
+const canon_query = ref(transformQueryForApi(cohort.value.query));
 const loading = ref(false);
 
 // for every change in the query, transform it to the API query format (canonical query)
@@ -86,10 +87,18 @@ watch(
       cohort.value.is_dirty = true;
 
       loading.value = true;
-      cohortsStore
-        .searchParticipants(newQuery)
+      cohortService
+        .searchParticipants({
+          query: newQuery,
+          save_results: isInCombineMode.value,
+          search_id: cohort.value.search_id,
+        })
         .then((response) => {
           cohort.value.size = response.data.count;
+          cohort.value.search_id = response.data.search_id;
+        })
+        .catch((error) => {
+          console.error("Error fetching cohort size", error);
         })
         .finally(() => {
           loading.value = false;

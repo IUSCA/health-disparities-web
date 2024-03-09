@@ -169,15 +169,6 @@ export const useCohortsStore = defineStore("cohorts", () => {
     });
   }
 
-  // wrapper for searchParticipants api call
-  // injects save_results parameter when in combine mode
-  function searchParticipants(query) {
-    return cohortService.searchParticipants({
-      query,
-      save_results: isInCombineMode.value,
-    });
-  }
-
   return {
     cohorts,
     operators,
@@ -191,7 +182,6 @@ export const useCohortsStore = defineStore("cohorts", () => {
     transformStoredCohort,
     isNewCohort,
     saveCohort,
-    searchParticipants,
   };
 });
 

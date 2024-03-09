@@ -58,15 +58,28 @@ class cohortService {
     });
   }
 
-  searchParticipants({ query, set_operations = null, save_results = false }) {
-    return api.post("/cohorts/search", {
-      query: {
-        ...config.cohort.phenotype_schema,
-        query,
-        ...(set_operations != null && { set_operations }),
+  searchParticipants({
+    query,
+    set_operations = null,
+    save_results = false,
+    search_id = null,
+  }) {
+    return api.post(
+      "/cohorts/search",
+      {
+        query: {
+          ...config.cohort.phenotype_schema,
+          query,
+          ...(set_operations != null && { set_operations }),
+        },
       },
-      save_results,
-    });
+      {
+        params: {
+          save_results,
+          search_id,
+        },
+      },
+    );
   }
 
   searchParticipantsWithSetOperations(cohort_ids, operators) {
