@@ -9,7 +9,7 @@
     <h2 class="text-3xl font-bold text-center mb-4">
       Welcome to Cohort Builder!
     </h2>
-    <p class="text-lg text-center mb-6">
+    <p class="text-lg text-center mb-4 md:mb-6">
       Streamline your cohort creation process with ease.
     </p>
 

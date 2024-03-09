@@ -7,7 +7,7 @@
       :close-on-select="false"
       :filter-results="false"
       :min-chars="1"
-      :resolve-on-load="false"
+      resolve-on-load
       :delay="0"
       :searchable="true"
       :options="debouncedSearch"
@@ -16,6 +16,7 @@
       :loading="loading"
       class="qb-multiselect text-sm w-full"
       breakTags
+      :allow-absent="true"
     />
   </div>
 </template>
@@ -28,10 +29,11 @@ import Multiselect from "@vueform/multiselect";
 const model = defineModel();
 const loading = ref(false);
 
-const debouncedSearch = useDebounceFn(fecthMatchingOptions, 500);
+const debouncedSearch = useDebounceFn(fecthMatchingOptions, 300);
 
 function fecthMatchingOptions(searchQuery) {
   console.log("searchQuery", searchQuery);
+  if (searchQuery === "" || searchQuery == null) return Promise.resolve([]);
   loading.value = true;
   return cohortsService
     .dxNameAutoComplete(searchQuery)

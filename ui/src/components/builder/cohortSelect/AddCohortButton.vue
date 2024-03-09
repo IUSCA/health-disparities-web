@@ -40,7 +40,7 @@
     </VaDropdown>
   </div>
   <div v-else>
-    <div class="flex flex-wrap gap-5 items-center">
+    <div class="flex flex-wrap gap-3 md:gap-5 items-center justify-center">
       <!-- new cohort button -->
       <va-button @click="addNewCohort" icon="add" class="" size="large">
         New Cohort

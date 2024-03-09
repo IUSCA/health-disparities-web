@@ -2,11 +2,14 @@
   <div v-if="cohorts.length > 1 && cohortsWithEmptyQueries.length > 0">
     <VaAlert color="warning" icon="warning">
       <div class="md:ml-3">
-        <span class="font-semibold text-lg">
-          Combining cohorts with empty queries is not allowed. Please remove the
-          cohorts with empty queries or add filters to them.
-        </span>
-        <p>Empty Cohorts:</p>
+        <p class="font-semibold text-lg">
+          Some cohorts do not contain any filters.
+        </p>
+        <p>
+          Please either remove the cohorts without any queries or add some
+          filters to them.
+        </p>
+        <p class="mt-2">Here are the empty cohorts:</p>
         <ul class="list-disc ml-5">
           <li v-for="c in cohortsWithEmptyQueries" :key="c.id">{{ c.name }}</li>
         </ul>
