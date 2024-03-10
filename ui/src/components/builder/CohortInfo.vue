@@ -55,10 +55,10 @@ const props = defineProps({
 
 const number_formatter = Intl.NumberFormat("en");
 
-onBeforeMount(() => {
-  console.log("CohortInfo", props);
-});
-onBeforeUnmount(() => {
-  console.log("CohortInfo unmount", props);
-});
+// onBeforeMount(() => {
+//   console.log("CohortInfo", props);
+// });
+// onBeforeUnmount(() => {
+//   console.log("CohortInfo unmount", props);
+// });
 </script>

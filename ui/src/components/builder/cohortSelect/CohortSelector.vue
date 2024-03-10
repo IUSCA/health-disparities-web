@@ -75,7 +75,6 @@ const { cohorts, operators: logicalOperators } = storeToRefs(cohortsStore);
 const combinationLogicModal = ref(null);
 
 function changeCombinationLogic(left_operand_idx) {
-  console.log("Change Combination Logic", left_operand_idx);
   combinationLogicModal.value.show(left_operand_idx);
 }
 </script>

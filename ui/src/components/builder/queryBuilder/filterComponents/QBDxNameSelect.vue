@@ -32,13 +32,11 @@ const loading = ref(false);
 const debouncedSearch = useDebounceFn(fecthMatchingOptions, 300);
 
 function fecthMatchingOptions(searchQuery) {
-  console.log("searchQuery", searchQuery);
   if (searchQuery === "" || searchQuery == null) return Promise.resolve([]);
   loading.value = true;
   return cohortsService
     .dxNameAutoComplete(searchQuery)
     .then((res) => {
-      console.log(res);
       return res.data;
     })
     .catch((err) => {

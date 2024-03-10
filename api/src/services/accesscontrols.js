@@ -90,6 +90,9 @@ const grantsObject = {
       'update:any': ['*'],
       'delete:any': ['*'],
     },
+    participant: {
+      'read:any': ['*'],
+    },
   },
 
   // user role permissions
@@ -114,10 +117,13 @@ const grantsObject = {
       'read:any': ['*'],
     },
     cohort: {
-      'create:any': ['*'],
+      'create:own': ['*'],
       'read:any': ['*'],
-      'update:any': ['*'],
-      'delete:any': ['*'],
+      'update:own': ['*'],
+      'delete:own': ['*'],
+    },
+    participant: {
+      'read:any': ['*'],
     },
   },
 
@@ -180,6 +186,9 @@ const grantsObject = {
       'read:any': ['*'],
       'update:any': ['*'],
       'delete:any': ['*'],
+    },
+    participant: {
+      'read:any': ['*'],
     },
   },
 };

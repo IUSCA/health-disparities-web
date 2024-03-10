@@ -52,7 +52,6 @@ function fecthMatchingOptions(search) {
   return cohortsService
     .textFieldAutoComplete(category, field, search)
     .then((res) => {
-      console.log(res);
       return res.data;
     })
     .catch((err) => {

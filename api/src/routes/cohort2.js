@@ -24,7 +24,7 @@ async function getCohortById(id) {
 
 router.get(
   '/:category/:field/unique',
-  isPermittedTo('read'),
+  accessControl('participant')('read'),
   validate([
     param('category').isIn(CATEGORIES),
   ]),
@@ -55,7 +55,7 @@ router.get(
 
 router.get(
   '/:category/:field/startswith/:prefix',
-  isPermittedTo('read'),
+  accessControl('participant')('read'),
   validate([
     param('category').isIn(CATEGORIES),
     query('limit').optional().default(10).isInt({ min: 1, max: 1000 })
@@ -88,7 +88,7 @@ router.get(
 
 router.get(
   '/dxname',
-  isPermittedTo('read'),
+  accessControl('participant')('read'),
   validate([
     query('limit').optional().default(10).isInt({ min: 1, max: 1000 })
       .toInt(),
@@ -115,31 +115,8 @@ router.get(
 );
 
 router.get(
-  '/',
-  isPermittedTo('read'),
-  validate([
-    query('mine').optional().isBoolean(),
-    query('is_published').optional().isBoolean(),
-    query('is_locked').optional().isBoolean(),
-    query('is_protected').optional().isBoolean(),
-  ]),
-  asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['cohorts']
-    // #swagger.summary = 'Filter cohorts.'
-    const data = _.pick(['name', 'is_published', 'is_locked', 'is_protected'])(req.query);
-    if (data.mine) {
-      data.author_id = req.user.id;
-    }
-    data.is_temp = false;
-    const sqlQuery = searchCohortsQuery(data);
-    const cohorts = await prisma.$queryRaw(sqlQuery);
-    res.json(cohorts);
-  }),
-);
-
-router.get(
   '/participants/total',
-  isPermittedTo('read'),
+  accessControl('participant')('read'),
   asyncHandler(async (req, res, next) => {
     const total = await prisma.participant.count();
 
@@ -150,29 +127,13 @@ router.get(
   }),
 );
 
-router.get(
-  '/:id',
-  isPermittedTo('read'),
-  validate([
-  ]),
-  asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['cohorts']
-    // #swagger.summary = 'Get a cohort.'
-    const cohort = await getCohortById(req.params.id);
-    if (!cohort) {
-      return res.sendStatus(404);
-    }
-    res.json(cohort);
-  }),
-);
-
 router.post(
   '/search',
   validate([
     body('query').custom(validateCohortQuery).bail().customSanitizer(sanitizeCohortQuery),
     query('save_results').optional().default(false).toBoolean(),
   ]),
-  isPermittedTo('read'),
+  isPermittedTo('create'),
   asyncHandler(async (req, res, next) => {
     // if save_results is true, save the search results to the cohort table as a temporary cohort
     // and return that cohort's id as search_id
@@ -203,9 +164,48 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const sqlQuery = combineQuery({ ...req.body.set_operations, count: true });
     // eslint-disable-next-line no-console
-    console.log(sqlQuery.sql, sqlQuery.values);
+    // console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
     res.json({ count: Number(rows[0].count) });
+  }),
+);
+
+router.get(
+  '/',
+  isPermittedTo('read'),
+  validate([
+    query('mine').optional().isBoolean(),
+    query('is_published').optional().isBoolean(),
+    query('is_locked').optional().isBoolean(),
+    query('is_protected').optional().isBoolean(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['cohorts']
+    // #swagger.summary = 'Filter cohorts.'
+    const data = _.pick(['name', 'is_published', 'is_locked', 'is_protected'])(req.query);
+    if (data.mine) {
+      data.author_id = req.user.id;
+    }
+    data.is_temp = false;
+    const sqlQuery = searchCohortsQuery(data);
+    const cohorts = await prisma.$queryRaw(sqlQuery);
+    res.json(cohorts);
+  }),
+);
+
+router.get(
+  '/:id',
+  isPermittedTo('read'),
+  validate([
+  ]),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['cohorts']
+    // #swagger.summary = 'Get a cohort.'
+    const cohort = await getCohortById(req.params.id);
+    if (!cohort) {
+      return res.sendStatus(404);
+    }
+    res.json(cohort);
   }),
 );
 
@@ -215,10 +215,9 @@ router.post(
   validate([
     body('name').isString().notEmpty(),
     body('query').custom(validateCohortQuery).bail().customSanitizer(sanitizeCohortQuery),
-    body('is_published').optional().isBoolean(),
-    body('is_locked').optional().isBoolean(),
-    body('is_protected').optional().isBoolean(),
-    body('description').optional().isString(),
+    body('is_published').optional().toBoolean(),
+    body('is_locked').optional().toBoolean(),
+    body('is_protected').optional().toBoolean(),
     body('metadata').optional().isObject(),
   ]),
   asyncHandler(async (req, res, next) => {
@@ -232,9 +231,14 @@ router.post(
       _.omitBy(_.isNil),
     ])(req.body);
 
+    // if is_published is true, then is_locked must be true
+    if (cohort_data.is_published) {
+      cohort_data.is_locked = true;
+    }
+
     const sqlQuery = buildParticipantsQuery(req.body.query.query);
     // eslint-disable-next-line no-console
-    console.log(sqlQuery.sql, sqlQuery.values);
+    // console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
     // rows is like [{participant_id: 1}, {participant_id: 2}, ...]
     const participants_ids = rows.map((row) => row.participant_id);
@@ -263,10 +267,9 @@ router.patch(
     body('query').optional()
       .custom(validateCohortQuery).bail()
       .customSanitizer(sanitizeCohortQuery),
-    body('is_published').optional().isBoolean(),
-    body('is_locked').optional().isBoolean(),
-    body('is_protected').optional().isBoolean(),
-    body('description').optional().isString(),
+    body('is_published').optional().toBoolean(),
+    body('is_locked').optional().toBoolean(),
+    body('is_protected').optional().toBoolean(),
     body('metadata').optional().isObject(),
   ]),
   asyncHandler(async (req, res, next) => {
@@ -276,24 +279,34 @@ router.patch(
     // operator role can modify any cohort
 
     const { id } = req.params;
+    const cohortToUpdate = await prisma.cohort.findFirstOrThrow({
+      where: {
+        id,
+      },
+    });
+
+    // cannot update a locked cohort
+    if (cohortToUpdate.is_locked) {
+      return res.status(403).json({ error: 'Cannot update a locked cohort.' });
+    }
 
     const cohort_data = _.pick(
       ['name', 'query', 'is_published', 'is_locked', 'is_protected', 'description', 'metadata'],
     )(req.body);
 
+    // if is_published is true, then is_locked must be true
+    if (cohort_data.is_published) {
+      cohort_data.is_locked = true;
+    }
+
     if (cohort_data.metadata) {
-      const cohortToUpdate = await prisma.cohort.findFirstOrThrow({
-        where: {
-          id,
-        },
-      });
       cohort_data.metadata = _.merge(cohortToUpdate?.metadata)(cohort_data.metadata); // deep merge
     }
 
     if (cohort_data.query) {
       const sqlQuery = buildParticipantsQuery(cohort_data.query.query);
       // eslint-disable-next-line no-console
-      console.log(sqlQuery.sql, sqlQuery.values);
+      // console.log(sqlQuery.sql, sqlQuery.values);
       const rows = await prisma.$queryRaw(sqlQuery);
       // rows is like [{participant_id: 1}, {participant_id: 2}, ...]
       const participants_ids = rows.map((row) => row.participant_id);

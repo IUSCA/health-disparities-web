@@ -98,7 +98,6 @@
             :range="ruleCtrl.connectorValue === 'between'"
             @update:model-value="
               (v) => {
-                console.log('update', v);
                 ruleCtrl.updateRuleData(v);
               }
             "

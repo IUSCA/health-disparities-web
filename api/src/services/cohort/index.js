@@ -29,8 +29,21 @@ function getCohortByIdQuery(id) {
   `;
 }
 
-// To not return the participants array but the count of participants
-// Why? Because the participants array can be very large and we don't need it
+/**
+ * Generates a SQL query to search for cohorts based on the provided filters.
+ * To not return the participants array but the count of participants
+ * Why? Because the participants array can be very large and we don't need it
+
+ *
+ * @param {Object} options - The search options.
+ * @param {string|null} options.name - The name of the cohort.
+ * @param {number|null} options.author_id - The ID of the author.
+ * @param {boolean|null} options.is_published - Indicates if the cohort is published.
+ * @param {boolean|null} options.is_locked - Indicates if the cohort is locked.
+ * @param {boolean|null} options.is_protected - Indicates if the cohort is protected.
+ * @param {boolean|null} options.is_temp - Indicates if the cohort is temporary.
+ * @returns {} The prepared statement of SQL query for searching cohorts.
+ */
 function searchCohortsQuery({
   name = null,
   author_id = null,
@@ -62,20 +75,24 @@ function searchCohortsQuery({
  * Saves the search results to the cohort table as a temporary cohort.
  * If id is null, it will create a new cohort.
  * If a cohort with id already exists, it will update the participants and the updated_at field.
+ * If a cohort with id does not exist, it will insert a new cohort with this id.
  *
  * @param {number} id - The ID of the cohort.
  * @param {string} searchQuery - The search query.
  * @returns {string} - The SQL query to save the search results.
  */
 function saveSearchResults(id, searchQuery) {
+  const TEMP_COHORT_NAME = 'temp_cohort';
+  const EMPTY_JSON = '{}';
+  const AUTHOR_ID = 1; // id of svc_tasks non-user account
   const insertSql = Prisma.sql`
   INSERT INTO cohort (name, query, participants, is_temp, author_id)
   SELECT
-      'temp_cohort',
-      '{}',
+      ${TEMP_COHORT_NAME},
+      ${EMPTY_JSON},
       ARRAY(${searchQuery}),
       true,
-      1
+      ${AUTHOR_ID}
   RETURNING id, array_length(participants, 1) AS count
   `;
 
@@ -83,11 +100,11 @@ function saveSearchResults(id, searchQuery) {
   INSERT INTO cohort (id, name, query, participants, is_temp, author_id)
   SELECT
       ${id}::UUID,
-      'temp_cohort',
-      '{}',
+      ${TEMP_COHORT_NAME},
+      ${EMPTY_JSON},
       ARRAY(${searchQuery}),
       true,
-      1
+      ${AUTHOR_ID}
   ON CONFLICT (id) DO UPDATE SET
       participants = EXCLUDED.participants,
       updated_at = CURRENT_TIMESTAMP
