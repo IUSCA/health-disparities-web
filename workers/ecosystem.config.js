@@ -4,7 +4,7 @@ module.exports = {
   apps: [
     {
       name: "celery_worker",
-      script: "/opt/sca/biobank/workers/.venv/bin/python",
+      script: "python",
       args: "-m celery -A workers.celery_app worker --loglevel INFO -O fair --pidfile celery_worker.pid --hostname 'biobank-celery-w1@%h' --autoscale=8,2 --queues 'biobank.sca.iu.edu.q'",
       watch: false,
       interpreter: "",
@@ -17,7 +17,7 @@ module.exports = {
     },
     {
       name: "watch",
-      script: "/opt/sca/biobank/workers/.venv/bin/python",
+      script: "python",
       args: "-u -m workers.scripts.watch",
       watch: false,
       interpreter: "",
@@ -29,7 +29,7 @@ module.exports = {
     },
     {
       name: "metrics",
-      script: "/opt/sca/biobank/workers/.venv/bin/python",
+      script: "python",
       args: "-u -m workers.scripts.metrics",
       watch: false,
       interpreter: "",
@@ -43,7 +43,7 @@ module.exports = {
     },
     {
       name: "purge_staged_datasets",
-      script: "/opt/sca/biobank/workers/.venv/bin/python",
+      script: "python",
       args: "-u -m workers.scripts.purge_staged_datasets",
       watch: false,
       interpreter: "",
@@ -68,6 +68,17 @@ module.exports = {
       autorestart: false,
       exp_backoff_restart_delay: 100,
       max_restarts: 3,
-    }
+    },
+    // {
+    //   name: "populate_bundles",
+    //   script: "python",
+    //   args: "-u -m workers.scripts.populate_bundles",
+    //   watch: false,
+    //   interpreter: "",
+    //   log_date_format: "YYYY-MM-DD HH:mm Z",
+    //   error_file: "../logs/workers/populate_bundles.err",
+    //   out_file: "../logs/workers/populate_bundles.log",
+    //   autorestart: false,
+    // }
   ]
 }

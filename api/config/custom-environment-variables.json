@@ -20,10 +20,14 @@
     "api_key": "TYPESENSE_API_KEY"
   },
   "oauth": {
+    "base_url": "OAUTH_BASE_URL",
     "download": {
       "client_id": "OAUTH_DOWNLOAD_CLIENT_ID",
       "client_secret": "OAUTH_DOWNLOAD_CLIENT_SECRET"
     }
+  },
+  "download_server": {
+    "base_url": "DOWNLOAD_SERVER_BASE_URL"
   }
 
 }

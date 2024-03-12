@@ -67,3 +67,9 @@ variants/*
 todo.md
 phenotype/*
 data_ingestion_*
+!db/backups
+db/backups/*.sql
+db/backups/*.psql
+todo.md
+
+.pm2

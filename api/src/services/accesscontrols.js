@@ -37,6 +37,12 @@ const grantsObject = {
       'create:any': ['*'],
       'read:any': ['*'],
     },
+    about: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
     auth: {
       'create:any': ['*'],
     },
@@ -102,7 +108,7 @@ const grantsObject = {
       'update:own': ['*'],
     },
     projects: {
-      'read:own': ['*', '!users'],
+      'read:own': ['*', '!users'], // cannot read associated users to the project
     },
     project_dataset_files: {
       'read:own': ['*'],
@@ -125,14 +131,17 @@ const grantsObject = {
     participant: {
       'read:any': ['*'],
     },
+    workflow: {
+      'create:any': ['stage'], // can only create a stage workflow
+    },
   },
 
   // operator role permissions
   operator: {
     user: {
       'read:any': ['*'],
-      'update:any': ['*', '!roles'],
-      'create:any': ['*', '!roles'],
+      'update:any': ['*', '!roles'], // cannot update roles attribute of a user
+      'create:any': ['*', '!roles'], // cannot set roles attribute while creating a user
     },
     workflow: {
       'create:any': ['*'],
@@ -189,6 +198,12 @@ const grantsObject = {
     },
     participant: {
       'read:any': ['*'],
+    },
+    about: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
     },
   },
 };

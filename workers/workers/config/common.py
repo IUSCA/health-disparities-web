@@ -1,13 +1,24 @@
 import datetime
 import os
+import urllib.parse
 
 from dotenv import load_dotenv
 
 load_dotenv()  # take environment variables from .env.
 YEAR = datetime.datetime.now().year
 APP_API_TOKEN = os.environ['APP_API_TOKEN']
+
+QUEUE_URL = os.environ['QUEUE_URL']
+QUEUE_USER = os.environ['QUEUE_USER']
 QUEUE_PASSWORD = os.environ['QUEUE_PASS']
+
+MONGO_HOST = os.environ['MONGO_HOST']
+MONGO_PORT = os.environ['MONGO_PORT']
+MONGO_DB = os.environ['MONGO_DB']
+MONGO_AUTH_SOURCE = os.environ['MONGO_AUTH_SOURCE']
+MONGO_USER = os.environ['MONGO_USER']
 MONGO_PASSWORD = os.environ['MONGO_PASS']
+
 ALIAS_SALT = os.environ['ALIAS_SALT']
 POSTGRES_PASSWORD = os.environ['POSTGRES_PASSWORD']
 
@@ -30,11 +41,13 @@ config = {
         'RAW_DATA': {
             'archive': f'development/{YEAR}/raw_data',
             'stage': '/path/to/staged/raw_data',
+            'bundle': '/path/to/bundle/raw_data',
             'qc': '/path/to/qc'
         },
         'DATA_PRODUCT': {
             'archive': f'development/{YEAR}/data_products',
             'stage': '/path/to/staged/data_products',
+            'bundle': '/path/to/bundle/data_products',
         },
         'download_dir': '/path/to/download_dir',
         'root': '/path/to/root'
@@ -62,6 +75,26 @@ config = {
         'alias_salt': ALIAS_SALT
     },
     'workflow_registry': {
+        'sync_archived_bundles': {
+            'steps': [
+                {
+                    'name': 'archive',
+                    'task': 'archive_dataset'
+                },
+                {
+                    'name': 'stage',
+                    'task': 'stage_dataset'
+                },
+                {
+                    'name': 'validate',
+                    'task': 'validate_dataset'
+                },
+                {
+                    'name': 'setup_download',
+                    'task': 'setup_dataset_download'
+                }
+            ]
+        },
         'integrated': {
             'steps': [
                 {
@@ -97,14 +130,12 @@ config = {
     },
     'celery': {
         'queue': {
-            'url': 'localhost:5672/myvhost',
-            'username': 'user',
+            'url': QUEUE_URL,
+            'username': QUEUE_USER,
             'password': QUEUE_PASSWORD
         },
         'mongo': {
-            'url': 'localhost:27017/celery?authSource=admin',
-            'username': 'root',
-            'password': MONGO_PASSWORD
+            'uri': f'mongodb://{MONGO_USER}:{urllib.parse.quote(MONGO_PASSWORD)}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource={MONGO_AUTH_SOURCE}',
         }
     },
     'variant_database': {
@@ -116,7 +147,7 @@ config = {
     },
     'workflow': {
         'purge': {
-            'types': ['source_integrated', 'stage', 'delete_dataset'],
+            'types': ['integrated', 'stage', 'delete'],
             'age_threshold_seconds': 86400,
             'max_purge_count': 10
         }
