@@ -21,7 +21,7 @@
         <CohortQueryBuilder
           v-model:query="cohort.query"
           v-if="cohort.is_supported"
-          :disabled="cohort.is_locked"
+          :locked="cohort.is_locked"
         />
         <div v-else class="flex h-full items-center justify-center">
           <i-mdi-alert-circle-outline class="" />

@@ -20,7 +20,11 @@
           v-for="(cohort, idx) in cohorts"
           :key="cohort.id"
         >
-          <VaCardContent>
+          <VaCardContent
+            :class="
+              cohort.is_locked ? 'border border-solid border-slate-500' : ''
+            "
+          >
             <Cohort
               :idx="idx"
               :cohort="cohort"

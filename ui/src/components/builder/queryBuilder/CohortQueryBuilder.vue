@@ -1,6 +1,12 @@
 <template>
-  <div :class="props.disabled ? 'pointer-events-none opacity-75' : ''">
-    <!-- {{ query }}
+  <!-- overlay fade: https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_image_overlay_opacity -->
+  <div class="container">
+    <div class="middle" v-if="props.locked">
+      <i-mdi-lock class="text-3xl text-gray-600 dark:text-gray-100" />
+    </div>
+    <div :class="props.locked ? 'locked-form' : ''">
+      <div :class="props.locked ? 'pointer-events-none' : ''">
+        <!-- {{ query }}
     <br />
     <br />
     {{ transformQueryForApi(query) }}
@@ -14,97 +20,101 @@
       JSON.stringify(transformStoredQuery(transformQueryForApi(query)))
     }} -->
 
-    <!-- Button positioned absolutely overlaps a div. to make it clickable z-index is set to 1 -->
-    <VaButton
-      @click="clearFilters"
-      size="small"
-      color="primary"
-      icon="backspace"
-      outline
-      preset="primary"
-      v-if="someFilters"
-      class="absolute top-3 right-3"
-      style="z-index: 1"
-    >
-      Clear All Filters
-    </VaButton>
-
-    <QueryBuilder :config="config" v-model="query">
-      <template #groupOperator="props">
-        <div class="flex items-center gap-3">
-          <span>Operator</span>
-          <VaSelect
-            :model-value="props.currentOperator"
-            @update:model-value="(v) => props.updateCurrentOperator(v)"
-            :options="props.operators"
-            text-by="name"
-            value-by="identifier"
-            class="group-operator-select w-28 flex-none text-sm"
-            size="small"
-          >
-          </VaSelect>
-        </div>
-      </template>
-
-      <template #groupControl="props">
-        <div class="flex items-center gap-3">
-          <VaButton
-            @click="
-              filterSelectModal.show((node) => {
-                if (!node) return;
-                props.addRule(node.id);
-              })
-            "
-            size="small"
-            color="primary"
-            icon="add"
-            preset="primary"
-          >
-            Add Filter
-          </VaButton>
-
-          <VaButton
-            @click="(v) => props.newGroup()"
-            size="small"
-            color="primary"
-            icon="post_add"
-            preset="primary"
-          >
-            Add Group
-          </VaButton>
-        </div>
-      </template>
-
-      <template #rule="ruleCtrl">
-        <div
-          class="flex flex-wrap items-center gap-2 md:gap-3 text-sm w-[calc(100%-2rem)] max-w-3xl"
+        <!-- Button positioned absolutely overlaps a div. to make it clickable z-index is set to 1 -->
+        <VaButton
+          @click="clearFilters"
+          size="small"
+          color="primary"
+          icon="backspace"
+          outline
+          preset="primary"
+          v-if="someFilters && !props.locked"
+          class="absolute top-3 right-3"
+          style="z-index: 1"
         >
-          <FilterChip :identifier="ruleCtrl.ruleIdentifier" />
-          <VaSelect
-            :model-value="ruleCtrl.connectorValue"
-            @update:model-value="(v) => ruleCtrl.updateConnectorValue(v)"
-            :options="ruleCtrl.connectorDefinition.options"
-            text-by="label"
-            value-by="key"
-            class="group-operator-select w-36 flex-none"
-            size="small"
-          >
-          </VaSelect>
-          <component
-            v-if="!isUnaryOperator(ruleCtrl.connectorValue)"
-            :is="ruleCtrl.ruleComponent"
-            :identifier="ruleCtrl.ruleIdentifier"
-            :model-value="ruleCtrl.ruleData"
-            :range="ruleCtrl.connectorValue === 'between'"
-            @update:model-value="
-              (v) => {
-                ruleCtrl.updateRuleData(v);
-              }
-            "
-          />
-        </div>
-      </template>
-    </QueryBuilder>
+          Clear All Filters
+        </VaButton>
+
+        <QueryBuilder :config="config" v-model="query">
+          <template #groupOperator="props">
+            <div class="flex items-center gap-3">
+              <span>Operator</span>
+              <VaSelect
+                :model-value="props.currentOperator"
+                @update:model-value="(v) => props.updateCurrentOperator(v)"
+                :options="props.operators"
+                text-by="name"
+                value-by="identifier"
+                class="group-operator-select w-28 flex-none text-sm"
+                size="small"
+              >
+              </VaSelect>
+            </div>
+          </template>
+
+          <template #groupControl="grpCtrlProps">
+            <div class="flex items-center gap-3">
+              <VaButton
+                @click="
+                  filterSelectModal.show((node) => {
+                    if (!node) return;
+                    grpCtrlProps.addRule(node.id);
+                  })
+                "
+                size="small"
+                color="primary"
+                icon="add"
+                preset="primary"
+                v-if="!props.locked"
+              >
+                Add Filter
+              </VaButton>
+
+              <VaButton
+                @click="(v) => grpCtrlProps.newGroup()"
+                size="small"
+                color="primary"
+                icon="post_add"
+                preset="primary"
+                v-if="!props.locked"
+              >
+                Add Group
+              </VaButton>
+            </div>
+          </template>
+
+          <template #rule="ruleCtrl">
+            <div
+              class="flex flex-wrap items-center gap-2 md:gap-3 text-sm w-[calc(100%-2rem)] max-w-3xl"
+            >
+              <FilterChip :identifier="ruleCtrl.ruleIdentifier" />
+              <VaSelect
+                :model-value="ruleCtrl.connectorValue"
+                @update:model-value="(v) => ruleCtrl.updateConnectorValue(v)"
+                :options="ruleCtrl.connectorDefinition.options"
+                text-by="label"
+                value-by="key"
+                class="group-operator-select w-36 flex-none"
+                size="small"
+              >
+              </VaSelect>
+              <component
+                v-if="!isUnaryOperator(ruleCtrl.connectorValue)"
+                :is="ruleCtrl.ruleComponent"
+                :identifier="ruleCtrl.ruleIdentifier"
+                :model-value="ruleCtrl.ruleData"
+                :range="ruleCtrl.connectorValue === 'between'"
+                @update:model-value="
+                  (v) => {
+                    ruleCtrl.updateRuleData(v);
+                  }
+                "
+              />
+            </div>
+          </template>
+        </QueryBuilder>
+      </div>
+    </div>
   </div>
 
   <!-- z-index is set to 10 to hide the absolutely positioned button with z-index 1 -->
@@ -129,7 +139,7 @@ import QBInput from "./filterComponents/QBInput.vue";
 import QBSelect from "./filterComponents/QBSelect.vue";
 
 const props = defineProps({
-  disabled: Boolean,
+  locked: Boolean,
 });
 // v-model:query - bidirectional binding
 // should be either null or a compatible query object. {} is not compatible.
@@ -266,6 +276,38 @@ const clearFilters = () => {
   padding-left: 1rem;
   padding-bottom: 1rem;
   // background-color: aqua;
+}
+.container {
+  position: relative;
+}
+
+.locked-form {
+  opacity: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: 0.5s ease;
+  backface-visibility: hidden;
+}
+
+.container:hover .locked-form {
+  opacity: 0.3;
+}
+
+.middle {
+  opacity: 0;
+  transition: 0.5s ease;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+}
+
+.container:hover .middle {
+  opacity: 1;
 }
 </style>
 
