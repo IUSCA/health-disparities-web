@@ -11,7 +11,7 @@
     <VaInnerLoading :loading="loading">
       <VaForm ref="formRef" class="flex flex-col gap-3 max-w-lg">
         <VaInput
-          v-model="name"
+          v-model="data.name"
           label="Name"
           required
           placeholder="Enter a name for the cohort"
@@ -19,23 +19,23 @@
           inner-label
         />
         <VaTextarea
-          v-model="description"
+          v-model="data.description"
           label="Description"
           placeholder="Enter a description for the cohort"
           inner-label
           :max-rows="5"
         />
         <VaCheckbox
-          v-model="is_published"
+          v-model="data.is_published"
           label="Publish Cohort"
           description="Make this cohort public so that others can see it. Publishing the cohort will also lock it."
           :disabled="props.cohort.is_locked"
         />
         <VaCheckbox
-          v-model="is_locked"
+          v-model="data.is_locked"
           label="Lock Cohort"
           description="Freeze the cohort so that it cannot be modified."
-          :disabled="props.cohort.is_locked || is_published"
+          :disabled="props.cohort.is_locked || data.is_published"
         />
       </VaForm>
       <div class="flex justify-end gap-3">
@@ -65,23 +65,38 @@ const emit = defineEmits(["save"]);
 
 const cohortsStore = useCohortsStore();
 
-const name = ref(props.cohort.name);
-const description = ref("");
-const is_published = ref(false);
-const is_locked = ref(false);
+const data = ref({
+  name: props.cohort.name || "",
+  description: props.cohort.description || "",
+  is_published: props.cohort.is_published || false,
+  is_locked: props.cohort.is_locked || false,
+});
+
 const visible = ref(false);
 const loading = ref(false);
 const { isValid, validate } = useForm("formRef");
 
-watch([() => props.cohort.name], () => {
-  name.value = props.cohort.name;
-});
+// watch([() => props.cohort.name], () => {
+//   data.value.name = props.cohort.name;
+// });
+// watch([() => props.cohort.description], () => {
+//   data.value.description = props.cohort.description;
+// });
+// watch([() => props.cohort.is_published], () => {
+//   data.value.is_published = props.cohort.is_published;
+// });
+// watch([() => props.cohort.is_locked], () => {
+//   data.value.is_locked = props.cohort.is_locked;
+// });
 
 // is_locked should be true if is_published is true and cannot be changed
 // when is_published is false, is_locked can be toggled
-watch(is_published, (value) => {
-  is_locked.value = value;
-});
+watch(
+  () => data.value.is_published,
+  (value) => {
+    data.value.is_locked = value;
+  },
+);
 
 function hide() {
   visible.value = false;
@@ -95,11 +110,8 @@ function show() {
 function handleSave() {
   const cohort_data = {
     id: props.cohort.id,
-    name: name.value,
-    description: description.value,
-    is_published: is_published.value,
-    is_locked: is_locked.value,
     query: props.cohort.query,
+    ...data.value,
   };
   if (validate()) {
     loading.value = true;
