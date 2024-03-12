@@ -164,7 +164,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const sqlQuery = combineQuery({ ...req.body.set_operations, count: true });
     // eslint-disable-next-line no-console
-    // console.log(sqlQuery.sql, sqlQuery.values);
+    console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
     res.json({ count: Number(rows[0].count) });
   }),
@@ -188,6 +188,8 @@ router.get(
     }
     data.is_temp = false;
     const sqlQuery = searchCohortsQuery(data);
+    // eslint-disable-next-line no-console
+    console.log(sqlQuery.sql, sqlQuery.values);
     const cohorts = await prisma.$queryRaw(sqlQuery);
     res.json(cohorts);
   }),

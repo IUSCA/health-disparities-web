@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="props.disabled ? 'pointer-events-none opacity-75' : ''">
     <!-- {{ query }}
     <br />
     <br />
@@ -134,9 +134,6 @@ const props = defineProps({
 // v-model:query - bidirectional binding
 // should be either null or a compatible query object. {} is not compatible.
 const query = defineModel("query");
-
-// TODO: disable query builder when cohort is locked
-provide("queryBuilderDisabled", props.disabled);
 
 const filterSelectModal = ref(null);
 // const query = ref(null);

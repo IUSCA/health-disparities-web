@@ -29,12 +29,13 @@
           v-model="is_published"
           label="Publish Cohort"
           description="Make this cohort public so that others can see it. Publishing the cohort will also lock it."
+          :disabled="props.cohort.is_locked"
         />
         <VaCheckbox
           v-model="is_locked"
           label="Lock Cohort"
           description="Freeze the cohort so that it cannot be modified."
-          :disabled="is_published"
+          :disabled="props.cohort.is_locked || is_published"
         />
       </VaForm>
       <div class="flex justify-end gap-3">

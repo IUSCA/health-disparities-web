@@ -83,13 +83,12 @@ function searchCohortsQuery({
  */
 function saveSearchResults(id, searchQuery) {
   const TEMP_COHORT_NAME = 'temp_cohort';
-  const EMPTY_JSON = '{}';
   const AUTHOR_ID = 1; // id of svc_tasks non-user account
   const insertSql = Prisma.sql`
   INSERT INTO cohort (name, query, participants, is_temp, author_id)
   SELECT
       ${TEMP_COHORT_NAME},
-      ${EMPTY_JSON},
+      '{}',
       ARRAY(${searchQuery}),
       true,
       ${AUTHOR_ID}
@@ -101,7 +100,7 @@ function saveSearchResults(id, searchQuery) {
   SELECT
       ${id}::UUID,
       ${TEMP_COHORT_NAME},
-      ${EMPTY_JSON},
+      '{}',
       ARRAY(${searchQuery}),
       true,
       ${AUTHOR_ID}

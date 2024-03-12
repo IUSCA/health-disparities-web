@@ -39,6 +39,7 @@
 </template>
 
 <script setup>
+import { isQueryEmpty } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
@@ -111,6 +112,19 @@ function handleAfterSearch(err) {
     debouncedCheckAndCombine();
   }
 }
+
+// prevent navigation when there are unsaved changes
+onBeforeRouteLeave(() => {
+  const anyEditedCohorts = cohorts.value.some(
+    (c) => c.is_dirty && !isQueryEmpty(c.query),
+  );
+  if (!anyEditedCohorts) return true;
+  const answer = window.confirm(
+    "Do you really want to leave? you have unsaved changes!",
+  );
+  // cancel the navigation and stay on the same page
+  if (!answer) return false;
+});
 </script>
 
 <route lang="yaml">
