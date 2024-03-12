@@ -54,5 +54,15 @@ function fecthMatchingOptions(searchQuery) {
 <style scoped lang="scss">
 .qb-multiselect {
   --ms-max-height: 20rem;
+  --ms-border-color: var(--va-background-border);
+  --ms-bg: var(--va-background-secondary);
+  --ms-dropdown-bg: var(--va-background-secondary);
+  --ms-dropdown-border-color: var(--va-background-border);
+  --ms-option-bg-pointed: var(--va-text-selected);
+}
+:deep(.qb-multiselect) {
+  input.multiselect-tags-search {
+    background-color: var(--va-background-secondary);
+  }
 }
 </style>
