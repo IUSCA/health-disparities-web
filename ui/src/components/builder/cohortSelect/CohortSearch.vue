@@ -58,15 +58,14 @@ const emit = defineEmits(["select"]);
 
 const filterInput = ref("");
 
+// table parent div's width is 944px
 const columns = [
   {
     key: "name",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
-  },
-  {
-    key: "description",
-    sortable: false,
+    tdClass: "truncate",
+    width: "584px", // 944 - 100 - 100 - 80 - 80
   },
   {
     key: "size",
