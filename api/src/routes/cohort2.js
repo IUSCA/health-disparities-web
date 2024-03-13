@@ -140,6 +140,7 @@ router.post(
     if (req.query.save_results) {
       const searchQuery = buildParticipantsQuery(req.body.query.query);
       const createQuery = saveSearchResults(req.query.search_id, searchQuery);
+      // console.log(searchQuery.sql, searchQuery.values);
       const rows = await prisma.$queryRaw(createQuery);
       res.json({
         count: Number(rows[0].count),

@@ -75,6 +75,9 @@ function buildFilters(queryJson) {
   const { operator, children } = queryJson;
 
   if (children) {
+    if (children.length === 0) {
+      return Prisma.empty;
+    }
     // non-leaf node
     let negation = Prisma.empty;
     let _operator = operator;
@@ -97,10 +100,12 @@ function buildFilters(queryJson) {
 
 function buildParticipantsQuery(query, { count = false } = {}) {
   const select = Prisma.raw(count ? 'COUNT(p.id) as count' : 'p.id as participant_id');
+  const sqlQuery = buildFilters(query);
+  const where = sqlQuery === Prisma.empty ? Prisma.empty : Prisma.sql`WHERE ${sqlQuery}`;
   return Prisma.sql`
   SELECT ${select}
   FROM participant p
-  WHERE ${buildFilters(query)}
+  ${where}
   `;
 }
 

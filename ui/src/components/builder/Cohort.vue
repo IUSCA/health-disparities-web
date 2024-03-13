@@ -119,11 +119,16 @@ watch(
 );
 
 // when number of cohorts goes from 1 to 2, search and save results so that combine can be done
-// needed only if cohort is dirty
+// needed only if cohort is dirty but query is not empty
 watch(
   () => cohorts.value.length,
   (newVal, oldVal) => {
-    if (newVal === 2 && oldVal === 1 && cohort.value.is_dirty) {
+    if (
+      newVal === 2 &&
+      oldVal === 1 &&
+      cohort.value.is_dirty &&
+      !isAPIQueryEmpty(canon_query.value)
+    ) {
       search(canon_query.value);
     }
   },
