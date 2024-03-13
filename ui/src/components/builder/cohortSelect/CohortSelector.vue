@@ -23,7 +23,10 @@
             </div>
             <!-- details -->
             <div>
-              <div class="text-lg font-semibold leading-4">
+              <div
+                class="font-semibold leading-4 max-w-[144px] whitespace-nowrap overflow-clip overflow-ellipsis"
+                :title="cohort.name"
+              >
                 {{ cohort.name }}
               </div>
               <div class="text-sm va-text-secondary w-[72px]">

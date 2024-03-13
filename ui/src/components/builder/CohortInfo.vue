@@ -1,36 +1,47 @@
 <template>
   <div>
     <div class="flex justify-start items-center mb-1">
-      <i-mdi-account-group
-        class="text-2xl"
-        :style="{
-          color: stringToRGB(`${props.cohort.id}-${props.cohort.name}`),
-        }"
-      />
-      <div class="ml-2 text-lg">{{ props.cohort.name }}</div>
-      <div>
-        <i-mdi-visibility
-          class="va-text-secondary ml-2 text-sm"
-          v-if="props.cohort.is_published"
-          title="publsihed"
+      <!-- <div class="flex-none">
+        <i-mdi-account-group
+          class="text-2xl"
+          :style="{
+            color: stringToRGB(`${props.cohort.id}-${props.cohort.name}`),
+          }"
         />
-        <i-mdi-visibility-off
-          class="va-text-secondary ml-2 text-sm"
-          v-else
-          title="unpublished"
-        />
+      </div> -->
+      <div
+        class="text-lg leading-5 whitespace-nowrap overflow-clip overflow-ellipsis"
+      >
+        {{ props.cohort.name }}
       </div>
-      <div>
-        <i-mdi-lock
-          class="va-text-secondary ml-2 text-sm"
-          v-if="props.cohort.is_locked"
-          title="locked"
-        />
-        <i-mdi-lock-open-variant
-          class="va-text-secondary ml-2 text-sm"
-          v-else
-          title="unlocked"
-        />
+      <div class="flex ml-auto">
+        <!-- published / unpublished -->
+        <div :title="props.cohort.is_published ? 'Published' : 'Unpublished'">
+          <i-mdi-visibility
+            class="va-text-secondary ml-2 text-sm"
+            v-if="props.cohort.is_published"
+            title="publsihed"
+          />
+          <i-mdi-visibility-off
+            class="va-text-secondary ml-2 text-sm"
+            v-else
+            title="unpublished"
+          />
+        </div>
+
+        <!-- locked / unlocked -->
+        <div :title="props.cohort.is_locked ? 'Locked' : 'Unlocked'">
+          <i-mdi-lock
+            class="va-text-secondary ml-2 text-sm"
+            v-if="props.cohort.is_locked"
+            title="locked"
+          />
+          <i-mdi-lock-open-variant
+            class="va-text-secondary ml-2 text-sm"
+            v-else
+            title="unlocked"
+          />
+        </div>
       </div>
     </div>
     <div class="va-text-secondary">
@@ -46,7 +57,7 @@
 </template>
 
 <script setup>
-import { stringToRGB } from "@/services/colors";
+// import { stringToRGB } from "@/services/colors";
 
 const props = defineProps({
   cohort: Object,

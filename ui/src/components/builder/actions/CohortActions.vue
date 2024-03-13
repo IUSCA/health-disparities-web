@@ -8,6 +8,8 @@
       preset="primary"
       size="small"
       :disabled="isSaveDisabled"
+      :border-color="isSaveDisabled ? null : 'success'"
+      round
     >
       Save
     </va-button>
@@ -18,6 +20,7 @@
       icon="download"
       size="small"
       disabled
+      round
     >
       Export
     </va-button>
