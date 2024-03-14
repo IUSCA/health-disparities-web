@@ -4,6 +4,7 @@ const { param, body, query } = require('express-validator');
 const _ = require('lodash/fp');
 
 const prisma = new PrismaClient();
+const { performance } = require('perf_hooks');
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
@@ -23,6 +24,25 @@ async function getCohortById(id) {
   const sqlQuery = getCohortByIdQuery(id);
   const cohorts = await prisma.$queryRaw(sqlQuery);
   return cohorts[0];
+}
+
+// asynchronously log the query and its sql
+// ignore errors
+function logQuery({
+  queryJson, sqlQuery, execution_time, author_id,
+}) {
+  return prisma.query_analytics.create({
+    data: {
+      query: queryJson,
+      sql: sqlQuery.sql,
+      values: sqlQuery.values,
+      author_id,
+      execution_time,
+    },
+  }).catch((e) => {
+    // eslint-disable-next-line no-console
+    console.error(e);
+  });
 }
 
 router.get(
@@ -140,11 +160,21 @@ router.post(
   asyncHandler(async (req, res, next) => {
     // if save_results is true, save the search results to the cohort table as a temporary cohort
     // and return that cohort's id as search_id
+    const start_time = performance.now();
     if (req.query.save_results) {
       const searchQuery = searchParticipants(req.body.query);
       const createQuery = saveSearchResults(req.query.search_id, searchQuery);
       // console.log(searchQuery.sql, searchQuery.values);
       const rows = await prisma.$queryRaw(createQuery);
+
+      const end_time = performance.now();
+      logQuery({
+        queryJson: req.body.query,
+        sqlQuery: searchQuery,
+        execution_time: end_time - start_time,
+        author_id: req.user.id,
+      });
+
       res.json({
         count: Number(rows[0].count),
         search_id: rows[0].id,
@@ -153,7 +183,18 @@ router.post(
       const sqlQuery = searchParticipants(req.body.query, {
         count: true,
       });
+      // eslint-disable-next-line no-console
+      console.log(sqlQuery.sql, sqlQuery.values);
       const rows = await prisma.$queryRaw(sqlQuery);
+
+      const end_time = performance.now();
+      logQuery({
+        queryJson: req.body.query,
+        sqlQuery,
+        execution_time: end_time - start_time,
+        author_id: req.user.id,
+      });
+
       res.json({ count: Number(rows[0].count) });
     }
   }),

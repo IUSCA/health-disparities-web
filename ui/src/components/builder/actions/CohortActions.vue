@@ -59,4 +59,3 @@ const isSaveDisabled = computed(() => {
   return !props.cohort.is_supported || isQueryEmpty(props.cohort.query);
 });
 </script>
-../queryBuilder/cohortQueryBuilder
