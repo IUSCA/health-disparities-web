@@ -18,28 +18,23 @@ function validateField(fieldValue) {
 // Add custom format to validate the "field" property
 ajv.addFormat('customFieldFormat', validateField);
 
-const setOperationsSchema = {
-  type: 'object',
-  properties: {
-    cohort_ids: {
-      type: 'array', items: { type: 'string' }, uniqueItems: true, minItems: 2,
-    },
-    operators: { type: 'array', items: { enum: ['union', 'intersection', 'difference', 'symmetric_difference'] }, minItems: 1 },
-  },
-  required: ['cohort_ids', 'operators'],
-  additionalProperties: false,
-};
-
+const PHENOTYPE_QUERY = 'phenotype';
+const GENOTYPE_QUERY = 'genotype';
+const SET_OPERATIONS_QUERY = 'set_operations';
 const schema = {
   type: 'object',
   properties: {
     namespace: { type: 'string' },
-    name: { type: 'string', enum: ['phenotype', 'genotype'] },
+    name: { type: 'string', enum: [PHENOTYPE_QUERY, GENOTYPE_QUERY, SET_OPERATIONS_QUERY] },
     version: { type: 'string' },
-    query: { $ref: '#/definitions/query' },
-    set_operations: setOperationsSchema,
+    criteria: {
+      anyOf: [
+        { $ref: '#/definitions/query' },
+        { $ref: '#/definitions/set_operations' },
+      ],
+    },
   },
-  required: ['namespace', 'name', 'query', 'version'],
+  required: ['namespace', 'name', 'criteria', 'version'],
   additionalProperties: false,
   definitions: {
     query: {
@@ -78,6 +73,17 @@ const schema = {
       required: ['field', 'operator', 'value'],
       additionalProperties: false,
     },
+    set_operations: {
+      type: 'object',
+      properties: {
+        cohort_ids: {
+          type: 'array', items: { type: 'string' }, uniqueItems: true, minItems: 2,
+        },
+        operators: { type: 'array', items: { enum: ['union', 'intersection', 'difference', 'symmetric_difference'] }, minItems: 1 },
+      },
+      required: ['cohort_ids', 'operators'],
+      additionalProperties: false,
+    },
   },
 };
 
@@ -92,7 +98,7 @@ function validateCohortQuery(query) {
   return true;
 }
 
-function _sanitizeCohortQuery(queryJson) {
+function sanitizeQueryTree(queryJson) {
   // for fields that are of type numeric, convert the value to number
   // for fields that are of date type, convert the value to date
   const { operator, children } = queryJson;
@@ -100,7 +106,7 @@ function _sanitizeCohortQuery(queryJson) {
     // non-leaf node
     return {
       operator,
-      children: children.map((child) => _sanitizeCohortQuery(child)),
+      children: children.map((child) => sanitizeQueryTree(child)),
     };
   }
   // leaf node
@@ -140,29 +146,20 @@ function _sanitizeCohortQuery(queryJson) {
 }
 
 function sanitizeCohortQuery(queryJson) {
-  return {
-    ...queryJson,
-    query: _sanitizeCohortQuery(queryJson.query),
-  };
-}
-
-const validateSO = ajv.compile(setOperationsSchema);
-function validateSetOperations(query) {
-  const valid = validateSO(query);
-  if (!valid) {
-    logger.error(JSON.stringify(validate.errors, null, 2));
-    throw new Error('Invalid query');
+  if (queryJson.name === 'phenotype') {
+    return {
+      ...queryJson,
+      criteria: sanitizeQueryTree(queryJson.criteria),
+    };
   }
-  const { cohort_ids, operators } = query;
-  if (cohort_ids.length !== operators.length + 1) {
-    logger.error(JSON.stringify(validate.errors, null, 2));
-    throw new Error(' Invalid query: length of cohort_ids should be one more than length of operators');
-  }
-  return true;
+  return queryJson;
 }
 
 module.exports = {
   validateCohortQuery,
   sanitizeCohortQuery,
-  validateSetOperations,
+  // validateSetOperations,
+  PHENOTYPE_QUERY,
+  GENOTYPE_QUERY,
+  SET_OPERATIONS_QUERY,
 };

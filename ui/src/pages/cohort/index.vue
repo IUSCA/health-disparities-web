@@ -44,6 +44,7 @@
 
 <script setup>
 import { isQueryEmpty } from "@/components/builder/queryBuilder/cohortQueryBuilder";
+import config from "@/config";
 import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
@@ -82,7 +83,13 @@ function checkAndCombine() {
     );
 
     cohortService
-      .searchParticipantsWithSetOperations(cohort_ids, operators.value)
+      .searchParticipants({
+        schema: config.cohort.set_operations_schema,
+        criteria: {
+          cohort_ids,
+          operators: operators.value,
+        },
+      })
       .then((res) => {
         combinedCount.value = res.data.count;
       })

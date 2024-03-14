@@ -12,7 +12,7 @@ import { ref } from "vue";
 
 export const useCohortsStore = defineStore("cohorts", () => {
   // maintain "dirty" state for each cohort to track which cohorts are not yet saved
-  // - new cohorts are inherently dirty: makeEmptyCohort
+  // - new cohorts are inherently dirty: makeEmptyPhenotypeCohort
   // - when a cohort is saved, it gets clean: transformStoredCohort
   // - when a cohort is loaded, it is clean: transformStoredCohort
   // - when query of a cohort is changed, it gets dirty: Cohort Component
@@ -87,7 +87,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
   }
 
   // service - no state change
-  function makeEmptyCohort() {
+  function makeEmptyPhenotypeCohort() {
     return {
       id: _.uniqueId("cohort_"),
       name: makeNewName(),
@@ -105,7 +105,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
   }
 
   // service - no state change
-  function isSupported({ name, namespace, version }) {
+  function isPhenotypeQuery({ name, namespace, version }) {
     return (
       name === config.cohort.phenotype_schema.name &&
       namespace === config.cohort.phenotype_schema.namespace &&
@@ -114,30 +114,38 @@ export const useCohortsStore = defineStore("cohorts", () => {
   }
 
   // service - no state change
+  function isSetOperationQuery({ name, namespace, version }) {
+    return (
+      name === config.cohort.set_operations_schema.name &&
+      namespace === config.cohort.set_operations_schema.namespace &&
+      version === config.cohort.set_operations_schema.version
+    );
+  }
+
+  // service - no state change
   function transformStoredCohort(cohort) {
     console.log("transformStoredCohort", cohort);
-    const { query: queryContainer, size, ...rest } = cohort;
-    const { name, namespace, version, query, set_operations } = queryContainer;
+    const { query, size, ...rest } = cohort;
+    const { name, namespace, version, criteria } = query;
     const sanitizedCohort = {
       ...rest,
-      set_operations,
       query_schema: { name, namespace, version },
       is_dirty: false,
     };
 
-    if (isSupported({ name, namespace, version })) {
+    if (isPhenotypeQuery({ name, namespace, version })) {
       sanitizedCohort.is_supported = true;
       if (_.isEmpty(query)) {
         sanitizedCohort.query = defaultQuery();
         sanitizedCohort.size = totalParticipants.value;
       } else {
-        sanitizedCohort.query = transformStoredQuery(query);
+        sanitizedCohort.query = transformStoredQuery(criteria);
         sanitizedCohort.size = size;
       }
     } else {
       // unsupported query type
       sanitizedCohort.is_supported = false;
-      sanitizedCohort.query = query;
+      sanitizedCohort.query = criteria;
       sanitizedCohort.size = size;
     }
     return sanitizedCohort;
@@ -158,15 +166,20 @@ export const useCohortsStore = defineStore("cohorts", () => {
     is_published,
     is_locked,
     query,
+    query_schema,
   }) {
+    let criteria = query;
+    if (isPhenotypeQuery(query_schema)) {
+      criteria = transformQueryForApi(query);
+    }
     const cohort_data = {
       name,
       description,
       is_published,
       is_locked,
       query: {
-        ...config.cohort.phenotype_schema,
-        query: transformQueryForApi(query),
+        ...query_schema,
+        criteria,
       },
     };
     // if cohort is new, create it, otherwise update it
@@ -190,10 +203,12 @@ export const useCohortsStore = defineStore("cohorts", () => {
     deleteCohort,
     updateCohort,
     updateOperator,
-    makeEmptyCohort,
+    makeEmptyPhenotypeCohort,
     transformStoredCohort,
     isNewCohort,
     saveCohort,
+    isPhenotypeQuery,
+    isSetOperationQuery,
   };
 });
 

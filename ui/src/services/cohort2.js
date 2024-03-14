@@ -1,4 +1,3 @@
-import config from "@/config";
 import api from "./api";
 const cache_busting_id = "41e81fd";
 
@@ -59,8 +58,8 @@ class cohortService {
   }
 
   searchParticipants({
-    query,
-    set_operations = null,
+    schema,
+    criteria,
     save_results = false,
     search_id = null,
   }) {
@@ -68,9 +67,8 @@ class cohortService {
       "/cohorts/search",
       {
         query: {
-          ...config.cohort.phenotype_schema,
-          query,
-          ...(set_operations != null && { set_operations }),
+          ...schema,
+          criteria,
         },
       },
       {
@@ -82,14 +80,14 @@ class cohortService {
     );
   }
 
-  searchParticipantsWithSetOperations(cohort_ids, operators) {
-    return api.post("/cohorts/search/set_operations", {
-      set_operations: {
-        cohort_ids,
-        operators,
-      },
-    });
-  }
+  // searchParticipantsWithSetOperations(cohort_ids, operators) {
+  //   return api.post("/cohorts/search/set_operations", {
+  //     set_operations: {
+  //       cohort_ids,
+  //       operators,
+  //     },
+  //   });
+  // }
 }
 
 export default new cohortService();

@@ -35,6 +35,7 @@
 </template>
 
 <script setup>
+import config from "@/config";
 import cohortService from "@/services/cohort2";
 import toast from "@/services/toast";
 import { useCohortsStore } from "@/stores/cohorts";
@@ -62,7 +63,8 @@ function search(query) {
   loading.value = true;
   cohortService
     .searchParticipants({
-      query,
+      schema: config.cohort.phenotype_schema,
+      criteria: query,
       search_id: cohort.value.search_id,
       save_results: cohorts.value.length > 1,
     })

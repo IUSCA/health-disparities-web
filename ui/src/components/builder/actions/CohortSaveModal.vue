@@ -111,6 +111,7 @@ function handleSave() {
   const cohort_data = {
     id: props.cohort.id,
     query: props.cohort.query,
+    query_schema: props.cohort.query_schema,
     ...data.value,
   };
   if (validate()) {

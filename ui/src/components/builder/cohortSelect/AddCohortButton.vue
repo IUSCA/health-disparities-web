@@ -79,7 +79,7 @@ const cohortSearchModal = ref(null);
 function addNewCohort() {
   // add an empty cohort - dirty: true
   cohortsStore.appendCohort(
-    cohortsStore.makeEmptyCohort(),
+    cohortsStore.makeEmptyPhenotypeCohort(),
     DEFAULT_LOGICAL_OPERATOR,
   );
 }
@@ -97,4 +97,4 @@ function addCohort(cohort) {
 .cohort-select-buttons {
   --va-button-justify-content: left;
 }
-</style>
+</style>@/components/builder/combination/constants

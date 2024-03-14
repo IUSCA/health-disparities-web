@@ -1,4 +1,7 @@
 const { Prisma } = require('@prisma/client');
+const { buildParticipantsQuery } = require('./participants');
+const { combineQuery } = require('./combination');
+const { PHENOTYPE_QUERY, GENOTYPE_QUERY, SET_OPERATIONS_QUERY } = require('./validation');
 
 // TODO: join with user table and return author's data
 const cohort_select = Prisma.raw`
@@ -112,8 +115,22 @@ function saveSearchResults(id, searchQuery) {
   return id != null ? upsertSql : insertSql;
 }
 
+function searchParticipants(query, { count = false } = {}) {
+  if (query.name === PHENOTYPE_QUERY) {
+    return buildParticipantsQuery(query.criteria, { count });
+  } if (query.name === GENOTYPE_QUERY) {
+    throw new Error('Not implemented');
+  } else if (query.name === SET_OPERATIONS_QUERY) {
+    return combineQuery(query.criteria, { count });
+  } else {
+    // won't reach here because of query validation
+    throw new Error(`Invalid cohort query name: ${query.name}`);
+  }
+}
+
 module.exports = {
   getCohortByIdQuery,
   searchCohortsQuery,
   saveSearchResults,
+  searchParticipants,
 };

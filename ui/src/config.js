@@ -62,6 +62,11 @@ const exports = {
       namespace: "edu.iu.sca.biobank",
       version: "1.0.0",
     },
+    set_operations_schema: {
+      name: "set_operations",
+      namespace: "edu.iu.sca.biobank",
+      version: "1.0.0",
+    },
   },
 };
 
