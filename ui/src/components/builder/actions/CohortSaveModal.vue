@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-import { Cohort } from "@/components/builder/cohort";
+import { Cohort } from "@/components/builder/models";
 import toast from "@/services/toast";
 
 import { useForm } from "vuestic-ui";

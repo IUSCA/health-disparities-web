@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { Cohort } from "@/components/builder/cohort";
+import { Cohort } from "@/components/builder/models";
 const props = defineProps({
   cohort: Cohort,
 });

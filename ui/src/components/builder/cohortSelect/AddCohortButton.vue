@@ -66,8 +66,8 @@
 </template>
 
 <script setup>
-import { PhenotypeCohort, createCohort } from "@/components/builder/cohort";
 import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
+import { PhenotypeCohort, createCohort } from "@/components/builder/models";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
@@ -96,4 +96,3 @@ function addCohort(cohort) {
   --va-button-justify-content: left;
 }
 </style>
-@/components/builder/combination/constants

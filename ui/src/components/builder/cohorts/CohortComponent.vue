@@ -29,10 +29,10 @@
 </template>
 
 <script setup>
-import { Cohort } from "@/components/builder/cohort";
 import CombinedCohortComponent from "@/components/builder/cohorts/CombinedCohortComponent.vue";
 import GenotypeCohortComponent from "@/components/builder/cohorts/GenotypeCohortComponent.vue";
 import PhenotypeCohortComponent from "@/components/builder/cohorts/PhenotypeCohortComponent.vue";
+import { Cohort } from "@/components/builder/models";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
