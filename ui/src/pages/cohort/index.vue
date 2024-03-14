@@ -25,7 +25,7 @@
               cohort.is_locked ? 'border border-solid border-slate-500' : ''
             "
           >
-            <Cohort
+            <CohortComponent
               :idx="idx"
               :cohort="cohort"
               @update:cohort="(updatedCohort) => (cohorts[idx] = updatedCohort)"
@@ -37,13 +37,9 @@
       </div>
     </VaInnerLoading>
   </div>
-  <!-- <div>
-    <QBDxNameSelect v-model="searchModel" />
-  </div> -->
 </template>
 
 <script setup>
-import { isQueryEmpty } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
@@ -59,7 +55,6 @@ const {
 } = storeToRefs(cohortsStore);
 // const props = defineProps({});
 
-// const searchModel = ref([]);
 const globalLoading = ref(false);
 
 cohortService.getTotalParticipants().then((res) => {
@@ -74,7 +69,6 @@ cohortService.getTotalParticipants().then((res) => {
 
 function checkAndCombine() {
   if (isInCombineMode.value) {
-    globalLoading.value = true;
     // get the ids of the cohorts to be combined
     // if the cohort is dirty, use the search_id
     // otherwise use the id (for saved cohorts)
@@ -82,9 +76,16 @@ function checkAndCombine() {
       c.is_dirty ? c.search_id : c.id,
     );
 
+    // if some cohort_ids are null, exit early
+    if (cohort_ids.some((id) => !id)) {
+      return;
+    }
+
+    globalLoading.value = true;
+
     cohortService
       .searchParticipants({
-        schema: config.cohort.set_operations_schema,
+        schema: config.cohort.schema.combination,
         criteria: {
           cohort_ids,
           operators: operators.value,
@@ -103,10 +104,9 @@ function checkAndCombine() {
 }
 // deduplicate the calls to checkAndCombine from
 // possible "collision" of afterSearch and watch([numCohorts, operators])
-const debouncedCheckAndCombine = useDebounceFn(checkAndCombine, 100);
 
 const numCohorts = computed(() => cohorts.value.length);
-watch([numCohorts, operators], debouncedCheckAndCombine, { deep: true });
+watch([numCohorts, operators], checkAndCombine, { deep: true });
 
 function handleBeforeSearch() {
   // when in combine mode, show global loading to prevent user from interacting with the other cohorts or operators
@@ -120,14 +120,14 @@ function handleAfterSearch(err) {
   if (err) {
     globalLoading.value = false;
   } else {
-    debouncedCheckAndCombine();
+    checkAndCombine();
   }
 }
 
 // prevent navigation when there are unsaved changes
 onBeforeRouteLeave(() => {
   const anyEditedCohorts = cohorts.value.some(
-    (c) => c.is_dirty && !isQueryEmpty(c.query),
+    (c) => c.is_dirty && !c.isEmpty(),
   );
   if (!anyEditedCohorts) return true;
   const answer = window.confirm(

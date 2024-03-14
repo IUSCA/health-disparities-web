@@ -20,17 +20,17 @@ ajv.addFormat('customFieldFormat', validateField);
 
 const PHENOTYPE_QUERY = 'phenotype';
 const GENOTYPE_QUERY = 'genotype';
-const SET_OPERATIONS_QUERY = 'set_operations';
+const COMBINATION_QUERY = 'combination';
 const schema = {
   type: 'object',
   properties: {
     namespace: { type: 'string' },
-    name: { type: 'string', enum: [PHENOTYPE_QUERY, GENOTYPE_QUERY, SET_OPERATIONS_QUERY] },
+    name: { type: 'string', enum: [PHENOTYPE_QUERY, GENOTYPE_QUERY, COMBINATION_QUERY] },
     version: { type: 'string' },
     criteria: {
       anyOf: [
         { $ref: '#/definitions/query' },
-        { $ref: '#/definitions/set_operations' },
+        { $ref: '#/definitions/combination' },
       ],
     },
   },
@@ -73,7 +73,7 @@ const schema = {
       required: ['field', 'operator', 'value'],
       additionalProperties: false,
     },
-    set_operations: {
+    combination: {
       type: 'object',
       properties: {
         cohort_ids: {
@@ -158,8 +158,7 @@ function sanitizeCohortQuery(queryJson) {
 module.exports = {
   validateCohortQuery,
   sanitizeCohortQuery,
-  // validateSetOperations,
   PHENOTYPE_QUERY,
   GENOTYPE_QUERY,
-  SET_OPERATIONS_QUERY,
+  COMBINATION_QUERY,
 };

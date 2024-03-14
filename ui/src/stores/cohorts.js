@@ -1,20 +1,11 @@
-import {
-  defaultQuery,
-  isQueryEmpty,
-  transformQueryForApi,
-  transformStoredQuery,
-} from "@/components/builder/queryBuilder/cohortQueryBuilder";
-import config from "@/config";
-import cohortService from "@/services/cohort2";
-import _ from "lodash";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useCohortsStore = defineStore("cohorts", () => {
   // maintain "dirty" state for each cohort to track which cohorts are not yet saved
-  // - new cohorts are inherently dirty: makeEmptyPhenotypeCohort
-  // - when a cohort is saved, it gets clean: transformStoredCohort
-  // - when a cohort is loaded, it is clean: transformStoredCohort
+  // - new cohorts are inherently dirty: constructors and createEmpty methods on Cohort class
+  // - when a cohort is saved, it gets clean: save method on Cohort class
+  // - when a cohort is loaded, it is clean: fromJson method on Cohort class
   // - when query of a cohort is changed, it gets dirty: Cohort Component
 
   const cohorts = ref([]);
@@ -26,7 +17,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
   const combinedCount = ref(0);
 
   const cohortsWithEmptyQueries = computed(() => {
-    return cohorts.value.filter((c) => isQueryEmpty(c.query));
+    return cohorts.value.filter((c) => c.isEmpty());
   });
   const isInCombineMode = computed(() => {
     return (
@@ -75,7 +66,6 @@ export const useCohortsStore = defineStore("cohorts", () => {
     operators.value[idx1] = op;
   }
 
-  // service - no state change
   function makeNewName(baseName = "Untitled") {
     let name = baseName;
     let i = 1;
@@ -84,112 +74,6 @@ export const useCohortsStore = defineStore("cohorts", () => {
       i++;
     }
     return name;
-  }
-
-  // service - no state change
-  function makeEmptyPhenotypeCohort() {
-    return {
-      id: _.uniqueId("cohort_"),
-      name: makeNewName(),
-      is_published: false,
-      is_locked: false,
-      is_protected: false,
-      size: totalParticipants.value,
-      query: defaultQuery(),
-      set_operations: null,
-      query_schema: config.cohort.phenotype_schema,
-      is_supported: true,
-      is_dirty: true,
-      search_id: null, // id of cohort results stored temporarily
-    };
-  }
-
-  // service - no state change
-  function isPhenotypeQuery({ name, namespace, version }) {
-    return (
-      name === config.cohort.phenotype_schema.name &&
-      namespace === config.cohort.phenotype_schema.namespace &&
-      version === config.cohort.phenotype_schema.version
-    );
-  }
-
-  // service - no state change
-  function isSetOperationQuery({ name, namespace, version }) {
-    return (
-      name === config.cohort.set_operations_schema.name &&
-      namespace === config.cohort.set_operations_schema.namespace &&
-      version === config.cohort.set_operations_schema.version
-    );
-  }
-
-  // service - no state change
-  function transformStoredCohort(cohort) {
-    console.log("transformStoredCohort", cohort);
-    const { query, size, ...rest } = cohort;
-    const { name, namespace, version, criteria } = query;
-    const sanitizedCohort = {
-      ...rest,
-      query_schema: { name, namespace, version },
-      is_dirty: false,
-    };
-
-    if (isPhenotypeQuery({ name, namespace, version })) {
-      sanitizedCohort.is_supported = true;
-      if (_.isEmpty(query)) {
-        sanitizedCohort.query = defaultQuery();
-        sanitizedCohort.size = totalParticipants.value;
-      } else {
-        sanitizedCohort.query = transformStoredQuery(criteria);
-        sanitizedCohort.size = size;
-      }
-    } else {
-      // unsupported query type
-      sanitizedCohort.is_supported = false;
-      sanitizedCohort.query = criteria;
-      sanitizedCohort.size = size;
-    }
-    return sanitizedCohort;
-  }
-
-  // service - no state change
-  function isNewCohort(id) {
-    // no id (null or undefined)
-    // if id starts with "cohort_" then it's a new cohort
-    return !id || id.startsWith("cohort_");
-  }
-
-  // service - no state change
-  function saveCohort({
-    id,
-    name,
-    description,
-    is_published,
-    is_locked,
-    query,
-    query_schema,
-  }) {
-    let criteria = query;
-    if (isPhenotypeQuery(query_schema)) {
-      criteria = transformQueryForApi(query);
-    }
-    const cohort_data = {
-      name,
-      description,
-      is_published,
-      is_locked,
-      query: {
-        ...query_schema,
-        criteria,
-      },
-    };
-    // if cohort is new, create it, otherwise update it
-    return (
-      isNewCohort(id)
-        ? cohortService.create(cohort_data)
-        : cohortService.update(id, cohort_data)
-    ).then((res) => {
-      return transformStoredCohort(res.data);
-    });
   }
 
   return {
@@ -203,12 +87,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     deleteCohort,
     updateCohort,
     updateOperator,
-    makeEmptyPhenotypeCohort,
-    transformStoredCohort,
-    isNewCohort,
-    saveCohort,
-    isPhenotypeQuery,
-    isSetOperationQuery,
+    makeNewName,
   };
 });
 

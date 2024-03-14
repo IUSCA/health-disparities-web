@@ -1,7 +1,7 @@
 const { Prisma } = require('@prisma/client');
 const { buildParticipantsQuery } = require('./participants');
 const { combineQuery } = require('./combination');
-const { PHENOTYPE_QUERY, GENOTYPE_QUERY, SET_OPERATIONS_QUERY } = require('./validation');
+const { PHENOTYPE_QUERY, GENOTYPE_QUERY, COMBINATION_QUERY } = require('./validation');
 
 // TODO: join with user table and return author's data
 const cohort_select = Prisma.raw`
@@ -120,7 +120,7 @@ function searchParticipants(query, { count = false } = {}) {
     return buildParticipantsQuery(query.criteria, { count });
   } if (query.name === GENOTYPE_QUERY) {
     throw new Error('Not implemented');
-  } else if (query.name === SET_OPERATIONS_QUERY) {
+  } else if (query.name === COMBINATION_QUERY) {
     return combineQuery(query.criteria, { count });
   } else {
     // won't reach here because of query validation

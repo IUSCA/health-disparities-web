@@ -59,8 +59,8 @@ function combine(cohort_ids, operators) {
   return combineTwo(combine(rest, rest_ops), cpq(tail), last_op);
 }
 
-function combineWrapper(set_operations, { count = false }) {
-  const { cohort_ids, operators } = set_operations;
+function combineWrapper(criteria, { count = false }) {
+  const { cohort_ids, operators } = criteria;
   const sqlQuery = combine(cohort_ids, operators);
   if (count) {
     return Prisma.sql`

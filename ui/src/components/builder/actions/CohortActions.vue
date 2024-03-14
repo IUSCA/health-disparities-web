@@ -39,23 +39,22 @@
   <CohortSaveModal
     ref="saveModal"
     :cohort="props.cohort"
-    @save="(cohort) => emit('save', cohort)"
+    @save="emit('save')"
   />
 </template>
 
 <script setup>
-import { isQueryEmpty } from "@/components/builder/queryBuilder/cohortQueryBuilder";
-
+import { Cohort } from "@/components/builder/cohort";
 const props = defineProps({
-  cohort: Object,
+  cohort: Cohort,
 });
 const emit = defineEmits(["save", "export", "remove"]);
 const saveModal = ref(null);
 
-// disable save button when
-// - cohort is not supported
-// - canonical query is empty
+// do not save cohorts with empty queries
+// disable save button when cohort is published
+// - if user cannot edit the cohort (todo)
 const isSaveDisabled = computed(() => {
-  return !props.cohort.is_supported || isQueryEmpty(props.cohort.query);
+  return props.cohort.isEmpty() || props.cohort.is_published;
 });
 </script>

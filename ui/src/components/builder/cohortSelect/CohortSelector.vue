@@ -81,4 +81,3 @@ function changeCombinationLogic(left_operand_idx) {
   combinationLogicModal.value.show(left_operand_idx);
 }
 </script>
-@/components/builder/combination/constants

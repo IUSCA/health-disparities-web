@@ -57,15 +57,17 @@ const exports = {
     },
   },
   cohort: {
-    phenotype_schema: {
-      name: "phenotype",
-      namespace: "edu.iu.sca.biobank",
-      version: "1.0.0",
-    },
-    set_operations_schema: {
-      name: "set_operations",
-      namespace: "edu.iu.sca.biobank",
-      version: "1.0.0",
+    schema: {
+      phenotype: {
+        name: "phenotype",
+        namespace: "edu.iu.sca.biobank",
+        version: "1.0.0",
+      },
+      combination: {
+        name: "combination",
+        namespace: "edu.iu.sca.biobank",
+        version: "1.0.0",
+      },
     },
   },
 };

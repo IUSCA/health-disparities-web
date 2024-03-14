@@ -66,6 +66,7 @@
 </template>
 
 <script setup>
+import { PhenotypeCohort, createCohort } from "@/components/builder/cohort";
 import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
@@ -77,19 +78,16 @@ const { cohorts } = storeToRefs(cohortsStore);
 const cohortSearchModal = ref(null);
 
 function addNewCohort() {
-  // add an empty cohort - dirty: true
+  // add an empty phenotype cohort - dirty: true
   cohortsStore.appendCohort(
-    cohortsStore.makeEmptyPhenotypeCohort(),
+    PhenotypeCohort.createEmpty(),
     DEFAULT_LOGICAL_OPERATOR,
   );
 }
 
 function addCohort(cohort) {
   // add an existing cohort - dirty: false
-  cohortsStore.appendCohort(
-    cohortsStore.transformStoredCohort(cohort),
-    DEFAULT_LOGICAL_OPERATOR,
-  );
+  cohortsStore.appendCohort(createCohort(cohort), DEFAULT_LOGICAL_OPERATOR);
 }
 </script>
 
@@ -97,4 +95,5 @@ function addCohort(cohort) {
 .cohort-select-buttons {
   --va-button-justify-content: left;
 }
-</style>@/components/builder/combination/constants
+</style>
+@/components/builder/combination/constants

@@ -47,8 +47,9 @@
 </template>
 
 <script setup>
+import { Cohort } from "@/components/builder/cohort";
 import toast from "@/services/toast";
-import { useCohortsStore } from "@/stores/cohorts";
+
 import { useForm } from "vuestic-ui";
 
 // parent component can invoke these methods through the template ref
@@ -58,12 +59,10 @@ defineExpose({
 });
 
 const props = defineProps({
-  cohort: Object,
+  cohort: Cohort,
 });
 
 const emit = defineEmits(["save"]);
-
-const cohortsStore = useCohortsStore();
 
 const data = ref({
   name: props.cohort.name || "",
@@ -108,18 +107,12 @@ function show() {
 
 // TODO
 function handleSave() {
-  const cohort_data = {
-    id: props.cohort.id,
-    query: props.cohort.query,
-    query_schema: props.cohort.query_schema,
-    ...data.value,
-  };
   if (validate()) {
     loading.value = true;
-    cohortsStore
-      .saveCohort(cohort_data)
-      .then((res) => {
-        emit("save", res);
+    props.cohort
+      .save(data.value)
+      .then(() => {
+        emit("save");
         hide();
       })
       .catch((error) => {
