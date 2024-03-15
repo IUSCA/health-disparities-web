@@ -81,6 +81,10 @@ export const useCohortsStore = defineStore("cohorts", () => {
     return name;
   }
 
+  function setCombinationCohort(cohort) {
+    combinationCohort.value = cohort;
+  }
+
   return {
     cohorts,
     operators,
@@ -93,6 +97,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
     updateCohort,
     updateOperator,
     makeNewName,
+    setCombinationCohort,
   };
 });
 

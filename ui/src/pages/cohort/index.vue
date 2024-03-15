@@ -40,12 +40,16 @@
 </template>
 
 <script setup>
+import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
+import { CombinationCohort } from "@/components/builder/models";
+import { createCohort } from "@/components/builder/models/utils";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
 const cohortsStore = useCohortsStore();
+const route = useRoute();
 const {
   cohorts,
   totalParticipants,
@@ -136,6 +140,40 @@ onBeforeRouteLeave(() => {
   // cancel the navigation and stay on the same page
   if (!answer) return false;
 });
+
+// check if the route has a query parameter id
+// if it does, load the cohort
+if (route.query.id) {
+  loadCohort(route.query.id);
+}
+
+// load the cohort from the server and update store
+// if it is a combination cohort, load the cohorts that are part of the combination
+function loadCohort(id) {
+  cohortService.get(id).then((res) => {
+    const cohort = createCohort(res.data);
+    if (cohort instanceof CombinationCohort) {
+      cohortsStore.setCombinationCohort(cohort);
+
+      // load the cohorts that are part of the combination
+      const promises = cohort.criteria.cohort_ids.map((id) => {
+        return cohortService.get(id).then((res) => {
+          return createCohort(res.data);
+        });
+      });
+      // wait for all the cohorts to be loaded
+      // append them to the store in the same order as they are in the combination
+      Promise.all(promises).then((cohorts) => {
+        cohorts.forEach((c) => {
+          cohortsStore.appendCohort(c, DEFAULT_LOGICAL_OPERATOR);
+        });
+      });
+    } else {
+      // other types of cohorts - single
+      cohortsStore.appendCohort(cohort);
+    }
+  });
+}
 </script>
 
 <route lang="yaml">
