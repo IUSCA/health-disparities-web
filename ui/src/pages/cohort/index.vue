@@ -40,7 +40,6 @@
 </template>
 
 <script setup>
-import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
 import { CombinationCohort } from "@/components/builder/models";
 import { createCohort } from "@/components/builder/models/utils";
 import config from "@/config";
@@ -162,11 +161,9 @@ function loadCohort(id) {
         });
       });
       // wait for all the cohorts to be loaded
-      // append them to the store in the same order as they are in the combination
-      Promise.all(promises).then((cohorts) => {
-        cohorts.forEach((c) => {
-          cohortsStore.appendCohort(c, DEFAULT_LOGICAL_OPERATOR);
-        });
+      // set the cohorts ref in store
+      Promise.all(promises).then((operand_cohorts) => {
+        cohorts.value = operand_cohorts;
       });
     } else {
       // other types of cohorts - single

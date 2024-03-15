@@ -60,6 +60,10 @@ const saveModal = ref(null);
 // disable save button when cohort is published
 // - if user cannot edit the cohort (todo)
 const isSaveDisabled = computed(() => {
-  return props.cohort.isEmpty() || props.cohort.is_published;
+  return (
+    props.cohort.isEmpty() ||
+    props.cohort.is_published ||
+    !props.cohort.is_dirty
+  );
 });
 </script>

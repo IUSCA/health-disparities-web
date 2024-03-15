@@ -9,7 +9,7 @@
     class="z-10"
   >
     <VaInnerLoading :loading="loading">
-      <VaForm ref="formRef" class="flex flex-col gap-3 max-w-lg">
+      <VaForm ref="formRef" class="flex flex-col gap-3 max-w-xl">
         <VaInput
           v-model="data.name"
           label="Name"
@@ -25,18 +25,28 @@
           inner-label
           :max-rows="5"
         />
-        <VaCheckbox
-          v-model="data.is_published"
-          label="Publish Cohort"
-          description="Make this cohort public so that others can see it. Publishing the cohort will also lock it."
-          :disabled="props.cohort.is_locked"
-        />
-        <VaCheckbox
-          v-model="data.is_locked"
-          label="Lock Cohort"
-          description="Freeze the cohort so that it cannot be modified."
-          :disabled="props.cohort.is_locked || data.is_published"
-        />
+        <div class="flex flex-col gap-1">
+          <VaCheckbox
+            v-model="data.is_published"
+            label="Publish Cohort"
+            :disabled="props.cohort.is_locked"
+          />
+          <span class="text-sm va-text-secondary pl-7">
+            Make this cohort public so that others can use it. Publishing the
+            cohort will also lock it.
+          </span>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <VaCheckbox
+            v-model="data.is_locked"
+            label="Lock Cohort"
+            :disabled="props.cohort.is_locked || data.is_published"
+          />
+          <span class="text-sm va-text-secondary pl-7"
+            >Freeze the cohort so that it cannot be modified.</span
+          >
+        </div>
       </VaForm>
       <div class="flex justify-end gap-3">
         <VaButton preset="secondary" @click="hide">Cancel</VaButton>
