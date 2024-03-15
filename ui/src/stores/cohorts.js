@@ -1,3 +1,4 @@
+import { CombinationCohort } from "@/components/builder/models";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -10,11 +11,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
 
   const cohorts = ref([]);
 
-  // sequence of set operations to be applied interleaved with cohorts
-  const operators = ref([]);
-
   const totalParticipants = ref(0);
-  const combinedCount = ref(0);
 
   const cohortsWithEmptyQueries = computed(() => {
     return cohorts.value.filter((c) => c.isEmpty());
@@ -23,6 +20,14 @@ export const useCohortsStore = defineStore("cohorts", () => {
     return (
       cohorts.value.length > 1 && cohortsWithEmptyQueries.value.length === 0
     );
+  });
+
+  const combinationCohort = ref(CombinationCohort.createEmpty());
+  // sequence of set operations to be applied interleaved with cohorts
+  // modifies the combinationCohort
+  const operators = computed({
+    get: () => combinationCohort.value?.criteria?.operators || [],
+    set: (value) => (combinationCohort.value.criteria.operators = value),
   });
 
   function appendCohort(cohort, op = null) {
@@ -79,10 +84,10 @@ export const useCohortsStore = defineStore("cohorts", () => {
   return {
     cohorts,
     operators,
-    combinedCount,
     totalParticipants,
     cohortsWithEmptyQueries,
     isInCombineMode,
+    combinationCohort,
     appendCohort,
     deleteCohort,
     updateCohort,

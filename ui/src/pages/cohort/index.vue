@@ -50,7 +50,7 @@ const {
   cohorts,
   totalParticipants,
   operators,
-  combinedCount,
+  combinationCohort,
   isInCombineMode,
 } = storeToRefs(cohortsStore);
 // const props = defineProps({});
@@ -80,7 +80,7 @@ function checkAndCombine() {
     if (cohort_ids.some((id) => !id)) {
       return;
     }
-
+    combinationCohort.value.criteria.cohort_ids = cohort_ids;
     globalLoading.value = true;
 
     cohortService
@@ -92,7 +92,7 @@ function checkAndCombine() {
         },
       })
       .then((res) => {
-        combinedCount.value = res.data.count;
+        combinationCohort.value.size = res.data.count;
       })
       .catch((err) => {
         console.error(err);

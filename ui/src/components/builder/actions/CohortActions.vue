@@ -32,6 +32,7 @@
       preset="primary"
       size="small"
       class="ml-auto"
+      v-if="!props.hideRemove"
     >
       Remove
     </va-button>
@@ -47,6 +48,10 @@
 import { Cohort } from "@/components/builder/models";
 const props = defineProps({
   cohort: Cohort,
+  hideRemove: {
+    type: Boolean,
+    default: false,
+  },
 });
 const emit = defineEmits(["save", "export", "remove"]);
 const saveModal = ref(null);

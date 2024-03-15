@@ -67,7 +67,8 @@
 
 <script setup>
 import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
-import { PhenotypeCohort, createCohort } from "@/components/builder/models";
+import { PhenotypeCohort } from "@/components/builder/models/phenotype";
+import { createCohort } from "@/components/builder/models/utils";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 

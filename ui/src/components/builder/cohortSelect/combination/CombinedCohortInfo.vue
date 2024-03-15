@@ -14,12 +14,19 @@
       <div>
         <div class="leading-4">
           <span class="font-semibold">
-            <NumberTransition :target="combinedCount" :debounce="50" />
+            <NumberTransition :target="combinationCohort.size" :debounce="50" />
           </span>
           <span> participants </span>
         </div>
         <div class="text-sm va-text-secondary w-[128px]">Combined Cohort</div>
       </div>
+    </div>
+    <div class="mt-3">
+      <CohortActions
+        :cohort="combinationCohort"
+        @export="exportCohort(cohort, idx)"
+        hide-remove
+      />
     </div>
   </div>
 </template>
@@ -34,5 +41,5 @@ const cohortsStore = useCohortsStore();
 
 // const props = defineProps({});
 
-const { combinedCount } = storeToRefs(cohortsStore);
+const { combinationCohort } = storeToRefs(cohortsStore);
 </script>
