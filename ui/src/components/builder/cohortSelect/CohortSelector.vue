@@ -5,55 +5,11 @@
         <!-- combination result -->
         <CombinedCohortInfo v-if="cohorts.length >= 2" />
         <!-- array of cohorts -->
-        <div
-          v-for="(cohort, idx) in cohorts"
-          :key="cohort.id"
-          class="flex items-center"
-        >
-          <!-- Cohort details -->
-          <div class="flex flex-nowrap items-start gap-2">
-            <!-- icon -->
-            <div>
-              <i-mdi-account-group
-                class="text-2xl"
-                :style="{
-                  color: stringToRGB(`${cohort.id}-${cohort.name}`),
-                }"
-              />
-            </div>
-            <!-- details -->
-            <div>
-              <div
-                class="font-semibold leading-4 max-w-[144px] whitespace-nowrap overflow-clip overflow-ellipsis"
-                :title="cohort.name"
-              >
-                {{ cohort.name }}
-              </div>
-              <div class="text-sm va-text-secondary w-[72px]">
-                <span class="font-semibold">
-                  {{ cohort.size }}
-                </span>
-                <span> pax. </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- combination logic -->
-          <div v-if="idx < logicalOperators.length" class="mx-3">
-            <va-button
-              @click="changeCombinationLogic(idx)"
-              :title="combinations[logicalOperators[idx]].label"
-              preset="secondary"
-              color="secondary"
-              size="small"
-            >
-              <Icon
-                :icon="combinations[logicalOperators[idx]].icon"
-                class="text-2xl"
-              />
-            </va-button>
-          </div>
-        </div>
+        <CohortsWithOperators
+          :cohorts="cohorts"
+          :logicalOperators="logicalOperators"
+          @updateLogicalOperator="changeCombinationLogic"
+        />
 
         <!-- Add cohort button -->
         <AddCohortButton />
@@ -65,8 +21,6 @@
 </template>
 
 <script setup>
-import { combinations } from "@/components/builder/cohortSelect/combination/constants";
-import { stringToRGB } from "@/services/colors";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
