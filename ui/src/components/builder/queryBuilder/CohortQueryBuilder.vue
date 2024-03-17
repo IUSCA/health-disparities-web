@@ -38,14 +38,14 @@
         <QueryBuilder :config="config" v-model="query">
           <template #groupOperator="props">
             <div class="flex items-center gap-3">
-              <span>Operator</span>
+              <span>Matching</span>
               <VaSelect
                 :model-value="props.currentOperator"
                 @update:model-value="(v) => props.updateCurrentOperator(v)"
                 :options="props.operators"
                 text-by="name"
                 value-by="identifier"
-                class="group-operator-select w-28 flex-none text-sm"
+                class="group-operator-select w-32 flex-none text-sm"
                 size="small"
               >
               </VaSelect>
@@ -162,15 +162,15 @@ const defultOperators = {
 const config = {
   operators: [
     {
-      name: "AND",
+      name: "All",
       identifier: "AND",
     },
     {
-      name: "OR",
+      name: "Any",
       identifier: "OR",
     },
     {
-      name: "Exclude",
+      name: "Excluding all",
       identifier: "NOT_AND",
     },
   ],
