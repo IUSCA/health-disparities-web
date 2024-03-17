@@ -21,7 +21,7 @@ const cohort = defineModel("cohort", {
   type: Cohort,
   required: true,
 });
-const emit = defineEmits(["beforeSearch", "afterSearch"]);
+const emit = defineEmits(["beforeSearch", "afterSearch", "commit"]);
 
 const cohortsStore = useCohortsStore();
 const { totalParticipants, cohorts } = storeToRefs(cohortsStore);
@@ -30,7 +30,7 @@ const canon_query = ref(transformQueryForApi(cohort.value.criteria));
 
 function search(query) {
   emit("beforeSearch");
-  cohortService
+  return cohortService
     .searchParticipants({
       schema: config.cohort.schema.phenotype,
       criteria: query,
@@ -72,13 +72,18 @@ watch(
   (newQuery, oldQuery) => {
     if (isAPIQueryEmpty(newQuery)) {
       cohort.value.size = totalParticipants.value;
+      if (!isAPIQueryEmpty(oldQuery)) emit("commit");
       return;
     }
     if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
       console.log("Cohort query changed", newQuery, oldQuery);
 
       cohort.value.is_dirty = true;
-      search(newQuery);
+      search(newQuery).then(() => {
+        // wait for the search to finish before committing the criteria and new size to history
+        console.log("Committing cohort");
+        emit("commit");
+      });
     }
   },
   { deep: true },

@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import duration from "dayjs/plugin/duration";
+import relativeTime from "dayjs/plugin/relativeTime";
 
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
@@ -15,6 +15,18 @@ function date(value) {
    */
   if (value == null) return null;
   return dayjs(value).format("MMM D YYYY");
+}
+
+function time(value) {
+  /**
+   * This function is intended to convert an ISO 8601 datetime string
+   * (with Z - UTC timezone) ex: "2023-06-14T01:18:40.501Z"
+   * to a date string of format HH:mm:ss AM/PM in browser's local time zone ex: "11:34:29 AM"
+   *
+   * date("2023-06-14T01:18:40.501Z") -> "01:18:40 AM"
+   */
+  if (value == null) return null;
+  return dayjs(value).format("HH:mm:ss A");
 }
 
 function absolute(value, timezoneOffset = true) {
@@ -92,4 +104,5 @@ function formatDuration(duration) {
   return ans;
 }
 
-export { date, absolute, fromNow, readableDuration, formatDuration };
+export { absolute, date, formatDuration, fromNow, readableDuration, time };
+

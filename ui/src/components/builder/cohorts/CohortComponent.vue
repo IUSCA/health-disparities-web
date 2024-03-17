@@ -2,7 +2,7 @@
   <VaInnerLoading :loading="loading">
     <div class="flex flex-col md:flex-row gap-3">
       <div
-        class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3"
+        class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px]"
       >
         <CohortInfo :cohort="cohort" :total-count="totalParticipants" />
         <div class="mt-3">
@@ -10,6 +10,14 @@
             :cohort="cohort"
             @export="exportCohort(cohort, idx)"
             @remove="() => cohortsStore.deleteCohort(props.idx)"
+          />
+        </div>
+        <div class="mt-5" v-if="!cohort.is_locked">
+          <QueryHistory
+            v-bind="{ history, canUndo, canRedo }"
+            @undo="undo"
+            @redo="redo"
+            @restore="restore"
           />
         </div>
       </div>
@@ -22,6 +30,7 @@
           v-model:cohort="cohort"
           @beforeSearch="handleBeforeSearch"
           @afterSearch="handleAfterSearch"
+          @commit="constrainedCommit"
         />
       </div>
     </div>
@@ -68,5 +77,38 @@ function handleAfterSearch() {
 
 function exportCohort() {
   console.log("Export cohort", cohort.value, props.idx);
+}
+
+const stateToTrack = computed({
+  get: () => ({
+    size: cohort.value.size,
+    criteria: cohort.value.criteria,
+  }),
+  set: ({ criteria }) => {
+    cohort.value.criteria = criteria;
+  },
+});
+
+const { history, commit, undo, redo, canUndo, canRedo } = useManualRefHistory(
+  stateToTrack,
+  {
+    capacity: 30,
+  },
+);
+
+function constrainedCommit() {
+  // when undo or redo is called, the criteria is set. this triggers another commit
+  // to the history. we don't want that, so we check if the criteria is different
+  // from the last commit
+  if (
+    JSON.stringify(cohort.value.criteria) !==
+    JSON.stringify(history.value[0].snapshot.criteria)
+  ) {
+    commit();
+  }
+}
+
+function restore(item) {
+  cohort.value.criteria = item.snapshot.criteria;
 }
 </script>
