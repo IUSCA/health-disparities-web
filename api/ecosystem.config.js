@@ -6,9 +6,11 @@ module.exports = [{
   exp_backoff_restart_delay: 100,
   max_restarts: 3,
   watch: false,
-}, {
+}, 
+{
+  name: 'delete temp cohorts',
   script: 'src/scripts/delete_temp_cohorts.js',
-  name: 'delete_temp_cohorts',
-  cron_restart: '0 */1 * * *', // every 1 hour
+  cron_restart: '0 * * * *', // minute 0 of every hour
+  autorestart: false,
 },
 ];

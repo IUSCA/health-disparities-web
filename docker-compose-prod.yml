@@ -24,8 +24,8 @@ services:
     expose:
       - 3030
     # entrypoint: [ "tail", "-f", "/dev/null" ]
-    depends_on:
-     - postgres
+    # depends_on:
+    #  - postgres
     networks:
       network:
         ipv4_address: 172.19.0.2
