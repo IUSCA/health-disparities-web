@@ -24,7 +24,7 @@ function createCohort(json) {
   } else if (isCombinationQuery(json.query)) {
     return CombinationCohort.fromJson(json);
   } else {
-    return new Cohort(json);
+    return Cohort.fromJson(json);
   }
 }
 

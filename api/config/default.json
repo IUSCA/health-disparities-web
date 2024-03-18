@@ -94,5 +94,8 @@
       ]
     }
   },
-  "dataset_types" : ["RAW_DATA", "DATA_PRODUCT"]
+  "dataset_types" : ["RAW_DATA", "DATA_PRODUCT"],
+  "system_user": {
+    "username": "svc_tasks"
+  }
 }

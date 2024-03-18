@@ -1,4 +1,5 @@
 const { Prisma } = require('@prisma/client');
+const config = require('config');
 const { buildParticipantsQuery } = require('./participants');
 const { combineQuery } = require('./combination');
 const { PHENOTYPE_QUERY, GENOTYPE_QUERY, COMBINATION_QUERY } = require('./validation');
@@ -13,7 +14,7 @@ select
   "description",
   metadata,
   updated_at,
-  author_id,
+  author_username,
   is_locked,
   is_protected,
   is_published,
@@ -40,7 +41,7 @@ function getCohortByIdQuery(id) {
  *
  * @param {Object} options - The search options.
  * @param {string|null} options.name - The name of the cohort.
- * @param {number|null} options.author_id - The ID of the author.
+ * @param {string|null} options.author_username - The username of the author.
  * @param {boolean|null} options.is_published - Indicates if the cohort is published.
  * @param {boolean|null} options.is_locked - Indicates if the cohort is locked.
  * @param {boolean|null} options.is_protected - Indicates if the cohort is protected.
@@ -49,7 +50,7 @@ function getCohortByIdQuery(id) {
  */
 function searchCohortsQuery({
   name = null,
-  author_id = null,
+  author_username = null,
   is_published = null,
   is_locked = null,
   is_protected = null,
@@ -57,7 +58,7 @@ function searchCohortsQuery({
 } = {}) {
   const filters = [
     name != null ? Prisma.sql`name ILIKE ${`%${name}%`}` : null,
-    author_id != null ? Prisma.sql`author_id = ${author_id}` : null,
+    author_username != null ? Prisma.sql`author_username = ${author_username}` : null,
     is_published != null ? Prisma.sql`is_published = ${is_published}` : null,
     is_locked != null ? Prisma.sql`is_locked = ${is_locked}` : null,
     is_protected != null ? Prisma.sql`is_protected = ${is_protected}` : null,
@@ -86,27 +87,27 @@ function searchCohortsQuery({
  */
 function saveSearchResults(id, searchQuery) {
   const TEMP_COHORT_NAME = 'temp_cohort';
-  const AUTHOR_ID = 1; // id of svc_tasks non-user account
+  const AUTHOR_USERNAME = config.system_user.username; // "svc_tasks" non-user account
   const insertSql = Prisma.sql`
-  INSERT INTO cohort (name, query, participants, is_temp, author_id)
+  INSERT INTO cohort (name, query, participants, is_temp, author_username)
   SELECT
       ${TEMP_COHORT_NAME},
       '{}',
       ARRAY(${searchQuery}),
       true,
-      ${AUTHOR_ID}
+      ${AUTHOR_USERNAME}
   RETURNING id, array_length(participants, 1) AS count
   `;
 
   const upsertSql = Prisma.sql`
-  INSERT INTO cohort (id, name, query, participants, is_temp, author_id)
+  INSERT INTO cohort (id, name, query, participants, is_temp, author_username)
   SELECT
       ${id}::UUID,
       ${TEMP_COHORT_NAME},
       '{}',
       ARRAY(${searchQuery}),
       true,
-      ${AUTHOR_ID}
+      ${AUTHOR_USERNAME}
   ON CONFLICT (id) DO UPDATE SET
       participants = EXCLUDED.participants,
       updated_at = CURRENT_TIMESTAMP

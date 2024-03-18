@@ -12,7 +12,7 @@ const {
   searchCohortsQuery, getCohortByIdQuery, saveSearchResults, searchParticipants,
 } = require('../services/cohort');
 const {
-  validateCohortQuery, sanitizeCohortQuery,
+  validateCohortQuery, sanitizeCohortQuery, COMBINATION_QUERY,
 } = require('../services/cohort/validation');
 
 const { CATEGORIES } = require('../services/cohort/fields');
@@ -29,14 +29,14 @@ async function getCohortById(id) {
 // asynchronously log the query and its sql
 // ignore errors
 function logQuery({
-  queryJson, sqlQuery, execution_time, author_id,
+  queryJson, sqlQuery, execution_time, author_username,
 }) {
   return prisma.query_analytics.create({
     data: {
       query: queryJson,
       sql: sqlQuery.sql,
       values: sqlQuery.values,
-      author_id,
+      author_username,
       execution_time,
     },
   }).catch((e) => {
@@ -172,7 +172,7 @@ router.post(
         queryJson: req.body.query,
         sqlQuery: searchQuery,
         execution_time: end_time - start_time,
-        author_id: req.user.id,
+        author_username: req.user.username,
       });
 
       res.json({
@@ -188,12 +188,14 @@ router.post(
       const rows = await prisma.$queryRaw(sqlQuery);
 
       const end_time = performance.now();
-      logQuery({
-        queryJson: req.body.query,
-        sqlQuery,
-        execution_time: end_time - start_time,
-        author_id: req.user.id,
-      });
+      if (req.body.query.name !== COMBINATION_QUERY) {
+        logQuery({
+          queryJson: req.body.query,
+          sqlQuery,
+          execution_time: end_time - start_time,
+          author_username: req.user.username,
+        });
+      }
 
       res.json({ count: Number(rows[0].count) });
     }
@@ -214,7 +216,7 @@ router.get(
     // #swagger.summary = 'Filter cohorts.'
     const data = _.pick(['name', 'is_published', 'is_locked', 'is_protected'])(req.query);
     if (data.mine) {
-      data.author_id = req.user.id;
+      data.author_username = req.user.username;
     }
     data.is_temp = false;
     const sqlQuery = searchCohortsQuery(data);
@@ -272,13 +274,14 @@ router.post(
     // eslint-disable-next-line no-console
     // console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
+
     // rows is like [{participant_id: 1}, {participant_id: 2}, ...]
     const participants_ids = rows.map((row) => row.participant_id);
 
     const createdCohort = await prisma.cohort.create({
       data: {
         ...cohort_data,
-        author_id: req.user.id,
+        author_username: req.user.username,
         participants: participants_ids,
       },
       select: {
@@ -307,13 +310,13 @@ router.patch(
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Modify cohort.'
-    // TODO: user role can modify cohort if they are the author,
-    // operator role can modify any cohort
 
+    // user role can modify cohort if they are the author
     const { id } = req.params;
     const cohortToUpdate = await prisma.cohort.findFirstOrThrow({
       where: {
         id,
+        author_username: req.user.username,
       },
     });
 

@@ -422,20 +422,20 @@ model results_by {
 }
 
 model cohort {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  description  String?
-  query        Json
-  metadata     Json?
-  created_at   DateTime @default(now()) @db.Timestamp(6)
-  updated_at   DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  is_published Boolean  @default(false)
-  is_locked    Boolean  @default(false)
-  is_protected Boolean  @default(false)
-  is_temp      Boolean  @default(false)
-  participants Int[]
-  author_id    Int
-  author       user     @relation(fields: [author_id], references: [id])
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  description     String?
+  query           Json
+  metadata        Json?
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  is_published    Boolean  @default(false)
+  is_locked       Boolean  @default(false)
+  is_protected    Boolean  @default(false)
+  is_temp         Boolean  @default(false)
+  participants    Int[]
+  author_username String
+  author          user     @relation(fields: [author_username], references: [username])
 }
 
 // model cohort_user {
@@ -702,12 +702,12 @@ view variant_annotation {
 }
 
 model query_analytics {
-  id             Int      @id @default(autoincrement())
-  query          Json
-  sql            String
-  values         Json
-  run_at         DateTime @default(now()) @db.Timestamp(6)
-  author_id      Int
-  author         user     @relation(fields: [author_id], references: [id])
-  execution_time Float
+  id              Int      @id @default(autoincrement())
+  query           Json
+  sql             String
+  values          Json
+  run_at          DateTime @default(now()) @db.Timestamp(6)
+  author_username String
+  author          user     @relation(fields: [author_username], references: [username])
+  execution_time  Float
 }
