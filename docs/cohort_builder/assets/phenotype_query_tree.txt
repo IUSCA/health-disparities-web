@@ -1,0 +1,17 @@
+flowchart LR
+    A((AND)) --> B[field: demo.gender, op: in value: &lbrack;'F'&rbrack;]
+    A --> F[field: demo.age,  op: gt,  value: 10]
+    A --> C((NOT_AND))
+    C --> D[field: demo.age, op: gt,  value:25]
+    C --> E[field: demo.age, op: lt, value: 35]
+    A --> G((OR))
+    G --> H[field: dx.name,  op: in, value: &lbrack;'diabetes'&rbrack;]
+    G --> I[field:lab.name, op: is_not_null, value: ]
+    
+
+    
+    
+
+    
+
+[![](https://mermaid.ink/img/pako:eNplUttuwiAYfhXChdakLjvEG5YscTrdkk0T3d1qDC1_KxkFR2FuMb67lFIzHTf8-Y4Q2ONMMcAE50Ltsg3VBr0uEoncGkbRcDbu9VC__4AeP3IOghFUgGSgY6S2BHGJvqmwQFBHpJpmn_fdSbejm3EVUrx90tppATHy5sK4Idhvrs_Uoyiazd_Xvr3BRx4fn6VchNwOVn-1T0F7kgonDXV3g7O6aRTNF23T1EPPbRP7uZK0bM_MZfzvxozTFAxUlxdvgl5CkKBpCPI51Voqs5ZWiFNgsCWy2XGMS9Al5cw9zr7GEmw2UEKCiRsZ5NQKk-C4oSr4siAzz-5DEq42arcMxMyWKeiq5o22UEsOiTy4GmqNWv7KDJOaiLHdMmpgzGmhaYlJTkXlUGDcKP3WfBb_Zw5H3sGtpQ?type=png)](https://mermaid.live/edit#pako:eNplUttuwiAYfhXChdakLjvEG5YscTrdkk0T3d1qDC1_KxkFR2FuMb67lFIzHTf8-Y4Q2ONMMcAE50Ltsg3VBr0uEoncGkbRcDbu9VC__4AeP3IOghFUgGSgY6S2BHGJvqmwQFBHpJpmn_fdSbejm3EVUrx90tppATHy5sK4Idhvrs_Uoyiazd_Xvr3BRx4fn6VchNwOVn-1T0F7kgonDXV3g7O6aRTNF23T1EPPbRP7uZK0bM_MZfzvxozTFAxUlxdvgl5CkKBpCPI51Voqs5ZWiFNgsCWy2XGMS9Al5cw9zr7GEmw2UEKCiRsZ5NQKk-C4oSr4siAzz-5DEq42arcMxMyWKeiq5o22UEsOiTy4GmqNWv7KDJOaiLHdMmpgzGmhaYlJTkXlUGDcKP3WfBb_Zw5H3sGtpQ)

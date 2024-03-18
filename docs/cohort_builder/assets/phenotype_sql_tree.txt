@@ -1,0 +1,11 @@
+flowchart LR
+    A((AND)) --> B[EXISTS &lpar; <br> SELECT 1 FROM demo t where <br> t.participant_id = p.id <br> and t.gender in &lpar;'F'&rpar; <br> &rpar;]
+    A --> F[EXISTS &lpar; <br>SELECT 1 FROM demo t where <br> t.participant_id = p.id and <br> t.age > 10 <br> &rpar;]
+    A --> J((NOT))
+    J --> C((AND))
+    C --> D[EXISTS &lpar; <br> SELECT 1 FROM demo t where <br> t.participant_id = p.id and <br> t.age > 25 <br> &rpar;]
+    C --> E[EXISTS &lpar; <br> SELECT 1 FROM demo t where <br> t.participant_id = p.id and <br> t.age < 35 <br> &rpar;]
+    A --> G((OR))
+    G --> H[EXISTS &lpar; <br> SELECT 1 FROM dx t where <br> t.participant_id = p.id and <br> t.name in &lpar;'diabetes'&rpar; <br> &rpar;]
+    G --> I[EXISTS &lpar; <br> SELECT 1 FROM lab t where <br> t.participant_id = p.id and <br> t.name is not null <br> &rpar;]
+    
