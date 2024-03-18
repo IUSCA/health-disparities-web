@@ -20,21 +20,6 @@
       JSON.stringify(transformStoredQuery(transformQueryForApi(query)))
     }} -->
 
-        <!-- Button positioned absolutely overlaps a div. to make it clickable z-index is set to 1 -->
-        <VaButton
-          @click="clearFilters"
-          size="small"
-          color="primary"
-          icon="backspace"
-          outline
-          preset="primary"
-          v-if="someFilters && !props.locked"
-          class="absolute top-3 right-3"
-          style="z-index: 1"
-        >
-          Clear All Filters
-        </VaButton>
-
         <QueryBuilder :config="config" v-model="query">
           <template #groupOperator="props">
             <div class="flex items-center gap-3">
@@ -117,8 +102,7 @@
     </div>
   </div>
 
-  <!-- z-index is set to 10 to hide the absolutely positioned button with z-index 1 -->
-  <FilterSelectModal ref="filterSelectModal" style="z-index: 10" />
+  <FilterSelectModal ref="filterSelectModal" />
 </template>
 
 <script setup>
@@ -131,7 +115,6 @@ import {
   isUnaryOperator,
   operators,
 } from "../cohortFilters";
-import { defaultQuery } from "./cohortQueryBuilder";
 import QBAsyncSelect from "./filterComponents/QBAsyncSelect.vue";
 import QBDate from "./filterComponents/QBDate.vue";
 import QBDxNameSelect from "./filterComponents/QBDxNameSelect.vue";
@@ -236,14 +219,6 @@ function getInitialValue(type) {
       return null;
   }
 }
-
-const someFilters = computed(() => {
-  return query.value && query.value.children?.length > 0;
-});
-
-const clearFilters = () => {
-  query.value = defaultQuery();
-};
 </script>
 
 <style scoped lang="scss">
@@ -303,7 +278,6 @@ const clearFilters = () => {
   transform: translate(-50%, -50%);
   -ms-transform: translate(-50%, -50%);
   text-align: center;
-  z-index: 10;
 }
 
 .container:hover .middle {

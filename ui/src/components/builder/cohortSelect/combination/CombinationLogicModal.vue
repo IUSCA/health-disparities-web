@@ -6,7 +6,6 @@
     close-button
     @ok="handleUpdate"
     @close="hide"
-    class="z-10"
   >
     <div class="flex flex-col gap-7">
       <div class="flex flex-wrap">

@@ -1,28 +1,4 @@
 <template>
-  <!-- undo button -->
-  <div class="flex items-center justify-start mb-2">
-    <VaButton
-      size="small"
-      icon="undo"
-      class="mr-2"
-      round
-      @click="emit('undo')"
-      :disabled="!props.canUndo"
-    >
-      Undo
-    </VaButton>
-    <VaButton
-      size="small"
-      icon="redo"
-      class="mr-2"
-      round
-      @click="emit('redo')"
-      :disabled="!props.canRedo"
-    >
-      Redo
-    </VaButton>
-  </div>
-
   <VaCollapse
     v-model="collapse_value"
     class=""
@@ -75,10 +51,8 @@
 import * as datetime from "@/services/datetime";
 const props = defineProps({
   history: Array,
-  canUndo: Boolean,
-  canRedo: Boolean,
 });
-const emit = defineEmits(["undo", "redo", "restore"]);
+const emit = defineEmits(["restore"]);
 
 console.log("QueryHistory", props.history, props.history.length);
 

@@ -19,6 +19,7 @@ class PhenotypeCohort extends Cohort {
     super({
       ...rest,
       schema: config.cohort.schema.phenotype,
+      supports_editing: true,
     });
   }
 
@@ -67,6 +68,10 @@ class PhenotypeCohort extends Cohort {
       is_dirty: true,
       search_id: null, // id of cohort results stored temporarily
     });
+  }
+
+  defaultCriteria() {
+    return defaultQuery();
   }
 }
 

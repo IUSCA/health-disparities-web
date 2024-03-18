@@ -13,18 +13,56 @@
           />
         </div>
         <div class="mt-5" v-if="!cohort.is_locked">
-          <QueryHistory
-            v-bind="{ history, canUndo, canRedo }"
-            @undo="undo"
-            @redo="redo"
-            @restore="restore"
-          />
+          <QueryHistory :history="history" @restore="restore" />
         </div>
       </div>
 
       <va-divider class="md:hidden" />
 
       <div class="md:w-9/12">
+        <!-- undo button -->
+        <div
+          class="flex items-center justify-end mb-2 md:mb-0 gap-3"
+          v-if="!cohort.is_locked && cohort.supports_editing"
+        >
+          <VaButton
+            size="small"
+            preset="primary"
+            :border-color="canUndo ? 'primary' : null"
+            icon="undo"
+            class=""
+            round
+            @click="undo"
+            :disabled="!canUndo"
+          >
+            Undo
+          </VaButton>
+
+          <VaButton
+            size="small"
+            preset="primary"
+            :border-color="canUndo ? 'primary' : null"
+            icon="redo"
+            class=""
+            round
+            @click="redo"
+            :disabled="!canRedo"
+          >
+            Redo
+          </VaButton>
+
+          <VaButton
+            @click="clearFilters"
+            size="small"
+            color="danger"
+            icon="backspace"
+            outline
+            preset="primary"
+            :disabled="cohort.isEmpty()"
+          >
+            Clear All Filters
+          </VaButton>
+        </div>
         <component
           :is="resolveComponent(cohort)"
           v-model:cohort="cohort"
@@ -111,4 +149,8 @@ function constrainedCommit() {
 function restore(item) {
   cohort.value.criteria = item.snapshot.criteria;
 }
+
+const clearFilters = () => {
+  cohort.value.criteria = cohort.value.defaultCriteria();
+};
 </script>

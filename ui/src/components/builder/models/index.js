@@ -17,6 +17,7 @@ class Cohort {
     is_dirty,
     is_protected,
     search_id,
+    supports_editing,
   }) {
     this.id = id;
     this.name = name;
@@ -32,6 +33,8 @@ class Cohort {
 
     this.is_dirty = is_dirty;
     this.search_id = search_id;
+
+    this.supports_editing = supports_editing || false;
   }
 
   // static or instance method?
@@ -86,6 +89,10 @@ class Cohort {
 
   hasUnsavedChanges() {
     return this.is_dirty && !this.isNew();
+  }
+
+  defaultCriteria() {
+    return {};
   }
 }
 

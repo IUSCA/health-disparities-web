@@ -6,7 +6,6 @@
     close-button
     hide-default-actions
     @close="hide"
-    class="z-10"
     size="large"
   >
     <CohortSearch @select="handleSelect" />

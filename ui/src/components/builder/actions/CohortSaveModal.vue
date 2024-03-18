@@ -6,7 +6,6 @@
     close-button
     hide-default-actions
     @close="hide"
-    class="z-10"
   >
     <VaInnerLoading :loading="loading">
       <VaForm ref="formRef" class="flex flex-col gap-3 max-w-xl">
