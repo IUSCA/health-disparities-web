@@ -415,7 +415,7 @@ router.post(
     const cohort = await prisma.cohort.create({
       data: {
         ...cohort_data,
-        author_id: req.user.id,
+        author_username: req.user.username,
         participants,
       },
       select: {
@@ -476,7 +476,7 @@ router.patch(
     const cohort = await prisma.cohort.create({
       data: {
         ...cohort_data,
-        author_id: req.user.id,
+        author_username: req.user.username,
         participants,
       },
       select: {
