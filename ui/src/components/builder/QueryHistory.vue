@@ -54,8 +54,6 @@ const props = defineProps({
 });
 const emit = defineEmits(["restore"]);
 
-console.log("QueryHistory", props.history, props.history.length);
-
 const collapse_value = ref(false);
 
 function sizeChange(idx) {

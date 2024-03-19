@@ -25,7 +25,7 @@
       <div class="ml-3 h-full mt-auto mb-auto">
         <va-button
           color="success"
-          @click="saveModal.show()"
+          @click="handleSave"
           icon="save"
           preset="primary"
           size="small"
@@ -65,6 +65,13 @@ const isSaveDisabled = computed(() => {
     cohorts.value.some((c) => c.is_dirty)
   );
 });
+
+function handleSave() {
+  // if the control is here it means no cohort is dirty and all cohorts will have ids
+  // however, we need to update cohort_ids in the criteria with the latest ids
+  combinationCohort.value.criteria.cohort_ids = cohorts.value.map((c) => c.id);
+  saveModal.value.show();
+}
 
 // todo
 // to lock or publish a combined cohort, all underlying cohorts must be locked or published

@@ -71,7 +71,7 @@ const props = defineProps({
   cohort: Cohort,
 });
 
-const emit = defineEmits(["save"]);
+const emit = defineEmits(["saved"]);
 
 const data = ref({
   name: props.cohort.name || "",
@@ -121,7 +121,7 @@ function handleSave() {
     props.cohort
       .save(data.value)
       .then(() => {
-        emit("save");
+        emit("saved");
         hide();
       })
       .catch((error) => {

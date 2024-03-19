@@ -34,21 +34,17 @@ const cohort = defineModel("cohort", {
 const { confirm } = useModal();
 
 const cohorts = ref([]);
-watch(
-  cohort,
-  () => {
-    console.log(cohort.value);
-    const promises = (cohort.value?.criteria?.cohort_ids || []).map((id) => {
-      return cohortService.get(id).then((res) => {
-        return createCohort(res.data);
-      });
+onMounted(() => {
+  // load operands (cohorts) from the criteria
+  const promises = (cohort.value?.criteria?.cohort_ids || []).map((id) => {
+    return cohortService.get(id).then((res) => {
+      return createCohort(res.data);
     });
-    Promise.all(promises).then((res) => {
-      cohorts.value = res;
-    });
-  },
-  { immediate: true },
-);
+  });
+  Promise.all(promises).then((res) => {
+    cohorts.value = res;
+  });
+});
 
 function handleEdit() {
   confirm({
