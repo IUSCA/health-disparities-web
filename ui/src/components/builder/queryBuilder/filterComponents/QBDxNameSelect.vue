@@ -64,5 +64,8 @@ function fecthMatchingOptions(searchQuery) {
   input.multiselect-tags-search {
     background-color: var(--va-background-secondary);
   }
+  .multiselect-clear {
+    z-index: 0;
+  }
 }
 </style>

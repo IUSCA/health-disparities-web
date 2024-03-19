@@ -10,11 +10,28 @@ class cohortService {
     });
   }
 
-  search(name, mine) {
+  search({
+    search_term,
+    is_published,
+    is_locked,
+    is_mine,
+    type,
+    sort_by,
+    sort_order,
+    limit,
+    offset,
+  }) {
     return api.get("/cohorts", {
       params: {
-        name,
-        mine,
+        search_term,
+        ...(is_published !== "" && { is_published }),
+        ...(is_locked !== "" && { is_locked }),
+        ...(is_mine !== "" && { is_mine }),
+        ...(type !== "" && { type }),
+        sort_by,
+        sort_order,
+        limit,
+        offset,
       },
     });
   }

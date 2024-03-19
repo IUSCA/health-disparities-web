@@ -68,8 +68,14 @@ const exports = {
         namespace: "edu.iu.sca.biobank",
         version: "1.0.0",
       },
+      genotype: {
+        name: "genotype",
+        namespace: "edu.iu.sca.biobank",
+        version: "1.0.0",
+      },
     },
   },
+  debounce_ms: 300,
 };
 
 export default exports;

@@ -12,7 +12,7 @@ const {
   searchCohortsQuery, getCohortByIdQuery, saveSearchResults, searchParticipants,
 } = require('../services/cohort');
 const {
-  validateCohortQuery, sanitizeCohortQuery, COMBINATION_QUERY,
+  validateCohortQuery, sanitizeCohortQuery, COMBINATION_QUERY, GENOTYPE_QUERY, PHENOTYPE_QUERY,
 } = require('../services/cohort/validation');
 
 const { CATEGORIES } = require('../services/cohort/fields');
@@ -206,20 +206,51 @@ router.get(
   '/',
   isPermittedTo('read'),
   validate([
-    query('mine').optional().isBoolean(),
-    query('is_published').optional().isBoolean(),
-    query('is_locked').optional().isBoolean(),
-    query('is_protected').optional().isBoolean(),
+    query('is_mine').optional().toBoolean(),
+    query('is_published').optional().toBoolean(),
+    query('is_locked').optional().toBoolean(),
+    query('type').optional().isIn([PHENOTYPE_QUERY, GENOTYPE_QUERY, COMBINATION_QUERY]),
+    query('sort_by').optional().isIn(['name', 'size', 'created_at', 'updated_at']),
+    query('sort_order').optional().isIn(['asc', 'desc']),
+    query('limit').optional().default(10).isInt({ min: 1, max: 1000 })
+      .toInt(),
+    query('offset').optional().default(0).isInt({ min: 0 })
+      .toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Filter cohorts.'
-    const data = _.pick(['name', 'is_published', 'is_locked', 'is_protected'])(req.query);
-    if (data.mine) {
+
+    //  user can only see their own cohorts or published cohorts
+    //  if is_mine is true, then only show the user's cohorts
+    //  if is_mine is false, is_published must not be false, otherwise empty array is returned
+
+    const data = _.pick(
+      ['search_term', 'is_published', 'is_locked', 'is_protected', 'is_mine', 'type'],
+    )(req.query);
+    if (data.is_mine) {
       data.author_username = req.user.username;
+    } else {
+      if (data.is_published === false) {
+        res.json([]);
+        return;
+      }
+      data.author_username = req.user.username;
+      data.is_published = true;
     }
+
+    // if name is empty string, remove it from the query
+    if (data.name === '') {
+      delete data.name;
+    }
+
     data.is_temp = false;
-    const sqlQuery = searchCohortsQuery(data);
+    const sqlQuery = searchCohortsQuery(data, {
+      sort_by: req.query.sort_by,
+      sort_order: req.query.sort_order,
+      limit: req.query.limit,
+      offset: req.query.offset,
+    });
     // eslint-disable-next-line no-console
     console.log(sqlQuery.sql, sqlQuery.values);
     const cohorts = await prisma.$queryRaw(sqlQuery);

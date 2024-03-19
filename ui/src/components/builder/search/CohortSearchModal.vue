@@ -8,7 +8,14 @@
     @close="hide"
     size="large"
   >
-    <CohortSearch @select="handleSelect" />
+    <div>
+      <CohortSearchFilters
+        v-model:params="params"
+        @reset="reset"
+        class="mb-3"
+      />
+      <CohortTable :params="params" @select="handleSelect" />
+    </div>
   </va-modal>
 </template>
 
@@ -31,6 +38,18 @@ function hide() {
 
 function show() {
   visible.value = true;
+}
+
+const defaultParams = () => ({
+  search_term: "",
+  is_published: "",
+  is_locked: "",
+  is_mine: true,
+  type: "",
+});
+const params = ref(defaultParams());
+function reset() {
+  params.value = defaultParams();
 }
 
 function handleSelect(cohort) {

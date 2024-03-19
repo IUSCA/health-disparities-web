@@ -16,32 +16,10 @@
       </div>
       <div class="flex ml-auto">
         <!-- published / unpublished -->
-        <div :title="props.cohort.is_published ? 'Published' : 'Unpublished'">
-          <i-mdi-visibility
-            class="va-text-secondary ml-2 text-sm"
-            v-if="props.cohort.is_published"
-            title="publsihed"
-          />
-          <i-mdi-visibility-off
-            class="va-text-secondary ml-2 text-sm"
-            v-else
-            title="unpublished"
-          />
-        </div>
+        <CohortPublishedIcon :is_published="props.cohort.is_published" />
 
         <!-- locked / unlocked -->
-        <div :title="props.cohort.is_locked ? 'Locked' : 'Unlocked'">
-          <i-mdi-lock
-            class="va-text-secondary ml-2 text-sm"
-            v-if="props.cohort.is_locked"
-            title="locked"
-          />
-          <i-mdi-lock-open-variant
-            class="va-text-secondary ml-2 text-sm"
-            v-else
-            title="unlocked"
-          />
-        </div>
+        <CohortLockedIcon :is_locked="props.cohort.is_locked" />
       </div>
     </div>
     <div class="va-text-secondary">
