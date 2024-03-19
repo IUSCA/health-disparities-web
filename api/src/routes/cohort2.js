@@ -235,7 +235,7 @@ router.get(
         res.json([]);
         return;
       }
-      data.author_username = req.user.username;
+      data.not_author_username = req.user.username;
       data.is_published = true;
     }
 
