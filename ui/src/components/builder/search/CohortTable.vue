@@ -15,7 +15,6 @@
         clickable
         :loading="data_loading"
         disableClientSideSorting
-        sticky-header
         @row:click="onClick"
       >
         <!-- <template #cell(type)="{ rowData }">
@@ -59,6 +58,13 @@
       </div>
     </template> -->
       </va-data-table>
+      <div
+        v-if="infinitescrollDisabled"
+        class="mt-5 flex justify-center"
+        :style="{ color: colors.secondary }"
+      >
+        No more data to load
+      </div>
     </va-infinite-scroll>
   </div>
 </template>
@@ -66,12 +72,15 @@
 <script setup>
 import cohortService from "@/services/cohort2";
 import * as datetime from "@/services/datetime";
+import { useColors } from "vuestic-ui/web-components";
 
 const props = defineProps({
   params: Object, // search params
 });
 
 const emit = defineEmits(["select"]);
+
+const { colors } = useColors();
 
 // table parent div's width is 944px
 const columns = [
