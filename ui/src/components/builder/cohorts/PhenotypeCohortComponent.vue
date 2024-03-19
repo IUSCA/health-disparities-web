@@ -104,4 +104,11 @@ watch(
     }
   },
 );
+
+// when a cohort component is mounted, if it is dirty with a non-empty query, search and save so that combine can be done
+onMounted(() => {
+  if (cohort.value.is_dirty && !cohort.value.isEmpty()) {
+    search(canon_query.value);
+  }
+});
 </script>

@@ -8,6 +8,8 @@
         <div class="mt-3">
           <CohortActions
             :cohort="cohort"
+            @saved="emit('saved')"
+            @copy="copyCohort(cohort, idx)"
             @export="exportCohort(cohort, idx)"
             @remove="() => cohortsStore.deleteCohort(props.idx)"
           />
@@ -76,6 +78,7 @@
 </template>
 
 <script setup>
+import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
 import CombinedCohortComponent from "@/components/builder/cohorts/CombinedCohortComponent.vue";
 import GenotypeCohortComponent from "@/components/builder/cohorts/GenotypeCohortComponent.vue";
 import PhenotypeCohortComponent from "@/components/builder/cohorts/PhenotypeCohortComponent.vue";
@@ -90,7 +93,7 @@ const cohort = defineModel("cohort", {
 const props = defineProps({
   idx: Number,
 });
-const emit = defineEmits(["beforeSearch", "afterSearch"]);
+const emit = defineEmits(["saved", "beforeSearch", "afterSearch"]);
 
 const cohortsStore = useCohortsStore();
 const { totalParticipants } = storeToRefs(cohortsStore);
@@ -116,6 +119,26 @@ function handleAfterSearch() {
 function exportCohort() {
   console.log("Export cohort", cohort.value, props.idx);
 }
+
+function copyCohort() {
+  // clone the cohort, save it, and append it to the store
+  console.log("Copy cohort", cohort.value, props.idx);
+  loading.value = true;
+  const cohortCopy = cohort.value.copy();
+  cohortCopy
+    .save()
+    .then(() => {
+      cohortsStore.appendCohort(cohortCopy, DEFAULT_LOGICAL_OPERATOR);
+    })
+    .catch((error) => {
+      console.error("Error copying cohort", error);
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+}
+
+// start of history management
 
 const stateToTrack = computed({
   get: () => ({
@@ -153,4 +176,6 @@ function restore(item) {
 const clearFilters = () => {
   cohort.value.criteria = cohort.value.defaultCriteria();
 };
+
+// end of history management
 </script>

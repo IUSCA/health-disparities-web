@@ -56,8 +56,11 @@ class Cohort {
     return !this.id || this.id.startsWith("cohort_");
   }
 
-  save({ name, description, is_published, is_locked }) {
-    const updates = { name, description, is_published, is_locked };
+  save({ name, description, is_published, is_locked } = {}) {
+    const updates = _.omitBy(
+      { name, description, is_published, is_locked },
+      _.isNil,
+    );
     const data = Object.assign(this.toJson(), updates);
     return (
       this.isNew()
@@ -93,6 +96,23 @@ class Cohort {
 
   defaultCriteria() {
     return {};
+  }
+
+  // create a clone of the cohort
+  // change name to "Copy of <name>"
+  // set published and locked to false
+  // set dirty to true if the original cohort supports editing
+  copy() {
+    return new this.constructor({
+      id: _.uniqueId("cohort_"),
+      name: `Copy of ${this.name}`,
+      description: this.description,
+      size: this.size,
+      schema: this.schema,
+      criteria: this.criteria,
+      is_dirty: this.supports_editing,
+      supports_editing: this.supports_editing,
+    });
   }
 }
 

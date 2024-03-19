@@ -64,12 +64,12 @@ cohortService.getTotalParticipants().then((res) => {
   totalParticipants.value = res.data.total;
 });
 
-// when a cohort is added / removed
-// or when a cohort query is changed and search succeeds
+// when a cohort is added / removed (numCohorts changes)
 // or when an operator is changed
-// do a set operation on the cohorts
-// if there is more than one cohort with non-empty query
+// or when a cohort query is changed and search succeeds
 
+// do a set operation on the cohorts if there is more than one cohort with non-empty query
+// update cohort_ids and operators in combinationCohort (store)
 function checkAndCombine() {
   if (isInCombineMode.value) {
     // get the ids of the cohorts to be combined
@@ -81,12 +81,12 @@ function checkAndCombine() {
 
     // if some cohort_ids are null, exit early
     if (cohort_ids.some((id) => !id)) {
-      return;
+      console.log("some cohort_ids are null exit early", cohort_ids);
+      return Promise.resolve();
     }
     combinationCohort.value.criteria.cohort_ids = cohort_ids;
     globalLoading.value = true;
-
-    cohortService
+    return cohortService
       .searchParticipants({
         schema: config.cohort.schema.combination,
         criteria: {
@@ -99,17 +99,23 @@ function checkAndCombine() {
       })
       .catch((err) => {
         console.error(err);
-      })
-      .finally(() => {
-        globalLoading.value = false;
       });
   }
+  return Promise.resolve();
 }
 // deduplicate the calls to checkAndCombine from
 // possible "collision" of afterSearch and watch([numCohorts, operators])
 
 const numCohorts = computed(() => cohorts.value.length);
-watch([numCohorts, operators], checkAndCombine, { deep: true });
+watch(
+  [numCohorts, operators],
+  () => {
+    checkAndCombine().finally(() => {
+      globalLoading.value = false;
+    });
+  },
+  { deep: true },
+);
 
 function handleBeforeSearch() {
   // when in combine mode, show global loading to prevent user from interacting with the other cohorts or operators
@@ -123,7 +129,10 @@ function handleAfterSearch(err) {
   if (err) {
     globalLoading.value = false;
   } else {
-    checkAndCombine();
+    globalLoading.value = true;
+    checkAndCombine().finally(() => {
+      globalLoading.value = false;
+    });
   }
 }
 
