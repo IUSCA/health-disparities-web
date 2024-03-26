@@ -1,8 +1,8 @@
+import config from "@/config";
+import authService from "@/services/auth";
+import { jwtDecode } from "jwt-decode";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
-import { jwtDecode } from "jwt-decode";
-import authService from "@/services/auth";
-import config from "@/config";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(useLocalStorage("user", {}));
@@ -35,6 +35,7 @@ export const useAuthStore = defineStore("auth", () => {
     loggedIn.value = false;
     user.value = {};
     token.value = "";
+    localStorage.clear();
   }
 
   function casLogin(ticket) {
@@ -111,6 +112,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   function spoof(username) {
     return authService.spoof(username).then((res) => {
+      onLogout();
       onLogin(res.data);
       // reload entire app to reload all components
       window.location.href = "/";

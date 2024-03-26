@@ -5,7 +5,7 @@
         <li
           v-for="k in itemKeys"
           :key="k"
-          :class="`name-${k} px-2 py-1 border bg-gray-200 rounded text-center shadow cursor-pointer flex-none min-w-[50px]`"
+          :class="`name-${k} px-2 py-1 border bg-gray-200 dark:bg-gray-600 rounded text-center shadow cursor-pointer flex-none min-w-[50px] max-w-[200px] truncate`"
           :data-id="k"
         >
           {{ id_item_map[k][props.labelBy] }}

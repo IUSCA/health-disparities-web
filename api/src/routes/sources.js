@@ -11,21 +11,35 @@ const isPermittedTo = accessControl('source');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// router.get(
+//   '/',
+//   isPermittedTo('read'),
+//   asyncHandler(async (req, res, next) => {
+//     // #swagger.tags = ['sources']
+//     const sources = await prisma.$queryRaw`
+//       with
+//         v as (select source_id, count(*) from variant group by source_id),
+//         a as (select source_id, count(*) from annotation group by source_id)
+//       select s.*, coalesce(v.count, 0) as num_variants, coalesce(a.count, 0) as num_annotations
+//       from source s
+//       left join v on s.id = v.source_id
+//       left join a on s.id = a.source_id
+//       order by s.created_at desc
+//     `;
+//     res.json(sources);
+//   }),
+// );
+
 router.get(
   '/',
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['sources']
-    const sources = await prisma.$queryRaw`
-      with 
-        v as (select source_id, count(*) from variant group by source_id),
-        a as (select source_id, count(*) from annotation group by source_id)
-      select s.*, coalesce(v.count, 0) as num_variants, coalesce(a.count, 0) as num_annotations 
-      from source s
-      left join v on s.id = v.source_id
-      left join a on s.id = a.source_id
-      order by s.created_at desc
-    `;
+    const sources = await prisma.source.findMany({
+      orderBy: {
+        id: 'asc',
+      },
+    });
     res.json(sources);
   }),
 );

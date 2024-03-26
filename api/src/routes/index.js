@@ -25,6 +25,7 @@ router.use('/cohorts', require('./cohort2'));
 router.use('/variants', require('./variants'));
 
 router.use('/snapshots', require('./snapshots'));
+router.use('/sources', require('./sources'));
 router.use('/protocols', require('./protocols'));
 router.use('/phenotype_files', require('./phenotype_files'));
 router.use('/genotype_sets', require('./genotype_sets'));
