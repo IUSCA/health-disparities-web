@@ -113,26 +113,26 @@ router.beforeEach(() => {
 });
 
 const user_items = ref([
-  {
-    icon: "solar:chart-bold",
-    title: "Categories",
-    path: "/categories/data",
-  },
-  {
-    icon: "material-symbols:person",
-    title: "Participants",
-    path: "/participants/demographic",
-  },
+  // {
+  //   icon: "solar:chart-bold",
+  //   title: "Categories",
+  //   path: "/categories/data",
+  // },
+  // {
+  //   icon: "material-symbols:person",
+  //   title: "Participants",
+  //   path: "/participants/demographic",
+  // },
   {
     icon: "mdi:account-multiple",
-    title: "Cohort",
+    title: "Cohort Builder",
     path: "/cohort",
   },
-  {
-    icon: "tabler:analyze",
-    title: "Analysis",
-    path: "/igv",
-  },
+  // {
+  //   icon: "tabler:analyze",
+  //   title: "Analysis",
+  //   path: "/igv",
+  // },
   {
     icon: "mdi:chart-sankey-variant", //"mdi:puzzle",
     title: "Variant Xplorer",

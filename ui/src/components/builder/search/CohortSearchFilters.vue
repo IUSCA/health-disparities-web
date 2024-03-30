@@ -7,7 +7,7 @@
       v-model="params.is_mine"
       :options="authorshipOptions"
       color="background-element"
-      border-color="background-element"
+      border-color="background-border"
       toggleColor="primary"
     />
 
