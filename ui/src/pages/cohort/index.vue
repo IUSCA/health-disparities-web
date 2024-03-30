@@ -14,7 +14,7 @@
       </div>
 
       <!-- Cohorts -->
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-3 mb-5">
         <VaCard
           class="cohort-card"
           v-for="(cohort, idx) in cohorts"
@@ -32,6 +32,16 @@
               @beforeSearch="handleBeforeSearch"
               @afterSearch="handleAfterSearch"
             />
+          </VaCardContent>
+        </VaCard>
+      </div>
+
+      <!-- user chooses a cohort to view its participants data / visualization -->
+      <!-- if that cohort "updates" (participants change), fetch data -->
+      <div class="">
+        <VaCard>
+          <VaCardContent>
+            <CohortParticipants />
           </VaCardContent>
         </VaCard>
       </div>

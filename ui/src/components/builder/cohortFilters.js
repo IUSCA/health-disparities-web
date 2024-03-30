@@ -80,7 +80,7 @@ export const cohortFilters = [
     ],
   },
   {
-    label: "Diagnosis",
+    label: "Diagnoses",
     key: "dx",
     icon: "mdi-stethoscope",
     filters: [
@@ -166,7 +166,7 @@ export const cohortFilters = [
     ],
   },
   {
-    label: "Hospitalization",
+    label: "Hospitalizations",
     key: "hospital",
     icon: "mdi-hospital-box",
     filters: [
@@ -197,7 +197,7 @@ export const cohortFilters = [
     ],
   },
   {
-    label: "COVID Test",
+    label: "COVID Tests",
     key: "covid_test",
     icon: "mdi-virus",
     filters: [
@@ -222,7 +222,7 @@ export const cohortFilters = [
     ],
   },
   {
-    label: "COVID Vaccination",
+    label: "COVID Vaccinations",
     key: "covid_vax",
     icon: "mdi-needle",
     filters: [

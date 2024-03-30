@@ -5,6 +5,7 @@ const _ = require('lodash/fp');
 
 const prisma = new PrismaClient();
 const { performance } = require('perf_hooks');
+// const assert = require('assert');
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
@@ -81,9 +82,9 @@ router.get(
   accessControl('participant')('read'),
   validate([
     param('category').isIn(CATEGORIES),
-    query('limit').optional().default(10).isInt({ min: 1, max: 1000 })
+    query('limit').default(10).isInt({ min: 1, max: 1000 })
       .toInt(),
-    query('offset').optional().default(0).isInt({ min: 0 })
+    query('offset').default(0).isInt({ min: 0 })
       .toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
@@ -113,9 +114,9 @@ router.get(
   '/dxname',
   accessControl('participant')('read'),
   validate([
-    query('limit').optional().default(10).isInt({ min: 1, max: 1000 })
+    query('limit').default(10).isInt({ min: 1, max: 1000 })
       .toInt(),
-    query('offset').optional().default(0).isInt({ min: 0 })
+    query('offset').default(0).isInt({ min: 0 })
       .toInt(),
     query('text').default(''),
   ]),
@@ -154,7 +155,7 @@ router.post(
   '/search',
   validate([
     body('query').custom(validateCohortQuery).bail().customSanitizer(sanitizeCohortQuery),
-    query('save_results').optional().default(false).toBoolean(),
+    query('save_results').default(false).toBoolean(),
   ]),
   isPermittedTo('create'),
   asyncHandler(async (req, res, next) => {
@@ -212,9 +213,9 @@ router.get(
     query('type').optional().isIn([PHENOTYPE_QUERY, GENOTYPE_QUERY, COMBINATION_QUERY]),
     query('sort_by').optional().isIn(['name', 'size', 'created_at', 'updated_at']),
     query('sort_order').optional().isIn(['asc', 'desc']),
-    query('limit').optional().default(10).isInt({ min: 1, max: 1000 })
+    query('limit').default(10).isInt({ min: 1, max: 1000 })
       .toInt(),
-    query('offset').optional().default(0).isInt({ min: 0 })
+    query('offset').default(0).isInt({ min: 0 })
       .toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
@@ -271,6 +272,76 @@ router.get(
       return res.sendStatus(404);
     }
     res.json(cohort);
+  }),
+);
+
+router.get(
+  '/:id/participants',
+  isPermittedTo('read'),
+  validate([
+    param('id').isUUID(),
+    query('limit').default(10).isInt({ min: 1, max: 10 })
+      .toInt(),
+    query('offset').default(0).isInt({ min: 0 })
+      .toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+  // #swagger.tags = ['cohorts']
+  // #swagger.summary = 'Get participants of a cohort.'
+    const cohort = await prisma.cohort.findFirstOrThrow({
+      where: {
+        id: req.params.id,
+      },
+    });
+    const participant_ids = cohort.participants.slice(
+      req.query.offset,
+      req.query.offset + req.query.limit,
+    );
+    prisma.participant.findMany({
+      where: {
+        id: {
+          in: participant_ids,
+        },
+      },
+      include: {
+        demographics: true,
+      },
+    }).then((participants) => res.json(participants));
+  }),
+);
+
+router.get(
+  '/participants/:participant_id',
+  isPermittedTo('read'),
+  validate([
+    param('participant_id').isInt().toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+  // #swagger.tags = ['cohorts']
+  // #swagger.summary = 'Get participant details of a participant in a cohort.'
+    // const cohort = await prisma.cohort.findFirstOrThrow({
+    //   where: {
+    //     id: req.params.id,
+    //   },
+    // });
+    // assert(cohort.participants.includes(req.params.participant_id), 'Participant not in cohort');
+    // const assoc_key = category_assocation_map[req.params.category];
+
+    const participant = await prisma.participant.findUniqueOrThrow({
+      where: {
+        id: req.params.participant_id,
+      },
+      include: {
+        demographics: true,
+        labs: true,
+        covid_tests: true,
+        covid_vaxes: true,
+        dxs: true,
+        hospitals: true,
+        medications: true,
+      },
+    });
+    res.json(participant);
   }),
 );
 

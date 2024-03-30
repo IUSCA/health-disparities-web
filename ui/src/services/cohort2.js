@@ -74,6 +74,19 @@ class cohortService {
     });
   }
 
+  getParticipants({ id, limit = null, offset = null }) {
+    return api.get(`/cohorts/${id}/participants`, {
+      params: {
+        limit,
+        offset,
+      },
+    });
+  }
+
+  getParticipantDetails({ participant_id }) {
+    return api.get(`/cohorts/participants/${participant_id}`);
+  }
+
   searchParticipants({
     schema,
     criteria,

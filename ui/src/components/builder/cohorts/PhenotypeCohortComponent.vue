@@ -8,8 +8,8 @@
 <script setup>
 import { Cohort } from "@/components/builder/models";
 import {
-  isAPIQueryEmpty,
-  transformQueryForApi,
+isAPIQueryEmpty,
+transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
@@ -35,7 +35,7 @@ function search(query) {
       schema: config.cohort.schema.phenotype,
       criteria: query,
       search_id: cohort.value.search_id,
-      save_results: cohorts.value.length > 1,
+      save_results: true,
     })
     .then((res) => {
       cohort.value.size = res.data.count;
