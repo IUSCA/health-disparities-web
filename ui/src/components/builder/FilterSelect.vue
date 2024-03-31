@@ -1,19 +1,20 @@
 <template>
-  <div class="flex items-center">
+  <div class="flex items-center gap-3 md:gap-5">
     <VaInput
       v-model="searchText"
-      placeholder="Filter..."
+      placeholder="Search for filters and categories"
       clearable
-      class="mr-3 grow-0 basis-24"
+      class="w-72"
     />
+    <VaCheckbox v-model="expandAll" label="Expand All" class="" />
   </div>
 
   <VaTreeView
-    :nodes="nodes"
-    :filter="searchText"
-    :filter-method="customFilterMethod"
+    :nodes="filteredNodes"
     expand-node-by="node"
     style="height: 500px; overflow-y: auto"
+    :expand-all="expandAll"
+    :key="expandAll"
   >
     <template #content="node">
       <span v-if="node.children?.length"> {{ node.label }} </span>
@@ -41,6 +42,12 @@ import { cohortFilters, filterId } from "./cohortFilters";
 const emit = defineEmits(["select"]);
 
 const searchText = ref("");
+const expandAll = ref(false);
+
+// Expand all when search text is first entered
+watch(searchText, (newVal, oldVal) => {
+  if (newVal && !oldVal) expandAll.value = true;
+});
 
 const nodes = cohortFilters.map((category) => {
   return {
@@ -57,13 +64,36 @@ const nodes = cohortFilters.map((category) => {
   };
 });
 
-function customFilterMethod(node, filterText, key) {
-  if (node.children) console.log(node, filterText, key);
-  return (
-    !node.children &&
-    node.label.toLowerCase().includes(filterText.toLowerCase())
-  );
-}
+// TreeView's inbuilt filter method doesn't work as expected
+const filteredNodes = computed(() => {
+  if (!searchText.value) return nodes;
+  // if searchText matches a parent node, return it with all children
+  // else return parent node with only matched children
+  // if no children match, omit the parent node
+  // WARNING: This only works for 2 levels of nesting
+  return nodes
+    .map((category) => {
+      if (
+        category.label.toLowerCase().includes(searchText.value.toLowerCase())
+      ) {
+        return category;
+      }
+      const matchedChildren = category.children.filter((child) =>
+        child.label.toLowerCase().includes(searchText.value.toLowerCase()),
+      );
+      if (matchedChildren.length === 0) return null;
+      return Object.assign({}, category, { children: matchedChildren });
+    })
+    .filter(Boolean);
+});
+
+// function customFilterMethod(node, filterText, key) {
+//   if (node.children) console.log(node, filterText, key);
+//   return (
+//     !node.children &&
+//     node.label.toLowerCase().includes(filterText.toLowerCase())
+//   );
+// }
 
 function getTypeIcon(type) {
   switch (type) {
