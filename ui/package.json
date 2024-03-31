@@ -29,6 +29,7 @@
     "config": "^3.3.9",
     "dayjs": "^1.11.10",
     "dompurify": "^3.0.8",
+    "echarts": "^5.5.0",
     "epic-spinners": "^2.0.0",
     "igv": "^2.15.11",
     "jwt-decode": "^4.0.0",
@@ -39,6 +40,7 @@
     "turndown": "^7.1.2",
     "vue": "^3.3.4",
     "vue-chartjs": "^5.2.0",
+    "vue-echarts": "^6.6.9",
     "vue-router": "^4.2.5",
     "vuestic-ui": "^1.9.2"
   },

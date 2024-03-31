@@ -1,6 +1,7 @@
 <template>
   <div v-if="cohorts.length === 0">
     <CohortBuilderLanding />
+    <ParticipantsVisualization />
   </div>
   <div v-else>
     <!-- Cohort Selector -->
