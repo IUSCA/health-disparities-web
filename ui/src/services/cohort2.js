@@ -5,7 +5,7 @@ class cohortService {
   unique(category, field) {
     return api.get(`/cohorts/${category}/${field}/unique`, {
       params: {
-        id: cache_busting_id,
+        cache_id: cache_busting_id,
       },
     });
   }
@@ -69,7 +69,7 @@ class cohortService {
   getTotalParticipants() {
     return api.get("/cohorts/participants/total", {
       params: {
-        id: cache_busting_id,
+        cache_id: cache_busting_id,
       },
     });
   }
@@ -84,7 +84,11 @@ class cohortService {
   }
 
   getParticipantDetails({ participant_id }) {
-    return api.get(`/cohorts/participants/${participant_id}`);
+    return api.get(`/cohorts/participants/${participant_id}`, {
+      params: {
+        cache_id: cache_busting_id,
+      },
+    });
   }
 
   searchParticipants({

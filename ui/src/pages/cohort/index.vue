@@ -103,9 +103,12 @@ function checkAndCombine() {
           cohort_ids,
           operators: operators.value,
         },
+        save_results: true,
+        search_id: combinationCohort.value.search_id,
       })
       .then((res) => {
         combinationCohort.value.size = res.data.count;
+        combinationCohort.value.search_id = res.data.search_id;
       })
       .catch((err) => {
         console.error(err);

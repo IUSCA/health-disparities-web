@@ -341,6 +341,9 @@ router.get(
         medications: true,
       },
     });
+    // cache indefinitely - 1 year
+    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+    res.set('Cache-control', 'private, max-age=31536000');
     res.json(participant);
   }),
 );
