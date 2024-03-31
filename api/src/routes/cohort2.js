@@ -280,7 +280,7 @@ router.get(
   isPermittedTo('read'),
   validate([
     param('id').isUUID(),
-    query('limit').default(10).isInt({ min: 1, max: 10 })
+    query('limit').default(10).isInt({ min: 1, max: 100 })
       .toInt(),
     query('offset').default(0).isInt({ min: 0 })
       .toInt(),
@@ -297,7 +297,7 @@ router.get(
       req.query.offset,
       req.query.offset + req.query.limit,
     );
-    prisma.participant.findMany({
+    const participants = await prisma.participant.findMany({
       where: {
         id: {
           in: participant_ids,
@@ -306,7 +306,21 @@ router.get(
       include: {
         demographics: true,
       },
-    }).then((participants) => res.json(participants));
+    });
+
+    // remove ib_id, study_id and
+    // change demographics from array on one object to a simple object
+    const _participants = participants.map((participant) => {
+      const {
+        // eslint-disable-next-line no-unused-vars
+        ib_id, study_id, demographics, ...rest
+      } = participant;
+      return {
+        ...rest,
+        demographics: demographics?.[0],
+      };
+    });
+    res.json(_participants);
   }),
 );
 

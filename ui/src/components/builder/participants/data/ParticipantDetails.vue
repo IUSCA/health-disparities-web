@@ -2,7 +2,7 @@
   <VaInnerLoading :loading="loading">
     <div>
       <!-- Tabs -->
-      <VaTabs v-model="selectedCategory" grow>
+      <VaTabs v-model="selectedCategory" grow class="pt-1">
         <template #tabs>
           <VaTab
             v-for="category in cohortFilters"
@@ -13,7 +13,7 @@
             <span>{{ category.label }}</span>
 
             <!-- number of associated records -->
-            <span class="w-[50px]">
+            <span class="w-[30px]">
               <span
                 v-if="
                   category.key !== 'demographic' &&
