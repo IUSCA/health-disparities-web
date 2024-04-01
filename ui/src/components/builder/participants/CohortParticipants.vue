@@ -10,9 +10,10 @@
 
     <!-- select a cohort -->
     <VaSelect
-      v-model="selectedCohort"
+      v-model="selectValue"
       :options="selectableCohorts"
       text-by="name"
+      value-by="id"
       placeholder="Select a cohort"
       class="flex-none"
     />
@@ -56,6 +57,9 @@ const options = [
   },
 ];
 
+// select component options are instances of Cohort class but it converts to plain object when assigning to v-model
+// so we track the id of the selected cohort and use it to find the cohort object
+const selectValue = ref(null);
 const selectedCohort = ref(null);
 const mode = ref("data");
 const participants = ref([]);
@@ -70,6 +74,11 @@ const selectableCohorts = computed(() => {
   );
 });
 
+watch(selectValue, (val) => {
+  console.log("value changed", val);
+  selectedCohort.value = selectableCohorts.value.find((c) => c.id === val);
+});
+
 // automatically choose a default selected cohort
 // when entering combine mode, choose the combination cohort
 // when exiting combine mode, choose the first non-empty cohort
@@ -77,11 +86,11 @@ watch(
   isInCombineMode,
   (newVal, oldVal) => {
     if (newVal && !oldVal) {
-      selectedCohort.value = combinationCohort.value;
+      selectValue.value = combinationCohort.value.id;
       return;
     }
     if (!newVal && oldVal) {
-      selectedCohort.value = cohorts.value.find((c) => !c.isEmpty());
+      selectValue.value = cohorts.value.find((c) => !c.isEmpty())?.id;
     }
   },
   {
@@ -96,10 +105,10 @@ watch(
     // if there is no selected cohort, choose the first non-empty cohort
     // when not in combine mode. The above watch handles the case when
     // entering and exiting the combine mode
-    if (selectedCohort.value == null) {
+    if (selectValue.value == null) {
       if (!isInCombineMode.value) {
         const c = cohorts.value.find((c) => !c.isEmpty());
-        if (c) selectedCohort.value = c;
+        if (c) selectValue.value = c.id;
       }
       return;
     }
@@ -115,7 +124,7 @@ watch(
       selectedCohort.value = c;
       return;
     }
-    selectedCohort.value = null;
+    selectValue.value = null;
   },
   {
     deep: true,
@@ -128,7 +137,7 @@ async function fetchParticipants() {
   const cohort_id = selectedCohort.value.is_dirty
     ? selectedCohort.value.search_id
     : selectedCohort.value.id;
-  console.log("selected cohort changed", cohort_id);
+  console.log("fetchParticipants cohort id", cohort_id);
 
   if (cohort_id && !selectedCohort.value.isEmpty()) {
     return cohortService
