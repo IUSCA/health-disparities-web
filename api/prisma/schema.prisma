@@ -711,3 +711,51 @@ model query_analytics {
   author          user     @relation(fields: [author_username], references: [username])
   execution_time  Float
 }
+
+/// This table is a partition table (partition of partitions).
+// first level partition - snapshot_id
+// second level partition - chr
+model genotype_stats {
+  chr           Int    @db.SmallInt
+  position      BigInt
+  ref           String
+  alt           String
+  source_id     Int
+  snapshot_id   Int
+  protocol_id   Int
+  missing       Int
+  c0            Int
+  c1            Int
+  c2            Int
+  c3            Int
+  allele_number Int
+  allele_count  Int
+  allele_freq   Float
+
+  @@id([chr, position, ref, alt, source_id, snapshot_id, protocol_id])
+}
+
+// prisma is unable to recognize nested partitions. 
+// it thinks genotype_stats_snapshot_1 partition is a table and tries to drop it
+// to prevent it from dropping, we need to create a model with the same name and add @@ignore directive
+// this has to be done for every nested partition created. ex: genotype_stats_snapshot_2, genotype_stats_snapshot_3, etc.
+model genotype_stats_snapshot_1 {
+  chr           Int    @db.SmallInt
+  position      BigInt
+  ref           String
+  alt           String
+  source_id     Int
+  snapshot_id   Int
+  protocol_id   Int
+  missing       Int
+  c0            Int
+  c1            Int
+  c2            Int
+  c3            Int
+  allele_number Int
+  allele_count  Int
+  allele_freq   Float
+
+  @@id([chr, position, ref, alt, source_id, snapshot_id, protocol_id])
+  @@ignore
+}
