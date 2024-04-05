@@ -41,7 +41,7 @@ function insert_query(snapshot_id, protocol_id) {
     This condition is not necessary because idx from "idx IN (select id from indexes)" in stats_data
     is never null.
   */
-  const select = Prisma.raw(`select chr, position, ref, alt, source_id, ${snapshot_id}, ${protocol_id}, missing, c0, c1, c2, c3, allele_num, allele_count, allele_freq from stats_data`);
+  const select = Prisma.raw(`select chr, position, ref, alt, source_id, ${snapshot_id}, ${protocol_id}, phase, missing, c0, c1, c2, c3, allele_num, allele_count, allele_freq from stats_data`);
   return Prisma.sql`with
     indexes as (
       select
@@ -54,7 +54,7 @@ function insert_query(snapshot_id, protocol_id) {
       pps.snapshot_id = ${snapshot_id}
     ),
     stats_data as (
-      select v.chr, v."position", v."ref", v.alt, v.source_id, 
+      select v.chr, v."position", v."ref", v.alt, v.source_id, v.phase,
             ac.missing as missing,
             ac.c0 as c0,
             ac.c1 as c1,

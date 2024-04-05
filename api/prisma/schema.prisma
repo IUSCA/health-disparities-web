@@ -716,13 +716,14 @@ model query_analytics {
 // first level partition - snapshot_id
 // second level partition - chr
 model genotype_stats {
-  chr           Int    @db.SmallInt
+  chr           Int     @db.SmallInt
   position      BigInt
   ref           String
   alt           String
   source_id     Int
   snapshot_id   Int
   protocol_id   Int
+  phase         Boolean
   missing       Int
   c0            Int
   c1            Int
@@ -740,13 +741,14 @@ model genotype_stats {
 // to prevent it from dropping, we need to create a model with the same name and add @@ignore directive
 // this has to be done for every nested partition created. ex: genotype_stats_snapshot_2, genotype_stats_snapshot_3, etc.
 model genotype_stats_snapshot_1 {
-  chr           Int    @db.SmallInt
+  chr           Int     @db.SmallInt
   position      BigInt
   ref           String
   alt           String
   source_id     Int
   snapshot_id   Int
   protocol_id   Int
+  phase         Boolean
   missing       Int
   c0            Int
   c1            Int

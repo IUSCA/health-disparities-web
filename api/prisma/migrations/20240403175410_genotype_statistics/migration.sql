@@ -7,6 +7,7 @@ CREATE TABLE "genotype_stats" (
     "source_id" INTEGER NOT NULL,
     "snapshot_id" INTEGER NOT NULL,
     "protocol_id" INTEGER NOT NULL,
+    "phase" BOOLEAN NOT NULL,
     "missing" INTEGER NOT NULL,
     "c0" INTEGER NOT NULL,
     "c1" INTEGER NOT NULL,
