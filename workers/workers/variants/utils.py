@@ -1,4 +1,5 @@
 import numpy as np
+from cyvcf2 import VCF
 
 
 def merge_genotype_arrays(previous_genotype: list[int],
@@ -27,3 +28,27 @@ def merge_genotype_arrays(previous_genotype: list[int],
     # set values at these indices - existing values will get overwritten
     x[_ids] = genotype_vals
     return x
+
+
+def count_records(vcf_file_path: str) -> int:
+    """
+    Count the number of records in a VCF file.
+    """
+    vcf = VCF(str(vcf_file_path))
+    return sum(1 for _ in vcf)
+
+
+def decode_chromosome(chrom: int) -> str:
+    """
+    Decode chromosome number to string.
+
+    :param chrom: Chromosome number.
+    :return: Chromosome string.
+    """
+    assert 1 <= chrom < 25
+    if chrom <= 22:
+        return str(chrom)
+    elif chrom == 23:
+        return 'X'
+    else:
+        return 'Y'
