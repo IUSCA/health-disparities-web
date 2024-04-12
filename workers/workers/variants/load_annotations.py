@@ -178,7 +178,10 @@ class GeneAnnotations:
 
     def fetch(self, site: Site) -> dict | None:
         if site.chrom not in self.sources:
-            with open(self.get_file_name(site.chrom), 'rb') as f:
+            fname = self.get_file_name(site.chrom)
+            if not fname.exists():
+                return None
+            with open(fname, 'rb') as f:
                 self.sources[site.chrom] = pickle.load(f)
         gene_info_dict = self.sources[site.chrom]
         return gene_info_dict.get(site, None)

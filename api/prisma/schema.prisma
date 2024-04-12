@@ -528,7 +528,8 @@ model annotation {
   ref           String
   alt           String
   func          String?
-  genes         String?
+  gene1_id      Int?
+  gene2_id      Int?
   exonic_func   String?
   aa_change     String?
   af_afr        Float?
@@ -540,33 +541,44 @@ model annotation {
   af_asj        Float?
   af_oth        Float?
   cln_allele_id Int?
-  cln_cond      String?
   cln_dis_db    String?
+  cln_dn        String?
+  cln_hgvs      String?
   cln_rev_stat  String?
   cln_sig       String?
+  cln_vc        String?
+  cln_vcso      String?
+  cln_geneinfo  String?
+  cln_mc        String?
   cadd_phred    Float?
   revel_max     Float?
   polyphen_max  Float?
   sift_max      Float?
 
+  gene1 gene? @relation(name: "first", fields: [gene1_id], references: [id])
+  gene2 gene? @relation(name: "second", fields: [gene2_id], references: [id])
+
   @@id([chr, position, ref, alt])
-  @@index([func])
-  @@index([genes])
-  @@index([exonic_func])
-  @@index([cln_sig])
+  @@index([gene1_id, gene2_id])
+}
+
+model gene {
+  id      Int          @id @default(autoincrement())
+  name    String       @unique
+  firsts  annotation[] @relation(name: "first")
+  seconds annotation[] @relation(name: "second")
 }
 
 model source {
-  id                 Int                  @id @default(autoincrement())
-  name               String
-  description        String?
-  created_at         DateTime             @default(now()) @db.Timestamp(6)
-  published          Boolean              @default(false)
-  author_id          Int?
-  author             user?                @relation(fields: [author_id], references: [id])
-  variant            variant[]
-  variant_annotation variant_annotation[]
-  genotype_set       genotype_set[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  description  String?
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  published    Boolean        @default(false)
+  author_id    Int?
+  author       user?          @relation(fields: [author_id], references: [id])
+  variant      variant[]
+  genotype_set genotype_set[]
 }
 
 model snapshot {
@@ -667,39 +679,39 @@ model phenotype_file {
   snapshot    snapshot @relation(fields: [snapshot_id], references: [id])
 }
 
-view variant_annotation {
-  chr           Int     @db.SmallInt
-  position      BigInt
-  ref           String
-  alt           String
-  source_id     Int
-  source        source  @relation(fields: [source_id], references: [id])
-  phase         Boolean
-  allele_counts Json
-  func          String?
-  genes         String?
-  exonic_func   String?
-  aa_change     String?
-  af_afr        Float?
-  af_sas        Float?
-  af_amr        Float?
-  af_eas        Float?
-  af_nfe        Float?
-  af_fin        Float?
-  af_asj        Float?
-  af_oth        Float?
-  cln_allele_id Int?
-  cln_cond      String?
-  cln_dis_db    String?
-  cln_rev_stat  String?
-  cln_sig       String?
-  cadd_phred    Float?
-  revel_max     Float?
-  polyphen_max  Float?
-  sift_max      Float?
+// view variant_annotation {
+//   chr           Int     @db.SmallInt
+//   position      BigInt
+//   ref           String
+//   alt           String
+//   source_id     Int
+//   source        source  @relation(fields: [source_id], references: [id])
+//   phase         Boolean
+//   allele_counts Json
+//   func          String?
+//   genes         String?
+//   exonic_func   String?
+//   aa_change     String?
+//   af_afr        Float?
+//   af_sas        Float?
+//   af_amr        Float?
+//   af_eas        Float?
+//   af_nfe        Float?
+//   af_fin        Float?
+//   af_asj        Float?
+//   af_oth        Float?
+//   cln_allele_id Int?
+//   cln_cond      String?
+//   cln_dis_db    String?
+//   cln_rev_stat  String?
+//   cln_sig       String?
+//   cadd_phred    Float?
+//   revel_max     Float?
+//   polyphen_max  Float?
+//   sift_max      Float?
 
-  @@id([chr, position, ref, alt])
-}
+//   @@id([chr, position, ref, alt])
+// }
 
 model query_analytics {
   id              Int      @id @default(autoincrement())

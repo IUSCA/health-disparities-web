@@ -177,6 +177,11 @@ python -m workers.variants.ingest_vcf \
 python -m workers.variants.load_annotations --gnomad_root_dir /N/project/phi_ingest_biobank_regeneron/annotations/gnomAD/ --mode celery
 ```
 
+Genes extraction:
+```bash
+python -m workers.variants.genes extract --vcf_file_path ../annotations/genes/subset_chr22_biAllelic_eur_chr22.hg19_multianno.vcf --outfile gene_info_chr22.pkl
+```
+
 Updates: (not possible through celery)
 ```bash
 python -m workers.variants.load_annotations --gnomad_root_dir ../annotations/gnomAD/  --gene_root_dir ../annotations/genes/extracted --clinvar_vcf_path ../annotations/clinvar/clinvar_20240127.vcf.gz --update --sources gene,clinvar

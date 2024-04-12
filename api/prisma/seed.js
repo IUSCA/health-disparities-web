@@ -306,49 +306,12 @@ async function main() {
   // );
 
   // upsert protocol user assoc
-  await Promise.all(
-    data.user_protocol_assoc.map((up) => prisma.user_protocol.upsert({
-      where: {
-        user_id_protocol_id: up,
-      },
-      update: {},
-      create: up,
-    })),
-  );
 
-  // upsert protocol participant assoc
-  // await Promise.all(
-  //   data.participant_protocol_assoc.map((pp) => prisma.participant_protocol.upsert({
-  //     where: {
-  //       participant_id_protocol_id: pp,
-  //     },
-  //     update: {},
-  //     create: pp,
-  //   })),
-  // );
-
-  // upsert cohort data
-  // await Promise.all(
-  //   data.cohorts.map((c) => prisma.cohort.upsert({
-  //     where: {
-  //       id: c.id,
-  //     },
-  //     update: {},
-  //     create: {
-  //       ...c,
-  //       users: {
-  //         create: [
-  //           {
-  //             user_id: 1,
-  //           },
-  //         ],
-  //       },
-  //     },
   //   })),
   // );
 
   // update the auto increment id's sequence numbers
-  const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot', 'participant', 'cohort'];
+  const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot'];
   await Promise.all(tables.map(update_seq));
 
   // add metrics

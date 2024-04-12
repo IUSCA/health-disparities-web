@@ -324,80 +324,17 @@ const protocols = [
     name: 'protocol-2',
     author_id: 2,
   },
-  {
-    id: 3,
-    name: 'protocol-3',
-  },
 ];
 
 const snapshots = [
   {
     id: 1,
-    name: 'initial',
+    name: 'Initial',
     description: '',
     published: false,
     author_id: 1,
   },
 ];
-
-const participants = [
-  {
-    id: 1, ib_id: 'IB_1', study_id: 1, enroll_snapshot_id: 1,
-  },
-  {
-    id: 2, ib_id: 'IB_2', study_id: 1, enroll_snapshot_id: 1, disenroll_snapshot_id: 2,
-  },
-  {
-    id: 3, ib_id: 'IB_3', study_id: 1, enroll_snapshot_id: 1, disenroll_snapshot_id: 3,
-  },
-  {
-    id: 4, ib_id: 'IB_4', study_id: 1, enroll_snapshot_id: 1, disenroll_snapshot_id: 2,
-  },
-  {
-    id: 5, ib_id: 'IB_5', study_id: 1, enroll_snapshot_id: 1,
-  },
-  {
-    id: 6, ib_id: 'IB_6', study_id: 1, enroll_snapshot_id: 2, disenroll_snapshot_id: 3,
-  },
-  {
-    id: 7, ib_id: 'IB_7', study_id: 1, enroll_snapshot_id: 2,
-  },
-  {
-    id: 8, ib_id: 'IB_8', study_id: 1, enroll_snapshot_id: 2, disenroll_snapshot_id: 3,
-  },
-  {
-    id: 9, ib_id: 'IB_9', study_id: 1, enroll_snapshot_id: 3,
-  },
-  {
-    id: 10, ib_id: 'IB_10', study_id: 1, enroll_snapshot_id: 3,
-  },
-];
-
-const protocol_users_map = {
-  1: [1, 2, 3, 7, 8, 9],
-  2: [4, 5, 6],
-  3: [2, 4, 5, 6, 7],
-};
-const user_protocol_assoc = Object.entries(protocol_users_map)
-  .map((curr) => {
-    const protocol_id = parseInt(curr[0], 10);
-    const user_ids = curr[1];
-    return user_ids.map((uid) => ({ user_id: uid, protocol_id }));
-  })
-  .flat();
-
-const protocol_participants_map = {
-  1: [1, 2, 3, 4, 5, 6, 7],
-  2: [8, 9, 10],
-  3: [3, 4, 5, 9, 10],
-};
-const participant_protocol_assoc = Object.entries(protocol_participants_map)
-  .map((curr) => {
-    const protocol_id = parseInt(curr[0], 10);
-    const participants_ids = curr[1];
-    return participants_ids.map((pid) => ({ participant_id: pid, protocol_id }));
-  })
-  .flat();
 
 const sources = [
   {
@@ -411,28 +348,6 @@ const sources = [
     author_id: 2,
   },
 ];
-
-// const cohorts = [
-//   {
-//     id: 1,
-//     name: 'Cohort-1',
-//     query: {},
-//     published: true,
-//     description: 'description of Cohort-1',
-//   },
-//   {
-//     id: 2,
-//     name: 'Cohort-2',
-//     query: {},
-//     published: true,
-//   },
-//   {
-//     id: 3,
-//     name: 'Cohort-3',
-//     query: {},
-//     published: false,
-//   },
-// ];
 
 const about_records = [
   {
@@ -462,10 +377,6 @@ module.exports = {
   project_contact_assoc,
   protocols,
   snapshots,
-  participants,
-  user_protocol_assoc,
-  participant_protocol_assoc,
-  // cohorts,
   sources,
   about_records,
 };
