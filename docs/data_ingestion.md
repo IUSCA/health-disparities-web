@@ -187,6 +187,10 @@ Updates: (not possible through celery)
 python -m workers.variants.load_annotations --gnomad_root_dir ../annotations/gnomAD/  --gene_root_dir ../annotations/genes/extracted --clinvar_vcf_path ../annotations/clinvar/clinvar_20240127.vcf.gz --update --sources gene,clinvar
 ```
 
+```bash
+PYTHONIOENCODING="UTF-8" python -m workers.variants.load_annotations --gnomad_root_dir /N/project/phi_ingest_biobank_regeneron/annotations/gnomAD/ --gene_root_dir annotations/genes --clinvar_vcf_path annotations/clivar/clinvar_20240127.vcf.gz --update --sources gene,clinvar
+```
+
 ### Archive
 
 ```bash
