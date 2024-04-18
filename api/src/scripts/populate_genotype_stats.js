@@ -120,4 +120,5 @@ async function main(snapshot_id, protocol_id, chr = null) {
 }
 
 // node src/scripts/populate_genotype_stats.js --snapshot_id 1 --protocol_id 1
+// node src/scripts/populate_genotype_stats.js --snapshot_id 1 --protocol_id 1 --chr 22
 fire(main);

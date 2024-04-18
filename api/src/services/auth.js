@@ -25,7 +25,7 @@ function issueJWT({ userProfile, forever = false }) {
   return jsonwt.sign(claim, key, signOpt);
 }
 
-const get_user_profile = _.pick(['username', 'email', 'name', 'roles', 'cas_id', 'id']);
+const get_user_profile = _.pick(['username', 'email', 'name', 'roles', 'cas_id', 'id', 'protocol_ids']);
 
 async function onLogin({ user, updateLastLogin = true }) {
   if (updateLastLogin) { await userService.updateLastLogin({ id: user.id, method: 'IUCAS' }); }

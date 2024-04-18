@@ -13,6 +13,7 @@ const INCLUDE_ROLES_LOGIN = {
       method: true,
     },
   },
+  protocols: true,
 };
 
 // using lodash chain api
@@ -25,6 +26,10 @@ const INCLUDE_ROLES_LOGIN = {
 
 // TODO: what happens if input is null or malformed
 const transformUser = _.flow([
+  ({ protocols, ...user }) => ({
+    ...user,
+    protocol_ids: protocols.map(({ protocol_id }) => protocol_id),
+  }),
   ({ user_role, ...user }) => ({
     ...user,
     roles: user_role?.map(({ roles }) => roles.name),

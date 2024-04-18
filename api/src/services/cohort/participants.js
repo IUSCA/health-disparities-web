@@ -1,7 +1,7 @@
 const { Prisma } = require('@prisma/client');
 const { customFields } = require('./fields');
 
-const sql_op_map = {
+const SQL_OP_MAP = {
   in: 'IN',
   not_in: 'NOT IN',
   eq: '=',
@@ -33,7 +33,7 @@ function buildCustomField(field, op, value) {
       FROM demographic t
       WHERE 
         t.participant_id = p.id
-        AND extract(year from age(dob)) ${Prisma.raw(sql_op_map[op])} ${_value}
+        AND extract(year from age(dob)) ${Prisma.raw(SQL_OP_MAP[op])} ${_value}
     )`;
   }
   throw new Error(`Implementation for custom field not found: ${field}`);
@@ -44,7 +44,7 @@ function buildField(field, op, value) {
     return buildCustomField(field, op, value);
   }
   const [category, fieldName] = field.split('.');
-  const sql_op = Prisma.raw(sql_op_map[op]);
+  const sql_op = Prisma.raw(SQL_OP_MAP[op]);
   let sql_value = value;
   if (op === 'in' || op === 'not_in') {
     sql_value = Prisma.sql`(${Prisma.join(value)})`;
@@ -111,4 +111,6 @@ function buildParticipantsQuery(query, { count = false } = {}) {
 
 module.exports = {
   buildParticipantsQuery,
+  SQL_OP_MAP,
+  isUnaryOp,
 };

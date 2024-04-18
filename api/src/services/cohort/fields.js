@@ -50,4 +50,5 @@ module.exports = {
   CATEGORIES: tables,
   dbSchema,
   customFields,
+  getFieldsWithType,
 };

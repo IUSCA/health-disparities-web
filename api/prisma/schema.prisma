@@ -773,3 +773,53 @@ model genotype_stats_snapshot_1 {
   @@id([chr, position, ref, alt, source_id, snapshot_id, protocol_id])
   @@ignore
 }
+
+
+view gt_stats_annotations {
+  chr           Int     @db.SmallInt
+  position      BigInt
+  ref           String
+  alt           String
+  func          String?
+  gene1_id      Int?
+  gene2_id      Int?
+  exonic_func   String?
+  aa_change     String?
+  af_afr        Float?
+  af_sas        Float?
+  af_amr        Float?
+  af_eas        Float?
+  af_nfe        Float?
+  af_fin        Float?
+  af_asj        Float?
+  af_oth        Float?
+  cln_allele_id Int?
+  cln_dis_db    String?
+  cln_dn        String?
+  cln_hgvs      String?
+  cln_rev_stat  String?
+  cln_sig       String?
+  cln_vc        String?
+  cln_vcso      String?
+  cln_geneinfo  String?
+  cln_mc        String?
+  cadd_phred    Float?
+  revel_max     Float?
+  polyphen_max  Float?
+  sift_max      Float?
+
+  source_id     Int
+  snapshot_id   Int
+  protocol_id   Int
+  phase         Boolean
+  missing       Int
+  c0            Int
+  c1            Int
+  c2            Int
+  c3            Int
+  allele_number Int
+  allele_count  Int
+  allele_freq   Float
+
+  @@id([chr, position, ref, alt])
+}

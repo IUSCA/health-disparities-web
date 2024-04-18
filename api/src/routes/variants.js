@@ -1,65 +1,40 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 const _ = require('lodash/fp');
-const createError = require('http-errors');
+// const createError = require('http-errors');
+// const config = require('config');
 const { validate } = require('../middleware/validators');
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
 const {
-  standardize, RANGE_COLS, participants_with_variants, decode_chromosome,
-  encode_chromosome, decode_genotype, ALLELE_STATS_COLS,
-  queryVariantsWithAlleleStatsFilter, queryVariantsWithoutAlleleStatsFilter,
-} = require('../services/variants');
+  encode_chromosome, isValidNucleotide, validateQuery, sanitizeQuery,
+} = require('../services/variants/validation');
+const { buildSQL, annotationHistogramSQL, buildBaseQuerySQL } = require('../services/variants');
+const fields = require('../services/variants/fields');
 
 const isPermittedTo = accessControl('variant');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// const NUMERIC_COLS = ['cadd_phred', 'polyphen_max', 'revel_max', 'sift_max'];
-
-function rangeToQuery(rangeQuery) {
-  // convert { min: 1, max: 2 } to { gte: 1, lte: 2 }
-  // if min or max is NaN, exclude that condition
-  const ret = _.omitBy(_.isNaN)({
-    gte: rangeQuery?.min,
-    lte: rangeQuery?.max,
-  });
-  // if there are no keys, return null
-  if (Object.keys(ret).length === 0) {
-    return null;
-  }
-  return ret;
-}
-
-function jointFilterValidation(req, res, next) {
-  // at least one of chromosome or gene must be provided
-  if (!(req.body.chr || req.body.gene)) {
-    next(createError(400, 'At least one of chromosome or gene must be provided'));
-  }
-  next();
-}
+const annotation_validators = [
+  query('source_id').isInt({ min: 1 }).toInt(),
+  query('snapshot_id').isInt({ min: 1 }).toInt(),
+  query('chr').customSanitizer(encode_chromosome),
+  query('start').isInt({ min: 1 }).toInt(),
+  query('end').isInt({ min: 1 }).toInt(),
+  query('ref').custom(isValidNucleotide).toUpperCase().optional(),
+  query('alt').custom(isValidNucleotide).toUpperCase().optional(),
+];
 
 function buildFilterQuery(_query) {
   // console.log(_query);
   const { start } = _query;
   const end = _query.end || start;
 
-  const gene_filter = [];
-  if (_query.gene) {
-    gene_filter.push({ genes: { contains: _query.gene } });
-  }
-  if (_query.genes?.length) {
-    gene_filter.push({ genes: { in: _query.genes } });
-  }
-
-  const numeric_filters = RANGE_COLS.reduce((acc, col) => {
-    acc[col] = rangeToQuery(_query[col]);
-    return acc;
-  }, {});
-
   return _.omitBy(_.isNil)({
     source_id: _query.source_id,
+    snapshot_id: _query.snapshot_id,
     chr: _query.chr,
     ref: _query.ref,
     alt: _query.alt,
@@ -68,422 +43,158 @@ function buildFilterQuery(_query) {
       gte: start,
       lte: end,
     } : null,
-
-    AND: gene_filter,
-
-    cln_sig: _query.cln_sig?.length ? { in: _query.cln_sig } : null,
-    func: _query.func?.length ? { in: _query.func } : null,
-    exonic_func: _query.exonic_func?.length ? { in: _query.exonic_func } : null,
-    ...numeric_filters,
   });
 }
 
-function isValidNucleotide(nucleotide) {
-  if (!/^[ATCG]+$/i.test(nucleotide)) {
-    throw new Error('Invalid nucleotide');
+function validateProtocols(req, res, next) {
+  const protocol_ids = req.user.protocol_ids || [];
+  if (protocol_ids.length === 0) {
+    return res.status(403).json({ message: 'No protocols assigned to user' });
   }
-  return true;
+  if (protocol_ids.length > 1) {
+    return res.status(501).send('Support for multiple protocols per user is not available');
+  }
+  // eslint-disable-next-line prefer-destructuring
+  req.user.protocol_id = protocol_ids[0];
+  next();
 }
 
-function rangeValidator(fieldName) {
-  return [
-    body(`${fieldName}.min`).optional().toFloat(),
-    body(`${fieldName}.max`).optional().toFloat(),
-  ];
-}
-
-const annotation_validators = [
-  body('source_id').isInt().toInt(),
-  body('snapshot_id').isInt().toInt(),
-  body('chr').customSanitizer(encode_chromosome).optional(),
-  body('start').isInt().toInt().optional(),
-  body('end').isInt().toInt().optional(),
-  body('ref').custom(isValidNucleotide).toUpperCase().optional(),
-  body('alt').custom(isValidNucleotide).toUpperCase().optional(),
-
-  body('func').isArray().optional(),
-  body('genes').isArray().optional(),
-  body('exonic_func').isArray().optional(),
-  body('cln_sig').isArray().optional(),
-  ...RANGE_COLS.map(rangeValidator),
-];
-
-function variant_id_sanitizer(variant_id) {
-  if (variant_id.length !== 4) {
-    throw createError(400, 'Invalid variant_id - length is not 4');
-  }
-  const chr = variant_id[0];
-  const position = variant_id[1];
-  const ref = variant_id[2];
-  const alt = variant_id[3];
-
-  // convert position to integer
-  const pos_num = Number(position);
-  if (Number.isNaN(pos_num)) {
-    throw createError(400, 'Invalid variant_id - position is not a number');
-  }
-
-  if (!isValidNucleotide(ref) || !isValidNucleotide(alt)) {
-    throw createError(400, 'Invalid variant_id - ref or alt nucleotide is invalid');
-  }
-
-  return [encode_chromosome(chr), pos_num, ref, alt];
-}
-
-router.post(
-  '/',
+router.get(
+  '/annotations/:field/unique',
   isPermittedTo('read'),
   validate([
     ...annotation_validators,
-    body('limit').default(100).isInt().toInt(),
-    body('offset').default(0).isInt().toInt(),
+    param('field').isIn(fields.ANNOTATION_FIELDS),
   ]),
-  jointFilterValidation,
+  validateProtocols,
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['Variants']
-    // #swagger.summary = 'Search variants'
+    // #swagger.tags = ['variants']
+    // #swagger.summary = 'Get unique values for an annotation field'
 
-    const filterQuery = buildFilterQuery(req.body);
-    const dataRetrievalQuery = {
-      skip: req.body.offset,
-      take: req.body.limit,
-      where: filterQuery,
-      orderBy: [
-        { chr: 'asc' },
-        { position: 'asc' },
-        { ref: 'asc' },
-        { alt: 'asc' },
-      ],
-    };
+    // The annotation table is huge and it is only useful to show values that
+    // are in the current search scope of the variants.
+    // or precompute unique values for each annotation field - treat as a static resource
 
-    // eslint-disable-next-line no-console
-    console.log(JSON.stringify(dataRetrievalQuery, null, 2));
+    const { field } = req.params;
+    const where = buildFilterQuery(req.query);
+    where.protocol_id = req.user.protocol_id;
+    where[field] = { not: null };
 
-    const [results, count] = await prisma.$transaction([
-      prisma.variant_annotation.findMany({ ...dataRetrievalQuery }),
-      prisma.variant_annotation.count({ where: filterQuery }),
-    ]);
-
-    //  transform allele_counts to allele_number and allele_count
-    //  transform encoded values to human readable values
-    const results2 = results.map((result) => {
-      const { chr, allele_counts, ...rest } = result;
-      // example allele_counts - phased: true
-      // [
-      //   {
-      //     "v": 1,
-      //     "count": 328
-      //   },
-      //   {
-      //     "v": 2,
-      //     "count": 315
-      //   },
-      //   {
-      //     "v": 0,
-      //     "count": 1229
-      //   },
-      //   {
-      //     "v": 3,
-      //     "count": 80
-      //   }
-      // ],
-
-      // allele_number referes to total number of alleles observed for a particular variant across
-      // all individuals in the sample population.
-      const allele_number = allele_counts
-        .filter((x) => x.v >= 0)
-        .map((x) => x.count * 2)
-        .reduce((total, x) => total + x, 0);
-
-      // allele_count refers to total number of alleles observed for a
-      // particular variant (the alt allele) across all individuals in the sample population.
-      const allele_count = result.phase
-        ? allele_counts.reduce((total, x) => { // phased
-          if (x.v === 1) {
-            return total + x.count;
-          }
-          if (x.v === 2) {
-            return total + x.count;
-          }
-          if (x.v === 3) {
-            return total + x.count * 2;
-          }
-          return total;
-        }, 0)
-        : allele_counts.reduce((total, x) => { // unphased
-          if (x.v === 1) {
-            return total + x.count;
-          }
-          if (x.v === 2) {
-            return total + x.count * 2;
-          }
-          return total;
-        }, 0);
-
-      const genotype_counts = allele_counts.reduce((acc, curr) => {
-        const decoded = decode_genotype(curr.v, result.phase);
-        acc[decoded] = curr.count;
-        return acc;
-      }, {});
-
-      return {
-        chr: decode_chromosome(chr),
-        ...rest,
-        allele_number,
-        allele_count,
-        genotype_counts,
-      };
+    const _rows = await prisma.gt_stats_annotations.groupBy({
+      where,
+      by: [field],
+      _count: {
+        [field]: true,
+      },
+      orderBy: {
+        _count: {
+          [field]: 'desc',
+        },
+      },
     });
+    const distinctValuesWithCounts = _rows.reduce((acc, item) => {
+      acc[item[field]] = item._count[field];
+      return acc;
+    }, {});
 
-    res.json({
-      metadata: { count },
-      results: results2,
-    });
+    return res.json(distinctValuesWithCounts);
   }),
 );
 
-router.post(
-  '/new',
+router.get(
+  '/annotations/:field/histogram',
   isPermittedTo('read'),
   validate([
     ...annotation_validators,
-    body('limit').default(100).isInt().toInt(),
-    body('offset').default(0).isInt().toInt(),
+    param('field').isIn(fields.NUMERIC_FIELDS),
+    query('bins').default(10).isInt({ min: 1, max: 100 }),
   ]),
-  jointFilterValidation,
+  validateProtocols,
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['Variants']
-    // #swagger.summary = 'Search variants'
+    // #swagger.tags = ['variants']
+    // #swagger.summary = 'Get histogram for an annotation field'
 
-    const canon_query = {
-      ...standardize(req.body),
-      limit: req.body.limit,
-      offset: req.body.offset,
-    };
-    // eslint-disable-next-line no-console
-    console.log({ canon_query });
+    // create histogram of field for the current search scope
+    // TODO: static resource: histogram of field for the entire dataset
 
-    const hasAlleleStatsFilter = ALLELE_STATS_COLS
-      .map((col) => _.has(col, canon_query))
-      .some((x) => x);
-    const results = await (hasAlleleStatsFilter
-      ? queryVariantsWithAlleleStatsFilter(canon_query, req.user.username)
-      : queryVariantsWithoutAlleleStatsFilter(canon_query, req.user.username));
+    const column = req.params.field;
+    const num_bins = req.query.bins;
+    const base_query = buildFilterQuery(req.query);
+    base_query.protocol_id = req.user.protocol_id;
 
-    res.json(results);
+    const querySql = buildBaseQuerySQL(base_query);
+    const sql = annotationHistogramSQL(querySql, column, num_bins);
+
+    const histogram = await prisma.$queryRaw(sql);
+    return res.json(histogram);
   }),
 );
 
-// function buildOrderByObject(sortOptions) {
-//   // TODO: multi column sort
-//   // TODO: handle no sorting case
-//   // TODO: validate sortkeys
-//   // TODO: validate sort orders
-//   const keyOrderPairs = Object.entries(sortOptions || {});
-//   if (keyOrderPairs.length > 0) {
-//     const [sortKey, sortOrder] = keyOrderPairs[0];
-//     return {
-//       orderBy: {
-//         [sortKey]: {
-//           sort: sortOrder,
-//           nulls: 'last',
-//         },
-//       },
-//     };
-//   }
-//   return {};
-// }
-
-router.post(
-  '/filters',
+router.get(
+  '/total-count',
   isPermittedTo('read'),
   validate(annotation_validators),
-  jointFilterValidation,
+  validateProtocols,
   asyncHandler(async (req, res, next) => {
-    const filterQuery = buildFilterQuery(req.body);
+    // #swagger.tags = ['variants']
+    // #swagger.summary = 'Get total count of variants'
 
-    const cols = ['genes', 'cln_sig', 'func', 'exonic_func'];
+    const where = buildFilterQuery(req.query);
+    where.protocol_id = req.user.protocol_id;
+    const count = await prisma.gt_stats_annotations.count({
+      where,
+    });
+    return res.json({ count });
 
-    // find distinct values for each column given the filter
-    const promises = cols.map((col) => prisma.variant_annotation.groupBy({
-      where: {
-        [col]: { not: { equals: null } },
-        ...filterQuery,
-      },
-      by: [col],
-      _count: true,
-    }));
-
-    const results = await Promise.all(promises);
-
-    // transform results to object like [{ value1: count1, value2: count2 }, ... ]
-    const results2 = results.map((result, idx) => result.reduce((acc, curr) => {
-      const col = cols[idx];
-      acc[curr[col]] = curr._count;
-      return acc;
-    }, {}));
-
-    // [['col1', 'col2'], [res1, res2]] -> { col1: res1, col2: res2 }
-    const filters = _.zipObject(cols, results2);
-
-    // find min and max values for each numeric column given the filter
-    // const minmax_result = await prisma.variant_annotation.aggregate({
-    //   where: filterQuery,
-    //   _min: RANGE_COLS.reduce((acc, curr) => ({ ...acc, [curr]: true }), {}),
-    //   _max: RANGE_COLS.reduce((acc, curr) => ({ ...acc, [curr]: true }), {}),
-    // });
-
-    // .then((result) => {
-    //   const { _min, _max } = result;
-    //   const numeric_filters = RANGE_COLS.reduce((acc, curr) => {
-    //     acc[curr] = { min: _min[curr], max: _max[curr] };
-    //     return acc;
-    //   }, {});
-    //   res.json({ ...filters, ...numeric_filters });
-    // });
-
-    res.json(filters);
+    // TODO: cache the total count
   }),
 );
 
+function decode_chromosome(encoded) {
+  const mapping = {
+    23: 'X',
+    24: 'Y',
+  };
+  return `${mapping[encoded] || encoded}`;
+}
+
 router.post(
-  '/participant-count',
+  '/search',
   isPermittedTo('read'),
   validate([
-    body('variant_ids').isArray().customSanitizer((xs) => xs.map(variant_id_sanitizer)),
-    body('source_id').isInt().toInt(),
-    body('snapshot_id').isInt().toInt(),
+    ...annotation_validators,
+    query('limit').default(100).isInt({ min: 1, max: 1000 }).toInt(),
+    query('offset').default(0).isInt({ min: 0 }).toInt(),
+    body('query').custom(validateQuery).bail().customSanitizer(sanitizeQuery),
   ]),
+  validateProtocols,
   asyncHandler(async (req, res, next) => {
-    const { variant_ids, source_id, snapshot_id } = req.body;
-    if (!variant_ids?.length) {
-      return res.json({ count: 0 });
-    }
-    const count = await participants_with_variants({
-      variant_ids,
-      source_id,
-      snapshot_id,
-      username: req.user.username,
-      return_count: true,
+    // #swagger.tags = ['variants']
+    // #swagger.summary = 'Search for variants'
+
+    const base_query = buildFilterQuery(req.query);
+    base_query.protocol_id = req.user.protocol_id;
+
+    const sql = buildSQL({
+      base_query,
+      json_query: req.body.query,
+      limit: req.query.limit,
+      offset: req.query.offset,
     });
-    res.json({ count });
-  }),
-);
+    // console.log(sql.sql, sql.values);
+    const results = await prisma.$queryRaw(sql) ?? [];
 
-router.post(
-  '/cohorts',
-  validate([
-    body('variant_ids').isArray().customSanitizer((xs) => xs.map(variant_id_sanitizer)),
-    body('source_id').isInt().toInt(),
-    body('snapshot_id').isInt().toInt(),
-    body('name').isString().notEmpty(),
-    body('is_published').optional().isBoolean(),
-    body('is_locked').optional().isBoolean(),
-    body('description').optional().isString(),
-    body('metadata').optional().isObject(),
-  ]),
-  asyncHandler(async (req, res, next) => {
-    const { variant_ids, source_id, snapshot_id } = req.body;
-    if (!variant_ids?.length) {
-      return res.json({ count: 0 });
-    }
-    const participants = await participants_with_variants({
-      variant_ids,
-      source_id,
-      snapshot_id,
-      username: req.user.username,
+    res.json({
+      metadata: { count: Number(results[0]?.total_count ?? 0) },
+      results: results.map((result) => {
+        // eslint-disable-next-line no-unused-vars
+        const { chr, total_count, ...rest } = result;
+        return {
+          ...rest,
+          chr: decode_chromosome(chr),
+        };
+      }),
     });
-
-    const cohort_data = _.flow([
-      _.pick(['name', 'is_published', 'description', 'metadata']),
-      _.omitBy(_.isNil),
-    ])(req.body);
-    cohort_data.query = {
-      name: 'genotype',
-      namespace: 'edu.iu.sca.biobank',
-      version: '1.0.0',
-      query: {},
-    };
-    cohort_data.metadata = {
-      ...cohort_data.metadata,
-      variant_search: {
-        source_id,
-        snapshot_id,
-      },
-    };
-
-    const cohort = await prisma.cohort.create({
-      data: {
-        ...cohort_data,
-        author_username: req.user.username,
-        participants,
-      },
-      select: {
-        id: true,
-      },
-    });
-    res.json(cohort);
-  }),
-);
-
-router.patch(
-  '/cohort/:id',
-  isPermittedTo('create'),
-  validate([
-    param('id').isInt().toInt(),
-    body('variant_ids').isArray().customSanitizer((xs) => xs.map(variant_id_sanitizer)),
-    body('source_id').isInt().toInt(),
-    body('snapshot_id').isInt().toInt(),
-    body('name').optional().isString().notEmpty(),
-    body('published').optional().isBoolean(),
-    body('description').optional().isString(),
-    body('metadata').optional().isObject(),
-  ]),
-  asyncHandler(async (req, res, next) => {
-    const { variant_ids, source_id, snapshot_id } = req.body;
-    if (!variant_ids?.length) {
-      return res.json({ count: 0 });
-    }
-    const participants = await participants_with_variants({
-      variant_ids,
-      source_id,
-      snapshot_id,
-      username: req.user.username,
-    });
-
-    const cohortToUpdate = await prisma.cohort.findUniqueOrThrow({
-      where: {
-        id: req.params.id,
-      },
-    });
-
-    const cohort_data = _.pick(['name', 'published', 'description', 'metadata'])(req.body);
-
-    cohort_data.metadata = _.merge(cohortToUpdate.metadata, {
-      variant_search: {
-        source_id,
-        snapshot_id,
-      },
-    });
-
-    cohort_data.query = {
-      name: 'genotype',
-      namespace: 'edu.iu.sca.biobank',
-      version: '1.0.0',
-      query: {},
-    };
-
-    const cohort = await prisma.cohort.create({
-      data: {
-        ...cohort_data,
-        author_username: req.user.username,
-        participants,
-      },
-      select: {
-        id: true,
-      },
-    });
-    res.json(cohort);
   }),
 );
 
