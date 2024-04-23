@@ -233,7 +233,11 @@ class Loader:
                 alt=s.alt
             )
             if Source.GNOMAD in sources:
-                _ann = self.gnomadAnnotations.fetch(s)
+                _ann = None
+                try:
+                    _ann = self.gnomadAnnotations.fetch(s)
+                except Exception as e:
+                    print('Unable to fetch gnomAD annotations for', s, e)
                 # print(s, _ann)
                 if _ann is not None:
                     ann.af_afr = _ann['AF_afr']
@@ -250,7 +254,11 @@ class Loader:
                     ann.sift_max = _ann['sift_max']
 
             if Source.GENE in sources:
-                _gene = self.geneAnnotations.fetch(s)
+                _gene = None
+                try:
+                    _gene = self.geneAnnotations.fetch(s)
+                except Exception as e:
+                    print('Unable to fetch gene annotations for', s, e)
                 if _gene is not None:
                     ann.func = _gene['Func.refGene']
                     gene_ids = _gene['Gene.refGene']
@@ -260,7 +268,11 @@ class Loader:
                     ann.aa_change = _gene['AAChange.refGene']
 
             if Source.CLINVAR in sources:
-                _clinvar = self.clinvarAnnotations.fetch(s)
+                _clinvar = None
+                try:
+                    _clinvar = self.clinvarAnnotations.fetch(s)
+                except Exception as e:
+                    print('Unable to fetch clinvar annotations for', s, e)
                 if _clinvar is not None:
                     ann.cln_allele_id = _clinvar['ALLELEID']
                     ann.cln_dis_db = _clinvar['CLNDISDB']
