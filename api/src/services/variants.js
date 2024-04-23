@@ -162,7 +162,7 @@ async function queryVariantsWithAlleleStatsFilter(_query, username) {
   results as (
   SELECT 
     v."chr", v."position", v."ref", v."alt", v.source_id, v.phase, 
-    a.func, a.genes, a.exonic_func, a.aa_change, a.af_afr, a.af_sas, a.af_amr, a.af_eas, a.af_nfe, a.af_fin, a.af_asj, a.af_oth, a.cln_allele_id, a.cln_cond, a.cln_dis_db, a.cln_rev_stat, a.cln_sig, a.cadd_phred, a.polyphen_max, a.revel_max, a.sift_max,
+    a.func, a.exonic_func, a.aa_change, a.af_afr, a.af_sas, a.af_amr, a.af_eas, a.af_nfe, a.af_fin, a.af_asj, a.af_oth, a.cln_allele_id, a.cln_dis_db, a.cln_rev_stat, a.cln_sig, a.cadd_phred, a.polyphen_max, a.revel_max, a.sift_max,
     ac.*, ac2.*, ac3.*
   from
     variant v
@@ -240,7 +240,7 @@ async function queryVariantsWithoutAlleleStatsFilter(_query, username) {
   )
   SELECT 
     v."chr", v."position", v."ref", v."alt", v.source_id, v.phase, 
-    a.func, a.genes, a.exonic_func, a.aa_change, a.af_afr, a.af_sas, a.af_amr, a.af_eas, a.af_nfe, a.af_fin, a.af_asj, a.af_oth, a.cln_allele_id, a.cln_cond, a.cln_dis_db, a.cln_rev_stat, a.cln_sig, a.cadd_phred, a.polyphen_max, a.revel_max, a.sift_max,
+    a.func, a.exonic_func, a.aa_change, a.af_afr, a.af_sas, a.af_amr, a.af_eas, a.af_nfe, a.af_fin, a.af_asj, a.af_oth, a.cln_allele_id, a.cln_dis_db, a.cln_rev_stat, a.cln_sig, a.cadd_phred, a.polyphen_max, a.revel_max, a.sift_max,
     ac.*, ac2.*, ac3.*
   from
     variant v
