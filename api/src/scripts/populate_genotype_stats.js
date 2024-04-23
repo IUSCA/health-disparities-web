@@ -4,7 +4,7 @@ const fire = require('js-fire');
 
 const prisma = new PrismaClient();
 
-function insert_query(snapshot_id, protocol_id) {
+function insert_query(snapshot_id, protocol_id, chr = null) {
   /*
   This query calculates the genotype statistics for the given snapshot and protocol
   and inserts them into the genotype_stats table. The genotype statistics are derived
@@ -42,6 +42,9 @@ function insert_query(snapshot_id, protocol_id) {
     is never null.
   */
   const select = Prisma.raw(`select chr, position, ref, alt, source_id, ${snapshot_id}, ${protocol_id}, phase, missing, c0, c1, c2, c3, allele_num, allele_count, allele_freq from stats_data`);
+
+  const chr_filter = chr != null ? Prisma.sql`where v.chr = ${chr}` : Prisma.empty;
+
   return Prisma.sql`with
     indexes as (
       select
@@ -90,16 +93,17 @@ function insert_query(snapshot_id, protocol_id) {
         ELSE ac2.allele_count::FLOAT / ac2.allele_num 
       END AS allele_freq
     ) as ac3
+    ${chr_filter}
   )
   insert into genotype_stats
   ${select}
   on conflict do nothing`;
 }
 
-async function main(snapshot_id, protocol_id) {
+async function main(snapshot_id, protocol_id, chr = null) {
   // Populate the genotype_stats table with derived genotype features
   // for the given snapshot and protocol
-  const query = insert_query(snapshot_id, protocol_id);
+  const query = insert_query(snapshot_id, protocol_id, chr);
   console.log(query.sql, query.values);
   console.log('Start: ', new Date().toISOString());
   return prisma.$executeRaw(query)
