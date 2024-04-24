@@ -14,10 +14,18 @@ config = {
         'RAW_DATA': {
             'archive': f'production/{YEAR}/raw_data',
             'stage': '/N/scratch/biouser/biobank/production/stage/raw_data',
+            'bundle': {
+                'generate': '/N/scratch/biouser/biobank/production/bundles/raw_data',
+                'stage': '/N/scratch/biouser/biobank/production/bundles/raw_data',
+            },
         },
         'DATA_PRODUCT': {
             'archive': f'production/{YEAR}/data_products',
             'stage': '/N/scratch/biouser/biobank/production/stage/data_products',
+            'bundle': {
+                'generate': '/N/scratch/biouser/biobank/production/bundles/data_products',
+                'stage': '/N/scratch/biouser/biobank/production/bundles/data_products',
+            },
         },
         'download_dir': '/N/scratch/biouser/biobank/production/download',
         'root': '/N/scratch/biouser/'
@@ -26,16 +34,6 @@ config = {
         'DATA_PRODUCT': {
             'source_dir': '/N/project/biobank/phi_ingest_biobank_regeneron_KEEPTRXyunlong/WES/originalData/regeneron_grouped'
         },
-    },
-    'celery': {
-        'queue': {
-            'url': 'commons3.sca.iu.edu:5672/celery_api',
-            'username': 'celery_api',
-        },
-        'mongo': {
-            'url': 'commons3.sca.iu.edu:27017/celery_api?authSource=celery_api',
-            'username': 'celery_api',
-        }
     },
     'variant_database': {
         'database': 'biobank',
