@@ -56,7 +56,8 @@ ALTER TABLE "workflow" DROP CONSTRAINT "workflow_dataset_id_fkey";
 DROP INDEX "dataset_name_type_key";
 
 -- AlterTable
-ALTER TABLE "dataset" ADD COLUMN     "bundle_size" BIGINT,
+ALTER TABLE "dataset" 
+ADD COLUMN     "bundle_size" BIGINT,
 ADD COLUMN     "participant_id" INTEGER;
 
 -- AlterTable
