@@ -169,3 +169,65 @@ on conflict (chr, position, ref, alt, source_id) do update set
     	true
 	);
 ```
+
+
+### Gene - Variant Associations
+
+Multiple genes can overlap and a variant can be associated with multiple genes. The gene-variant associations are stored in an array field.
+
+```prisma
+model annotation {
+  chr           Int     @db.SmallInt
+  position      BigInt
+  ref           String
+  alt           String
+  func          String?
+  gene_ids      Int[] // Array to store gene IDs associated with each variant
+}
+```
+
+To insert a variant with gene associations:
+```sql
+INSERT INTO variant (chr, position, ref, alt, gene_ids)
+VALUES (1, 1000, 'A', 'T', ARRAY[1, 2, 3]);
+```
+
+
+Querying variants associated with a gene:
+```sql
+SELECT * FROM variant WHERE 2 = ANY (gene_ids);
+```
+
+Using @> (Does left array contain right array?) operator to find variants associated with one or more genes:
+```sql
+SELECT * FROM variant WHERE gene_ids @> ARRAY[2];
+```
+
+```sql
+SELECT * FROM variant WHERE gene_ids @> ARRAY[1, 2];
+```
+
+
+Alternative Approaches:
+
+Assuming a variant can only have at most 2 genes associated with it, we can store the gene associations as two separate columns. But this approach is not scalable if the number of genes associated with a variant is not known.
+
+```prisma
+model annotation {
+  chr           Int     @db.SmallInt
+  position      BigInt
+  ref           String
+  alt           String
+  func          String?
+  gene1_id      Int?
+  gene2_id      Int?
+}
+```
+
+Store gene ids in a jsonb column. This allows indexing on the gene column.
+
+Store gene ids in intarray column. This too allows indexing in the gene column.
+
+Store genes as semi-colon separated string of gene names. This is not recommended as it is expensive to query and index on the gene column. This can lead to misspellings and inconsistencies in the gene names. Also, it is difficult to show / search individual genes.
+
+Further reading on data types and indexing arrays in postgres: https://stackoverflow.com/questions/4058731/can-postgresql-index-array-columns
