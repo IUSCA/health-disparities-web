@@ -172,16 +172,6 @@
             `${rowData.chr}-${rowData.position}-${rowData.ref}-${rowData.alt}`
           }}
         </template>
-
-        <!-- 1/1 (c2) when unphased, 1|1 (c3) when phased -->
-        <template #cell(homalt)="{ rowData }">
-          {{ rowData.phase ? rowData.c3 : rowData.c2 }}
-        </template>
-
-        <!-- 1|0 c2 when phased -->
-        <template #cell(hetflipped)="{ rowData }">
-          {{ rowData.phase ? rowData.c2 : null }}
-        </template>
       </va-data-table>
 
       <!-- pagination -->
@@ -632,7 +622,7 @@ const columns = {
     numeric: true,
     _slow: true,
   },
-  hetflipped: {
+  c2: {
     // corresponds to c2, defined only when phase is true
     label: "Het. Flipped",
     category: "Allele Stats",
@@ -641,10 +631,8 @@ const columns = {
     numeric: true,
     _slow: true,
   },
-  homalt: {
-    // corresponds to c3, when phase is true
-    // corresponds to c2, when phase is false
-    // represents 1/1 or 1|1
+  c3: {
+    // c3 is used to represent 1/1 or 1|1
     label: "Hom. Alt.",
     category: "Allele Stats",
     thTitle: "Homozygous Alternate (1/1 or 1|1)",

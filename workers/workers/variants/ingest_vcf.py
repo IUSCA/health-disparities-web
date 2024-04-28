@@ -41,7 +41,7 @@ def encode_genotype(genotype: tuple[int, int, bool]) -> int | None:
     0/0 - 0
     0/1 - 1
     1/0 - 1
-    1/1 - 2
+    1/1 - 3
 
     .|. - -1
     .|1 - -1
@@ -55,17 +55,14 @@ def encode_genotype(genotype: tuple[int, int, bool]) -> int | None:
     a, b, phased = genotype
     if a == -1 or b == -1:
         return -1
-    if not phased:
-        return a + b
-    else:
-        if a == 0 and b == 0:
-            return 0
-        if a == 0 and b == 1:
-            return 1
-        if a == 1 and b == 0:
-            return 2
-        if a == 1 and b == 1:
-            return 3
+    if a == 0 and b == 0:
+        return 0
+    if a == 0 and b == 1:
+        return 1
+    if a == 1 and b == 0:
+        return 2
+    if a == 1 and b == 1:
+        return 3
 
 
 def encode_chromosome(chrom: str) -> int:

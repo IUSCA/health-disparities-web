@@ -44,7 +44,7 @@ const COLUMNS = {
     _show: true,
     numeric: true,
   },
-  hetflipped: {
+  c2: {
     // corresponds to c2, defined only when phase is true
     label: "Het. Flipped",
     category: "Allele Stats",
@@ -52,10 +52,8 @@ const COLUMNS = {
     _show: true,
     numeric: true,
   },
-  homalt: {
-    // corresponds to c3, when phase is true
-    // corresponds to c2, when phase is false
-    // represents 1/1 or 1|1
+  c3: {
+    // c3 is used to represent 1/1 or 1|1
     label: "Hom. Alt.",
     category: "Allele Stats",
     thTitle: "Homozygous Alternate (1/1 or 1|1)",

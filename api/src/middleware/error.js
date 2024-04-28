@@ -21,7 +21,7 @@ function prismaNotFoundHandler(e, req, res, next) {
   return next(e);
 }
 
-// catch prisma constraint failed errors and send 40
+// catch prisma constraint failed errors and send 400
 function prismaConstraintFailedHandler(e, req, res, next) {
   if (e instanceof Prisma.PrismaClientKnownRequestError) {
     if (e?.code === 'P2002') {

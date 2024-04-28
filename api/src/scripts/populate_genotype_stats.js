@@ -13,8 +13,8 @@ function insert_query(snapshot_id, protocol_id, chr = null) {
   - missing: number of missing genotypes
   - c0: number of 0/0 or 0|0
   - c1: number of 0/1 or 0|1
-  - c2: number of 1/1 or 1|0
-  - c3: number of 1|1
+  - c2: number of 1|0
+  - c3: number of 1/1 or 1|1
   - allele_num: number of alleles
   - allele_count: number of non-missing alleles
   - allele_freq: allele frequency
@@ -83,7 +83,7 @@ function insert_query(snapshot_id, protocol_id, chr = null) {
         select 
             2*(ac.c0 + ac.c1 + ac.c2 + ac.c3) as allele_num,
             case
-              when v.phase = false then (ac.c1 + 2*ac.c2)
+              when v.phase = false then (ac.c1 + 2*ac.c3)
               when v.phase = true then (ac.c1 + ac.c2 + 2*ac.c3)
             end as allele_count
     ) as ac2

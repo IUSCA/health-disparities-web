@@ -12,16 +12,6 @@
     <template #cell(chr)="{ rowData }">
       {{ `${rowData.chr}-${rowData.position}-${rowData.ref}-${rowData.alt}` }}
     </template>
-
-    <!-- 1/1 (c2) when unphased, 1|1 (c3) when phased -->
-    <template #cell(homalt)="{ rowData }">
-      {{ rowData.phase ? rowData.c3 : rowData.c2 }}
-    </template>
-
-    <!-- 1|0 c2 when phased -->
-    <template #cell(hetflipped)="{ rowData }">
-      {{ rowData.phase ? rowData.c2 : null }}
-    </template>
   </va-data-table>
 
   <!-- pagination -->

@@ -54,7 +54,7 @@ function decode_genotype(encoded, phase) {
   const unphased_mapping = {
     0: '0/0',
     1: '0/1',
-    2: '1/1',
+    3: '1/1',
     '-1': './.',
   };
   return unphased_mapping[encoded];
