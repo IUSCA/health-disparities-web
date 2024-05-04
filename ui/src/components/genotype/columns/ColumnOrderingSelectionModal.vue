@@ -31,7 +31,9 @@
       </div>
 
       <!-- Column Legend -->
-      <div class="gap-2 mt-2"></div>
+      <div class="gap-2 mt-2" style="height: 200px; overflow-y: scroll">
+        <ColumnLegend :columns="Object.values(COLUMNS)" />
+      </div>
     </div>
 
     <template #footer>
@@ -58,8 +60,8 @@
 
 // Object of available columns (key to column object): {chr: {label: 'Chromosome', ...}, ...}
 import {
-  COLUMNS,
-  getDefaultColumns,
+COLUMNS,
+getDefaultColumns,
 } from "@/components/genotype/columns/columns";
 import { useVariantsStore } from "@/stores/variants";
 import { storeToRefs } from "pinia";

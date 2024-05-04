@@ -38,7 +38,7 @@ const COLUMNS = {
   },
   c1: {
     // c1 is used to represent 0/1 and 0|1
-    label: "Het",
+    label: "Het.",
     category: "Allele Stats",
     thTitle: "Heterozygous (0/1 or 0|1)",
     _show: true,
@@ -180,40 +180,38 @@ const COLUMNS = {
     thTitle: "ClinVar Allele ID",
     _show: false,
   },
-  cln_cond: {
-    label: "CLN Cond.",
-    category: "ClinVAR",
-    thTitle: "ClinVar Condition",
-    _show: false,
-  },
   cln_dis_db: {
     label: "CLN Dis. DB",
     category: "ClinVAR",
-    thTitle: "ClinVar Disease Database Name and Identifier",
+    thTitle:
+      "Tag-value pairs of disease database name and identifier submitted for germline classifications, e.g. OMIM:NNNNNN",
     _show: false,
   },
   cln_dn: {
     label: "CLN DN",
     category: "ClinVAR",
-    thTitle: "ClinVar Disease Name",
+    thTitle:
+      "ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB",
     _show: false,
   },
   cln_hgvs: {
     label: "CLN HGVS",
     category: "ClinVAR",
-    thTitle: "ClinVar HGVS",
+    thTitle: "Top-level (primary assembly, alt, or patch) HGVS expression.",
     _show: false,
   },
   cln_rev_stat: {
     label: "CLN Rev. Stat.",
     category: "ClinVAR",
-    thTitle: "ClinVar Review Status",
+    thTitle:
+      "ClinVar review status of germline classification for the Variation ID",
     _show: false,
   },
   cln_sig: {
     label: "CLN Sig.",
     category: "ClinVAR",
-    thTitle: "ClinVar Significance",
+    thTitle:
+      "Aggregate germline classification for this single variant; multiple values are separated by a vertical bar",
     _show: false,
   },
   cln_vc: {

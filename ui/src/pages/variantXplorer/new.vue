@@ -23,7 +23,16 @@
       </VaCardContent>
     </VaCard>
 
-    <VaButton @click="() => columnOrderingModal.show()"> Columns </VaButton>
+    <div class="flex gap-3">
+      <VaButton @click="() => columnOrderingModal.show()"> Columns </VaButton>
+      <VaButton @click="() => columnLegendModal.show()"> Legend </VaButton>
+    </div>
+
+    <ZygositySelector v-model="zygosities" />
+
+    <p>Variants: {{ total_count }}</p>
+
+    <p>Participants: {{ participant_count }}</p>
 
     <!-- results table -->
     <div v-if="resultsView">
@@ -54,6 +63,7 @@
   </div>
 
   <ColumnOrderingSelectionModal ref="columnOrderingModal" />
+  <ColumnLegendModal ref="columnLegendModal" />
 </template>
 
 <script setup>
@@ -73,8 +83,12 @@ const { currPage, pageSize } = storeToRefs(variantsStore);
 const snapshot = ref(null);
 const source = ref(null);
 const query = ref(null);
+const zygosities = ref(["HET", "HOMALT"]);
 const loading = ref(false);
+
 const columnOrderingModal = ref(null);
+const columnLegendModal = ref(null);
+
 const resultsView = ref(false);
 const variants = ref([]);
 const total_count = ref(0);
@@ -91,7 +105,7 @@ function reset() {
   resultsView.value = false;
 }
 
-watchDebounced([query, currPage, pageSize], handleSearch, {
+watchDebounced([query, currPage, pageSize, zygosities], handleSearch, {
   deep: true,
   debounce: 150,
 });
@@ -100,7 +114,7 @@ function handleSearch() {
   const parsedQuery = parseQuery(query.value);
   console.log("query changed", parsedQuery);
   // validate that parsedQuery is not empty
-  if (Object.keys(parsedQuery).length === 0) {
+  if (Object.keys(parsedQuery).length === 0 || zygosities.value.length === 0) {
     return;
   }
   loading.value = true;
@@ -109,6 +123,7 @@ function handleSearch() {
       source_id: source.value,
       snapshot_id: snapshot.value,
       ranges: [parsedQuery],
+      zygosities: zygosities.value,
       offset: (currPage.value - 1) * pageSize.value,
       limit: pageSize.value,
     })
