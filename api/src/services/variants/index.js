@@ -8,10 +8,10 @@ function buildRangesSQL(ranges) {
     if (range.type === 'gene') {
       return Prisma.sql`(gene1_id = ${range.value.id} or gene2_id = ${range.value.id})`;
     }
-    if (range.type === 'range') {
+    if (range.type === 'region') {
       return Prisma.sql`(chr = ${range.value.chr} AND position BETWEEN ${range.value.start} AND ${range.value.end})`;
     }
-    // single
+    // variant
     return Prisma.sql`(chr = ${range.value.chr} AND position = ${range.value.position} AND ref = ${range.value.ref} AND alt = ${range.value.alt})`;
   });
   return Prisma.join(t, ' OR  ');
@@ -31,7 +31,7 @@ function buildRangesPrismaQuery(ranges) {
         ],
       };
     }
-    if (range.type === 'range') {
+    if (range.type === 'region') {
       return {
         chr: range.value.chr,
         position: {
@@ -40,7 +40,7 @@ function buildRangesPrismaQuery(ranges) {
         },
       };
     }
-    // single
+    // variant
     return {
       chr: range.value.chr,
       position: range.value.position,
@@ -121,17 +121,17 @@ function buildSQL({
 }) {
   const base_query_sql = buildBaseQuerySQL(base_query);
 
-  const json_query_sql = buildFilters(json_query.criteria);
+  const json_query_sql = json_query != null ? buildFilters(json_query.criteria) : null;
   // console.log(json_query_sql.sql, json_query_sql.values);
 
   const select = Prisma.raw(count ? 'COUNT(*) as count' : '*');
+  const where = json_query_sql != null
+    ? Prisma.sql`WHERE (${base_query_sql}) AND (${json_query_sql})`
+    : Prisma.sql`WHERE (${base_query_sql})`;
   const query = Prisma.sql`WITH results AS (
       SELECT ${select}
       FROM gt_stats_annotations
-      WHERE (${base_query_sql}) 
-      AND (
-        ${json_query_sql}
-      )
+      ${where}
     )
     select *, count(*) over () as total_count
     from results

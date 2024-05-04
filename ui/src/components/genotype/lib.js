@@ -19,27 +19,34 @@ function parseQuery(text) {
   if (variantRegex.test(text)) {
     const match = text.match(variantRegex);
     return {
-      chr: match[1],
-      start: match[2],
-      ref: match[3],
-      alt: match[4],
+      type: "variant",
+      value: {
+        chr: match[1],
+        position: parseInt(match[2]),
+        ref: match[3],
+        alt: match[4],
+      },
     };
   } else if (genomicRegionRegex.test(text)) {
     const match = text.match(genomicRegionRegex);
     return {
-      chr: match[1],
-      start: match[2],
-      end: match[3],
+      type: "region",
+      value: {
+        chr: match[1],
+        start: parseInt(match[2]),
+        end: parseInt(match[3]),
+      },
     };
   } else if (geneRegex.test(text)) {
     return {
-      gene: text,
+      type: "gene",
+      value: {
+        gene: text,
+      },
     };
   } else {
     return {};
   }
 }
 
-export default {
-  parseQuery,
-};
+export { parseQuery };

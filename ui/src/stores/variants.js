@@ -7,9 +7,11 @@ import { ref } from "vue";
 
 export const useVariantsStore = defineStore("varaints", () => {
   const currPage = ref(1);
-  const pageSize = ref(10);
+  const pageSize = ref(50);
 
   console.log("getDefaultColumns", getDefaultColumns());
+  // columns: Array of objects with key and label properties [{key: 'chr', label: 'Chromosome', ...}]
+  // columnsSelected: Object of selected columns {chr: true, ...}
   const columns = ref(useLocalStorage("variants.columns", []));
   const columnsSelected = ref(
     useLocalStorage("variants.columnsSelected", getDefaultColumns()),

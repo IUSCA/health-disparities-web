@@ -1,74 +1,47 @@
 import api from "./api";
-
 class VariantService {
-  search({ query, offset = 0, limit = 50 }) {
-    return api.post(`/variants`, {
-      ...query,
-      offset,
-      limit,
-    });
-  }
-
-  search2({ query, offset = 0, limit = 50 }) {
-    return api.post(`/variants/new`, {
-      ...query,
-      offset,
-      limit,
-    });
-  }
-
-  getFilters({ query }) {
-    return api.post(`/variants/filters`, query);
-  }
-
-  getParticipantCount({ variant_ids, source_id, snapshot_id }) {
-    return api.post(`/variants/participant-count`, {
-      variant_ids,
+  getAnnotationsUniqueValues(field, { source_id, snapshot_id, ranges }) {
+    return api.post(`/variants/annotations/${field}/unique`, {
       source_id,
       snapshot_id,
+      ranges,
     });
   }
 
-  createCohort({
-    variant_ids,
+  getAnnotationsHistogram(field, { source_id, snapshot_id, ranges, bins }) {
+    return api.post(`/variants/annotations/${field}/histogram`, {
+      source_id,
+      snapshot_id,
+      ranges,
+      bins,
+    });
+  }
+
+  getTotalCount({ source_id, snapshot_id, ranges }) {
+    return api.post(`/variants/total-count`, {
+      source_id,
+      snapshot_id,
+      ranges,
+    });
+  }
+
+  search({
     source_id,
     snapshot_id,
-    name,
-    description = null,
-    is_published = null,
-    is_locked = null,
-  } = {}) {
-    return api.post(`/variants/cohorts`, {
-      variant_ids,
+    ranges,
+    query,
+    zygosities,
+    offset = 0,
+    limit = 50,
+  }) {
+    return api.post(`/variants/search`, {
       source_id,
       snapshot_id,
-      name,
-      description,
-      is_published,
-      is_locked,
-    });
-  }
-
-  updateCohort(
-    cohort_id,
-    {
-      variant_ids,
-      source_id,
-      snapshot_id,
-      name,
-      description = null,
-      is_published = null,
-      is_locked = null,
-    } = {},
-  ) {
-    return api.put(`/variants/cohorts/${cohort_id}`, {
-      variant_ids,
-      source_id,
-      snapshot_id,
-      name,
-      description,
-      is_published,
-      is_locked,
+      ranges,
+      query,
+      zygosities: zygosities || ["HET", "HETFLP", "HOMALT"],
+      offset,
+      limit,
     });
   }
 }

@@ -209,7 +209,7 @@ function sanitizeZygosities(zygosities) {
 const rangesSchema = {
   type: 'array',
   items: {
-    anyOf: [{ $ref: '#/definitions/gene' }, { $ref: '#/definitions/range' }, { $ref: '#/definitions/single' }],
+    anyOf: [{ $ref: '#/definitions/gene' }, { $ref: '#/definitions/region' }, { $ref: '#/definitions/variant' }],
   },
   definitions: {
     gene: {
@@ -228,10 +228,10 @@ const rangesSchema = {
       required: ['type', 'value'],
       additionalProperties: false,
     },
-    range: {
+    region: {
       type: 'object',
       properties: {
-        type: { type: 'string', enum: ['range'] },
+        type: { type: 'string', enum: ['region'] },
         value: {
           type: 'object',
           properties: {
@@ -246,10 +246,10 @@ const rangesSchema = {
       required: ['type', 'value'],
       additionalProperties: false,
     },
-    single: {
+    variant: {
       type: 'object',
       properties: {
-        type: { type: 'string', enum: ['single'] },
+        type: { type: 'string', enum: ['variant'] },
         value: {
           type: 'object',
           properties: {
@@ -279,7 +279,7 @@ function validateRanges(ranges) {
 
 function sanitizeRanges(ranges) {
   return ranges.map((range) => {
-    if (range.type === 'range') {
+    if (range.type === 'region') {
       return {
         ...range,
         value: {
@@ -288,7 +288,7 @@ function sanitizeRanges(ranges) {
         },
       };
     }
-    if (range.type === 'single') {
+    if (range.type === 'variant') {
       return {
         ...range,
         value: {

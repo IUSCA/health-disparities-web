@@ -91,12 +91,6 @@ const COLUMNS = {
     thTitle: "Amino Acid Change",
     _show: false,
   },
-  cln_sig: {
-    label: "ClinVar Sig.",
-    category: "ClinVAR",
-    thTitle: "ClinVar Significance",
-    _show: false,
-  },
   cadd_phred: {
     label: "CADD",
     category: "Info",
@@ -137,19 +131,10 @@ const COLUMNS = {
     _show: false,
     numeric: true,
   },
-
   af_amr: {
     label: "AF AMR",
     category: "AF",
     thTitle: "Alternate allele frequency in samples of Latino ancestry",
-    _show: false,
-    numeric: true,
-  },
-  af_asj: {
-    label: "AF ASJ",
-    category: "AF",
-    thTitle:
-      "Alternate allele frequency in samples of Ashkenazi Jewish ancestry",
     _show: false,
     numeric: true,
   },
@@ -207,10 +192,54 @@ const COLUMNS = {
     thTitle: "ClinVar Disease Database Name and Identifier",
     _show: false,
   },
+  cln_dn: {
+    label: "CLN DN",
+    category: "ClinVAR",
+    thTitle: "ClinVar Disease Name",
+    _show: false,
+  },
+  cln_hgvs: {
+    label: "CLN HGVS",
+    category: "ClinVAR",
+    thTitle: "ClinVar HGVS",
+    _show: false,
+  },
   cln_rev_stat: {
     label: "CLN Rev. Stat.",
     category: "ClinVAR",
     thTitle: "ClinVar Review Status",
+    _show: false,
+  },
+  cln_sig: {
+    label: "CLN Sig.",
+    category: "ClinVAR",
+    thTitle: "ClinVar Significance",
+    _show: false,
+  },
+  cln_vc: {
+    label: "CLN VC",
+    category: "ClinVAR",
+    thTitle: "Variant type",
+    _show: false,
+  },
+  cln_vcso: {
+    label: "CLN VCSO",
+    category: "ClinVAR",
+    thTitle: "Sequence Ontology id for variant type",
+    _show: false,
+  },
+  cln_geneinfo: {
+    label: "CLN Gene Info",
+    category: "ClinVAR",
+    thTitle:
+      "Gene(s) for the variant reported as gene symbol:gene id. The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)",
+    _show: false,
+  },
+  cln_mc: {
+    label: "CLN MC",
+    category: "ClinVAR",
+    thTitle:
+      "comma separated list of molecular consequence in the form of Sequence Ontology ID|molecular_consequence",
     _show: false,
   },
 };
