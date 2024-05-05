@@ -14,10 +14,11 @@
 </template>
 
 <script setup>
-import { cohortFilters } from "@/components/builder/cohortFilters";
+// import { cohortFilters } from "@/components/builder/cohortFilters";
 import { stringToRGB } from "@/services/colors";
 
 const props = defineProps({
+  filters: Object,
   identifier: String,
   seperator: {
     type: String,
@@ -33,7 +34,7 @@ watch(
   () => {
     const [category_key, filer_key] = props.identifier.split(props.seperator);
 
-    category.value = cohortFilters.find(
+    category.value = props.filters.find(
       (category) => category.key === category_key,
     );
     filter.value = category.value.filters.find(

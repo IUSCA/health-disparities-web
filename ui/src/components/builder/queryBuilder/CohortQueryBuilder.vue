@@ -72,7 +72,10 @@
             <div
               class="flex flex-wrap items-center gap-2 md:gap-3 text-sm w-[calc(100%-2rem)] max-w-3xl"
             >
-              <FilterChip :identifier="ruleCtrl.ruleIdentifier" />
+              <FilterChip
+                :filters="cohortFilters"
+                :identifier="ruleCtrl.ruleIdentifier"
+              />
               <VaSelect
                 :model-value="ruleCtrl.connectorValue"
                 @update:model-value="(v) => ruleCtrl.updateConnectorValue(v)"
@@ -102,7 +105,7 @@
     </div>
   </div>
 
-  <FilterSelectModal ref="filterSelectModal" />
+  <FilterSelectModal :filters="cohortFilters" ref="filterSelectModal" />
 </template>
 
 <script setup>
@@ -110,10 +113,10 @@ import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
 import {
-  cohortFilters,
-  flatten,
-  isUnaryOperator,
-  operators,
+cohortFilters,
+flatten,
+isUnaryOperator,
+operators,
 } from "../cohortFilters";
 import QBAsyncSelect from "./filterComponents/QBAsyncSelect.vue";
 import QBDate from "./filterComponents/QBDate.vue";

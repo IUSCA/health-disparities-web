@@ -7,11 +7,15 @@
     hide-default-actions
     @close="hide"
   >
-    <FilterSelect @select="handleSelect" />
+    <FilterSelect :filters="props.filters" @select="handleSelect" />
   </va-modal>
 </template>
 
 <script setup>
+const props = defineProps({
+  filters: Object,
+});
+
 // parent component can invoke these methods through the template ref
 defineExpose({
   show,

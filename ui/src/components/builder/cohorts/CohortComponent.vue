@@ -1,6 +1,7 @@
 <template>
   <VaInnerLoading :loading="loading">
     <div class="flex flex-col md:flex-row gap-3">
+      <!-- Info, Actions, History -->
       <div
         class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px]"
       >
@@ -21,6 +22,7 @@
 
       <va-divider class="md:hidden" />
 
+      <!-- undo buttons, and query builder -->
       <div class="md:w-9/12">
         <!-- undo button -->
         <div

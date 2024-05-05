@@ -37,7 +37,11 @@
 </template>
 
 <script setup>
-import { cohortFilters, filterId } from "./cohortFilters";
+import { filterId } from "./cohortFilters";
+
+const props = defineProps({
+  filters: Object,
+});
 
 const emit = defineEmits(["select"]);
 
@@ -49,7 +53,7 @@ watch(searchText, (newVal, oldVal) => {
   if (newVal && !oldVal) expandAll.value = true;
 });
 
-const nodes = cohortFilters.map((category) => {
+const nodes = props.filters.map((category) => {
   return {
     id: category.key,
     label: category.label,
