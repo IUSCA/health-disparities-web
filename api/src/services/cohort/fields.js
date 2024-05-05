@@ -7,7 +7,7 @@ const customFields = {
 
 const getFieldsWithType = (model_name) => {
   // types
-  const allowedTypes = ['Int', 'String', 'DateTime', 'Decimal', 'Boolean'];
+  const allowedTypes = ['Int', 'String', 'DateTime', 'Decimal', 'Boolean', 'Float', 'BigInt'];
 
   // Get the metadata for all models
   const { models } = Prisma.dmmf.datamodel;

@@ -64,7 +64,7 @@ watchDebounced(
 // watch for changes in the canonical query
 // do not run on unsupported cohorts
 // if the canonical query is empty, set the cohort size to the total participants
-// deep compate old and new canonical queries to avoid unnecessary API calls
+// deep compare old and new canonical queries to avoid unnecessary API calls
 // if the query has changed, call the API to get the count of participants
 // set cohort as dirty
 watch(

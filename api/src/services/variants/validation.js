@@ -7,8 +7,12 @@ const { dbSchema } = require('./fields');
 const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 
 // Define custom validation function for the "field" property
-function validateField(field) {
-  // console.log('fieldValue', fieldValue);
+function validateField(fieldValue) {
+  const parts = fieldValue.split('.');
+  if (parts.length !== 2) {
+    return false;
+  }
+  const field = parts[1];
   return !!dbSchema[field];
 }
 
@@ -42,133 +46,6 @@ function encode_chromosome(decoded) {
     throw createError(400, 'Invalid input: chromosome is not valid');
   }
   return chr_int;
-}
-
-const VARIANT_SEARCH = 'VARIANT_SEARCH';
-const schema = {
-  type: 'object',
-  properties: {
-    namespace: { type: 'string' },
-    name: { type: 'string', enum: [VARIANT_SEARCH] },
-    version: { type: 'string' },
-    criteria: {
-      anyOf: [
-        { $ref: '#/definitions/query' },
-      ],
-    },
-  },
-  required: ['namespace', 'name', 'criteria', 'version'],
-  additionalProperties: false,
-  definitions: {
-    query: {
-      type: 'object',
-      properties: {
-        operator: { enum: ['AND', 'OR', 'NOT_AND', 'NOT_OR'] },
-        children: {
-          type: 'array',
-          items: { anyOf: [{ $ref: '#/definitions/query' }, { $ref: '#/definitions/leafNode' }] },
-        },
-      },
-      required: ['operator', 'children'],
-      additionalProperties: false,
-    },
-    leafNode: {
-      type: 'object',
-      properties: {
-        function: { enum: ['count', 'min', 'max', 'avg', 'sum'] },
-        field: { type: 'string', format: 'customFieldFormat' },
-        operator: {
-          enum: [
-            'in', 'not_in',
-            'eq', 'neq', 'gt', 'lt', 'gte', 'lte',
-            'contains', 'not_contains', 'starts_with', 'ends_with',
-            'is_null', 'is_not_null',
-          ],
-        },
-        value: {
-          anyOf: [{
-            type: 'array',
-            items: {
-              anyOf: [{ type: 'string' }, { type: 'number' }],
-            },
-          },
-          { type: 'string' },
-          { type: 'number' },
-          { type: 'null' },
-          { type: 'string', format: 'customFieldFormat' }],
-        },
-      },
-      required: ['field', 'operator', 'value'],
-      additionalProperties: false,
-    },
-  },
-};
-
-const validate = ajv.compile(schema);
-
-function validateQuery(query) {
-  const valid = validate(query);
-  if (!valid) {
-    logger.error(JSON.stringify(validate.errors, null, 2));
-    throw createError(400, 'Invalid query');
-  }
-  return true;
-}
-
-function sanitizeQueryTree(queryJson) {
-  // for fields that are of type numeric, convert the value to number
-  // for fields that are of date type, convert the value to date
-  const { operator, children } = queryJson;
-  if (children) {
-    // non-leaf node
-    return {
-      operator,
-      children: children.map((child) => sanitizeQueryTree(child)),
-    };
-  }
-  // leaf node
-  const { field, operator: op, value } = queryJson;
-  let new_value = value;
-
-  if (dbSchema[field] === 'Int') {
-    if (op === 'in' || op === 'not_in') {
-      new_value = value.map((v) => parseInt(v, 10));
-    } else {
-      new_value = parseInt(value, 10);
-    }
-  }
-
-  if (dbSchema[field] === 'Decimal') {
-    if (op === 'in' || op === 'not_in') {
-      new_value = value.map((v) => parseFloat(v));
-    } else {
-      new_value = parseFloat(value);
-    }
-  }
-
-  if (dbSchema[field] === 'DateTime') {
-    if (op === 'in' || op === 'not_in') {
-      new_value = value.map((v) => new Date(v));
-    } else {
-      new_value = new Date(value);
-    }
-  }
-
-  return {
-    field,
-    operator: op,
-    value: new_value,
-  };
-}
-
-function sanitizeQuery(queryJson) {
-  if (queryJson.name === VARIANT_SEARCH) {
-    return {
-      ...queryJson,
-      criteria: sanitizeQueryTree(queryJson.criteria),
-    };
-  }
-  return queryJson;
 }
 
 /**
@@ -299,6 +176,149 @@ function sanitizeRanges(ranges) {
     }
     return range;
   });
+}
+
+const schema = {
+  type: 'object',
+  properties: {
+    namespace: { type: 'string' },
+    name: { type: 'string', enum: ['genotype'] },
+    version: { type: 'string' },
+    criteria: {
+      anyOf: [
+        { $ref: '#/definitions/query' },
+      ],
+    },
+    zygosities: zygositiesSchema,
+    ranges: {
+      type: 'array',
+      items: rangesSchema.items,
+    },
+    snapshot_id: { type: 'number', minimum: 1 },
+    source_id: { type: 'number', minimum: 1 },
+  },
+  required: ['namespace', 'name', 'criteria', 'version', 'zygosities', 'ranges', 'snapshot_id', 'source_id'],
+  additionalProperties: false,
+  definitions: {
+    query: {
+      type: 'object',
+      properties: {
+        operator: { enum: ['AND', 'OR', 'NOT_AND', 'NOT_OR'] },
+        children: {
+          type: 'array',
+          items: { anyOf: [{ $ref: '#/definitions/query' }, { $ref: '#/definitions/leafNode' }] },
+        },
+      },
+      required: ['operator', 'children'],
+      additionalProperties: false,
+    },
+    leafNode: {
+      type: 'object',
+      properties: {
+        field: { type: 'string', format: 'customFieldFormat' },
+        operator: {
+          enum: [
+            'in', 'not_in',
+            'eq', 'neq', 'gt', 'lt', 'gte', 'lte',
+            'contains', 'not_contains', 'starts_with', 'ends_with',
+            'is_null', 'is_not_null',
+          ],
+        },
+        value: {
+          anyOf: [{
+            type: 'array',
+            items: {
+              anyOf: [{ type: 'string' }, { type: 'number' }],
+            },
+          },
+          { type: 'string' },
+          { type: 'number' },
+          { type: 'null' }],
+        },
+      },
+      required: ['field', 'operator', 'value'],
+      additionalProperties: false,
+    },
+    ...rangesSchema.definitions,
+  },
+};
+
+const validate = ajv.compile(schema);
+
+function validateQuery(query) {
+  const valid = validate(query);
+  if (!valid) {
+    logger.error(JSON.stringify(validate.errors, null, 2));
+    throw createError(400, 'Invalid query');
+  }
+  return true;
+}
+
+function getFieldType(fieldValue) {
+  const parts = fieldValue.split('.');
+  if (parts.length !== 2) {
+    return null;
+  }
+  const field = parts[1];
+  return dbSchema[field];
+}
+
+function sanitizeQueryTree(queryJson) {
+  // for fields that are of type numeric, convert the value to number
+  // for fields that are of date type, convert the value to date
+  const { operator, children } = queryJson;
+  if (children) {
+    // non-leaf node
+    return {
+      operator,
+      children: children.map((child) => sanitizeQueryTree(child)),
+    };
+  }
+  // leaf node
+  const { field, operator: op, value } = queryJson;
+  let new_value = value;
+
+  if (getFieldType(field) === 'Int' || getFieldType(field) === 'BigInt') {
+    if (op === 'in' || op === 'not_in') {
+      new_value = value.map((v) => parseInt(v, 10));
+    } else {
+      new_value = parseInt(value, 10);
+    }
+  }
+
+  if (getFieldType(field) === 'Decimal' || getFieldType(field) === 'Float') {
+    if (op === 'in' || op === 'not_in') {
+      new_value = value.map((v) => parseFloat(v));
+    } else {
+      new_value = parseFloat(value);
+    }
+  }
+
+  if (getFieldType(field) === 'DateTime') {
+    if (op === 'in' || op === 'not_in') {
+      new_value = value.map((v) => new Date(v));
+    } else {
+      new_value = new Date(value);
+    }
+  }
+
+  return {
+    field,
+    operator: op,
+    value: new_value,
+  };
+}
+
+function sanitizeQuery(queryJson) {
+  if (queryJson.name === 'genotype') {
+    return {
+      ...queryJson,
+      criteria: sanitizeQueryTree(queryJson.criteria),
+      ranges: sanitizeRanges(queryJson.ranges),
+      zygosities: sanitizeZygosities(queryJson.zygosities),
+    };
+  }
+  return queryJson;
 }
 
 module.exports = {

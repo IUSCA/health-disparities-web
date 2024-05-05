@@ -25,24 +25,8 @@ class VariantService {
     });
   }
 
-  search({
-    source_id,
-    snapshot_id,
-    ranges,
-    query,
-    zygosities,
-    offset = 0,
-    limit = 50,
-  }) {
-    return api.post(`/variants/search`, {
-      source_id,
-      snapshot_id,
-      ranges,
-      query,
-      zygosities: zygosities || ["HET", "HETFLP", "HOMALT"],
-      offset,
-      limit,
-    });
+  search(data) {
+    return api.post(`/variants/search`, data);
   }
 }
 

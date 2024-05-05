@@ -132,7 +132,7 @@ const rules = flatten(variantFilters).map((field) => {
   };
 });
 
-console.log("rules", rules);
+// console.log("rules", rules);
 
 const config = {
   operators: [

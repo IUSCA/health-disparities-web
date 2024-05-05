@@ -31,17 +31,19 @@
     <div class="">
       <VaCard class="cohort-card">
         <VaCardContent>
-          <VariantQueryBuilder v-model="query" />
+          <VariantQueryBuilder v-model:query="criteria" :locked="false" />
         </VaCardContent>
       </VaCard>
     </div>
+
+    {{ criteria }}
 
     <div class="">
       <VaCard class="cohort-card">
         <VaCardContent>
           <ZygositySelector v-model="zygosities" />
 
-          <p>Variants: {{ total_count }}</p>
+          <p>Variants: {{ variant_count }}</p>
 
           <p>Participants: {{ participant_count }}</p>
         </VaCardContent>
@@ -53,7 +55,7 @@
       <VariantResultsTable
         :results="variants"
         :loading="loading"
-        :total_count="total_count"
+        :total_count="variant_count"
       />
     </div>
 
@@ -80,6 +82,10 @@
 </template>
 
 <script setup>
+import {
+isAPIQueryEmpty,
+transformQueryForApi,
+} from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import { parseQuery } from "@/components/genotype/lib";
 import variantService from "@/services/variants";
 import { useVariantsStore } from "@/stores/variants";
@@ -95,7 +101,7 @@ const { currPage, pageSize, source_id, snapshot_id, range } =
   storeToRefs(variantsStore);
 
 const range_query = ref(null);
-const query = ref(null);
+const criteria = ref(null);
 const zygosities = ref(["HET", "HOMALT"]);
 const loading = ref(false);
 
@@ -104,8 +110,23 @@ const columnLegendModal = ref(null);
 
 const resultsView = ref(false);
 const variants = ref([]);
+const variant_count = ref(0);
 const total_count = ref(0);
 const participant_count = ref(0);
+
+const canon_query = ref(transformQueryForApi(criteria.value));
+
+// for every change in the query, transform it to the API query format (canonical query)
+watchDebounced(
+  criteria,
+  (newQuery) => {
+    canon_query.value = transformQueryForApi(newQuery);
+  },
+  {
+    debounce: 300,
+    deep: true,
+  },
+);
 
 const example_searches = {
   gene: "GAB4",
@@ -137,6 +158,49 @@ watch([range, currPage, pageSize, zygosities], handleSearch, {
   deep: true,
 });
 
+// watch for changes in the canonical query
+// do not run on unsupported queries
+// if the canonical query is empty, set the variants count to the total count
+// deep compare old and new canonical queries to avoid unnecessary API calls
+// if the query has changed, call the API
+watch(
+  canon_query,
+  (newQuery, oldQuery) => {
+    if (isAPIQueryEmpty(newQuery)) {
+      variant_count.value = total_count.value;
+      return;
+    }
+    if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
+      console.log("query changed", newQuery, oldQuery);
+
+      handleSearch();
+    }
+  },
+  { deep: true },
+);
+
+const EMPTY_CRITERIA = {
+  operator: "AND",
+  children: [],
+};
+
+function makeVariantSearchQuery() {
+  return {
+    query: {
+      name: "genotype",
+      namespace: "edu.iu.sca.biobank",
+      version: "1.0.0",
+      source_id: source_id.value,
+      snapshot_id: snapshot_id.value,
+      ranges: [range.value],
+      zygosities: zygosities.value,
+      criteria: canon_query.value || EMPTY_CRITERIA,
+    },
+    offset: (currPage.value - 1) * pageSize.value,
+    limit: pageSize.value,
+  };
+}
+
 function handleSearch() {
   console.log("handleSearch", range.value, currPage.value, pageSize.value);
   if (range.value == null || zygosities.value.length === 0) {
@@ -144,19 +208,12 @@ function handleSearch() {
   }
   loading.value = true;
   variantService
-    .search({
-      source_id: source_id.value,
-      snapshot_id: snapshot_id.value,
-      ranges: [range.value],
-      zygosities: zygosities.value,
-      offset: (currPage.value - 1) * pageSize.value,
-      limit: pageSize.value,
-    })
+    .search(makeVariantSearchQuery())
     .then((res) => {
       console.log("total count", res);
       resultsView.value = true;
       variants.value = res.data?.variants || [];
-      total_count.value = res.data?.metadata?.variant_count || 0;
+      variant_count.value = res.data?.metadata?.variant_count || 0;
       participant_count.value = res.data?.metadata?.participant_count || 0;
     })
     .finally(() => {

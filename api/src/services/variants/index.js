@@ -65,7 +65,7 @@ function buildBaseQuerySQL({
   `;
 }
 
-function buildField(field, op, value, func = null) {
+function buildField(field, op, value) {
   const sql_op = Prisma.raw(SQL_OP_MAP[op]);
   let sql_value = value;
   if (op === 'in' || op === 'not_in') {
@@ -83,7 +83,8 @@ function buildField(field, op, value, func = null) {
   if (isUnaryOp(op)) {
     sql_value = Prisma.empty;
   }
-  const field_sql = func != null ? Prisma.raw(`${func}(${field})`) : Prisma.raw(field);
+  const _field = field.split('.')[1];
+  const field_sql = Prisma.raw(_field);
   return Prisma.sql`${field_sql} ${sql_op} ${sql_value}`;
 }
 
@@ -111,9 +112,9 @@ function buildFilters(queryJson) {
 
   // leaf node
   const {
-    function: func, field, operator: op, value,
+    field, operator: op, value,
   } = queryJson;
-  return buildField(field, op, value, func);
+  return buildField(field, op, value);
 }
 
 function buildSQL({
@@ -121,13 +122,13 @@ function buildSQL({
 }) {
   const base_query_sql = buildBaseQuerySQL(base_query);
 
-  const json_query_sql = json_query != null ? buildFilters(json_query.criteria) : null;
+  const json_query_sql = buildFilters(json_query);
   // console.log(json_query_sql.sql, json_query_sql.values);
 
   const select = Prisma.raw(count ? 'COUNT(*) as count' : '*');
-  const where = json_query_sql != null
-    ? Prisma.sql`WHERE (${base_query_sql}) AND (${json_query_sql})`
-    : Prisma.sql`WHERE (${base_query_sql})`;
+  const where = json_query_sql === Prisma.empty
+    ? Prisma.sql`WHERE (${base_query_sql})`
+    : Prisma.sql`WHERE (${base_query_sql}) AND (${json_query_sql})`;
   const query = Prisma.sql`WITH results AS (
       SELECT ${select}
       FROM gt_stats_annotations

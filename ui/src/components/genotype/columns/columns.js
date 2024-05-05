@@ -23,7 +23,7 @@ const COLUMNS = {
     numeric: true,
     type: "number",
   },
-  allele_frequency: {
+  allele_freq: {
     label: "AF",
     category: "Allele Stats",
     thTitle: "Alternate Allele Frequency",

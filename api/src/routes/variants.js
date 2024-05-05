@@ -161,30 +161,30 @@ router.post(
   '/search',
   isPermittedTo('read'),
   validate([
-    body('source_id').isInt({ min: 1 }).toInt(),
-    body('snapshot_id').isInt({ min: 1 }).toInt(),
     body('limit').default(100).isInt({ min: 1, max: 1000 }).toInt(),
     body('offset').default(0).isInt({ min: 0 }).toInt(),
-    body('ranges').custom(validateRanges).bail().customSanitizer(sanitizeRanges),
-    body('query').optional().custom(validateQuery).bail()
+    body('query').custom(validateQuery).bail()
       .customSanitizer(sanitizeQuery),
-    body('zygosities').custom(validateZygosities).bail().customSanitizer(sanitizeZygosities),
   ]),
   validateProtocols,
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['variants']
     // #swagger.summary = 'Search for variants'
 
+    const {
+      source_id, snapshot_id, ranges, criteria, zygosities,
+    } = req.body.query;
+
     const base_query = {
-      source_id: req.body.source_id,
-      snapshot_id: req.body.snapshot_id,
+      source_id,
+      snapshot_id,
       protocol_id: req.user.protocol_id,
-      ranges: req.body.ranges,
+      ranges,
     };
 
     const sql = buildSQL({
       base_query,
-      json_query: req.body.query,
+      json_query: criteria,
       limit: req.body.limit,
       offset: req.body.offset,
     });
@@ -196,8 +196,8 @@ router.post(
       const variant_ids = results.map((r) => [r.chr, r.position, r.ref, r.alt, r.source_id]);
       count = await participantsWithVariants({
         variant_ids,
-        zygosities: req.body.zygosities,
-        snapshot_id: req.body.snapshot_id,
+        zygosities,
+        snapshot_id,
         username: req.user.username,
         return_count: true,
       });

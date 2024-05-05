@@ -2,7 +2,7 @@
   <!-- table -->
   <!-- style="height: calc(100vh - 13.75rem); overflow-y: scroll" -->
   <va-data-table
-    :items="props.results"
+    :items="rows"
     :columns="columns"
     :loading="loading"
     hoverable
@@ -26,9 +26,14 @@
 </template>
 
 <script setup>
-import { PAGE_SIZE_OPTIONS } from "@/components/genotype/constants";
+import {
+NUMERIC_PRECISION,
+PAGE_SIZE_OPTIONS,
+} from "@/components/genotype/constants";
 import { useVariantsStore } from "@/stores/variants";
+import _ from "lodash";
 import { storeToRefs } from "pinia";
+import { COLUMNS } from "./columns/columns";
 
 const props = defineProps({
   results: {
@@ -44,6 +49,24 @@ const props = defineProps({
 
 const varaintsStore = useVariantsStore();
 const { currPage, pageSize, columns } = storeToRefs(varaintsStore);
+
+function formatNumericData(data) {
+  // data is column_key: value object, value is sometimes a number
+  // columns is column_key: column object
+  // for each column, if it is a numeric column, format the number
+  return Object.entries(data).reduce((acc, [key, value]) => {
+    if (COLUMNS[key]?.numeric) {
+      acc[key] = value != null ? _.round(value, NUMERIC_PRECISION) : null;
+    } else {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+}
+
+const rows = computed(() => {
+  return props.results.map((row) => formatNumericData(row));
+});
 </script>
 
 <style scoped>
