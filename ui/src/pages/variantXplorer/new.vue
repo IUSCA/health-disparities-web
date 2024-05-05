@@ -3,10 +3,10 @@
     <VaCard>
       <VaCardContent>
         <div class="flex items-center gap-3">
-          <SourceSelect v-model="source" class="flex-none" />
-          <SnapshotSelect v-model="snapshot" class="flex-none" />
+          <SourceSelect v-model="source_id" class="flex-none" />
+          <SnapshotSelect v-model="snapshot_id" class="flex-none" />
           <VariantSearchInput
-            v-model="query"
+            v-model="range_query"
             :example_searches="example_searches"
             @clear="reset"
           />
@@ -28,11 +28,25 @@
       <VaButton @click="() => columnLegendModal.show()"> Legend </VaButton>
     </div>
 
-    <ZygositySelector v-model="zygosities" />
+    <div class="">
+      <VaCard class="cohort-card">
+        <VaCardContent>
+          <VariantQueryBuilder v-model="query" />
+        </VaCardContent>
+      </VaCard>
+    </div>
 
-    <p>Variants: {{ total_count }}</p>
+    <div class="">
+      <VaCard class="cohort-card">
+        <VaCardContent>
+          <ZygositySelector v-model="zygosities" />
 
-    <p>Participants: {{ participant_count }}</p>
+          <p>Variants: {{ total_count }}</p>
+
+          <p>Participants: {{ participant_count }}</p>
+        </VaCardContent>
+      </VaCard>
+    </div>
 
     <!-- results table -->
     <div v-if="resultsView">
@@ -47,7 +61,6 @@
     <div class="flex flex-col justify-center items-center mt-24" v-else>
       <!-- loading spinner -->
       <div v-if="loading" class="flex justify-center items-center mt-24">
-        <span>loading</span>
         <semipolar-spinner
           :animation-duration="2000"
           :size="65"
@@ -57,7 +70,7 @@
       <VariantSearchExample
         v-else
         :example_searches="example_searches"
-        @search="(val) => (query = val)"
+        @search="(val) => (range_query = val)"
       />
     </div>
   </div>
@@ -78,10 +91,10 @@ const { colors } = useColors();
 // const props = defineProps({})
 
 const variantsStore = useVariantsStore();
-const { currPage, pageSize } = storeToRefs(variantsStore);
+const { currPage, pageSize, source_id, snapshot_id, range } =
+  storeToRefs(variantsStore);
 
-const snapshot = ref(null);
-const source = ref(null);
+const range_query = ref(null);
 const query = ref(null);
 const zygosities = ref(["HET", "HOMALT"]);
 const loading = ref(false);
@@ -105,24 +118,36 @@ function reset() {
   resultsView.value = false;
 }
 
-watchDebounced([query, currPage, pageSize, zygosities], handleSearch, {
+watchDebounced(
+  range_query,
+  (val) => {
+    console.log("range_query", val);
+    const parsedQuery = parseQuery(val);
+    if (Object.keys(parsedQuery).length !== 0) {
+      range.value = parsedQuery;
+    }
+  },
+  {
+    deep: true,
+    debounce: 150,
+  },
+);
+
+watch([range, currPage, pageSize, zygosities], handleSearch, {
   deep: true,
-  debounce: 150,
 });
 
 function handleSearch() {
-  const parsedQuery = parseQuery(query.value);
-  console.log("query changed", parsedQuery);
-  // validate that parsedQuery is not empty
-  if (Object.keys(parsedQuery).length === 0 || zygosities.value.length === 0) {
+  console.log("handleSearch", range.value, currPage.value, pageSize.value);
+  if (range.value == null || zygosities.value.length === 0) {
     return;
   }
   loading.value = true;
   variantService
     .search({
-      source_id: source.value,
-      snapshot_id: snapshot.value,
-      ranges: [parsedQuery],
+      source_id: source_id.value,
+      snapshot_id: snapshot_id.value,
+      ranges: [range.value],
       zygosities: zygosities.value,
       offset: (currPage.value - 1) * pageSize.value,
       limit: pageSize.value,
@@ -145,3 +170,9 @@ meta:
   title: Variant Xplorer
   nav: [{ label: "Variant Xplorer" }]
 </route>
+
+<style scoped lang="scss">
+.cohort-card {
+  --va-card-padding: 0.75rem;
+}
+</style>

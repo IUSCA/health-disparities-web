@@ -1,9 +1,0 @@
-apps:
-  - name: "api"
-    script: src/index.js
-    cwd: '/opt/sca/biobank/api/'
-    exec_mode: fork
-    watch: false
-    out_file: /opt/sca/var/log/biobank/api.log
-    err_file: /opt/sca/var/log/biobank/api.err
-    combine_logs: false
