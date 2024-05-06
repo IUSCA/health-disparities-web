@@ -206,7 +206,7 @@ router.post(
     res.json({
       metadata: {
         variant_count: Number(results[0]?.total_count ?? 0),
-        participant_count: count,
+        participant_count: parseInt(count, 10),
       },
       variants: results.map((result) => {
         // eslint-disable-next-line no-unused-vars

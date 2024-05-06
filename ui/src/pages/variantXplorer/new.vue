@@ -10,7 +10,18 @@
             :example_searches="example_searches"
             @clear="reset"
           />
-          <!-- <VaButton @click="reset"> Add </VaButton> -->
+          <VaButton
+            @click="reset"
+            size="small"
+            color="danger"
+            icon="backspace"
+            outline
+            preset="primary"
+            class="ml-auto"
+            v-if="resultsView"
+          >
+            Clear All
+          </VaButton>
         </div>
 
         <!-- Selected ranges -->
@@ -20,43 +31,111 @@
             <div class="flex-1"></div>
           </div>
         </div> -->
+
+        <div v-if="resultsView" class="mt-3">
+          <VaDivider class="mt-4 mb-5" />
+          <div class="flex flex-col md:flex-row gap-3">
+            <div
+              class="md:w-9/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px]"
+            >
+              <ZygositySelector v-model="zygosities" />
+            </div>
+            <va-divider class="md:hidden" />
+            <div class="md:w-3/12">
+              <div class="flex flex-col flex-wrap items-center justify-center">
+                <span class="text-lg">
+                  <NumberTransition
+                    :target="participant_count"
+                    :debounce="100"
+                    :duration="30"
+                    class="mr-1 font-semibold"
+                  />
+                  {{
+                    maybePluralize(participant_count, "Participant", "s", false)
+                  }}
+                </span>
+
+                <VaButton class="flex-none" preset="secondary" color="success">
+                  <i-mdi-content-save-edit />
+                  <span class="ml-1"> Save As Cohort </span>
+                </VaButton>
+              </div>
+            </div>
+          </div>
+        </div>
       </VaCardContent>
     </VaCard>
 
-    <div class="flex gap-3">
-      <VaButton @click="() => columnOrderingModal.show()"> Columns </VaButton>
-      <VaButton @click="() => columnLegendModal.show()"> Legend </VaButton>
-    </div>
-
-    <div class="">
-      <VaCard class="cohort-card">
-        <VaCardContent>
-          <VariantQueryBuilder v-model:query="criteria" :locked="false" />
-        </VaCardContent>
-      </VaCard>
-    </div>
-
-    {{ criteria }}
-
-    <div class="">
-      <VaCard class="cohort-card">
-        <VaCardContent>
-          <ZygositySelector v-model="zygosities" />
-
-          <p>Variants: {{ variant_count }}</p>
-
-          <p>Participants: {{ participant_count }}</p>
-        </VaCardContent>
-      </VaCard>
-    </div>
-
-    <!-- results table -->
+    <!-- query builder, buttons and results table -->
     <div v-if="resultsView">
-      <VariantResultsTable
-        :results="variants"
-        :loading="loading"
-        :total_count="variant_count"
-      />
+      <!-- query builder -->
+      <VaCard class="cohort-card mb-3">
+        <VaCardContent>
+          <div class="">
+            <p class="flex gap-1 items-center font-semibold mb-3">
+              <i-mdi-filter-variant />
+              <span> Variant Filters </span>
+            </p>
+            <div class="ml-3">
+              <VariantQueryBuilder v-model:query="criteria" :locked="false" />
+            </div>
+          </div>
+
+          <VaDivider class="my-3" />
+
+          <!-- variant results table -->
+          <div class="flex flex-wrap items-center justify-between w-full mb-3">
+            <!-- variants counts -->
+            <div class="space-x-1">
+              <span> Filtering </span>
+              <span class="font-semibold text-lg">
+                <NumberTransition :target="variant_count" :debounce="50" />
+              </span>
+              <span v-if="total_count" class="text-lg">
+                of {{ number_formatter.format(total_count) }}
+              </span>
+              <span class="">
+                {{
+                  maybePluralize(
+                    total_count || variant_count,
+                    "Variant",
+                    "s",
+                    false,
+                  )
+                }}
+              </span>
+            </div>
+
+            <!-- buttons -->
+            <div class="flex gap-3 items-center">
+              <VaButton
+                @click="() => columnOrderingModal.show()"
+                preset="primary"
+                border-color="primary"
+                size="small"
+              >
+                <i-mdi-drag-variant />
+                <span class="ml-1"> Columns </span>
+              </VaButton>
+              <VaButton
+                @click="() => columnLegendModal.show()"
+                preset="primary"
+                border-color="primary"
+                size="small"
+              >
+                <i-mdi-information-outline />
+                <span class="ml-1"> Legend </span>
+              </VaButton>
+            </div>
+          </div>
+
+          <VariantResultsTable
+            :results="variants"
+            :loading="loading"
+            :total_count="variant_count"
+          />
+        </VaCardContent>
+      </VaCard>
     </div>
 
     <!-- search examples -->
@@ -83,10 +162,10 @@
 
 <script setup>
 import {
-isAPIQueryEmpty,
-transformQueryForApi,
+transformQueryForApi
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import { parseQuery } from "@/components/genotype/lib";
+import { maybePluralize } from "@/services/utils";
 import variantService from "@/services/variants";
 import { useVariantsStore } from "@/stores/variants";
 import { SemipolarSpinner } from "epic-spinners";
@@ -95,6 +174,13 @@ import { useColors } from "vuestic-ui";
 
 const { colors } = useColors();
 // const props = defineProps({})
+const number_formatter = Intl.NumberFormat("en");
+
+const DEFAULT_ZYGOSITIES = ["HET", "HOMALT"];
+const EMPTY_CRITERIA = {
+  operator: "AND",
+  children: [],
+};
 
 const variantsStore = useVariantsStore();
 const { currPage, pageSize, source_id, snapshot_id, range } =
@@ -102,7 +188,7 @@ const { currPage, pageSize, source_id, snapshot_id, range } =
 
 const range_query = ref(null);
 const criteria = ref(null);
-const zygosities = ref(["HET", "HOMALT"]);
+const zygosities = ref(DEFAULT_ZYGOSITIES);
 const loading = ref(false);
 
 const columnOrderingModal = ref(null);
@@ -137,6 +223,12 @@ const example_searches = {
 function reset() {
   console.log("reset");
   resultsView.value = false;
+  variants.value = [];
+  variant_count.value = 0;
+  total_count.value = 0;
+  participant_count.value = 0;
+  criteria.value = EMPTY_CRITERIA;
+  zygosities.value = DEFAULT_ZYGOSITIES;
 }
 
 watchDebounced(
@@ -154,6 +246,25 @@ watchDebounced(
   },
 );
 
+watch(
+  range,
+  () => {
+    variantService
+      .getTotalCount({
+        source_id: source_id.value,
+        snapshot_id: snapshot_id.value,
+        ranges: [range.value],
+      })
+      .then((res) => {
+        total_count.value = res.data?.count || 0;
+      })
+      .catch((err) => {
+        console.error("Error getting total count", err);
+      });
+  },
+  { deep: true },
+);
+
 watch([range, currPage, pageSize, zygosities], handleSearch, {
   deep: true,
 });
@@ -166,10 +277,10 @@ watch([range, currPage, pageSize, zygosities], handleSearch, {
 watch(
   canon_query,
   (newQuery, oldQuery) => {
-    if (isAPIQueryEmpty(newQuery)) {
-      variant_count.value = total_count.value;
-      return;
-    }
+    // if (isAPIQueryEmpty(newQuery)) {
+    //   variant_count.value = total_count.value;
+    //   return;
+    // }
     if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
       console.log("query changed", newQuery, oldQuery);
 
@@ -178,11 +289,6 @@ watch(
   },
   { deep: true },
 );
-
-const EMPTY_CRITERIA = {
-  operator: "AND",
-  children: [],
-};
 
 function makeVariantSearchQuery() {
   return {
@@ -210,7 +316,6 @@ function handleSearch() {
   variantService
     .search(makeVariantSearchQuery())
     .then((res) => {
-      console.log("total count", res);
       resultsView.value = true;
       variants.value = res.data?.variants || [];
       variant_count.value = res.data?.metadata?.variant_count || 0;
