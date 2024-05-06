@@ -9,6 +9,7 @@ const COLUMNS = {
   },
   allele_number: {
     label: "AN",
+    alt_label: "Allele Number",
     category: "Allele Stats",
     thTitle: "Allele Number",
     _show: true,
@@ -17,6 +18,7 @@ const COLUMNS = {
   },
   allele_count: {
     label: "AC",
+    alt_label: "Allele Count",
     category: "Allele Stats",
     thTitle: "Alternate Allele Count",
     _show: true,
@@ -25,6 +27,7 @@ const COLUMNS = {
   },
   allele_freq: {
     label: "AF",
+    alt_label: "Allele Frequency",
     category: "Allele Stats",
     thTitle: "Alternate Allele Frequency",
     _show: true,
@@ -70,7 +73,7 @@ const COLUMNS = {
   missing: {
     label: "Missing",
     category: "Allele Stats",
-    thTitle: "./. Missing Genotypes",
+    thTitle: "Missing Genotypes ./.",
     _show: true,
     numeric: true,
     type: "number",
@@ -105,6 +108,7 @@ const COLUMNS = {
   },
   cadd_phred: {
     label: "CADD",
+    alt_label: "CADD Phred Score",
     category: "GnomAD",
     thTitle:
       "Cadd Phred-like scores ('scaled C-scores') ranging from 1 to 99, based on the rank of each variant relative to all possible 8.6 billion substitutions in the human reference genome. Larger values are more deleterious.",
@@ -114,6 +118,7 @@ const COLUMNS = {
   },
   polyphen_max: {
     label: "Polyphen",
+    alt_label: "Polyphen Max",
     category: "GnomAD",
     thTitle:
       "Score that predicts the possible impact of an amino acid substitution on the structure and function of a human protein, ranging from 0.0 (tolerated) to 1.0 (deleterious).  We prioritize max scores for MANE Select transcripts where possible and otherwise report a score for the canonical transcript.",
@@ -123,6 +128,7 @@ const COLUMNS = {
   },
   revel_max: {
     label: "Revel",
+    alt_label: "Revel Max",
     category: "GnomAD",
     thTitle:
       "The maximum REVEL score at a site's MANE Select or canonical transcript. It's an ensemble score for predicting the pathogenicity of missense variants (based on 13 other variant predictors). Scores ranges from 0 to 1. Variants with higher scores are predicted to be more likely to be deleterious.",
@@ -132,6 +138,7 @@ const COLUMNS = {
   },
   sift_max: {
     label: "SIFT",
+    alt_label: "SIFT Max",
     category: "GnomAD",
     thTitle:
       "Score reflecting the scaled probability of the amino acid substitution being tolerated, ranging from 0 to 1. Scores below 0.05 are predicted to impact protein function. We prioritize max scores for MANE Select transcripts where possible and otherwise report a score for the canonical transcript.",
@@ -141,7 +148,7 @@ const COLUMNS = {
   },
   af_afr: {
     label: "AF AFR",
-    category: "AF",
+    category: "1000 Genomes Project",
     thTitle:
       "Alternate allele frequency in samples of African/African-American ancestry",
     _show: false,
@@ -150,7 +157,7 @@ const COLUMNS = {
   },
   af_amr: {
     label: "AF AMR",
-    category: "AF",
+    category: "1000 Genomes Project",
     thTitle: "Alternate allele frequency in samples of Latino ancestry",
     _show: false,
     numeric: true,
@@ -158,7 +165,7 @@ const COLUMNS = {
   },
   af_eas: {
     label: "AF EAS",
-    category: "AF",
+    category: "1000 Genomes Project",
     thTitle: "Alternate allele frequency in samples of East Asian ancestry",
     _show: false,
     numeric: true,
@@ -166,7 +173,7 @@ const COLUMNS = {
   },
   af_fin: {
     label: "AF FIN",
-    category: "AF",
+    category: "1000 Genomes Project",
     thTitle: "Alternate allele frequency in samples of Finnish ancestry",
     _show: false,
     numeric: true,
@@ -174,7 +181,7 @@ const COLUMNS = {
   },
   af_nfe: {
     label: "AF NFE",
-    category: "AF",
+    category: "1000 Genomes Project",
     thTitle:
       "Alternate allele frequency in samples of Non-Finnish European ancestry",
     _show: false,
@@ -183,7 +190,7 @@ const COLUMNS = {
   },
   af_sas: {
     label: "AF SAS",
-    category: "AF",
+    category: "1000 Genomes Project",
     thTitle: "Alternate allele frequency in samples of South Asian ancestry",
     _show: false,
     numeric: true,
@@ -191,7 +198,7 @@ const COLUMNS = {
   },
   af_oth: {
     label: "AF OTH",
-    category: "AF",
+    category: "1000 Genomes Project",
     thTitle: "Alternate allele frequency in samples of other ancestry",
     _show: false,
     numeric: true,
@@ -199,6 +206,7 @@ const COLUMNS = {
   },
   cln_allele_id: {
     label: "CLN Allele ID",
+    alt_label: "Allele ID",
     category: "ClinVAR",
     thTitle: "ClinVar Allele ID",
     _show: false,
@@ -206,6 +214,7 @@ const COLUMNS = {
   },
   cln_dis_db: {
     label: "CLN Dis. DB",
+    alt_label: "Disease DB",
     category: "ClinVAR",
     thTitle:
       "Tag-value pairs of disease database name and identifier submitted for germline classifications, e.g. OMIM:NNNNNN",
@@ -214,6 +223,7 @@ const COLUMNS = {
   },
   cln_dn: {
     label: "CLN DN",
+    alt_label: "Disease Name",
     category: "ClinVAR",
     thTitle:
       "ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB",
@@ -222,6 +232,7 @@ const COLUMNS = {
   },
   cln_hgvs: {
     label: "CLN HGVS",
+    alt_label: "HGVS",
     category: "ClinVAR",
     thTitle: "Top-level (primary assembly, alt, or patch) HGVS expression.",
     _show: false,
@@ -229,6 +240,7 @@ const COLUMNS = {
   },
   cln_rev_stat: {
     label: "CLN Rev. Stat.",
+    alt_label: "Review Status",
     category: "ClinVAR",
     thTitle:
       "ClinVar review status of germline classification for the Variation ID",
@@ -237,6 +249,7 @@ const COLUMNS = {
   },
   cln_sig: {
     label: "CLN Sig.",
+    alt_label: "Clinical Significance",
     category: "ClinVAR",
     thTitle:
       "Aggregate germline classification for this single variant; multiple values are separated by a vertical bar",
@@ -245,6 +258,7 @@ const COLUMNS = {
   },
   cln_vc: {
     label: "CLN VC",
+    alt_label: "Variant Type (VC)",
     category: "ClinVAR",
     thTitle: "Variant type",
     _show: false,
@@ -252,6 +266,7 @@ const COLUMNS = {
   },
   cln_vcso: {
     label: "CLN VCSO",
+    alt_label: "Sequence Ontology ID (VCSO)",
     category: "ClinVAR",
     thTitle: "Sequence Ontology id for variant type",
     _show: false,
@@ -259,6 +274,7 @@ const COLUMNS = {
   },
   cln_geneinfo: {
     label: "CLN Gene Info",
+    alt_label: "Gene Info",
     category: "ClinVAR",
     thTitle:
       "Gene(s) for the variant reported as gene symbol:gene id. The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)",
@@ -267,6 +283,7 @@ const COLUMNS = {
   },
   cln_mc: {
     label: "CLN MC",
+    alt_label: "Molecular Consequence (MC)",
     category: "ClinVAR",
     thTitle:
       "comma separated list of molecular consequence in the form of Sequence Ontology ID|molecular_consequence",

@@ -21,7 +21,7 @@ const legend_columns = [
     key: "category",
     label: "Category",
     sortable: true,
-    width: "100px",
+    width: "180px",
   },
   { key: "label", label: "Name", sortable: true, width: "150px" },
   {

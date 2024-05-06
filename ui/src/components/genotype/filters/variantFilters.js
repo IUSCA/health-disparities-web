@@ -6,7 +6,7 @@ function columnsByType(type) {
     .map(([key, col]) => ({
       key,
       type: col.type,
-      label: col.label,
+      label: col.alt_label || col.label,
     }));
 }
 
@@ -30,10 +30,10 @@ export const variantFilters = [
     filters: columnsByType("Genes"),
   },
   {
-    label: "Allele Frequencies",
-    key: "AF",
+    label: "1000 Genomes Project",
+    key: "1000 Genomes Project",
     icon: "mdi-chart-bell-curve",
-    filters: columnsByType("AF"),
+    filters: columnsByType("1000 Genomes Project"),
   },
   {
     label: "GnomAD",

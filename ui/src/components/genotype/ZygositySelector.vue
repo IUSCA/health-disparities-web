@@ -5,7 +5,7 @@
     }"
   >
     <!-- Choose a minimum of one option to display the count of participants possessing these zygosities within the filtered variants. -->
-    <!-- Select at least one option to see the participant count for the selected zygosities in the filtered variants. A participant is counted if they have at least one filtered variant with the chosen zygosity. -->
+    <!-- Select at least one option to see the participant count for the selected zygosities in the filtered variants. A participant is counted if they have at least one filtered variant with the chosen zygosities. -->
 
     <div class="flex flex-wrap items-center gap-2">
       <span class="font-semibold pr-2">Zygosities: </span>
