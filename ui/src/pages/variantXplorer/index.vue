@@ -1,169 +1,180 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <VaCard>
-      <VaCardContent>
-        <div class="flex items-center gap-3">
-          <SourceSelect v-model="source_id" class="flex-none" />
-          <SnapshotSelect v-model="snapshot_id" class="flex-none" />
-          <VariantSearchInput
-            v-model="range_query"
-            :example_searches="example_searches"
-            @clear="reset"
-          />
-          <VaButton
-            @click="reset"
-            size="small"
-            color="danger"
-            icon="backspace"
-            outline
-            preset="primary"
-            class="ml-auto"
-            v-if="resultsView"
-          >
-            Clear All
-          </VaButton>
-        </div>
+  <VaInnerLoading :loading="resultsView && loading">
+    <div class="flex flex-col gap-3">
+      <VaCard>
+        <VaCardContent>
+          <div class="flex items-center gap-3">
+            <SourceSelect v-model="source_id" class="flex-none" />
+            <SnapshotSelect v-model="snapshot_id" class="flex-none" />
+            <VariantSearchInput
+              v-model="range_query"
+              :example_searches="example_searches"
+              @clear="reset"
+            />
+            <VaButton
+              @click="reset"
+              size="small"
+              color="danger"
+              icon="backspace"
+              outline
+              preset="primary"
+              class="ml-auto"
+              v-if="resultsView"
+            >
+              Clear All
+            </VaButton>
+          </div>
 
-        <!-- Selected ranges -->
-        <!-- <div>
+          <!-- Selected ranges -->
+          <!-- <div>
           <div class="flex items-center gap-3">
             <div class="flex-none">Selected ranges:</div>
             <div class="flex-1"></div>
           </div>
         </div> -->
 
-        <div v-if="resultsView" class="mt-3">
-          <VaDivider class="mt-4 mb-5" />
-          <div class="flex flex-col md:flex-row gap-3">
-            <div
-              class="md:w-9/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px]"
-            >
-              <ZygositySelector v-model="zygosities" />
-            </div>
-            <va-divider class="md:hidden" />
-            <div class="md:w-3/12">
-              <div class="flex flex-col flex-wrap items-center justify-center">
-                <span class="text-lg">
-                  <NumberTransition
-                    :target="participant_count"
-                    :debounce="100"
-                    :duration="30"
-                    class="mr-1 font-semibold"
-                  />
-                  {{
-                    maybePluralize(participant_count, "Participant", "s", false)
-                  }}
-                </span>
-
-                <VaButton
-                  class="flex-none"
-                  preset="secondary"
-                  color="success"
-                  :disabled="participant_count === 0"
-                  @click="saveCohortModal.show()"
+          <div v-if="resultsView" class="mt-3">
+            <VaDivider class="mt-4 mb-5" />
+            <div class="flex flex-col md:flex-row gap-3">
+              <div
+                class="md:w-9/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px]"
+              >
+                <ZygositySelector v-model="zygosities" />
+              </div>
+              <va-divider class="md:hidden" />
+              <div class="md:w-3/12">
+                <div
+                  class="flex flex-col flex-wrap items-center justify-center"
                 >
-                  <i-mdi-content-save-edit />
-                  <span class="ml-1"> Save As Cohort </span>
-                </VaButton>
+                  <span class="text-lg">
+                    <NumberTransition
+                      :target="participant_count"
+                      :debounce="100"
+                      :duration="30"
+                      class="mr-1 font-semibold"
+                    />
+                    {{
+                      maybePluralize(
+                        participant_count,
+                        "Participant",
+                        "s",
+                        false,
+                      )
+                    }}
+                  </span>
+
+                  <VaButton
+                    class="flex-none"
+                    preset="secondary"
+                    color="success"
+                    :disabled="participant_count === 0"
+                    @click="saveCohortModal.show()"
+                  >
+                    <i-mdi-content-save-edit />
+                    <span class="ml-1"> Save As Cohort </span>
+                  </VaButton>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </VaCardContent>
-    </VaCard>
-
-    <!-- query builder, buttons and results table -->
-    <div v-if="resultsView">
-      <!-- query builder -->
-      <VaCard class="cohort-card mb-3">
-        <VaCardContent>
-          <div class="">
-            <p class="flex gap-1 items-center font-semibold mb-3">
-              <i-mdi-filter-variant />
-              <span> Variant Filters </span>
-              <span class="ml-auto font-normal">
-                Genome Build: {{ source_id === 1 ? "hg38" : "hg19" }}
-              </span>
-            </p>
-            <div class="ml-3">
-              <VariantQueryBuilder v-model:query="criteria" :locked="false" />
-            </div>
-          </div>
-
-          <VaDivider class="my-3" />
-
-          <!-- variant results table -->
-          <div class="flex flex-wrap items-center justify-between w-full mb-3">
-            <!-- variants counts -->
-            <div class="space-x-1">
-              <span> Filtering </span>
-              <span class="font-semibold text-lg">
-                <NumberTransition :target="variant_count" :debounce="50" />
-              </span>
-              <span v-if="total_count" class="text-lg">
-                of {{ number_formatter.format(total_count) }}
-              </span>
-              <span class="">
-                {{
-                  maybePluralize(
-                    total_count || variant_count,
-                    "Variant",
-                    "s",
-                    false,
-                  )
-                }}
-              </span>
-            </div>
-
-            <!-- buttons -->
-            <div class="flex gap-3 items-center">
-              <VaButton
-                @click="() => columnOrderingModal.show()"
-                preset="primary"
-                border-color="primary"
-                size="small"
-              >
-                <i-mdi-drag-variant />
-                <span class="ml-1"> Columns </span>
-              </VaButton>
-              <VaButton
-                @click="() => columnLegendModal.show()"
-                preset="primary"
-                border-color="primary"
-                size="small"
-              >
-                <i-mdi-information-outline />
-                <span class="ml-1"> Legend </span>
-              </VaButton>
-            </div>
-          </div>
-
-          <VariantResultsTable
-            :results="variants"
-            :loading="loading"
-            :total_count="variant_count"
-          />
         </VaCardContent>
       </VaCard>
-    </div>
 
-    <!-- search examples -->
-    <div class="flex flex-col justify-center items-center mt-24" v-else>
-      <!-- loading spinner -->
-      <div v-if="loading" class="flex justify-center items-center mt-24">
-        <semipolar-spinner
-          :animation-duration="2000"
-          :size="65"
-          :color="colors.primary"
+      <!-- query builder, buttons and results table -->
+      <div v-if="resultsView">
+        <!-- query builder -->
+        <VaCard class="cohort-card mb-3">
+          <VaCardContent>
+            <div class="">
+              <p class="flex gap-1 items-center font-semibold mb-3">
+                <i-mdi-filter-variant />
+                <span> Variant Filters </span>
+                <span class="ml-auto font-normal">
+                  Genome Build: {{ source_id === 1 ? "hg38" : "hg19" }}
+                </span>
+              </p>
+              <div class="ml-3">
+                <VariantQueryBuilder v-model:query="criteria" :locked="false" />
+              </div>
+            </div>
+
+            <VaDivider class="my-3" />
+
+            <!-- variant results table -->
+            <div
+              class="flex flex-wrap items-center justify-between w-full mb-3"
+            >
+              <!-- variants counts -->
+              <div class="space-x-1">
+                <span> Filtering </span>
+                <span class="font-semibold text-lg">
+                  <NumberTransition :target="variant_count" :debounce="50" />
+                </span>
+                <span v-if="total_count" class="text-lg">
+                  of {{ number_formatter.format(total_count) }}
+                </span>
+                <span class="">
+                  {{
+                    maybePluralize(
+                      total_count || variant_count,
+                      "Variant",
+                      "s",
+                      false,
+                    )
+                  }}
+                </span>
+              </div>
+
+              <!-- buttons -->
+              <div class="flex gap-3 items-center">
+                <VaButton
+                  @click="() => columnOrderingModal.show()"
+                  preset="primary"
+                  border-color="primary"
+                  size="small"
+                >
+                  <i-mdi-drag-variant />
+                  <span class="ml-1"> Columns </span>
+                </VaButton>
+                <VaButton
+                  @click="() => columnLegendModal.show()"
+                  preset="primary"
+                  border-color="primary"
+                  size="small"
+                >
+                  <i-mdi-information-outline />
+                  <span class="ml-1"> Legend </span>
+                </VaButton>
+              </div>
+            </div>
+
+            <VariantResultsTable
+              :results="variants"
+              :loading="loading"
+              :total_count="variant_count"
+            />
+          </VaCardContent>
+        </VaCard>
+      </div>
+
+      <!-- search examples -->
+      <div class="flex flex-col justify-center items-center mt-24" v-else>
+        <!-- loading spinner -->
+        <div v-if="loading" class="flex justify-center items-center mt-24">
+          <semipolar-spinner
+            :animation-duration="2000"
+            :size="65"
+            :color="colors.primary"
+          />
+        </div>
+        <VariantSearchExample
+          v-else
+          :example_searches="example_searches"
+          @search="(val) => (range_query = val)"
         />
       </div>
-      <VariantSearchExample
-        v-else
-        :example_searches="example_searches"
-        @search="(val) => (range_query = val)"
-      />
     </div>
-  </div>
+  </VaInnerLoading>
 
   <ColumnOrderingSelectionModal ref="columnOrderingModal" />
   <ColumnLegendModal ref="columnLegendModal" />
@@ -240,6 +251,8 @@ function reset() {
   participant_count.value = 0;
   criteria.value = defaultQuery();
   zygosities.value = DEFAULT_ZYGOSITIES;
+  currPage.value = 1;
+  pageSize.value = 50;
 }
 
 // convert range query (str) to range object
@@ -254,7 +267,7 @@ watchDebounced(
   },
   {
     deep: true,
-    debounce: 150,
+    debounce: 300,
   },
 );
 
@@ -265,6 +278,10 @@ watch(
     if (range.value == null) {
       return;
     }
+
+    // reset page to 1
+    currPage.value = 1;
+
     variantService
       .getTotalCount({
         source_id: source_id.value,
@@ -277,36 +294,6 @@ watch(
       .catch((err) => {
         console.error("Error getting total count", err);
       });
-  },
-  { deep: true },
-);
-
-// watch for changes in the search parameters and call the API
-watch(
-  [snapshot_id, source_id, range, currPage, pageSize, zygosities],
-  handleSearch,
-  {
-    deep: true,
-  },
-);
-
-// watch for changes in the canonical query
-// do not run on unsupported queries
-// if the canonical query is empty, set the variants count to the total count
-// deep compare old and new canonical queries to avoid unnecessary API calls
-// if the query has changed, call the API
-watch(
-  canon_query,
-  (newQuery, oldQuery) => {
-    // if (isAPIQueryEmpty(newQuery)) {
-    //   variant_count.value = total_count.value;
-    //   return;
-    // }
-    if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
-      console.log("query changed", newQuery, oldQuery);
-
-      handleSearch();
-    }
   },
   { deep: true },
 );
@@ -346,6 +333,40 @@ function handleSearch() {
       loading.value = false;
     });
 }
+const throttledSearch = useThrottleFn(handleSearch, 100);
+
+// watch for changes in the search parameters and call the API
+watch(
+  [snapshot_id, source_id, range, currPage, pageSize, zygosities],
+  throttledSearch,
+  {
+    deep: true,
+  },
+);
+
+// watch for changes in the canonical query
+// do not run on unsupported queries
+// if the canonical query is empty, set the variants count to the total count
+// deep compare old and new canonical queries to avoid unnecessary API calls
+// if the query has changed, call the API
+watch(
+  canon_query,
+  (newQuery, oldQuery) => {
+    // if (isAPIQueryEmpty(newQuery)) {
+    //   variant_count.value = total_count.value;
+    //   return;
+    // }
+    if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
+      console.log("query changed", newQuery, oldQuery);
+
+      // reset page to 1
+      currPage.value = 1;
+
+      throttledSearch();
+    }
+  },
+  { deep: true },
+);
 
 const cohort_id = ref(null);
 function handleOnSave(cohort_data) {
