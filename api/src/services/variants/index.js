@@ -143,6 +143,25 @@ function buildSQL({
   return query;
 }
 
+function buildSQLVarIds({
+  base_query, json_query,
+}) {
+  const base_query_sql = buildBaseQuerySQL(base_query);
+
+  const json_query_sql = buildFilters(json_query);
+  // console.log(json_query_sql.sql, json_query_sql.values);
+
+  const where = json_query_sql === Prisma.empty
+    ? Prisma.sql`WHERE (${base_query_sql})`
+    : Prisma.sql`WHERE (${base_query_sql}) AND (${json_query_sql})`;
+  const query = Prisma.sql`
+      SELECT chr, position, ref, alt, source_id
+      FROM gt_stats_annotations
+      ${where}
+  `;
+  return query;
+}
+
 function histogramSQL(_table, _column, _num_bins) {
   const table = Prisma.raw(_table);
   const column = Prisma.raw(_column);
@@ -176,27 +195,32 @@ function annotationHistogramSQL(query, _column, _num_bins) {
 }
 
 async function participantsWithVariants({
-  variant_ids,
+  variants_sql,
   zygosities,
   snapshot_id,
   username,
   return_count = false,
 }) {
-  const variant_id_sql = variant_ids.map(
-    ([chr, pos, ref, alt, source_id]) => Prisma.sql`(${chr}, ${pos}, ${ref}, ${alt}, ${source_id})`,
-  );
   const select_column = return_count
     ? Prisma.raw('count(distinct p.id) as count')
     : Prisma.raw('distinct p.id as pid');
   const query = Prisma.sql`
+    with relevant_variants as (
+      ${variants_sql}
+    )
     select 
     ${select_column}
     from variant v
+    join relevant_variants rv on 
+      v.chr = rv.chr and 
+      v."position" = rv.position and 
+      v."ref" = rv.ref and 
+      v.alt = rv.alt and 
+      v.source_id = rv.source_id
     join unnest(v.genotype) WITH ordinality t(g, idx) on 1=1
     join participant p on p.genotype_idx = idx
     join participants_per_user ppu on ppu.id = p.id
     join participants_per_snapshot pps on pps.id = p.id
-    and ("chr", "position", "ref", "alt", "source_id") in (${Prisma.join(variant_id_sql, ',')})
     and snapshot_id = ${snapshot_id}
     and username = ${username}
     and t.g in (${Prisma.join(zygosities, ',')})
@@ -219,4 +243,5 @@ module.exports = {
   participantsWithVariants,
   buildRangesSQL,
   buildRangesPrismaQuery,
+  buildSQLVarIds,
 };

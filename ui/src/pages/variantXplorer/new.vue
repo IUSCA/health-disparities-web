@@ -55,7 +55,13 @@
                   }}
                 </span>
 
-                <VaButton class="flex-none" preset="secondary" color="success">
+                <VaButton
+                  class="flex-none"
+                  preset="secondary"
+                  color="success"
+                  :disabled="participant_count === 0"
+                  @click="saveCohortModal.show()"
+                >
                   <i-mdi-content-save-edit />
                   <span class="ml-1"> Save As Cohort </span>
                 </VaButton>
@@ -75,6 +81,9 @@
             <p class="flex gap-1 items-center font-semibold mb-3">
               <i-mdi-filter-variant />
               <span> Variant Filters </span>
+              <span class="ml-auto font-normal">
+                Genome Build: {{ source_id === 1 ? "hg38" : "hg19" }}
+              </span>
             </p>
             <div class="ml-3">
               <VariantQueryBuilder v-model:query="criteria" :locked="false" />
@@ -158,6 +167,7 @@
 
   <ColumnOrderingSelectionModal ref="columnOrderingModal" />
   <ColumnLegendModal ref="columnLegendModal" />
+  <GenotypeCohortSaveModal ref="saveCohortModal" @save="handleOnSave" />
 </template>
 
 <script setup>
@@ -166,6 +176,7 @@ defaultQuery,
 transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import { parseQuery } from "@/components/genotype/lib";
+import toast from "@/services/toast";
 import { maybePluralize } from "@/services/utils";
 import variantService from "@/services/variants";
 import { useVariantsStore } from "@/stores/variants";
@@ -190,6 +201,7 @@ const loading = ref(false);
 
 const columnOrderingModal = ref(null);
 const columnLegendModal = ref(null);
+const saveCohortModal = ref(null);
 
 const resultsView = ref(false);
 const variants = ref([]);
@@ -230,6 +242,7 @@ function reset() {
   zygosities.value = DEFAULT_ZYGOSITIES;
 }
 
+// convert range query (str) to range object
 watchDebounced(
   range_query,
   (val) => {
@@ -245,8 +258,9 @@ watchDebounced(
   },
 );
 
+// get total count of variants when range changes
 watch(
-  range,
+  [snapshot_id, source_id, range],
   () => {
     if (range.value == null) {
       return;
@@ -267,9 +281,14 @@ watch(
   { deep: true },
 );
 
-watch([range, currPage, pageSize, zygosities], handleSearch, {
-  deep: true,
-});
+// watch for changes in the search parameters and call the API
+watch(
+  [snapshot_id, source_id, range, currPage, pageSize, zygosities],
+  handleSearch,
+  {
+    deep: true,
+  },
+);
 
 // watch for changes in the canonical query
 // do not run on unsupported queries
@@ -326,6 +345,39 @@ function handleSearch() {
     .finally(() => {
       loading.value = false;
     });
+}
+
+const cohort_id = ref(null);
+function handleOnSave(cohort_data) {
+  const isNewCohort = !cohort_id.value;
+  const req_body = {
+    ...cohort_data,
+    query: makeVariantSearchQuery().query,
+  };
+  if (isNewCohort) {
+    variantService
+      .createCohort(req_body)
+      .then((res) => {
+        cohort_id.value = res.data.id;
+        toast.success("Cohort saved successfully");
+        saveCohortModal.value.hide();
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Error saving cohort");
+      });
+  } else {
+    variantService
+      .updateCohort(cohort_id.value, req_body)
+      .then(() => {
+        toast.success("Cohort updated successfully");
+        saveCohortModal.value.hide();
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Error updating cohort");
+      });
+  }
 }
 </script>
 

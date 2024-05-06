@@ -1,21 +1,20 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { body, param, query } = require('express-validator');
+const { body, param } = require('express-validator');
 const _ = require('lodash/fp');
-// const createError = require('http-errors');
+const createError = require('http-errors');
 // const config = require('config');
 const { validate } = require('../middleware/validators');
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
 const {
   validateQuery, sanitizeQuery,
-  validateZygosities, sanitizeZygosities,
   validateRanges, sanitizeRanges,
 } = require('../services/variants/validation');
 const {
   buildSQL, annotationHistogramSQL, buildBaseQuerySQL,
   participantsWithVariants,
-  buildRangesPrismaQuery,
+  buildRangesPrismaQuery, buildSQLVarIds,
 } = require('../services/variants');
 const fields = require('../services/variants/fields');
 
@@ -193,9 +192,12 @@ router.post(
 
     let count = 0;
     if (results.length !== 0) {
-      const variant_ids = results.map((r) => [r.chr, r.position, r.ref, r.alt, r.source_id]);
+      const variants_sql = buildSQLVarIds({
+        base_query,
+        json_query: criteria,
+      });
       count = await participantsWithVariants({
-        variant_ids,
+        variants_sql,
         zygosities,
         snapshot_id,
         username: req.user.username,
@@ -222,13 +224,9 @@ router.post(
 
 router.post(
   '/cohort',
-  isPermittedTo('read'),
+  accessControl('cohort')('create'),
   validate([
-    query('source_id').isInt({ min: 1 }).toInt(),
-    query('snapshot_id').isInt({ min: 1 }).toInt(),
-    body('ranges').custom(validateRanges).bail().customSanitizer(sanitizeRanges),
     body('query').custom(validateQuery).bail().customSanitizer(sanitizeQuery),
-    body('zygosities').custom(validateZygosities).bail().customSanitizer(sanitizeZygosities),
     body('name').isString().notEmpty(),
     body('is_published').optional().isBoolean(),
     body('is_locked').optional().isBoolean(),
@@ -240,48 +238,42 @@ router.post(
     // #swagger.tags = ['variants']
     // #swagger.summary = 'Search for variants'
 
+    const {
+      source_id, snapshot_id, ranges, criteria, zygosities,
+    } = req.body.query;
+
     const base_query = {
-      source_id: req.query.source_id,
-      snapshot_id: req.query.snapshot_id,
+      source_id,
+      snapshot_id,
       protocol_id: req.user.protocol_id,
-      ranges: req.body.ranges,
+      ranges,
     };
 
-    const sql = buildSQL({
+    const variants_sql = buildSQLVarIds({
       base_query,
-      json_query: req.body.query,
-      limit: req.query.limit,
-      offset: req.query.offset,
+      json_query: criteria,
     });
-    // console.log(sql.sql, sql.values);
-    const results = await prisma.$queryRaw(sql) ?? [];
-
-    const variant_ids = results.map((r) => [r.chr, r.position, r.ref, r.alt, r.source_id]);
     const participants = await participantsWithVariants({
-      variant_ids,
-      zygosities: req.body.zygosities,
-      snapshot_id: req.query.snapshot_id,
+      variants_sql,
+      zygosities,
+      snapshot_id,
       username: req.user.username,
       return_count: false,
     });
 
+    if (participants.length === 0) {
+      return createError(400, 'No participants found for the given query.');
+    }
+
     const cohort_data = _.flow([
-      _.pick(['name', 'is_published', 'description', 'metadata']),
+      _.pick(['name', 'is_published', 'is_locked', 'description', 'metadata']),
       _.omitBy(_.isNil),
     ])(req.body);
-    cohort_data.query = {
-      name: 'genotype',
-      namespace: 'edu.iu.sca.biobank',
-      version: '1.0.0',
-      query: {},
+    cohort_data.query = req.body.query;
+    cohort_data.metadata = {
+      ...cohort_data.metadata,
+      protocol_id: req.user.protocol_id,
     };
-    // cohort_data.metadata = {
-    //   ...cohort_data.metadata,
-    //   variant_search: {
-    //     source_id,
-    //     snapshot_id,
-    //   },
-    // };
 
     const cohort = await prisma.cohort.create({
       data: {
@@ -299,70 +291,60 @@ router.post(
 
 router.patch(
   '/cohort/:id',
-  isPermittedTo('create'),
+  accessControl('cohort')('update'),
   validate([
-    param('id').isInt().toInt(),
-    query('source_id').isInt().toInt(),
-    body('ranges').custom(validateRanges).bail().customSanitizer(sanitizeRanges),
+    param('id').isUUID(),
     body('query').custom(validateQuery).bail().customSanitizer(sanitizeQuery),
-    body('zygosities').custom(validateZygosities).bail().customSanitizer(sanitizeZygosities),
-    query('snapshot_id').isInt().toInt(),
     body('name').optional().isString().notEmpty(),
-    body('published').optional().isBoolean(),
+    body('is_published').optional().isBoolean(),
+    body('is_locked').optional().isBoolean(),
     body('description').optional().isString(),
     body('metadata').optional().isObject(),
   ]),
+  validateProtocols,
   asyncHandler(async (req, res, next) => {
-    const { source_id, snapshot_id } = req.query;
-
-    const base_query = {
-      source_id: req.query.source_id,
-      snapshot_id: req.query.snapshot_id,
-      protocol_id: req.user.protocol_id,
-      ranges: req.body.ranges,
-    };
-
-    const sql = buildSQL({
-      base_query,
-      json_query: req.body.query,
-      limit: req.query.limit,
-      offset: req.query.offset,
-    });
-    // console.log(sql.sql, sql.values);
-    const results = await prisma.$queryRaw(sql) ?? [];
-
-    const variant_ids = results.map((r) => [r.chr, r.position, r.ref, r.alt, r.source_id]);
-    const participants = await participantsWithVariants({
-      variant_ids,
-      zygosities: req.body.zygosities,
-      snapshot_id: req.query.snapshot_id,
-      username: req.user.username,
-      return_count: false,
-    });
-
     const cohortToUpdate = await prisma.cohort.findUniqueOrThrow({
       where: {
         id: req.params.id,
       },
     });
 
-    const cohort_data = _.pick(['name', 'published', 'description', 'metadata'])(req.body);
+    const {
+      source_id, snapshot_id, ranges, criteria, zygosities,
+    } = req.body.query;
 
-    cohort_data.metadata = _.merge(cohortToUpdate.metadata, {
-      variant_search: {
-        source_id,
-        snapshot_id,
-      },
-    });
-
-    cohort_data.query = {
-      name: 'genotype',
-      namespace: 'edu.iu.sca.biobank',
-      version: '1.0.0',
-      query: {},
+    const base_query = {
+      source_id,
+      snapshot_id,
+      protocol_id: req.user.protocol_id,
+      ranges,
     };
 
-    const cohort = await prisma.cohort.create({
+    const variants_sql = buildSQLVarIds({
+      base_query,
+      json_query: criteria,
+    });
+    const participants = await participantsWithVariants({
+      variants_sql,
+      zygosities,
+      snapshot_id,
+      username: req.user.username,
+      return_count: false,
+    });
+    // console.log('participants.length', participants.length);
+
+    const cohort_data = _.pick(['name', 'is_published', 'is_locked', 'description', 'metadata'])(req.body);
+
+    cohort_data.metadata = _.merge(cohortToUpdate.metadata, {
+      protocol_id: req.user.protocol_id,
+    });
+
+    cohort_data.query = req.body.query;
+
+    const cohort = await prisma.cohort.update({
+      where: {
+        id: req.params.id,
+      },
       data: {
         ...cohort_data,
         author_username: req.user.username,

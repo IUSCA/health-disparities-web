@@ -28,6 +28,14 @@ class VariantService {
   search(data) {
     return api.post(`/variants/search`, data);
   }
+
+  createCohort(data) {
+    return api.post(`/variants/cohort`, data);
+  }
+
+  updateCohort(id, data) {
+    return api.patch(`/variants/cohort/${id}`, data);
+  }
 }
 
 export default new VariantService();
