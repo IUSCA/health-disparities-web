@@ -4,9 +4,10 @@
     <p>Enter a query in the search bar or get started with an example query:</p>
     <p>
       <span class="font-bold"> Gene </span> :
+      <!-- class="va-link underline" -->
       <button
-        class="va-link underline"
         @click="emit('search', props.example_searches['gene'])"
+        :disabled="true"
       >
         {{ props.example_searches["gene"] }}
       </button>

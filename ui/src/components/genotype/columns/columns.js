@@ -82,13 +82,13 @@ const COLUMNS = {
     _show: false,
     type: "select",
   },
-  genes: {
-    label: "Genes",
-    category: "Genes",
-    thTitle: "Genes",
-    _show: false,
-    type: "select",
-  },
+  // genes: {
+  //   label: "Genes",
+  //   category: "Genes",
+  //   thTitle: "Genes",
+  //   _show: false,
+  //   type: "select",
+  // },
   exonic_func: {
     label: "Exonic Func.",
     category: "Genes",

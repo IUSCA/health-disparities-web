@@ -162,7 +162,8 @@
 
 <script setup>
 import {
-transformQueryForApi
+defaultQuery,
+transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import { parseQuery } from "@/components/genotype/lib";
 import { maybePluralize } from "@/services/utils";
@@ -177,10 +178,6 @@ const { colors } = useColors();
 const number_formatter = Intl.NumberFormat("en");
 
 const DEFAULT_ZYGOSITIES = ["HET", "HOMALT"];
-const EMPTY_CRITERIA = {
-  operator: "AND",
-  children: [],
-};
 
 const variantsStore = useVariantsStore();
 const { currPage, pageSize, source_id, snapshot_id, range } =
@@ -223,11 +220,13 @@ const example_searches = {
 function reset() {
   console.log("reset");
   resultsView.value = false;
+  range_query.value = "";
+  range.value = null;
   variants.value = [];
   variant_count.value = 0;
   total_count.value = 0;
   participant_count.value = 0;
-  criteria.value = EMPTY_CRITERIA;
+  criteria.value = defaultQuery();
   zygosities.value = DEFAULT_ZYGOSITIES;
 }
 
@@ -249,6 +248,9 @@ watchDebounced(
 watch(
   range,
   () => {
+    if (range.value == null) {
+      return;
+    }
     variantService
       .getTotalCount({
         source_id: source_id.value,
@@ -300,7 +302,7 @@ function makeVariantSearchQuery() {
       snapshot_id: snapshot_id.value,
       ranges: [range.value],
       zygosities: zygosities.value,
-      criteria: canon_query.value || EMPTY_CRITERIA,
+      criteria: canon_query.value || transformQueryForApi(defaultQuery()),
     },
     offset: (currPage.value - 1) * pageSize.value,
     limit: pageSize.value,
