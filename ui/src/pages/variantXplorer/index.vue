@@ -19,7 +19,7 @@
               outline
               preset="primary"
               class="ml-auto"
-              v-if="resultsView"
+              v-if="searchParams.length > 0"
             >
               Clear All
             </VaButton>
@@ -251,15 +251,22 @@ function reset() {
 }
 
 // get total count of variants when snapshot or source or searchParams changes
+// reset page to 1
+// reset criteria to default query
+// if searchParams is empty, set resultsView to false
 watch(
   [snapshot_id, source_id, searchParams],
   () => {
     if (searchParams.value.length === 0) {
+      resultsView.value = false;
       return;
     }
 
     // reset page to 1
     currPage.value = 1;
+
+    // reset criteria to default query
+    criteria.value = defaultQuery();
 
     variantService
       .getTotalCount({

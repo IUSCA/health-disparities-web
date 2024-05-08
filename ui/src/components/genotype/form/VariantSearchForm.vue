@@ -13,7 +13,7 @@
       :disabled="error || param.trim() === ''"
       class="flex-none"
     >
-      Search
+      {{ variantsStore.searchParams.length > 0 ? "Add" : "Search" }}
     </VaButton>
   </div>
 </template>
