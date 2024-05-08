@@ -20,10 +20,11 @@
 <script setup>
 import variantService from "@/services/variants";
 import { useVariantsStore } from "@/stores/variants";
+import _ from "lodash";
 import { storeToRefs } from "pinia";
 
 const variantsStore = useVariantsStore();
-const { source_id, snapshot_id, range } = storeToRefs(variantsStore);
+const { source_id, snapshot_id, searchParams } = storeToRefs(variantsStore);
 
 const props = defineProps({
   identifier: String,
@@ -41,13 +42,13 @@ const teleportOptions = ref(null);
 watch(
   () => props.identifier,
   () => {
-    const [_, field] = props.identifier.split(props.separator);
+    const [_cat, field] = props.identifier.split(props.separator);
     loading.value = true;
     variantService
       .getAnnotationsUniqueValues(field, {
         source_id: source_id.value,
         snapshot_id: snapshot_id.value,
-        ranges: [range.value],
+        ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
       })
       .then((res) => {
         options.value = Object.keys(res.data);
