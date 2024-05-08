@@ -73,10 +73,13 @@
       </div>
     </VaInnerLoading>
   </div>
+  <Chat @message="handleUserMessage" ref="chat" />
 </template>
 
 <script setup>
+import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
 import { CombinationCohort } from "@/components/builder/models";
+import { PhenotypeCohort } from "@/components/builder/models/phenotype";
 import { createCohort } from "@/components/builder/models/utils";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
@@ -220,6 +223,34 @@ function loadCohort(id) {
       cohortsStore.appendCohort(cohort);
     }
   });
+}
+
+const chat = ref(null);
+function handleUserMessage(text) {
+  console.log("handleUserMessage", text);
+  if (text === "who are you?") {
+    setTimeout(() => {
+      chat.value.addBotMessage("I am a bot.");
+    }, 2000);
+  } else if (text === "add a cohort") {
+    setTimeout(() => {
+      const cohort = PhenotypeCohort.createEmpty();
+      cohort.criteria = {
+        operatorIdentifier: "AND",
+        children: [
+          {
+            identifier: "demographic.gender",
+            connectorValue: "in",
+            value: ["F"],
+          },
+        ],
+      };
+      cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
+      chat.value.addBotMessage("Done!");
+    }, 2000);
+  } else {
+    chat.value.addBotMessage("I don't understand.");
+  }
 }
 </script>
 

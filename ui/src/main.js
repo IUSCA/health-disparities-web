@@ -40,6 +40,8 @@ import vVisible from "./directives/v-visible";
 // import "vuestic-ui/styles/essential.css";
 // import "vuestic-ui/styles/typography.css";
 
+import Chat from "vue3-beautiful-chat";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -59,5 +61,6 @@ app.use(createVuestic({ config }));
 app.use(createPinia());
 app.use(router);
 app.use(vVisible);
+app.use(Chat);
 
 app.mount("#app");
