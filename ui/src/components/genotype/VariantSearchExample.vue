@@ -1,7 +1,6 @@
 <template>
   <!-- search examples -->
-  <div class="flex-none text-lg">
-    <p>Enter a query in the search bar or get started with an example query:</p>
+  <div>
     <p>
       <span class="font-bold"> Gene </span> :
       <!-- class="va-link underline" -->

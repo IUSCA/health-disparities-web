@@ -6,11 +6,11 @@
           <div class="flex items-center gap-3">
             <SourceSelect v-model="source_id" class="flex-none" />
             <SnapshotSelect v-model="snapshot_id" class="flex-none" />
-            <VariantSearchInput
-              v-model="range_query"
-              :example_searches="example_searches"
-              @clear="reset"
+            <VariantSearchForm
+              :example_searches="EXAMPLE_SEARCHES"
+              class="flex-grow"
             />
+
             <VaButton
               @click="reset"
               size="small"
@@ -25,13 +25,8 @@
             </VaButton>
           </div>
 
-          <!-- Selected ranges -->
-          <!-- <div>
-          <div class="flex items-center gap-3">
-            <div class="flex-none">Selected ranges:</div>
-            <div class="flex-1"></div>
-          </div>
-        </div> -->
+          <!-- Selected variant search parameters -->
+          <VariantSearchParameters class="mt-3" />
 
           <div v-if="resultsView" class="mt-3">
             <VaDivider class="mt-4 mb-5" />
@@ -167,11 +162,16 @@
             :color="colors.primary"
           />
         </div>
-        <VariantSearchExample
-          v-else
-          :example_searches="example_searches"
-          @search="(val) => (range_query = val)"
-        />
+        <div v-else class="flex-none text-lg">
+          <p>
+            Enter a query in the search bar or get started with an example
+            query:
+          </p>
+          <VariantSearchExample
+            :example_searches="EXAMPLE_SEARCHES"
+            @search="(val) => variantsStore.addSearchParam(parseQuery(val))"
+          />
+        </div>
       </div>
     </div>
   </VaInnerLoading>
@@ -186,12 +186,17 @@ import {
 defaultQuery,
 transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
+import {
+DEFAULT_ZYGOSITIES,
+EXAMPLE_SEARCHES,
+} from "@/components/genotype/constants";
 import { parseQuery } from "@/components/genotype/lib";
 import toast from "@/services/toast";
 import { maybePluralize } from "@/services/utils";
 import variantService from "@/services/variants";
 import { useVariantsStore } from "@/stores/variants";
 import { SemipolarSpinner } from "epic-spinners";
+import _ from "lodash";
 import { storeToRefs } from "pinia";
 import { useColors } from "vuestic-ui";
 
@@ -199,13 +204,10 @@ const { colors } = useColors();
 // const props = defineProps({})
 const number_formatter = Intl.NumberFormat("en");
 
-const DEFAULT_ZYGOSITIES = ["HET", "HOMALT"];
-
 const variantsStore = useVariantsStore();
-const { currPage, pageSize, source_id, snapshot_id, range } =
+const { currPage, pageSize, source_id, snapshot_id, searchParams } =
   storeToRefs(variantsStore);
 
-const range_query = ref(null);
 const criteria = ref(null);
 const zygosities = ref(DEFAULT_ZYGOSITIES);
 const loading = ref(false);
@@ -234,17 +236,10 @@ watchDebounced(
   },
 );
 
-const example_searches = {
-  gene: "GAB4",
-  variant: "22-17477492-C-A", //"22-17311348-C-A"
-  genomic_region: "chr22:17455700-17575000",
-};
-
 function reset() {
   console.log("reset");
   resultsView.value = false;
-  range_query.value = "";
-  range.value = null;
+  searchParams.value = [];
   variants.value = [];
   variant_count.value = 0;
   total_count.value = 0;
@@ -255,27 +250,11 @@ function reset() {
   pageSize.value = 50;
 }
 
-// convert range query (str) to range object
-watchDebounced(
-  range_query,
-  (val) => {
-    console.log("range_query", val);
-    const parsedQuery = parseQuery(val);
-    if (Object.keys(parsedQuery).length !== 0) {
-      range.value = parsedQuery;
-    }
-  },
-  {
-    deep: true,
-    debounce: 300,
-  },
-);
-
-// get total count of variants when range changes
+// get total count of variants when snapshot or source or searchParams changes
 watch(
-  [snapshot_id, source_id, range],
+  [snapshot_id, source_id, searchParams],
   () => {
-    if (range.value == null) {
+    if (searchParams.value.length === 0) {
       return;
     }
 
@@ -286,7 +265,7 @@ watch(
       .getTotalCount({
         source_id: source_id.value,
         snapshot_id: snapshot_id.value,
-        ranges: [range.value],
+        ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
       })
       .then((res) => {
         total_count.value = res.data?.count || 0;
@@ -306,7 +285,7 @@ function makeVariantSearchQuery() {
       version: "1.0.0",
       source_id: source_id.value,
       snapshot_id: snapshot_id.value,
-      ranges: [range.value],
+      ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
       zygosities: zygosities.value,
       criteria: canon_query.value || transformQueryForApi(defaultQuery()),
     },
@@ -316,8 +295,7 @@ function makeVariantSearchQuery() {
 }
 
 function handleSearch() {
-  console.log("handleSearch", range.value, currPage.value, pageSize.value);
-  if (range.value == null || zygosities.value.length === 0) {
+  if (searchParams.value.length === 0 || zygosities.value.length === 0) {
     return;
   }
   loading.value = true;
@@ -337,7 +315,7 @@ const throttledSearch = useThrottleFn(handleSearch, 100);
 
 // watch for changes in the search parameters and call the API
 watch(
-  [snapshot_id, source_id, range, currPage, pageSize, zygosities],
+  [snapshot_id, source_id, searchParams, currPage, pageSize, zygosities],
   throttledSearch,
   {
     deep: true,

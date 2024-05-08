@@ -14,23 +14,22 @@
 
     <template #appendInner>
       <VaPopover>
-        <Icon icon="mdi:help-circle" class="text-base va-text-secondary" />
+        <Icon
+          :icon="error ? 'mdi-alert' : 'mdi:help-circle'"
+          class="text-lg va-text-secondary"
+          :class="{ ' text-amber-600 dark:text-amber-400': error }"
+        />
         <template #title>
-          <i>Examples by query type:</i>
+          <i v-if="error">
+            The input text does not conform to any of the following patterns
+          </i>
+          <i v-else>Examples by query type:</i>
         </template>
         <template #body>
-          <p>
-            <span class="font-bold"> Gene </span> :
-            {{ props.example_searches["gene"] }}
-          </p>
-          <p>
-            <span class="font-bold"> Variant </span>:
-            {{ props.example_searches["variant"] }}
-          </p>
-          <p>
-            <span class="font-bold"> Genomic Region </span>:
-            {{ props.example_searches["genomic_region"] }}
-          </p>
+          <VariantSearchExample
+            :example_searches="props.example_searches"
+            @search="(val) => (model = val)"
+          />
         </template>
       </VaPopover>
     </template>
@@ -43,6 +42,10 @@ const props = defineProps({
   example_searches: {
     type: Object,
     required: true,
+  },
+  error: {
+    type: Boolean,
+    default: false,
   },
 });
 

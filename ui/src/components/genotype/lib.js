@@ -19,6 +19,7 @@ function parseQuery(text) {
   if (variantRegex.test(text)) {
     const match = text.match(variantRegex);
     return {
+      text,
       type: "variant",
       value: {
         chr: match[1],
@@ -30,6 +31,7 @@ function parseQuery(text) {
   } else if (genomicRegionRegex.test(text)) {
     const match = text.match(genomicRegionRegex);
     return {
+      text,
       type: "region",
       value: {
         chr: match[1],
@@ -39,13 +41,14 @@ function parseQuery(text) {
     };
   } else if (geneRegex.test(text)) {
     return {
+      text,
       type: "gene",
       value: {
         gene: text,
       },
     };
   } else {
-    return {};
+    return null;
   }
 }
 
