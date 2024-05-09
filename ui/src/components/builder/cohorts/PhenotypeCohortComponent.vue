@@ -13,6 +13,7 @@ transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
+import ollamaService from "@/services/ollama";
 import toast from "@/services/toast";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
@@ -84,6 +85,15 @@ watch(
         console.log("Committing cohort");
         emit("commit");
       });
+      ollamaService
+        .generate_name_description({ criteria: newQuery })
+        .then((res) => {
+          cohort.value.suggested_name = res.data.name;
+          cohort.value.suggested_description = res.data.description;
+        })
+        .catch((error) => {
+          console.error("Error generating name and description", error);
+        });
     }
   },
   { deep: true },

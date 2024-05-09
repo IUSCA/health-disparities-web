@@ -61,6 +61,17 @@ services:
   #   command: >
   #     bash -c "pg_dump -w -f /backup/$${PROJ_NAME}_postgres_backup.$$(date +%F).psql --username=$$POSTGRES_USER --host=postgres --dbname=$$POSTGRES_DB"
 
+  ollama:
+    image: ollama/ollama
+    expose:
+      - 11434
+    volumes:
+      - ./db/ollama:/root/.ollama
+    networks:
+      network:
+        ipv4_address: 172.19.0.4
+
+
 volumes:
   ui_modules:
     external: false

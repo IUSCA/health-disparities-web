@@ -31,5 +31,6 @@ router.use('/phenotype_files', require('./phenotype_files'));
 router.use('/genotype_sets', require('./genotype_sets'));
 router.use('/genotype_files', require('./genotype_files'));
 router.use('/genotype_samples', require('./genotype_samples'));
+router.use('/ollama', require('./ollama'));
 
 module.exports = router;

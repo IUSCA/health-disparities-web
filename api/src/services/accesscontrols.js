@@ -99,6 +99,9 @@ const grantsObject = {
     participant: {
       'read:any': ['*'],
     },
+    ollama: {
+      'create:any': ['*'],
+    },
   },
 
   // user role permissions
@@ -204,6 +207,9 @@ const grantsObject = {
       'read:any': ['*'],
       'update:any': ['*'],
       'delete:any': ['*'],
+    },
+    ollama: {
+      'create:any': ['*'],
     },
   },
 };

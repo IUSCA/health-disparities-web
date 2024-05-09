@@ -28,6 +28,9 @@
   },
   "download_server": {
     "base_url": "DOWNLOAD_SERVER_BASE_URL"
+  },
+  "ollama": {
+    "host": "OLLAMA_HOST"
   }
 
 }

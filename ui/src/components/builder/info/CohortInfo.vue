@@ -12,7 +12,11 @@
       <div
         class="text-lg leading-5 whitespace-nowrap overflow-clip overflow-ellipsis"
       >
-        {{ props.cohort.name }}
+        {{
+          (props.cohort.name.startsWith("Untitled")
+            ? props.cohort.suggested_name
+            : props.cohort.name) || props.cohort.name
+        }}
       </div>
       <div class="flex ml-auto">
         <!-- published / unpublished -->
