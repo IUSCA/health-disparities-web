@@ -92,7 +92,7 @@ services:
   #     - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
 
   # run this once
-  # docker compose exec ollama ollama fetch mistral:latest
+  # docker compose exec ollama ollama pull mistral:latest
   ollama:
     image: ollama/ollama
     ports:
