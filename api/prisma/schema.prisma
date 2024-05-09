@@ -572,6 +572,7 @@ model gene {
 model source {
   id           Int            @id @default(autoincrement())
   name         String
+  build        String?
   description  String?
   created_at   DateTime       @default(now()) @db.Timestamp(6)
   published    Boolean        @default(false)
@@ -774,7 +775,6 @@ model genotype_stats_snapshot_1 {
   @@ignore
 }
 
-
 view gt_stats_annotations {
   chr           Int     @db.SmallInt
   position      BigInt
@@ -822,4 +822,31 @@ view gt_stats_annotations {
   allele_freq   Float
 
   @@id([chr, position, ref, alt])
+}
+
+model ncbiRefSeqCurated {
+  id           Int      @id @default(autoincrement())
+  name         String
+  name2        String
+  chr          Int      @db.SmallInt
+  strand       String
+  txStart      BigInt
+  txEnd        BigInt
+  cdsStart     BigInt
+  cdsEnd       BigInt
+  exonCount    Int
+  exonStarts   Int[]
+  exonEnds     Int[]
+  score        Int?
+  cdsStartStat cds_type
+  cdsEndStat   cds_type
+  exonFrames   Int[]
+  build        String
+}
+
+enum cds_type {
+  none
+  unk
+  incmpl
+  cmpl
 }

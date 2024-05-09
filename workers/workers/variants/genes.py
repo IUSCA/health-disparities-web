@@ -20,6 +20,10 @@ class GeneInfo:
         If initfile is provided, the gene information will be updated with the new information.
         Creates new genes in the database if they do not exist.
 
+        # run this before re-ingesting the gene information
+        delete from gene;
+        ALTER SEQUENCE gene_id_seq RESTART WITH 1;
+
         @param vcf_file_path: Path to the VCF file containing gene information.
         @param outfile: Path to the output pickle file.
         @param initfile: Path to the initial pickle file containing gene information.
