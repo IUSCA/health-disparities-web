@@ -9,23 +9,31 @@ const {
 
 const prisma = new PrismaClient();
 
-function ageHistogramSQL(participant_ids, num_bins) {
+function ageHistogramSQL(cohort_id, num_bins) {
   return Prisma.sql`
     with data as (
-      select extract(year from age(dob)) as age from demographic
-      WHERE participant_id = ANY(${participant_ids})
+      select extract(year from age(dob)) as age from demographic d
+      JOIN (
+        SELECT participants 
+        FROM cohort 
+        WHERE id = CAST(${cohort_id} AS UUID)
+      ) c ON d.participant_id = ANY(c.participants)
     )
     ${histogramSQL('data', 'age', num_bins)}
   `;
 }
 
-async function dateHistogram(participant_ids, _column, num_bins) {
+async function dateHistogram(cohort_id, _column, num_bins) {
   // To determine bin size, get the range of the column
   const column = Prisma.raw(_column);
   const rangeSQL = Prisma.sql`
     with data as (
-      select ${column} from demographic
-      WHERE participant_id = ANY(${participant_ids})
+      select ${column} from demographic d
+      JOIN (
+        SELECT participants 
+        FROM cohort 
+        WHERE id = CAST(${cohort_id} AS UUID)
+      ) c ON d.participant_id = ANY(c.participants)
     )
     ${dateRangeSQL('data', _column, num_bins)}
   `;
@@ -66,8 +74,12 @@ async function dateHistogram(participant_ids, _column, num_bins) {
 
   const sql = Prisma.sql`
     with data as (
-      select ${column} from demographic
-      WHERE participant_id = ANY(${participant_ids})
+      select ${column} from demographic d
+      JOIN (
+        SELECT participants 
+        FROM cohort 
+        WHERE id = CAST(${cohort_id} AS UUID)
+      ) c ON d.participant_id = ANY(c.participants)
     )
     ${aggSQL}
   `;
@@ -75,7 +87,23 @@ async function dateHistogram(participant_ids, _column, num_bins) {
   return prisma.$queryRaw(sql);
 }
 
+function aggregateColumnSQL(cohort_id, _column) {
+  const column = Prisma.raw(_column);
+  const sql = Prisma.sql`
+  select ${column}, count(*) as count from demographic d
+    JOIN (
+      SELECT participants 
+      FROM cohort 
+      WHERE id = CAST(${cohort_id} AS UUID)
+    ) c ON d.participant_id = ANY(c.participants)
+  group by ${column}
+  order by count desc
+  `;
+  return sql;
+}
+
 module.exports = {
   ageHistogramSQL,
   dateHistogram,
+  aggregateColumnSQL,
 };

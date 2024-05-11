@@ -31,7 +31,7 @@ export const cohortFilters = [
       {
         key: "max_enc_date",
         type: "date",
-        label: "Max Encounter Date",
+        label: "Max Enc. Date",
         info: null,
       },
       {

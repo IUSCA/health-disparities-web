@@ -17,7 +17,7 @@ const {
 } = require('../services/cohort/validation');
 
 const { CATEGORIES } = require('../services/cohort/fields');
-const { ageHistogramSQL, dateHistogram } = require('../services/cohort/visualization');
+const { ageHistogramSQL, dateHistogram, aggregateColumnSQL } = require('../services/cohort/visualization');
 
 const isPermittedTo = accessControl('cohort');
 const router = express.Router();
@@ -510,33 +510,12 @@ router.get(
     query('field').isIn(['gender', 'race', 'ethnicity']),
   ]),
   asyncHandler(async (req, res, next) => {
-    const cohort = await prisma.cohort.findFirstOrThrow({
-      where: {
-        id: req.params.id,
-      },
-    });
-    const participant_ids = cohort.participants;
     const { field } = req.query;
 
-    const _rows = await prisma.demographic.groupBy({
-      where: {
-        participant_id: {
-          in: participant_ids,
-        },
-      },
-      by: [field],
-      _count: {
-        [field]: true,
-      },
-      orderBy: {
-        _count: {
-          [field]: 'desc',
-        },
-      },
-    });
+    const _rows = await prisma.$queryRaw(aggregateColumnSQL(req.params.id, field));
 
     const distinctValuesWithCounts = _rows.reduce((acc, item) => {
-      acc[item[field]] = item._count[field];
+      acc[item[field]] = item.count;
       return acc;
     }, {});
 
@@ -555,12 +534,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     // only works for age field
     const { bins } = req.query;
-    const cohort = await prisma.cohort.findFirstOrThrow({
-      where: {
-        id: req.params.id,
-      },
-    });
-    const sql = ageHistogramSQL(cohort.participants, bins);
+    const sql = ageHistogramSQL(req.params.id, bins);
     // console.log(sql.sql, sql.values);
     const _rows = await prisma.$queryRaw(sql);
     res.json(_rows);
@@ -578,12 +552,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     // only works for age field
     const { field, bins } = req.query;
-    const cohort = await prisma.cohort.findFirstOrThrow({
-      where: {
-        id: req.params.id,
-      },
-    });
-    const _rows = await dateHistogram(cohort.participants, field, bins);
+    const _rows = await dateHistogram(req.params.id, field, bins);
     res.json(_rows);
   }),
 );

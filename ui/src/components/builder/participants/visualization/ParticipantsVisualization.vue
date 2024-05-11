@@ -58,7 +58,7 @@ const graphs = {
     // },
     max_enc_date: {
       data: ref([]),
-      title: "Max Encounter Date",
+      title: "Max Enc. Date",
       component: ECDateHistogram,
     },
     enroll_date: {
