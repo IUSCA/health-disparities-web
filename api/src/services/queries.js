@@ -12,7 +12,7 @@ function histogramSQL(_table, _column, _num_bins) {
       count(*)::int AS bin_count
     FROM
       ${table},
-      (SELECT MIN(${column}) AS min_value, MAX(${column}) AS max_value FROM ${table}) AS range_values
+      (SELECT MIN(${column}) AS min_value, MAX(${column})+1 AS max_value FROM ${table}) AS range_values
     GROUP BY
       bin_number, bin_start, bin_end
     ORDER BY
@@ -20,6 +20,36 @@ function histogramSQL(_table, _column, _num_bins) {
   `;
   return sql;
 }
+
+// alternative implementation
+// the range is derived from the data in that bucket itself
+// this fails when there are empty buckets
+// also the range is not continuous
+
+// function histogramSQL(_table, _column, _num_bins) {
+//   const table = Prisma.raw(_table);
+//   const column = Prisma.raw(_column);
+//   const num_bins = Prisma.raw(_num_bins);
+
+//   const sql = Prisma.sql`SELECT
+//       width_bucket(${column}, min_value, max_value, ${num_bins}) AS bin_number,
+//       lower(numrange(min(age),max(age))) as bin_start,
+//       upper(numrange(min(age),max(age))) as bin_end,
+//       count(*)::int AS bin_count
+//     FROM
+//       ${table},
+//       (SELECT
+//         MIN(${column}) AS min_value,
+//         MAX(${column})+1 AS max_value
+//         FROM ${table}
+//       ) AS range_values
+//     GROUP BY
+//       bin_number
+//     ORDER BY
+//       bin_number;
+//   `;
+//   return sql;
+// }
 
 function aggregateDateByMonthYearSQL(_table, _column) {
   const table = Prisma.raw(_table);
