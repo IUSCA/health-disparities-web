@@ -13,13 +13,14 @@
             <div
               class="flex flex-wrap gap-3 items-center text-sm va-text-secondary"
             >
-              <div>Gender: {{ participant.demographics.gender }}</div>
+              <div>Gender: {{ participant?.demographics?.gender }}</div>
               <div>|</div>
               <div>
-                Age: {{ datetime.fromNow(participant.demographics.dob, true) }}
+                Age:
+                {{ datetime.fromNow(participant?.demographics?.dob, true) }}
               </div>
               <div>|</div>
-              <div>Race: {{ participant.demographics.race }}</div>
+              <div>Race: {{ participant?.demographics?.race }}</div>
             </div>
           </div>
         </template>
