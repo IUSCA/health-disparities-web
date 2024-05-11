@@ -113,6 +113,35 @@ class cohortService {
       },
     );
   }
+
+  // get /cohorts/:id/participants/aggregate?field=
+  getParticipantAggregate({ id, field }) {
+    return api.get(`/cohorts/${id}/participants/aggregate`, {
+      params: {
+        field,
+      },
+    });
+  }
+
+  // get /cohorts/:id/participants/bins?field=&bins=
+  getParticipantBins({ id, field, bins }) {
+    return api.get(`/cohorts/${id}/participants/bins`, {
+      params: {
+        field,
+        bins,
+      },
+    });
+  }
+
+  // get /cohorts/:id/participants/date/bins?field=&bins=
+  getParticipantDateBins({ id, field, bins }) {
+    return api.get(`/cohorts/${id}/participants/date/bins`, {
+      params: {
+        field,
+        bins,
+      },
+    });
+  }
 }
 
 export default new cohortService();

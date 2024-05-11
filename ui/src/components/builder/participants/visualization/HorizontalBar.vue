@@ -8,12 +8,6 @@
 </template>
 
 <script setup>
-const props = defineProps({
-  data: {
-    type: Object,
-    required: true,
-  },
-});
 import { BarChart, PieChart } from "echarts/charts";
 import {
 GridComponent,
@@ -34,6 +28,13 @@ use([
   LegendComponent,
   GridComponent,
 ]);
+
+const props = defineProps({
+  data: {
+    type: Object,
+    required: true,
+  },
+});
 
 const isDark = useDark();
 

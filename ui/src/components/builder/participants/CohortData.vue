@@ -20,25 +20,16 @@
   </div>
   <div class="mt-3" v-if="selectedCohort">
     <div v-if="mode === 'data'">
-      <ParticipantsData :participants="participants" />
-      <Pagination
-        class="mt-4 px-1 lg:px-3"
-        v-model:page="currPage"
-        v-model:page_size="pageSize"
-        :total_results="selectedCohort.size"
-        :curr_items="participants.length"
-        :page_size_options="PAGE_SIZE_OPTIONS"
-      />
+      <ParticipantsData :cohort="selectedCohort" />
     </div>
     <!-- visualization -->
     <div v-if="mode === 'visualization'">
-      <ParticipantsVisualization :participants="participants" />
+      <ParticipantsVisualization :cohort="selectedCohort" />
     </div>
   </div>
 </template>
 
 <script setup>
-import cohortService from "@/services/cohort2";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 // const props = defineProps({})
@@ -61,12 +52,7 @@ const options = [
 // so we track the id of the selected cohort and use it to find the cohort object
 const selectValue = ref(null);
 const selectedCohort = ref(null);
-const mode = ref("data");
-const participants = ref([]);
-const currPage = ref(1);
-const pageSize = ref(10);
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
-const offset = computed(() => (currPage.value - 1) * pageSize.value);
+const mode = ref("visualization");
 
 const selectableCohorts = computed(() => {
   return (isInCombineMode.value ? [combinationCohort.value] : []).concat(
@@ -75,8 +61,8 @@ const selectableCohorts = computed(() => {
 });
 
 watch(selectValue, (val) => {
-  console.log("value changed", val);
   selectedCohort.value = selectableCohorts.value.find((c) => c.id === val);
+  console.log("setting selectedCohort", selectedCohort.value);
 });
 
 // automatically choose a default selected cohort
@@ -117,11 +103,13 @@ watch(
     // else set it to null
     if (combinationCohort.value.id === selectedCohort.value.id) {
       selectedCohort.value = combinationCohort.value;
+      console.log("setting selectedCohort", selectedCohort.value);
       return;
     }
     const c = cohorts.value.find((c) => c.id === selectedCohort.value.id);
     if (c) {
       selectedCohort.value = c;
+      console.log("setting selectedCohort", selectedCohort.value);
       return;
     }
     selectValue.value = null;
@@ -131,39 +119,4 @@ watch(
     immediate: true,
   },
 );
-
-async function fetchParticipants() {
-  if (!selectedCohort.value) return;
-  const cohort_id = selectedCohort.value.is_dirty
-    ? selectedCohort.value.search_id
-    : selectedCohort.value.id;
-  console.log("fetchParticipants cohort id", cohort_id);
-
-  if (cohort_id && !selectedCohort.value.isEmpty()) {
-    return cohortService
-      .getParticipants({
-        id: cohort_id,
-        limit: pageSize.value,
-        offset: offset.value,
-      })
-      .then((response) => {
-        participants.value = response.data;
-      });
-  }
-}
-
-watch(
-  selectedCohort,
-  () => {
-    fetchParticipants().then(() => {
-      currPage.value = 1;
-    });
-  },
-  {
-    immediate: true,
-    deep: true,
-  },
-);
-
-watch([currPage, pageSize], fetchParticipants);
 </script>

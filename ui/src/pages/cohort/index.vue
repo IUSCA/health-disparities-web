@@ -1,7 +1,7 @@
 <template>
   <div v-if="cohorts.length === 0">
     <CohortBuilderLanding />
-    <ParticipantsVisualization />
+    <!-- <ParticipantsVisualization /> -->
   </div>
   <div v-else>
     <!-- Cohort Selector -->
@@ -42,7 +42,7 @@
       <div class="">
         <VaCard>
           <VaCardContent>
-            <CohortParticipants />
+            <CohortData />
           </VaCardContent>
         </VaCard>
       </div>

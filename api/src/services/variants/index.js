@@ -1,5 +1,6 @@
 const { Prisma, PrismaClient } = require('@prisma/client');
 const { SQL_OP_MAP, isUnaryOp } = require('../cohort/participants');
+const { histogramSQL } = require('../queries');
 
 const prisma = new PrismaClient();
 
@@ -160,27 +161,6 @@ function buildSQLVarIds({
       ${where}
   `;
   return query;
-}
-
-function histogramSQL(_table, _column, _num_bins) {
-  const table = Prisma.raw(_table);
-  const column = Prisma.raw(_column);
-  const num_bins = Prisma.raw(_num_bins);
-
-  const sql = Prisma.sql`SELECT
-      width_bucket(${column}, min_value, max_value, ${num_bins}) AS bin_number,
-      min_value + ((max_value - min_value) / ${num_bins}) * (width_bucket(${column}, min_value, max_value, ${num_bins}) - 1) AS bin_start,
-      min_value + ((max_value - min_value) / ${num_bins}) * width_bucket(${column}, min_value, max_value, ${num_bins}) AS bin_end,
-      count(*)::int AS bin_count
-    FROM
-      ${table},
-      (SELECT MIN(${column}) AS min_value, MAX(${column}) AS max_value FROM ${table}) AS range_values
-    GROUP BY
-      bin_number, bin_start, bin_end
-    ORDER BY
-      bin_number;
-  `;
-  return sql;
 }
 
 function annotationHistogramSQL(query, _column, _num_bins) {
