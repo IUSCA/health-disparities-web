@@ -30,6 +30,11 @@ export const useCohortsStore = defineStore("cohorts", () => {
     set: (value) => (combinationCohort.value.criteria.operators = value),
   });
 
+  const enableTitleGeneration = ref(
+    useLocalStorage("cohort.enableTitleGeneration", false),
+  );
+  const enableChatbot = ref(useLocalStorage("cohort.enableChatbot", false));
+
   function appendCohort(cohort, op = null) {
     // op is the operator to be applied to the last cohort and this new cohort
     // if there are no cohorts, then op is not needed
@@ -98,6 +103,8 @@ export const useCohortsStore = defineStore("cohorts", () => {
     updateOperator,
     makeNewName,
     setCombinationCohort,
+    enableTitleGeneration,
+    enableChatbot,
   };
 });
 

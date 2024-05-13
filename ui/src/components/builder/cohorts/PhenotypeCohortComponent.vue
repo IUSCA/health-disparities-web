@@ -25,7 +25,8 @@ const cohort = defineModel("cohort", {
 const emit = defineEmits(["beforeSearch", "afterSearch", "commit"]);
 
 const cohortsStore = useCohortsStore();
-const { totalParticipants, cohorts } = storeToRefs(cohortsStore);
+const { totalParticipants, cohorts, enableTitleGeneration } =
+  storeToRefs(cohortsStore);
 
 const canon_query = ref(transformQueryForApi(cohort.value.criteria));
 
@@ -85,15 +86,18 @@ watch(
         console.log("Committing cohort");
         emit("commit");
       });
-      ollamaService
-        .generate_name_description({ criteria: newQuery })
-        .then((res) => {
-          cohort.value.suggested_name = res.data.name;
-          cohort.value.suggested_description = res.data.description;
-        })
-        .catch((error) => {
-          console.error("Error generating name and description", error);
-        });
+
+      if (enableTitleGeneration.value) {
+        ollamaService
+          .generate_name_description({ criteria: newQuery })
+          .then((res) => {
+            cohort.value.suggested_name = res.data.name;
+            cohort.value.suggested_description = res.data.description;
+          })
+          .catch((error) => {
+            console.error("Error generating name and description", error);
+          });
+      }
     }
   },
   { deep: true },
