@@ -73,7 +73,7 @@
       </div>
     </VaInnerLoading>
   </div>
-  <Chat @message="handleUserMessage" ref="chat" />
+  <Chat @message="handleUserMessage" ref="chat" v-if="enableChatbot" />
 </template>
 
 <script setup>
@@ -83,6 +83,7 @@ import { PhenotypeCohort } from "@/components/builder/models/phenotype";
 import { createCohort } from "@/components/builder/models/utils";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
+import genAIService from "@/services/gen_ai";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
@@ -228,29 +229,41 @@ function loadCohort(id) {
 const chat = ref(null);
 function handleUserMessage(text) {
   console.log("handleUserMessage", text);
-  if (text === "who are you?") {
-    setTimeout(() => {
-      chat.value.addBotMessage("I am a bot.");
-    }, 2000);
-  } else if (text === "add a cohort") {
-    setTimeout(() => {
+  // if (text === "who are you?") {
+  //   setTimeout(() => {
+  //     chat.value.addBotMessage("I am a bot.");
+  //   }, 2000);
+  // } else if (text === "add a cohort") {
+  //   setTimeout(() => {
+  //     const cohort = PhenotypeCohort.createEmpty();
+  //     cohort.criteria = {
+  //       operatorIdentifier: "AND",
+  //       children: [
+  //         {
+  //           identifier: "demographic.gender",
+  //           connectorValue: "in",
+  //           value: ["F"],
+  //         },
+  //       ],
+  //     };
+  //     cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
+  //     chat.value.addBotMessage("Done!");
+  //   }, 2000);
+  // } else {
+  //   chat.value.addBotMessage("I don't understand.");
+  // }
+  genAIService
+    .generate_cohort({ text })
+    .then((res) => {
       const cohort = PhenotypeCohort.createEmpty();
-      cohort.criteria = {
-        operatorIdentifier: "AND",
-        children: [
-          {
-            identifier: "demographic.gender",
-            connectorValue: "in",
-            value: ["F"],
-          },
-        ],
-      };
+      cohort.criteria = res.data.json_query;
       cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
       chat.value.addBotMessage("Done!");
-    }, 2000);
-  } else {
-    chat.value.addBotMessage("I don't understand.");
-  }
+    })
+    .catch((err) => {
+      console.error(err);
+      chat.value.addBotMessage("Unable to generate cohort. Please try again.");
+    });
 }
 </script>
 

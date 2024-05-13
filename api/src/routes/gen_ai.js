@@ -5,6 +5,7 @@ const express = require('express');
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
 const ollamaService = require('../services/ollama');
+const quarryService = require('../services/quarry');
 
 const isPermittedTo = accessControl('ollama');
 const router = express.Router();
@@ -19,6 +20,15 @@ router.post(
     console.log({ generated_text });
 
     res.json(JSON.parse(generated_text.trim()));
+  }),
+);
+
+router.post(
+  '/generate/cohort',
+  isPermittedTo('create'),
+  asyncHandler(async (req, res) => {
+    const http_res = await quarryService.generate_cohort(req.body.text);
+    res.json(http_res.data);
   }),
 );
 

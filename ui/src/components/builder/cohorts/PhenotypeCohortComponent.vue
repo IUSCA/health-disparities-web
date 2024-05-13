@@ -13,7 +13,7 @@ transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
-import ollamaService from "@/services/ollama";
+import genAIService from "@/services/gen_ai";
 import toast from "@/services/toast";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
@@ -88,7 +88,7 @@ watch(
       });
 
       if (enableTitleGeneration.value) {
-        ollamaService
+        genAIService
           .generate_name_description({ criteria: newQuery })
           .then((res) => {
             cohort.value.suggested_name = res.data.name;
@@ -126,3 +126,4 @@ onMounted(() => {
   }
 });
 </script>
+@/services/generative_ai

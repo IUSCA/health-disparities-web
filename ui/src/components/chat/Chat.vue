@@ -23,7 +23,32 @@
     :disableUserListToggle="true"
     :messageStyling="true"
   >
-    <template v-slot:header> Chat with a Bot </template>
+    <template v-slot:header> Chat with an AI </template>
+
+    <template v-slot:text-message-body="{ message }">
+      <div v-if="message.author === 'bot' && message?.data?.meta === 'init'">
+        <p>
+          Hello, you can describe your cohort and I will help you create it. To
+          get started, try on of the following:
+        </p>
+        <br />
+        <div class="flex flex-col gap-3">
+          <p v-for="(msg, idx) in exmapleMessages" :key="idx">
+            <a
+              @click="addUserMessage(msg)"
+              href="#"
+              class="va-link hover:underline"
+            >
+              {{ msg }}
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <div v-else>
+        {{ message?.data?.text }}
+      </div>
+    </template>
   </beautiful-chat>
 </template>
 
@@ -45,8 +70,11 @@ const participants = ref([
 const titleImageUrl = "/icons8-bot-50.png";
 
 const messageList = ref([
-  { type: "text", author: "me", data: { text: "Say yes!" } },
-  { type: "text", author: "bot", data: { text: "No." } },
+  {
+    type: "text",
+    author: "bot",
+    data: { text: "Hello. How can I help you?", meta: "init" },
+  },
 ]);
 
 const newMessagesCount = ref(0);
@@ -77,6 +105,12 @@ const colors = {
   },
 };
 
+const exmapleMessages = [
+  "Create a cohort of female patients with diabetes.",
+  "Create a cohort of patients with diabetes and hypertension and age above 50.",
+  "Patients between 18 and 65 years old with diabetes but without hypertension.",
+];
+
 function addBotMessage(text) {
   if (text.length > 0) {
     newMessagesCount.value = visible.value
@@ -84,6 +118,10 @@ function addBotMessage(text) {
       : newMessagesCount.value + 1;
     onMessageWasSent({ author: "bot", type: "text", data: { text } });
   }
+}
+
+function addUserMessage(text) {
+  onMessageWasSent({ author: "me", type: "text", data: { text } });
 }
 
 function onMessageWasSent(message) {
@@ -118,7 +156,7 @@ watch(messageList, () => {
 }
 
 #chat .sc-chat-window {
-  height: calc(100vh - 300px);
+  height: calc(100vh - 330px);
 }
 
 #chat .sc-typing-indicator {
@@ -128,5 +166,18 @@ watch(messageList, () => {
 #chat .sc-typing-indicator span {
   height: 5px;
   width: 5px;
+}
+
+#chat .sc-message-list {
+  padding: 20px 0px;
+}
+
+#chat .sc-message {
+  width: 330px;
+}
+
+#chat .sc-header--img {
+  padding: 10px;
+  height: 50px;
 }
 </style>

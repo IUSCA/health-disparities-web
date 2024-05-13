@@ -101,5 +101,8 @@
   "ollama": {
     "host": "",
     "port": 11434
+  },
+  "quarry": {
+    "base_url": ""
   }
 }
