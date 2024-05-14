@@ -181,29 +181,48 @@ async function participantsWithVariants({
   username,
   return_count = false,
 }) {
+  // compute required data in stages with CTEs
+  // 1. relevant variants - variants that match the input filters
+  // 2. gt - genotype indexes of participants with the required zygosities in the relevant variants
+  // 3. permissible_participants - participants that are in the snapshot and accessible to the user
+  // through protocols
+  // 4. select - intersection of permissible_participants and participants matching gt indexes
+  // This query is superior to the previous one in terms of performance, because it avoids
+  // large intermediate join results. The query planner is not able to optimize the previous query.
   const select_column = return_count
     ? Prisma.raw('count(distinct p.id) as count')
     : Prisma.raw('distinct p.id as pid');
   const query = Prisma.sql`
-    with relevant_variants as (
-      ${variants_sql}
-    )
-    select 
+    with 
+      relevant_variants as (
+        ${variants_sql}
+      ),
+      gt as (
+        select
+          distinct t.idx as idx
+        from
+          variant v
+          join relevant_variants rv on 
+                v.chr = rv.chr
+            and v."position" = rv.position
+            and v."ref" = rv.ref
+            and v.alt = rv.alt
+            and v.source_id = rv.source_id
+          join unnest(v.genotype) WITH ordinality t(g, idx) on t.g in (${Prisma.join(zygosities, ',')})
+      ),
+      permissible_participants as (
+        select p.id, p.genotype_idx
+        from participant p 
+        join participants_per_snapshot pps on pps.id = p.id and pps.snapshot_id = ${snapshot_id}
+        join participants_per_user ppu on ppu.id = p.id and ppu.username = ${username}
+        where p.genotype_idx is not null  
+      )
+    select
     ${select_column}
-    from variant v
-    join relevant_variants rv on 
-      v.chr = rv.chr and 
-      v."position" = rv.position and 
-      v."ref" = rv.ref and 
-      v.alt = rv.alt and 
-      v.source_id = rv.source_id
-    join unnest(v.genotype) WITH ordinality t(g, idx) on 1=1
-    join participant p on p.genotype_idx = idx
-    join participants_per_user ppu on ppu.id = p.id
-    join participants_per_snapshot pps on pps.id = p.id
-    and snapshot_id = ${snapshot_id}
-    and username = ${username}
-    and t.g in (${Prisma.join(zygosities, ',')})
+    FROM permissible_participants p 
+    WHERE EXISTS (
+      SELECT 1 FROM gt WHERE p.genotype_idx = gt.idx
+    )
   `;
 
   // eslint-disable-next-line no-console
