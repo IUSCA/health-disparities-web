@@ -188,7 +188,9 @@ router.post(
       offset: req.body.offset,
     });
     // console.log(sql.sql, sql.values);
+    // console.time('variant query');
     const results = await prisma.$queryRaw(sql) ?? [];
+    // console.timeEnd('variant query')
 
     let count = 0;
     if (results.length !== 0) {
@@ -196,6 +198,7 @@ router.post(
         base_query,
         json_query: criteria,
       });
+      // console.time('participantsWithVariants')
       count = await participantsWithVariants({
         variants_sql,
         zygosities,
@@ -203,6 +206,7 @@ router.post(
         username: req.user.username,
         return_count: true,
       });
+      // console.timeEnd('participantsWithVariants')
     }
 
     res.json({

@@ -106,9 +106,9 @@ const colors = {
 };
 
 const exmapleMessages = [
-  "Create a cohort of female patients with diabetes.",
-  "Create a cohort of patients with diabetes and hypertension and age above 50.",
-  "Patients between 18 and 65 years old with diabetes but without hypertension.",
+  "Create a cohort of female patients over 50 years old",
+  // "Create a cohort of patients with diabetes and hypertension and age above 50.",
+  // "Patients between 18 and 65 years old with diabetes but without hypertension.",
 ];
 
 function addBotMessage(text) {

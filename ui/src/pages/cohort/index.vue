@@ -81,6 +81,7 @@ import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/comb
 import { CombinationCohort } from "@/components/builder/models";
 import { PhenotypeCohort } from "@/components/builder/models/phenotype";
 import { createCohort } from "@/components/builder/models/utils";
+import { transformStoredQuery } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
 import genAIService from "@/services/gen_ai";
@@ -256,7 +257,7 @@ function handleUserMessage(text) {
     .generate_cohort({ text })
     .then((res) => {
       const cohort = PhenotypeCohort.createEmpty();
-      cohort.criteria = res.data.json_query;
+      cohort.criteria = transformStoredQuery(JSON.parse(res.data.json_query).query);
       cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
       chat.value.addBotMessage("Done!");
     })
