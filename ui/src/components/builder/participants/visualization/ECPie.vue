@@ -24,6 +24,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  topN: {
+    type: Number,
+    default: Infinity,
+  },
 });
 
 const isDark = useDark();
@@ -42,10 +46,13 @@ const option = computed(() => ({
       name: "Count",
       type: "pie",
       radius: "50%",
-      data: Object.entries(props.data).map(([name, value]) => ({
-        name,
-        value,
-      })),
+      data: Object.entries(props.data)
+        .sort(([_name, value]) => value) // sort by value descending
+        .map(([name, value]) => ({
+          name,
+          value,
+        }))
+        .slice(0, props.topN),
       emphasis: {
         itemStyle: {
           shadowBlur: 10,

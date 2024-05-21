@@ -7,6 +7,7 @@
             :is="graph.component"
             :data="graph.data.value"
             :title="graph.title"
+            v-bind="graph.props || {}"
           />
         </div>
       </VaCardContent>
@@ -42,6 +43,9 @@ const graphs = {
       data: ref([]),
       title: "Race",
       component: ECPie,
+      props: {
+        topN: 5,
+      },
     },
   },
   numericals: {
