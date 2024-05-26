@@ -32,6 +32,26 @@ const props = defineProps({
 
 const isDark = useDark();
 
+const data = computed(() => {
+  const all_date = Object.entries(props.data)
+    .sort(([_name, value]) => value) // sort by value descending
+    .map(([name, value]) => ({
+      name,
+      value,
+    }));
+  const topN = all_date.slice(0, props.topN);
+
+  if (topN.length === all_date.length) {
+    return topN;
+  }
+
+  const othersValue = all_date
+    .slice(props.topN)
+    .reduce((acc, { value }) => acc + value, 0);
+  console.log(topN, { name: "Others", value: othersValue });
+  return [...topN, { name: "Others", value: othersValue }];
+});
+
 const option = computed(() => ({
   title: {
     text: props.title,
@@ -46,13 +66,7 @@ const option = computed(() => ({
       name: "Count",
       type: "pie",
       radius: "50%",
-      data: Object.entries(props.data)
-        .sort(([_name, value]) => value) // sort by value descending
-        .map(([name, value]) => ({
-          name,
-          value,
-        }))
-        .slice(0, props.topN),
+      data: data.value,
       emphasis: {
         itemStyle: {
           shadowBlur: 10,

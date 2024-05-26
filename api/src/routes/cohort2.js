@@ -515,7 +515,7 @@ router.get(
     const _rows = await prisma.$queryRaw(aggregateColumnSQL(req.params.id, field));
 
     const distinctValuesWithCounts = _rows.reduce((acc, item) => {
-      acc[item[field]] = item.count;
+      acc[item[field]] = parseInt(item.count, 10);
       return acc;
     }, {});
 
