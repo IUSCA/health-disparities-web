@@ -15,6 +15,7 @@ from workers.utils import batched
 from workers.variants.database import conn
 from workers.variants.models import variant, participant
 from workers.variants.models.variant import Variant
+from workers.variants.utils import encode_chromosome
 
 logger = get_task_logger(__name__)
 
@@ -63,21 +64,6 @@ def encode_genotype(genotype: tuple[int, int, bool]) -> int | None:
         return 2
     if a == 1 and b == 1:
         return 3
-
-
-def encode_chromosome(chrom: str) -> int:
-    try:
-        if chrom.upper() in ['X', 'XX']:
-            return 23
-        if chrom.upper() in ['Y', 'YY']:
-            return 24
-        if chrom.isnumeric():
-            if 1 <= int(chrom) <= 22:
-                return int(chrom)
-    except Exception as e:
-        print('error in encoding chromosome', e)
-        raise IngestionFailed(f'Unable to encode chromosome value {chrom}')
-    raise IngestionFailed(f'Unable to encode chromosome value {chrom}')
 
 
 def infer_phase(vcf_file_path: str) -> bool:

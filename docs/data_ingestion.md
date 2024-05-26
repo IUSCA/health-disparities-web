@@ -206,3 +206,17 @@ cd /opt/sca/biobank/workers
 poetry shell
 python -m workers.scripts.register_ondemand --path /path/to/vcf_dir -r -n 20240202_imputed
 ```
+
+
+### RefSeq Genes
+
+Data files:
+- [HG38](https://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/ncbiRefSeqCurated.txt.gz)
+- [HG19](https://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/ncbiRefSeqCurated.txt.gz)
+
+```bash
+cd /opt/sca/biobank/workers
+poetry shell
+python -m workers.variants.ingest_refseq --data_path  /N/project/biobank/annotations/refseq/hg38/ncbiRefSeqCurated.txt --build hg38
+python -m workers.variants.ingest_refseq --data_path  /N/project/biobank/annotations/refseq/hg19/ncbiRefSeqCurated.txt --build hg19
+```

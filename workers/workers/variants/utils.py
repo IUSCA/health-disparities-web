@@ -1,6 +1,8 @@
 import numpy as np
 from cyvcf2 import VCF
 
+from workers.exceptions import IngestionFailed
+
 
 def merge_genotype_arrays(previous_genotype: list[int],
                           participant_ids: list[int],
@@ -52,3 +54,18 @@ def decode_chromosome(chrom: int) -> str:
         return 'X'
     else:
         return 'Y'
+
+
+def encode_chromosome(chrom: str) -> int:
+    try:
+        if chrom.upper() in ['X', 'XX']:
+            return 23
+        if chrom.upper() in ['Y', 'YY']:
+            return 24
+        if chrom.isnumeric():
+            if 1 <= int(chrom) <= 22:
+                return int(chrom)
+    except Exception as e:
+        print('error in encoding chromosome', e)
+        raise IngestionFailed(f'Unable to encode chromosome value {chrom}')
+    raise IngestionFailed(f'Unable to encode chromosome value {chrom}')
