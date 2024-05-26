@@ -8,6 +8,12 @@ poetry shell
 python -m workers.phenotype.load_data /N/project/biobank/phenotype 1
 ```
 
+Run the following command to populate / update the materialized view
+
+```sql
+REFRESH MATERIALIZED view dx_unique_name;
+```
+
 ## Regeneron Data Ingestion
 
 ### Mapping samples to paritcipants

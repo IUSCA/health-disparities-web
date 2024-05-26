@@ -1,68 +1,146 @@
 const { Prisma, PrismaClient } = require('@prisma/client');
+const config = require('config');
 const { SQL_OP_MAP, isUnaryOp } = require('../cohort/participants');
 const { histogramSQL } = require('../queries');
 
 const prisma = new PrismaClient();
 
+function mergeIntervals(intervals) {
+  // merge overlapping intervals
+  // intervals is array of 2-tuples [[start, end], [start, end], ...]
+  // intervals are assumed to be sorted by start and then end
+  const merged = [intervals[0]];
+
+  for (let i = 1; i < intervals.length; i += 1) {
+    const last = merged[merged.length - 1];
+
+    // if the current interval starts on or before the last interval ends, merge them
+    if (intervals[i][0] <= last[1]) {
+      // merge the intervals
+      // set the end of the last interval to the max of the two ends
+      last[1] = Math.max(last[1], intervals[i][1]);
+    } else {
+      merged.push(intervals[i]);
+    }
+  }
+  return merged;
+}
+
+async function getDistinctRangesFromGene(gene_name, build) {
+  const rows = await prisma.$queryRaw`
+    select distinct chr, "txStart" as start, "txEnd" as end 
+    from "ncbiRefSeqCurated" nrsc 
+    where upper(name2) = upper(${gene_name}) and build = ${build}
+    order by chr, "txStart", "txEnd"
+  `;
+  return rows.map((row) => ({
+    chr: row.chr,
+    start: parseInt(row.start, 10),
+    end: parseInt(row.end, 10),
+  }));
+}
+
+async function getGeneRegions(gene_name, build) {
+  // get distinct ranges for the gene by looking up the gene in the ncbiRefSeqCurated table
+  // returns [{chr, start, end}, ...]
+
+  const ranges = await getDistinctRangesFromGene(gene_name, build);
+
+  // group by chr
+  const chr_ranges = {};
+  ranges.forEach((row) => {
+    if (!chr_ranges[row.chr]) {
+      chr_ranges[row.chr] = [];
+    }
+    chr_ranges[row.chr].push([row.start, row.end]);
+  });
+
+  // for each chr, merge overlapping intervals
+  const chr_ranges_merged = {};
+  Object.entries(chr_ranges).forEach(([chr, intervals]) => {
+    chr_ranges_merged[chr] = mergeIntervals(intervals);
+  });
+
+  // flatten the merged intervals per chromosome into a list of ranges
+  return Object.entries(chr_ranges_merged)
+    .map(
+      ([chr, merged_intervals]) => merged_intervals
+        .map(
+          (interval) => ({
+            chr: parseInt(chr, 10),
+            start: interval[0] - config.get('variant_search.gene.left_padding'),
+            end: interval[1] + config.get('variant_search.gene.right_padding'),
+          }),
+        ),
+    ).flat();
+}
+
+async function transformRanges(ranges, build) {
+  return Promise.all(
+    ranges.map(async (range) => {
+      if (range.type === 'gene') {
+        const regions = await getGeneRegions(range.value.name, build);
+        return {
+          ...range,
+          value: {
+            ...range.value,
+            regions,
+          },
+        };
+      }
+      return range;
+    }),
+  );
+}
+
+function geneSQLFilter(regions) {
+  // convert ranges to SQL
+  const region_sqls = regions
+    .map(
+      (r) => Prisma.sql`(chr = ${r.chr} AND position BETWEEN ${r.start} AND ${r.end})`,
+    );
+
+  if (region_sqls.length === 0) {
+    return null;
+  }
+
+  // join the ranges with OR
+  return Prisma.join(region_sqls, ' OR ');
+}
+
 function buildRangesSQL(ranges) {
-  const t = ranges.map((range) => {
+  const range_sqls = ranges.map((range) => {
     if (range.type === 'gene') {
-      return Prisma.sql`(gene1_id = ${range.value.id} or gene2_id = ${range.value.id})`;
+      // can return null if gene is not found
+      return geneSQLFilter(range.value.regions);
     }
     if (range.type === 'region') {
       return Prisma.sql`(chr = ${range.value.chr} AND position BETWEEN ${range.value.start} AND ${range.value.end})`;
     }
     // variant
     return Prisma.sql`(chr = ${range.value.chr} AND position = ${range.value.position} AND ref = ${range.value.ref} AND alt = ${range.value.alt})`;
-  });
-  return Prisma.join(t, ' OR  ');
-}
+  }).filter((r) => r != null);
 
-function buildRangesPrismaQuery(ranges) {
-  const t = ranges.map((range) => {
-    if (range.type === 'gene') {
-      return {
-        OR: [
-          {
-            gene1_id: range.value.id,
-          },
-          {
-            gene2_id: range.value.id,
-          },
-        ],
-      };
-    }
-    if (range.type === 'region') {
-      return {
-        chr: range.value.chr,
-        position: {
-          gte: range.value.start,
-          lte: range.value.end,
-        },
-      };
-    }
-    // variant
-    return {
-      chr: range.value.chr,
-      position: range.value.position,
-      ref: range.value.ref,
-      alt: range.value.alt,
-    };
-  });
-  return {
-    OR: t,
-  };
+  if (range_sqls.length === 0) {
+    return null;
+  }
+
+  return Prisma.join(range_sqls, ' OR  ');
 }
 
 function buildBaseQuerySQL({
   source_id, snapshot_id, protocol_id, ranges,
 }) {
   const rangesSql = buildRangesSQL(ranges);
+
+  // if no ranges, query should return no results
+  const _rangesSql = rangesSql == null ? Prisma.sql`false` : rangesSql;
+
   return Prisma.sql`
     source_id = ${source_id}
     AND snapshot_id = ${snapshot_id}
     AND protocol_id = ${protocol_id}
-    AND (${rangesSql})
+    AND (${_rangesSql})
   `;
 }
 
@@ -140,6 +218,17 @@ function buildSQL({
     ORDER BY "chr", "position", "ref", "alt" ASC 
     LIMIT ${limit}
     OFFSET ${offset};
+  `;
+  return query;
+}
+
+function buildTotalCountSQL(base_query) {
+  const base_query_sql = buildBaseQuerySQL(base_query);
+
+  const query = Prisma.sql`
+    SELECT COUNT(*) as count
+    FROM gt_stats_annotations
+    WHERE (${base_query_sql})
   `;
   return query;
 }
@@ -241,6 +330,10 @@ module.exports = {
   buildBaseQuerySQL,
   participantsWithVariants,
   buildRangesSQL,
-  buildRangesPrismaQuery,
+  // buildRangesPrismaQuery,
   buildSQLVarIds,
+  getDistinctRangesFromGene,
+  getGeneRegions,
+  transformRanges,
+  buildTotalCountSQL,
 };

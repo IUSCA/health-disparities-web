@@ -96,9 +96,9 @@ const rangesSchema = {
         value: {
           type: 'object',
           properties: {
-            id: { type: 'number', minimum: 1 },
+            name: { type: 'string' },
           },
-          required: ['id'],
+          required: ['name'],
           additionalProperties: false,
         },
       },

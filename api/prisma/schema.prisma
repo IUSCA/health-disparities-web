@@ -572,7 +572,7 @@ model gene {
 model source {
   id           Int            @id @default(autoincrement())
   name         String
-  build        String?
+  build        String?        // TODO: make this required
   description  String?
   created_at   DateTime       @default(now()) @db.Timestamp(6)
   published    Boolean        @default(false)
@@ -842,6 +842,9 @@ model ncbiRefSeqCurated {
   cdsEndStat   cds_type
   exonFrames   Int[]
   build        String
+
+  @@index([chr, txStart, txEnd])
+  @@index([name2])
 }
 
 enum cds_type {

@@ -14,9 +14,10 @@ const {
 const {
   buildSQL, annotationHistogramSQL, buildBaseQuerySQL,
   participantsWithVariants,
-  buildRangesPrismaQuery, buildSQLVarIds,
+  buildRangesPrismaQuery, buildSQLVarIds, transformRanges, buildTotalCountSQL,
 } = require('../services/variants');
 const fields = require('../services/variants/fields');
+const sourceStore = require('../services/variants/sourceStore');
 
 const isPermittedTo = accessControl('variant');
 const router = express.Router();
@@ -133,18 +134,23 @@ router.post(
     // #swagger.tags = ['variants']
     // #swagger.summary = 'Get total count of variants'
 
-    const where = {
-      source_id: req.body.source_id,
-      snapshot_id: req.body.snapshot_id,
-      protocol_id: req.user.protocol_id,
-      ...buildRangesPrismaQuery(req.body.ranges),
-    };
-    const count = await prisma.gt_stats_annotations.count({
-      where,
-    });
-    return res.json({ count });
+    const {
+      source_id, snapshot_id, ranges,
+    } = req.body;
 
-    // TODO: cache the total count
+    // enrich gene ranges with regions (chr, start, end) by looking up the gene in the refseq table
+    const source = await sourceStore.fetchSource(source_id);
+    const resolvedRanges = await transformRanges(ranges, source.build);
+
+    const sql = buildTotalCountSQL({
+      source_id,
+      snapshot_id,
+      protocol_id: req.user.protocol_id,
+      ranges: resolvedRanges,
+    });
+    // console.log(sql.sql, sql.values);
+    const rows = await prisma.$queryRaw(sql);
+    return res.json({ count: rows[0].count });
   }),
 );
 
@@ -174,11 +180,15 @@ router.post(
       source_id, snapshot_id, ranges, criteria, zygosities,
     } = req.body.query;
 
+    // enrich gene ranges with regions (chr, start, end) by looking up the gene in the refseq table
+    const source = await sourceStore.fetchSource(source_id);
+    const resolvedRanges = await transformRanges(ranges, source.build);
+
     const base_query = {
       source_id,
       snapshot_id,
       protocol_id: req.user.protocol_id,
-      ranges,
+      ranges: resolvedRanges,
     };
 
     const sql = buildSQL({

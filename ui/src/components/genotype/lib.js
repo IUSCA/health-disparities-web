@@ -44,7 +44,7 @@ function parseQuery(text) {
       text,
       type: "gene",
       value: {
-        gene: text,
+        name: text,
       },
     };
   } else {
