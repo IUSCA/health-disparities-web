@@ -572,7 +572,7 @@ model gene {
 model source {
   id           Int            @id @default(autoincrement())
   name         String
-  build        String?        // TODO: make this required
+  build        String
   description  String?
   created_at   DateTime       @default(now()) @db.Timestamp(6)
   published    Boolean        @default(false)
