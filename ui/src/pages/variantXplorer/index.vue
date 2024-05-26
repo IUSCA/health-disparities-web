@@ -4,7 +4,7 @@
       <VaCard>
         <VaCardContent>
           <div class="flex items-center gap-3">
-            <SourceSelect v-model="source_id" class="flex-none" />
+            <SourceSelect v-model="source" class="flex-none" />
             <SnapshotSelect v-model="snapshot_id" class="flex-none" />
             <VariantSearchForm
               :example_searches="EXAMPLE_SEARCHES"
@@ -85,7 +85,7 @@
                 <i-mdi-filter-variant />
                 <span> Variant Filters </span>
                 <span class="ml-auto font-normal">
-                  Genome Build: {{ source_id === 1 ? "hg38" : "hg19" }}
+                  Genome Build: {{ source.build }}
                 </span>
               </p>
               <div class="ml-3">
@@ -205,7 +205,7 @@ const { colors } = useColors();
 const number_formatter = Intl.NumberFormat("en");
 
 const variantsStore = useVariantsStore();
-const { currPage, pageSize, source_id, snapshot_id, searchParams } =
+const { currPage, pageSize, source, snapshot_id, searchParams } =
   storeToRefs(variantsStore);
 
 const criteria = ref(null);
@@ -255,7 +255,7 @@ function reset() {
 // reset criteria to default query
 // if searchParams is empty, set resultsView to false
 watch(
-  [snapshot_id, source_id, searchParams],
+  [snapshot_id, source, searchParams],
   () => {
     if (searchParams.value.length === 0) {
       resultsView.value = false;
@@ -270,7 +270,7 @@ watch(
 
     variantService
       .getTotalCount({
-        source_id: source_id.value,
+        source_id: source.value?.id,
         snapshot_id: snapshot_id.value,
         ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
       })
@@ -290,7 +290,7 @@ function makeVariantSearchQuery() {
       name: "genotype",
       namespace: "edu.iu.sca.biobank",
       version: "1.0.0",
-      source_id: source_id.value,
+      source_id: source.value?.id,
       snapshot_id: snapshot_id.value,
       ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
       zygosities: zygosities.value,
@@ -322,7 +322,7 @@ const throttledSearch = useThrottleFn(handleSearch, 100);
 
 // watch for changes in the search parameters and call the API
 watch(
-  [snapshot_id, source_id, searchParams, currPage, pageSize, zygosities],
+  [snapshot_id, source, searchParams, currPage, pageSize, zygosities],
   throttledSearch,
   {
     deep: true,

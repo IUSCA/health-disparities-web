@@ -18,7 +18,7 @@ export const useVariantsStore = defineStore("varaints", () => {
     useLocalStorage("variants.columnsSelected", getDefaultColumns()),
   );
 
-  const source_id = ref(null);
+  const source = ref(null);
   const snapshot_id = ref(null);
   const range = ref(null);
   const searchParams = ref([]);
@@ -61,7 +61,7 @@ export const useVariantsStore = defineStore("varaints", () => {
     pageSize,
     columns,
     columnsSelected,
-    source_id,
+    source,
     snapshot_id,
     range,
     searchParams,

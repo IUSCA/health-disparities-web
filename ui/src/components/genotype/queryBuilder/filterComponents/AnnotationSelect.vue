@@ -24,7 +24,7 @@ import _ from "lodash";
 import { storeToRefs } from "pinia";
 
 const variantsStore = useVariantsStore();
-const { source_id, snapshot_id, searchParams } = storeToRefs(variantsStore);
+const { source, snapshot_id, searchParams } = storeToRefs(variantsStore);
 
 const props = defineProps({
   identifier: String,
@@ -46,7 +46,7 @@ watch(
     loading.value = true;
     variantService
       .getAnnotationsUniqueValues(field, {
-        source_id: source_id.value,
+        source_id: source.value?.id,
         snapshot_id: snapshot_id.value,
         ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
       })
