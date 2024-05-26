@@ -23,12 +23,12 @@ export const variantFilters = [
     icon: "mdi-database-search",
     filters: columnsByType("ClinVAR"),
   },
-  {
-    label: "Genes",
-    key: "Genes",
-    icon: "mdi-dna",
-    filters: columnsByType("Genes"),
-  },
+  // {
+  //   label: "Genes",
+  //   key: "Genes",
+  //   icon: "mdi-dna",
+  //   filters: columnsByType("Genes"),
+  // },
   {
     label: "1000 Genomes Project",
     key: "1000 Genomes Project",
