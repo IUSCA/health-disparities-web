@@ -56,7 +56,7 @@ const schema = {
         operator: {
           enum: [
             'in', 'not_in',
-            'eq', 'neq', 'gt', 'lt', 'gte', 'lte',
+            'eq', 'neq', 'gt', 'lt', 'gte', 'lte', 'between',
             'contains', 'not_contains', 'starts_with', 'ends_with',
             'is_null', 'is_not_null',
           ],
@@ -115,7 +115,7 @@ function sanitizeQueryTree(queryJson) {
   const [category, fieldName] = field.split('.');
 
   if (dbSchema[category][fieldName] === 'Int') {
-    if (op === 'in' || op === 'not_in') {
+    if (op === 'in' || op === 'not_in' || op === 'between') {
       new_value = value.map((v) => parseInt(v, 10));
     } else {
       new_value = parseInt(value, 10);
@@ -123,7 +123,7 @@ function sanitizeQueryTree(queryJson) {
   }
 
   if (dbSchema[category][fieldName] === 'Decimal') {
-    if (op === 'in' || op === 'not_in') {
+    if (op === 'in' || op === 'not_in' || op === 'between') {
       new_value = value.map((v) => parseFloat(v));
     } else {
       new_value = parseFloat(value);
@@ -131,7 +131,7 @@ function sanitizeQueryTree(queryJson) {
   }
 
   if (dbSchema[category][fieldName] === 'DateTime') {
-    if (op === 'in' || op === 'not_in') {
+    if (op === 'in' || op === 'not_in' || op === 'between') {
       new_value = value.map((v) => new Date(v));
     } else {
       new_value = new Date(value);

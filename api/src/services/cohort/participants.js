@@ -10,6 +10,7 @@ const SQL_OP_MAP = {
   lt: '<',
   gte: '>=',
   lte: '<=',
+  between: 'BETWEEN',
   contains: 'ILIKE',
   not_contains: 'NOT ILIKE',
   starts_with: 'ILIKE',
@@ -24,7 +25,13 @@ function isUnaryOp(op) {
 
 function buildCustomField(field, op, value) {
   const [category, fieldName] = field.split('.');
-  const _value = isUnaryOp(op) ? Prisma.empty : value;
+  let sql_value = value;
+  if (isUnaryOp(op)) {
+    sql_value = Prisma.empty;
+  }
+  if (op === 'between') {
+    sql_value = Prisma.sql`${value[0]} AND ${value[1]}`;
+  }
   if (category === 'demographic' && fieldName === 'age') {
     // datatype is Int
     return Prisma.sql`
@@ -33,7 +40,7 @@ function buildCustomField(field, op, value) {
       FROM demographic t
       WHERE 
         t.participant_id = p.id
-        AND extract(year from age(dob)) ${Prisma.raw(SQL_OP_MAP[op])} ${_value}
+        AND extract(year from age(dob)) ${Prisma.raw(SQL_OP_MAP[op])} ${sql_value}
     )`;
   }
   throw new Error(`Implementation for custom field not found: ${field}`);
@@ -60,6 +67,9 @@ function buildField(field, op, value) {
   }
   if (isUnaryOp(op)) {
     sql_value = Prisma.empty;
+  }
+  if (op === 'between') {
+    sql_value = Prisma.sql`${value[0]} AND ${value[1]}`;
   }
   return Prisma.sql`
   EXISTS (

@@ -337,6 +337,10 @@ export const operators = [
         label: "<=",
       },
       {
+        key: "between",
+        label: "between",
+      },
+      {
         key: "is_null",
         label: "is null",
       },
