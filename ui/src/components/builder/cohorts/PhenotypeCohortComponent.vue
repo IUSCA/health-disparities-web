@@ -91,7 +91,7 @@ watch(
         genAIService
           .generate_name_description({ criteria: newQuery })
           .then((res) => {
-            cohort.value.suggested_name = res.data.name;
+            cohort.value.suggested_name = res.data.title;
             cohort.value.suggested_description = res.data.description;
           })
           .catch((error) => {

@@ -110,5 +110,9 @@
       "left_padding": 2500,
       "right_padding": 2500
     }
+  },
+  "openai": {
+    "base_url":"http://rc-156-247.rci.uits.iu.edu/api/chat",
+    "api_key": ""
   }
 }

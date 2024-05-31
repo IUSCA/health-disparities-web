@@ -257,7 +257,7 @@ function handleUserMessage(text) {
     .generate_cohort({ text })
     .then((res) => {
       const cohort = PhenotypeCohort.createEmpty();
-      cohort.criteria = transformStoredQuery(JSON.parse(res.data.json_query).query);
+      cohort.criteria = transformStoredQuery(res.data.criteria);
       cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
       chat.value.addBotMessage("Done!");
     })

@@ -4,8 +4,10 @@ const express = require('express');
 
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
-const ollamaService = require('../services/ollama');
-const quarryService = require('../services/quarry');
+// const ollamaService = require('../services/ollama');
+// const quarryService = require('../services/quarry');
+const openaiService = require('../services/openai');
+const { validateCohortQuery } = require('../services/cohort/validation');
 
 const isPermittedTo = accessControl('ollama');
 const router = express.Router();
@@ -14,12 +16,8 @@ router.post(
   '/generate/name-description',
   isPermittedTo('create'),
   asyncHandler(async (req, res) => {
-    const http_res = await ollamaService.generate_cohort_name_description(req.body.criteria);
-    const generated_text = http_res.data?.response;
-    // eslint-disable-next-line no-console
-    console.log({ generated_text });
-
-    res.json(JSON.parse(generated_text.trim()));
+    const metadata = await openaiService.generate_cohort_name_description(req.body.criteria);
+    res.json(metadata);
   }),
 );
 
@@ -27,8 +25,15 @@ router.post(
   '/generate/cohort',
   isPermittedTo('create'),
   asyncHandler(async (req, res) => {
-    const http_res = await quarryService.generate_cohort(req.body.text);
-    res.json(http_res.data);
+    const json = await openaiService.generate_cohort(req.body.text);
+    // console.log(JSON.stringify(json, null, 2));
+    const query = Object.assign(json?.query, {
+      name: 'phenotype',
+      namespace: 'edu.iu.sca.biobank',
+      version: '1.0.0',
+    });
+    validateCohortQuery(query);
+    res.json(query);
   }),
 );
 
