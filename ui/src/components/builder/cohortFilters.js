@@ -415,6 +415,10 @@ export const operators = [
         label: "on or before",
       },
       {
+        key: "between",
+        label: "between",
+      },
+      {
         key: "is_null",
         label: "is null",
       },
