@@ -256,11 +256,15 @@ router.post(
       source_id, snapshot_id, ranges, criteria, zygosities,
     } = req.body.query;
 
+    // enrich gene ranges with regions (chr, start, end) by looking up the gene in the refseq table
+    const source = await sourceStore.fetchSource(source_id);
+    const resolvedRanges = await transformRanges(ranges, source.build);
+
     const base_query = {
       source_id,
       snapshot_id,
       protocol_id: req.user.protocol_id,
-      ranges,
+      ranges: resolvedRanges,
     };
 
     const variants_sql = buildSQLVarIds({
@@ -283,7 +287,13 @@ router.post(
       _.pick(['name', 'is_published', 'is_locked', 'description', 'metadata']),
       _.omitBy(_.isNil),
     ])(req.body);
-    cohort_data.query = req.body.query;
+    cohort_data.query = {
+      source_id,
+      snapshot_id,
+      ranges: resolvedRanges,
+      criteria,
+      zygosities,
+    };
     cohort_data.metadata = {
       ...cohort_data.metadata,
       protocol_id: req.user.protocol_id,
@@ -327,11 +337,15 @@ router.patch(
       source_id, snapshot_id, ranges, criteria, zygosities,
     } = req.body.query;
 
+    // enrich gene ranges with regions (chr, start, end) by looking up the gene in the refseq table
+    const source = await sourceStore.fetchSource(source_id);
+    const resolvedRanges = await transformRanges(ranges, source.build);
+
     const base_query = {
       source_id,
       snapshot_id,
       protocol_id: req.user.protocol_id,
-      ranges,
+      ranges: resolvedRanges,
     };
 
     const variants_sql = buildSQLVarIds({
@@ -353,7 +367,13 @@ router.patch(
       protocol_id: req.user.protocol_id,
     });
 
-    cohort_data.query = req.body.query;
+    cohort_data.query = {
+      source_id,
+      snapshot_id,
+      ranges: resolvedRanges,
+      criteria,
+      zygosities,
+    };
 
     const cohort = await prisma.cohort.update({
       where: {
