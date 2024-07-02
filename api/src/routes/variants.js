@@ -15,7 +15,7 @@ const {
 const {
   buildSQL, annotationHistogramSQL, buildBaseQuerySQL,
   participantsWithVariants,
-  buildRangesPrismaQuery, buildSQLVarIds, transformRanges, buildTotalCountSQL,
+  buildSQLVarIds, transformRanges, buildTotalCountSQL,
 } = require('../services/variants');
 const fields = require('../services/variants/fields');
 const sourceStore = require('../services/variants/sourceStore');
@@ -62,7 +62,7 @@ router.post(
       snapshot_id: req.body.snapshot_id,
       protocol_id: req.user.protocol_id,
       [field]: { not: null },
-      ...buildRangesPrismaQuery(req.body.ranges),
+      // ...buildRangesPrismaQuery(req.body.ranges), // TODO
     };
 
     const _rows = await prisma.gt_stats_annotations.groupBy({

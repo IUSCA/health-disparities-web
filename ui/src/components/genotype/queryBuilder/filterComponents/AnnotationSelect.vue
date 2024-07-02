@@ -46,8 +46,8 @@ watch(
     loading.value = true;
     variantService
       .getAnnotationsUniqueValues(field, {
-        source_id: source.value?.id,
-        snapshot_id: snapshot_id.value,
+        source_id: source.value?.id || 1, // TODO
+        snapshot_id: snapshot_id.value || 1,
         ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
       })
       .then((res) => {
