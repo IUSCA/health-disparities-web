@@ -1,4 +1,5 @@
 <template>
+  <!-- AI checkboxes -->
   <div class="relative">
     <VaButtonDropdown
       preset="plain"
@@ -230,29 +231,6 @@ function loadCohort(id) {
 const chat = ref(null);
 function handleUserMessage(text) {
   console.log("handleUserMessage", text);
-  // if (text === "who are you?") {
-  //   setTimeout(() => {
-  //     chat.value.addBotMessage("I am a bot.");
-  //   }, 2000);
-  // } else if (text === "add a cohort") {
-  //   setTimeout(() => {
-  //     const cohort = PhenotypeCohort.createEmpty();
-  //     cohort.criteria = {
-  //       operatorIdentifier: "AND",
-  //       children: [
-  //         {
-  //           identifier: "demographic.gender",
-  //           connectorValue: "in",
-  //           value: ["F"],
-  //         },
-  //       ],
-  //     };
-  //     cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
-  //     chat.value.addBotMessage("Done!");
-  //   }, 2000);
-  // } else {
-  //   chat.value.addBotMessage("I don't understand.");
-  // }
   genAIService
     .generate_cohort({ text })
     .then((res) => {

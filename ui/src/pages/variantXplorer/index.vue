@@ -183,12 +183,12 @@
 
 <script setup>
 import {
-defaultQuery,
-transformQueryForApi,
+  defaultQuery,
+  transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import {
-DEFAULT_ZYGOSITIES,
-EXAMPLE_SEARCHES,
+  DEFAULT_ZYGOSITIES,
+  EXAMPLE_SEARCHES,
 } from "@/components/genotype/constants";
 import { parseQuery } from "@/components/genotype/lib";
 import toast from "@/services/toast";

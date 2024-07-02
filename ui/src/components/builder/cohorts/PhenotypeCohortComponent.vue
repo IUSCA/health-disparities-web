@@ -8,8 +8,8 @@
 <script setup>
 import { Cohort } from "@/components/builder/models";
 import {
-isAPIQueryEmpty,
-transformQueryForApi,
+  isAPIQueryEmpty,
+  transformQueryForApi,
 } from "@/components/builder/queryBuilder/cohortQueryBuilder";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
@@ -126,4 +126,3 @@ onMounted(() => {
   }
 });
 </script>
-@/services/generative_ai
