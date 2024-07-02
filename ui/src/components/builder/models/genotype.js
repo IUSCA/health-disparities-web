@@ -71,8 +71,8 @@ class GenotypeCohort extends Cohort {
       criteria: defaultQuery(),
       ranges: [],
       zygosities: DEFAULT_ZYGOSITIES,
-      source_id: null,
-      snapshot_id: null,
+      source_id: 1,
+      snapshot_id: 1,
     };
   }
 

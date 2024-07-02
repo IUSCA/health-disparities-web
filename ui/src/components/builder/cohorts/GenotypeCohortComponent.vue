@@ -7,7 +7,7 @@
   </div> -->
   <div>
     <div class="flex items-center gap-3">
-      <SourceSelect v-model="source" class="flex-none" />
+      <!-- <SourceSelect v-model="source" class="flex-none" /> -->
 
       <VariantSearchForm2
         v-model:search-params="cohort.criteria.ranges"
@@ -44,9 +44,7 @@
       <p class="flex gap-1 items-center font-semibold mb-3">
         <i-mdi-filter-variant />
         <span> Variant Filters </span>
-        <span class="ml-auto font-normal">
-          Genome Build: {{ source?.build }}
-        </span>
+        <span class="ml-auto font-normal"> Genome Build: hg38 </span>
       </p>
       <div class="ml-3">
         <VariantQueryBuilder
@@ -76,7 +74,6 @@ const { cohorts } = storeToRefs(cohortsStore);
 
 const emit = defineEmits(["beforeSearch", "afterSearch", "commit"]);
 console.log("Genotype Cohort", cohort.value);
-const source = ref(null);
 
 function addSearchParam(param) {
   // add if not already present
@@ -114,7 +111,7 @@ function makeVariantSearchQuery() {
       name: "genotype",
       namespace: "edu.iu.sca.biobank",
       version: "1.0.0",
-      source_id: source.value?.id,
+      source_id: 1,
       snapshot_id: 1,
       ranges: cohort.value.criteria.ranges.map((p) => _.omit(p, ["text"])),
       zygosities: cohort.value.criteria.zygosities,
@@ -132,9 +129,10 @@ function handleSearch() {
   }
   emit("beforeSearch");
   variantService
-    .search(makeVariantSearchQuery())
+    .search2(makeVariantSearchQuery())
     .then((res) => {
-      cohort.value.size = res.data?.metadata?.participant_count || 0;
+      cohort.value.size = res.data?.count;
+      cohort.value.search_id = res.data.search_id;
       emit("afterSearch");
     })
     .catch((err) => {
@@ -146,12 +144,11 @@ const throttledSearch = useThrottleFn(handleSearch, 100);
 
 // watch for changes in the search parameters and call the API
 watch(
-  [
-    source,
-    () => cohort.value.criteria.ranges,
-    () => cohort.value.criteria.zygosities,
-  ],
-  throttledSearch,
+  [() => cohort.value.criteria.ranges, () => cohort.value.criteria.zygosities],
+  () => {
+    throttledSearch();
+    emit("commit");
+  },
   {
     deep: true,
   },
@@ -173,6 +170,7 @@ watch(
       console.log("query changed", newQuery, oldQuery);
 
       throttledSearch();
+      emit("commit");
     }
   },
   { deep: true },

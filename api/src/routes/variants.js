@@ -238,6 +238,65 @@ router.post(
 );
 
 router.post(
+  '/search2',
+  isPermittedTo('read'),
+  validate([
+    body('query').custom(validateQuery).bail()
+      .customSanitizer(sanitizeQuery),
+  ]),
+  validateProtocols,
+  asyncHandler(async (req, res, next) => {
+    const {
+      source_id, snapshot_id, ranges, criteria, zygosities,
+    } = req.body.query;
+
+    // enrich gene ranges with regions (chr, start, end) by looking up the gene in the refseq table
+    const source = await sourceStore.fetchSource(source_id);
+    const resolvedRanges = await transformRanges(ranges, source.build);
+
+    const base_query = {
+      source_id,
+      snapshot_id,
+      protocol_id: req.user.protocol_id,
+      ranges: resolvedRanges,
+    };
+
+    const variants_sql = buildSQLVarIds({
+      base_query,
+      json_query: criteria,
+    });
+    const participants = await participantsWithVariants({
+      variants_sql,
+      zygosities,
+      snapshot_id,
+      username: req.user.username,
+      return_count: false,
+    });
+
+    const cohort = await prisma.cohort.create({
+      data: {
+        name: 'temp_cohort',
+        query: req.body.query,
+        metadata: {
+          protocol_id: req.user.protocol_id,
+        },
+        is_temp: true,
+        author_username: req.user.username,
+        participants,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    res.json({
+      count: participants.length,
+      search_id: cohort.id,
+    });
+  }),
+);
+
+router.post(
   '/cohort',
   accessControl('cohort')('create'),
   validate([
@@ -301,10 +360,8 @@ router.post(
         author_username: req.user.username,
         participants,
       },
-      select: {
-        id: true,
-      },
     });
+    delete cohort.participants;
     if (cohort?.query?.zygosities?.length > 0) {
       cohort.query.zygosities = decode_zygosities(cohort.query.zygosities);
     }

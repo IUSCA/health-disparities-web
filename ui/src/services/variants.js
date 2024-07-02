@@ -29,6 +29,10 @@ class VariantService {
     return api.post(`/variants/search`, data);
   }
 
+  search2(data) {
+    return api.post(`/variants/search2`, data);
+  }
+
   createCohort(data) {
     return api.post(`/variants/cohort`, data);
   }
