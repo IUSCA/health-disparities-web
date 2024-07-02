@@ -70,6 +70,18 @@ const zygMapping = {
   HOMALT: 3,
 };
 
+const zygInvMapping = {
+  '-1': 'MISSING',
+  0: 'HOM',
+  1: 'HET',
+  2: 'HETFLP',
+  3: 'HOMALT',
+};
+
+function decode_zygosities(zygosities) {
+  return zygosities.map((zygosity) => zygInvMapping[zygosity]);
+}
+
 function validateZygosities(zygosities) {
   const valid = ajv.validate(zygositiesSchema, zygosities);
   if (!valid) {
@@ -103,7 +115,7 @@ const rangesSchema = {
         },
       },
       required: ['type', 'value'],
-      additionalProperties: false,
+      additionalProperties: true, // TODO: set to false later, quick fix for now
     },
     region: {
       type: 'object',
@@ -121,7 +133,7 @@ const rangesSchema = {
         },
       },
       required: ['type', 'value'],
-      additionalProperties: false,
+      additionalProperties: true,
     },
     variant: {
       type: 'object',
@@ -140,7 +152,7 @@ const rangesSchema = {
         },
       },
       required: ['type', 'value'],
-      additionalProperties: false,
+      additionalProperties: true,
     },
   },
 };
@@ -330,4 +342,5 @@ module.exports = {
   sanitizeZygosities,
   validateRanges,
   sanitizeRanges,
+  decode_zygosities,
 };

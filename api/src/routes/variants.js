@@ -10,6 +10,7 @@ const { accessControl } = require('../middleware/auth');
 const {
   validateQuery, sanitizeQuery,
   validateRanges, sanitizeRanges,
+  decode_zygosities,
 } = require('../services/variants/validation');
 const {
   buildSQL, annotationHistogramSQL, buildBaseQuerySQL,
@@ -287,13 +288,8 @@ router.post(
       _.pick(['name', 'is_published', 'is_locked', 'description', 'metadata']),
       _.omitBy(_.isNil),
     ])(req.body);
-    cohort_data.query = {
-      source_id,
-      snapshot_id,
-      ranges: resolvedRanges,
-      criteria,
-      zygosities,
-    };
+    cohort_data.query = req.body.query;
+    // cohort_data.query.ranges = resolvedRanges;
     cohort_data.metadata = {
       ...cohort_data.metadata,
       protocol_id: req.user.protocol_id,
@@ -309,6 +305,18 @@ router.post(
         id: true,
       },
     });
+    if (cohort?.query?.zygosities?.length > 0) {
+      cohort.query.zygosities = decode_zygosities(cohort.query.zygosities);
+    }
+    if (cohort?.query?.ranges?.length > 0) {
+      cohort.query.ranges = cohort.query.ranges.map((range) => {
+        if (range.type === 'region' || range.type === 'variant') {
+          // eslint-disable-next-line no-param-reassign
+          range.value.chr = decode_chromosome(range.value.chr);
+        }
+        return range;
+      });
+    }
     res.json(cohort);
   }),
 );
@@ -367,13 +375,8 @@ router.patch(
       protocol_id: req.user.protocol_id,
     });
 
-    cohort_data.query = {
-      source_id,
-      snapshot_id,
-      ranges: resolvedRanges,
-      criteria,
-      zygosities,
-    };
+    cohort_data.query = req.body.query;
+    // cohort_data.query.ranges = resolvedRanges;
 
     const cohort = await prisma.cohort.update({
       where: {
@@ -388,6 +391,18 @@ router.patch(
         id: true,
       },
     });
+    if (cohort?.query?.zygosities?.length > 0) {
+      cohort.query.zygosities = decode_zygosities(cohort.query.zygosities);
+    }
+    if (cohort?.query?.ranges?.length > 0) {
+      cohort.query.ranges = cohort.query.ranges.map((range) => {
+        if (range.type === 'region' || range.type === 'variant') {
+          // eslint-disable-next-line no-param-reassign
+          range.value.chr = decode_chromosome(range.value.chr);
+        }
+        return range;
+      });
+    }
     res.json(cohort);
   }),
 );

@@ -1,4 +1,8 @@
-import { Cohort, CombinationCohort } from "@/components/builder/models";
+import {
+  Cohort,
+  CombinationCohort,
+  GenotypeCohort,
+} from "@/components/builder/models";
 import { PhenotypeCohort } from "@/components/builder/models/phenotype";
 import config from "@/config";
 
@@ -18,11 +22,21 @@ function isCombinationQuery({ name, namespace, version }) {
   );
 }
 
+function isGenotypeQuery({ name, namespace, version }) {
+  return (
+    name === config.cohort.schema.genotype.name &&
+    namespace === config.cohort.schema.genotype.namespace &&
+    version === config.cohort.schema.genotype.version
+  );
+}
+
 function createCohort(json) {
   if (isPhenotypeQuery(json.query)) {
     return PhenotypeCohort.fromJson(json);
   } else if (isCombinationQuery(json.query)) {
     return CombinationCohort.fromJson(json);
+  } else if (isGenotypeQuery(json.query)) {
+    return GenotypeCohort.fromJson(json);
   } else {
     return Cohort.fromJson(json);
   }

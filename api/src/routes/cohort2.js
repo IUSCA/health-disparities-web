@@ -15,6 +15,7 @@ const {
 const {
   validateCohortQuery, sanitizeCohortQuery, COMBINATION_QUERY, GENOTYPE_QUERY, PHENOTYPE_QUERY,
 } = require('../services/cohort/validation');
+const { decode_zygosities } = require('../services/variants/validation');
 
 const { CATEGORIES } = require('../services/cohort/fields');
 const { ageHistogramSQL, dateHistogram, aggregateColumnSQL } = require('../services/cohort/visualization');
@@ -26,6 +27,14 @@ async function getCohortById(id) {
   const sqlQuery = getCohortByIdQuery(id);
   const cohorts = await prisma.$queryRaw(sqlQuery);
   return cohorts[0];
+}
+
+function decode_chromosome(encoded) {
+  const mapping = {
+    23: 'X',
+    24: 'Y',
+  };
+  return `${mapping[encoded] || encoded}`;
 }
 
 // asynchronously log the query and its sql
@@ -256,6 +265,24 @@ router.get(
     // eslint-disable-next-line no-console
     console.log(sqlQuery.sql, sqlQuery.values);
     const cohorts = await prisma.$queryRaw(sqlQuery);
+
+    cohorts.forEach((cohort) => {
+      if (cohort?.query?.zygosities?.length > 0) {
+        // eslint-disable-next-line no-param-reassign
+        cohort.query.zygosities = decode_zygosities(cohort.query.zygosities);
+      }
+      if (cohort?.query?.ranges?.length > 0) {
+        // eslint-disable-next-line no-param-reassign
+        cohort.query.ranges = cohort.query.ranges.map((range) => {
+          if (range.type === 'region' || range.type === 'variant') {
+            // eslint-disable-next-line no-param-reassign
+            range.value.chr = decode_chromosome(range.value.chr);
+          }
+          return range;
+        });
+      }
+    });
+
     res.json(cohorts);
   }),
 );
@@ -271,6 +298,10 @@ router.get(
     const cohort = await getCohortById(req.params.id);
     if (!cohort) {
       return res.sendStatus(404);
+    }
+    if (cohort?.query?.zygosities?.length > 0) {
+      // eslint-disable-next-line no-param-reassign
+      cohort.query.zygosities = decode_zygosities(cohort.query.zygosities);
     }
     res.json(cohort);
   }),
