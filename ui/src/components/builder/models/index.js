@@ -1,12 +1,5 @@
-import {
-  defaultQuery,
-  transformQueryForApi,
-  transformStoredQuery,
-} from "@/components/builder/queryBuilder/cohortQueryBuilder";
-import { DEFAULT_ZYGOSITIES } from "@/components/genotype/constants";
 import config from "@/config";
 import cohortService from "@/services/cohort2";
-import variantService from "@/services/variants";
 import _ from "lodash";
 
 class Cohort {
@@ -156,88 +149,4 @@ class CombinationCohort extends Cohort {
   }
 }
 
-class GenotypeCohort extends Cohort {
-  constructor(params) {
-    const { schema: _schema, ...rest } = params;
-    super({
-      ...rest,
-      schema: config.cohort.schema.genotype,
-      supports_editing: true,
-    });
-  }
-
-  static fromJson(json) {
-    const { query, ...rest } = json;
-    const {
-      name,
-      namespace,
-      version,
-      criteria,
-      ranges,
-      zygosities,
-      source_id,
-      snapshot_id,
-    } = query;
-    return new GenotypeCohort({
-      ...rest,
-      schema: { name, namespace, version },
-      criteria: {
-        criteria: transformStoredQuery(criteria),
-        ranges,
-        zygosities,
-        source_id,
-        snapshot_id,
-      },
-    });
-  }
-
-  isEmpty() {
-    return (
-      _.isEmpty(this.criteria?.ranges) || _.isEmpty(this.criteria?.zygosities)
-    );
-  }
-
-  toJson() {
-    return {
-      ...super.toJson(),
-      query: {
-        ...this.schema,
-        ...this.criteria,
-        criteria: transformQueryForApi(this.criteria.criteria),
-      },
-    };
-  }
-
-  defaultCriteria() {
-    return {
-      criteria: defaultQuery(),
-      ranges: [],
-      zygosities: DEFAULT_ZYGOSITIES,
-      source_id: null,
-      snapshot_id: null,
-    };
-  }
-
-  save({ name, description, is_published, is_locked } = {}) {
-    const updates = _.omitBy(
-      { name, description, is_published, is_locked },
-      _.isNil,
-    );
-    const data = Object.assign(this.toJson(), updates);
-    return (
-      this.isNew()
-        ? variantService.createCohort(data)
-        : variantService.updateCohort(this.id, data)
-    ).then((res) => {
-      this.id = res.data.id;
-      this.name = res.data.name;
-      this.description = res.data.description;
-      this.is_published = res.data.is_published;
-      this.is_locked = res.data.is_locked;
-      this.is_dirty = false;
-      return res.data;
-    });
-  }
-}
-
-export { Cohort, CombinationCohort, GenotypeCohort };
+export { Cohort, CombinationCohort };

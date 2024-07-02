@@ -13,14 +13,24 @@
 
       <VaDropdownContent>
         <div class="flex flex-col gap-1 py-1 items-start">
-          <!-- new cohort button -->
+          <!-- new phenotype cohort button -->
           <va-button
-            @click="addNewCohort"
+            @click="addNewPTCohort"
             preset="secondary"
             icon="group_add"
             class="cohort-select-buttons w-full"
           >
-            New Cohort
+            New Cohort (Phenotypes)
+          </va-button>
+
+          <!-- new genotype cohort button -->
+          <va-button
+            @click="addNewGTCohort"
+            preset="secondary"
+            icon="group_add"
+            class="cohort-select-buttons w-full"
+          >
+            New Cohort (Genotypes)
           </va-button>
 
           <!-- Search for cohort -->
@@ -42,9 +52,34 @@
   <div v-else>
     <div class="flex flex-wrap gap-3 md:gap-5 items-center justify-center">
       <!-- new cohort button -->
-      <va-button @click="addNewCohort" icon="add" class="" size="large">
-        New Cohort
-      </va-button>
+      <VaDropdown :offset="[0, 40]">
+        <template #anchor>
+          <va-button icon="add" class="" size="large"> New Cohort </va-button>
+        </template>
+        <VaDropdownContent>
+          <div class="flex flex-col gap-1 py-1 items-start">
+            <!-- new phenotype cohort button -->
+            <va-button
+              @click="addNewPTCohort"
+              preset="secondary"
+              icon="group_add"
+              class="cohort-select-buttons w-full"
+            >
+              New Cohort (Phenotypes)
+            </va-button>
+
+            <!-- new genotype cohort button -->
+            <va-button
+              @click="addNewGTCohort"
+              preset="secondary"
+              icon="group_add"
+              class="cohort-select-buttons w-full"
+            >
+              New Cohort (Genotypes)
+            </va-button>
+          </div>
+        </VaDropdownContent>
+      </VaDropdown>
 
       <!-- Search for cohort -->
       <!-- opens the CohortSearchModal -->
@@ -67,6 +102,7 @@
 
 <script setup>
 import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
+import { GenotypeCohort } from "@/components/builder/models/genotype";
 import { PhenotypeCohort } from "@/components/builder/models/phenotype";
 import { createCohort } from "@/components/builder/models/utils";
 import { useCohortsStore } from "@/stores/cohorts";
@@ -78,10 +114,18 @@ const { cohorts } = storeToRefs(cohortsStore);
 // const props = defineProps({});
 const cohortSearchModal = ref(null);
 
-function addNewCohort() {
+function addNewPTCohort() {
   // add an empty phenotype cohort - dirty: true
   cohortsStore.appendCohort(
     PhenotypeCohort.createEmpty(),
+    DEFAULT_LOGICAL_OPERATOR,
+  );
+}
+
+function addNewGTCohort() {
+  // add an empty phenotype cohort - dirty: true
+  cohortsStore.appendCohort(
+    GenotypeCohort.createEmpty(),
     DEFAULT_LOGICAL_OPERATOR,
   );
 }

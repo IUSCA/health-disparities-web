@@ -1,8 +1,5 @@
-import {
-  Cohort,
-  CombinationCohort,
-  GenotypeCohort,
-} from "@/components/builder/models";
+import { Cohort, CombinationCohort } from "@/components/builder/models";
+import { GenotypeCohort } from "@/components/builder/models/genotype";
 import { PhenotypeCohort } from "@/components/builder/models/phenotype";
 import config from "@/config";
 
