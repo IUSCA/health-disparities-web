@@ -4,21 +4,21 @@ const { body, param } = require('express-validator');
 const _ = require('lodash/fp');
 const createError = require('http-errors');
 // const config = require('config');
-const { validate } = require('../middleware/validators');
-const asyncHandler = require('../middleware/asyncHandler');
-const { accessControl } = require('../middleware/auth');
+const { validate } = require('../../middleware/validators');
+const asyncHandler = require('../../middleware/asyncHandler');
+const { accessControl } = require('../../middleware/auth');
 const {
   validateQuery, sanitizeQuery,
   validateRanges, sanitizeRanges,
   decode_zygosities,
-} = require('../services/variants/validation');
+} = require('../../services/variants/validation');
 const {
   buildSQL, annotationHistogramSQL, buildBaseQuerySQL,
   participantsWithVariants,
   buildSQLVarIds, transformRanges, buildTotalCountSQL,
-} = require('../services/variants');
-const fields = require('../services/variants/fields');
-const sourceStore = require('../services/variants/sourceStore');
+} = require('../../services/variants');
+const fields = require('../../services/variants/fields');
+const sourceStore = require('../../services/variants/sourceStore');
 
 const isPermittedTo = accessControl('variant');
 const router = express.Router();
@@ -36,6 +36,8 @@ function validateProtocols(req, res, next) {
   req.user.protocol_id = protocol_ids[0];
   next();
 }
+
+router.use('/stats', require('./stats'));
 
 router.post(
   '/annotations/:field/unique',

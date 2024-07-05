@@ -22,7 +22,7 @@ router.use('/statistics', require('./statistics'));
 router.use('/cohorts', require('./cohort2'));
 // router.use('/cohort', require('./cohort'));
 // router.use('/participant', require('./participant'));
-router.use('/variants', require('./variants'));
+router.use('/variants', require('./variants/index'));
 
 router.use('/snapshots', require('./snapshots'));
 router.use('/sources', require('./sources'));
@@ -32,5 +32,6 @@ router.use('/genotype_sets', require('./genotype_sets'));
 router.use('/genotype_files', require('./genotype_files'));
 router.use('/genotype_samples', require('./genotype_samples'));
 router.use('/gen-ai', require('./gen_ai'));
+router.use('/phenotype', require('./phenotype'));
 
 module.exports = router;
