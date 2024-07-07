@@ -1,7 +1,7 @@
 const express = require('express');
 const { Prisma, PrismaClient } = require('@prisma/client');
-const NodeCache = require('node-cache');
-const { query } = require('express-validator');
+// const NodeCache = require('node-cache');
+const { param, query } = require('express-validator');
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
 const { validate } = require('../middleware/validators');
@@ -9,36 +9,49 @@ const {
   histogramSQL,
 } = require('../services/queries');
 
-const isPermittedTo = accessControl('variant');
+const isPermittedTo = accessControl('cohort');
 const router = express.Router();
 const prisma = new PrismaClient();
-const cache = new NodeCache();
+// const cache = new NodeCache();
 
 router.get(
-  '/total-counts',
+  '/:category/counts',
   isPermittedTo('read'),
   validate([
-    query('category').isIn(['lab', 'dx', 'medication']),
+    param('category').isIn(['lab', 'dx', 'medication']),
   ]),
   asyncHandler(async (req, res) => {
-  // #swagger.tags = ['phenotype']
-  // #swagger.summary = 'Get total number of labs, diagnosis, medications.'
+    // #swagger.tags = ['phenotype']
+    // #swagger.summary = 'Get total number of labs, diagnosis, medications.'
 
-    if (cache.get('phenotype.categories.counts')) {
-      return res.json(cache.get('phenotype.categories.counts'));
-    }
-    const lab_rows = await prisma.$queryRaw`select count(distinct name) as count from lab`;
-    const dx_rows = await prisma.$queryRaw`select count(*) as count from dx_unique_name`;
-    const med_rows = await prisma.$queryRaw`select count(distinct name) as count from medication`;
+    const keyword = req.query.keyword || '';
+
+    const table = Prisma.raw(req.params.category);
+    const where_sql = keyword ? Prisma.sql`where name ilike ${`%${keyword}%`}` : Prisma.empty;
+
+    const rows = await prisma.$queryRaw`
+      select 
+        count(distinct name) as count, 
+        count(distinct participant_id) as participant_count 
+      from ${table}
+      ${where_sql}
+    `;
+
+    // for dx this query may be faster
+    /*
+      select
+        count(distinct name) as count,
+        count(distinct participant_id) as participant_count
+      from dx
+      where name = any(
+        select name from dx_unique_name dun where name ilike '%diabetes%'
+      );
+    */
 
     const v = {
-      counts: {
-        lab: lab_rows[0].count,
-        dx: dx_rows[0].count,
-        medication: med_rows[0].count,
-      },
+      total: parseInt(rows[0].count, 10),
+      participants: parseInt(rows[0].participant_count, 10),
     };
-    cache.set('phenotype.categories.counts', v);
 
     res.json(v);
   }),
