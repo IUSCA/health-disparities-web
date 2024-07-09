@@ -61,7 +61,9 @@ router.get(
   '/:category/participant-counts-by-name',
   isPermittedTo('read'),
   validate([
-    query('category').isIn(['lab', 'dx', 'medication']),
+    param('category').isIn(['lab', 'dx', 'medication']),
+    query('limit').default(10).isInt({ min: 1, max: 100 }).toInt(),
+    query('offset').default(0).isInt({ min: 0 }).toInt(),
   ]),
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['phenotype']
@@ -69,19 +71,28 @@ router.get(
 
     const keyword = req.query.keyword || '';
 
-    const table = Prisma.sql`${req.params.category}`;
+    const where_sql = keyword ? Prisma.sql`where name ilike ${`%${keyword}%`}` : Prisma.empty;
+    const table = Prisma.raw(req.params.category);
 
-    const rows = await prisma.$queryRaw`
-        select t.name, count(t.name) as count
+    const sql = Prisma.sql`
+      select t.name, count(t.name) as count
         from
           ( select distinct name, participant_id 
             from ${table} 
-            where name ilike '%'${keyword}'%'
+            ${where_sql}
           ) t
         group by t.name
         order by count desc
+        limit ${req.query.limit} offset ${req.query.offset}
     `;
-    res.json(rows);
+    // console.log(sql.sql, sql.values);
+
+    const rows = await prisma.$queryRaw(sql);
+    const updatedRows = rows.map(({ name, count }) => ({
+      name,
+      count: parseInt(count, 10),
+    }));
+    res.json(updatedRows);
   }),
 );
 

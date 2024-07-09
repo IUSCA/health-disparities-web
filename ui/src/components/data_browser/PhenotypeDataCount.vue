@@ -31,6 +31,10 @@
         <span class="pl-5"> participants </span>
       </p>
     </div>
+
+    <div class="mt-2">
+      <PhenotypeTop10Terms :category="props.category" />
+    </div>
   </div>
 </template>
 

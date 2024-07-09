@@ -1,6 +1,5 @@
 <template>
-  <h1 class="text-2xl font-bold">Data Browser</h1>
-  <p class="text-sm text-gray-500">
+  <p class="text-gray-500">
     Browse and search through the data in the database.
   </p>
 
@@ -21,8 +20,8 @@
     </div>
   </div>
 
-  <div>
-    <p>EHR Domains</p>
+  <div class="mt-3">
+    <h2 class="text-xl font-bold">EHR Domains</h2>
 
     <div class="flex flex-wrap gap-3">
       <VaCard>
@@ -34,7 +33,6 @@
             category="lab"
             title="Labs"
             :keyword="debouncedKeyword"
-            class="w-[200px]"
           />
         </VaCardContent>
       </VaCard>
@@ -48,7 +46,6 @@
             category="dx"
             title="Diagnoses"
             :keyword="debouncedKeyword"
-            class="w-[200px]"
           />
         </VaCardContent>
       </VaCard>
@@ -62,15 +59,14 @@
             category="medication"
             title="Medications"
             :keyword="debouncedKeyword"
-            class="w-[200px]"
           />
         </VaCardContent>
       </VaCard>
     </div>
   </div>
 
-  <div>
-    <p>Genomics</p>
+  <div class="mt-3">
+    <h2 class="text-xl font-bold">Genomics</h2>
 
     <div class="flex flex-wrap gap-3">
       <VaCard>
