@@ -24,13 +24,39 @@ router.get(
     // expensive query
     const row = await prisma.$queryRaw`select count(*) as count from variant`;
     const row2 = await prisma.$queryRaw`select count(*) as count from participant where genotype_idx is not null`;
-    v = { total: row[0].count, participants: row2[0].count };
+    v = {
+      total: parseInt(row[0].count, 10),
+      participants: parseInt(row2[0].count, 10),
+    };
     cache.set(CACHE_KEY, v);
 
     // cache indefinitely - 1 year
-    // res.set('Cache-control', 'private, max-age=31536000');
+    res.set('Cache-control', 'private, max-age=31536000');
     res.json(v);
   }),
 );
+
+router.get(
+  '/genes/count',
+  isPermittedTo('read'),
+  async (req, res) => {
+    const row = await prisma.$queryRaw`select count(*) as count from gene`;
+    res.json({ count: parseInt(row[0].count, 10) });
+  },
+);
+
+router.get('/clinvar/count', isPermittedTo('read'), async (req, res) => {
+  const row = await prisma.$queryRaw`
+    select count(*) as count from annotation a where cln_allele_id is not null
+  `;
+  res.json({ count: parseInt(row[0].count, 10) });
+});
+
+router.get('/gnomad/count', isPermittedTo('read'), async (req, res) => {
+  const row = await prisma.$queryRaw`
+    select count(*) as count from annotation a where cadd_phred is not null;
+  `;
+  res.json({ count: parseInt(row[0].count, 10) });
+});
 
 module.exports = router;

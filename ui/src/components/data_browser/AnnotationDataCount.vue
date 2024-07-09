@@ -3,8 +3,8 @@
     :title="props.title"
     :icon="props.icon"
     :loading="loading"
-    :total="counts.total"
-    :participants="counts.participants"
+    :total="total_count"
+    :units="props.units"
   />
 </template>
 
@@ -12,19 +12,13 @@
 import dataBrowserService from "@/services/data_browser";
 
 const props = defineProps({
-  category: String,
+  source: String,
   title: String,
-  keyword: {
-    type: String,
-    default: "",
-  },
   icon: String,
+  units: String,
 });
 
-const counts = ref({
-  total: 0,
-  participants: 0,
-});
+const total_count = ref(0);
 const loading = ref(false);
 
 watch(() => props.keyword, getCounts);
@@ -32,13 +26,11 @@ watch(() => props.keyword, getCounts);
 function getCounts() {
   loading.value = true;
   dataBrowserService
-    .getPhenotypeDataCounts({
-      category: props.category,
-      keyword: props.keyword,
+    .getAnnotationCounts({
+      source: props.source,
     })
     .then((res) => {
-      counts.value.total = res.data.total;
-      counts.value.participants = res.data.participants;
+      total_count.value = res.data.count;
     })
     .finally(() => {
       loading.value = false;

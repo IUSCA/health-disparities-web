@@ -9,8 +9,8 @@ const auth = useAuthStore();
 const router = useRouter();
 
 if (auth.canOperate) {
-  router.push("/dashboard");
+  router.push("/data_browser");
 } else {
-  router.push("/projects");
+  router.push("/data_browser");
 }
 </script>

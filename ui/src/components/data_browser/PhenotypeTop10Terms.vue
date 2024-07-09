@@ -2,9 +2,9 @@
   <VaSkeleton variant="rounded" inline height="32px" v-if="loading" />
   <div v-else>
     <TopNHorizontalBarChart
-      class="h-[400px] w-[400px]"
+      class="h-[400px] w-[300px]"
       :data="counts"
-      title="Top 10 Terms"
+      title=""
       name="# participants"
     />
   </div>

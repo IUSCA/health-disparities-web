@@ -88,7 +88,11 @@ const option = computed(() => {
     yAxis: {
       type: "category",
       axisLine: { show: false },
-      axisLabel: { overflow: "truncate", width: 150, fontSize: 11 },
+      axisLabel: {
+        overflow: "truncate",
+        width: 150,
+        fontSize: 11,
+      },
       axisTick: { show: false },
       splitLine: { show: false },
       data: labels,
@@ -101,6 +105,7 @@ const option = computed(() => {
           show: true,
           position: "inside",
           // formatter: "{b}",
+          fontSize: 11,
         },
         data: values,
       },

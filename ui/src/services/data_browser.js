@@ -10,6 +10,14 @@ class DataBrowserService {
     });
   }
 
+  getAnnotationCounts({ source }) {
+    return api.get(`/variants/stats/${source}/count`, {
+      params: {
+        cache_id: cache_busting_id,
+      },
+    });
+  }
+
   getPhenotypeDataCounts({ category, keyword }) {
     return api.get(`/phenotype/${category}/counts`, {
       params: {

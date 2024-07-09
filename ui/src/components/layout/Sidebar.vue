@@ -124,35 +124,21 @@ const user_items = ref([
   //   path: "/participants/demographic",
   // },
   {
+    icon: "mdi-table-search",
+    title: "Data Browser",
+    path: "/data_browser",
+  },
+  {
     icon: "mdi:account-multiple",
     title: "Cohort Builder",
     path: "/cohort",
   },
-  // {
-  //   icon: "tabler:analyze",
-  //   title: "Analysis",
-  //   path: "/igv",
-  // },
+
   {
     icon: "mdi:chart-sankey-variant", //"mdi:puzzle",
     title: "Variant Xplorer",
     path: "/variantXplorer",
   },
-  // {
-  //   icon: "carbon:ibm-process-mining",
-  //   title: "Analysis",
-  //   path: "/analysis",
-  // },
-  // {
-  //   icon: "mdi-chart-gantt",
-  //   title: "Tracks",
-  //   path: "/tracks",
-  // },
-  // {
-  //   icon: "mdi-chart-timeline",
-  //   title: "Sessions",
-  //   path: "/sessions",
-  // },
 ]);
 
 const operator_items = ref([

@@ -3,78 +3,77 @@
     Browse and search through the data in the database.
   </p>
 
-  <!-- search bar -->
-  <div class="flex gap-3">
-    <div class="flex-1">
-      <va-input
-        v-model="filterInput"
-        class="w-full"
-        placeholder="Search for data..."
-        outline
-        clearable
-      >
-        <template #prependInner>
-          <Icon icon="material-symbols:search" class="text-xl" />
-        </template>
-      </va-input>
-    </div>
-  </div>
-
   <div class="mt-3">
     <h2 class="text-xl font-bold">EHR Domains</h2>
 
-    <div class="flex flex-wrap gap-3">
-      <VaCard>
-        <VaCardTitle>
-          <span class="text-lg"> Labs </span>
-        </VaCardTitle>
-        <VaCardContent>
-          <PhenotypeDataCount
-            category="lab"
-            title="Labs"
-            :keyword="debouncedKeyword"
-          />
-        </VaCardContent>
-      </VaCard>
+    <!-- search bar -->
+    <div class="flex gap-3 mt-3 max-w-5xl">
+      <div class="flex-1">
+        <va-input
+          v-model="filterInput"
+          class="w-full"
+          placeholder="Search for data..."
+          outline
+          clearable
+        >
+          <template #prependInner>
+            <Icon icon="material-symbols:search" class="text-xl" />
+          </template>
+        </va-input>
+      </div>
+    </div>
 
-      <VaCard>
+    <div class="flex flex-wrap gap-3 lg:gap-5 mt-3">
+      <VaCard
+        v-for="card in cards"
+        :key="card.category"
+        :to="`/data_browser/${card.category}`"
+        class="w-full mx-3 md:w-auto md:mx-0"
+      >
         <VaCardTitle>
-          <span class="text-lg"> Diagnoses </span>
+          <span class="text-lg"> {{ card.title }} </span>
         </VaCardTitle>
         <VaCardContent>
           <PhenotypeDataCount
-            category="dx"
-            title="Diagnoses"
+            :category="card.category"
+            :title="card.title"
             :keyword="debouncedKeyword"
-          />
-        </VaCardContent>
-      </VaCard>
-
-      <VaCard>
-        <VaCardTitle>
-          <span class="text-lg"> Medications </span>
-        </VaCardTitle>
-        <VaCardContent>
-          <PhenotypeDataCount
-            category="medication"
-            title="Medications"
-            :keyword="debouncedKeyword"
+            :icon="card.icon"
           />
         </VaCardContent>
       </VaCard>
     </div>
   </div>
 
-  <div class="mt-3">
+  <div class="mt-5">
     <h2 class="text-xl font-bold">Genomics</h2>
 
-    <div class="flex flex-wrap gap-3">
-      <VaCard>
+    <div class="flex flex-wrap gap-3 lg:gap-5 mt-3">
+      <VaCard to="/variantXplorer" class="w-full mx-3 md:w-auto md:mx-0">
         <VaCardTitle>
           <span class="text-lg"> Variants </span>
         </VaCardTitle>
         <VaCardContent>
-          <GenomicsDataCount class="w-[200px]" />
+          <GenomicsDataCount />
+        </VaCardContent>
+      </VaCard>
+
+      <VaCard
+        v-for="card in annotation_cards"
+        :key="card.source"
+        to="/variantXplorer"
+        class="w-full mx-3 md:w-auto md:mx-0"
+      >
+        <VaCardTitle>
+          <span class="text-lg"> {{ card.title }} </span>
+        </VaCardTitle>
+        <VaCardContent>
+          <AnnotationDataCount
+            :source="card.source"
+            :title="card.title"
+            :icon="card.icon"
+            :units="card.units"
+          />
         </VaCardContent>
       </VaCard>
     </div>
@@ -85,6 +84,49 @@
 // const props = defineProps({});
 const filterInput = ref("");
 const debouncedKeyword = refDebounced(filterInput, 300);
+const cards = [
+  {
+    title: "Labs",
+    category: "lab",
+    icon: "mdi-test-tube",
+  },
+  {
+    title: "Diagnoses",
+    category: "dx",
+    icon: "mdi-stethoscope",
+  },
+  {
+    title: "Medications",
+    category: "medication",
+    icon: "mdi-pill",
+  },
+  {
+    title: "Hospitalizations",
+    category: "hospital",
+    icon: "mdi-hospital-box",
+  },
+];
+
+const annotation_cards = [
+  {
+    title: "Genes",
+    icon: "mdi-microscope",
+    source: "genes",
+    units: "genes",
+  },
+  {
+    title: "gnomAD",
+    icon: "mdi-chart-histogram",
+    source: "gnomad",
+    units: "annotations",
+  },
+  {
+    title: "ClinVar",
+    icon: "mdi-alpha-c-circle-outline",
+    source: "clinvar",
+    units: "annotations",
+  },
+];
 </script>
 
 <route lang="yaml">
