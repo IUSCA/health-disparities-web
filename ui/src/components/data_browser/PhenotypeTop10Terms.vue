@@ -1,11 +1,20 @@
 <template>
-  <VaSkeleton variant="rounded" inline height="32px" v-if="loading" />
+  <VaSkeleton
+    variant="rounded"
+    inline
+    height="300px"
+    v-if="loading"
+    animation="wave"
+    :delay="0"
+  />
   <div v-else>
+    <p class="text-xl font-semibold my-1 text-center">Top 10 Terms</p>
     <TopNHorizontalBarChart
-      class="h-[400px] w-[300px]"
+      class="h-[300px]"
       :data="counts"
       title=""
       name="# participants"
+      :label-width="300"
     />
   </div>
 </template>
@@ -37,7 +46,7 @@ function getCounts() {
       keyword: props.keyword,
     })
     .then((res) => {
-      counts.value = res.data
+      counts.value = (res.data?.results || [])
         .map(({ name, count }) => ({
           label: name,
           value: count,

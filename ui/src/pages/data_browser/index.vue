@@ -27,7 +27,10 @@
       <VaCard
         v-for="card in cards"
         :key="card.category"
-        :to="`/data_browser/${card.category}`"
+        :to="{
+          path: `/data_browser/${card.category}`,
+          query: { keyword: debouncedKeyword },
+        }"
         class="w-full mx-3 md:w-auto md:mx-0"
       >
         <VaCardTitle>

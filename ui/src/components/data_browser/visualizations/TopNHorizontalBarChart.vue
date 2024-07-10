@@ -36,11 +36,16 @@ const props = defineProps({
   },
   title: {
     type: String,
-    required: true,
+    required: false,
   },
   name: {
     type: String,
     required: true,
+  },
+  labelWidth: {
+    type: Number,
+    required: false,
+    default: 150,
   },
 });
 
@@ -64,9 +69,10 @@ const option = computed(() => {
       },
     },
     grid: {
-      left: "3%",
-      right: "4%",
-      bottom: "3%",
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
       containLabel: true,
     },
     xAxis: {
@@ -90,8 +96,8 @@ const option = computed(() => {
       axisLine: { show: false },
       axisLabel: {
         overflow: "truncate",
-        width: 150,
-        fontSize: 11,
+        width: props.labelWidth,
+        fontSize: 12,
       },
       axisTick: { show: false },
       splitLine: { show: false },
@@ -105,7 +111,7 @@ const option = computed(() => {
           show: true,
           position: "inside",
           // formatter: "{b}",
-          fontSize: 11,
+          fontSize: 12,
         },
         data: values,
       },

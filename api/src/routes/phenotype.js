@@ -98,7 +98,7 @@ router.get(
   '/:category/participant-counts-by-name',
   isPermittedTo('read'),
   validate([
-    param('category').isIn(['lab', 'dx', 'medication']),
+    param('category').isIn(['lab', 'dx', 'medication', 'hospital']),
     query('limit').default(10).isInt({ min: 1, max: 100 }).toInt(),
     query('offset').default(0).isInt({ min: 0 }).toInt(),
   ]),
@@ -114,28 +114,36 @@ router.get(
     let sql = Prisma.empty;
     if (req.params.category === 'hospital') {
       sql = Prisma.sql`
-        select name, count(name) as count
-        from hospital h 
-        join 
-          ( select distinct name, code, code_system 
-            from dx
-            where "name" = any(
-              select name from dx_unique_name dun ${where_sql}
-            )
-          ) t on h.dx_code = t.code and h.dx_code_system = t.code_system
-        group by name
+        with results as (
+          select name, count(name) as count
+          from hospital h 
+          join 
+            ( select distinct name, code, code_system 
+              from dx
+              where "name" = any(
+                select name from dx_unique_name dun ${where_sql}
+              )
+            ) t on h.dx_code = t.code and h.dx_code_system = t.code_system
+          group by name
+        )
+        select *, count(*) over () as total_count
+        from results
         order by count desc
         limit ${req.query.limit} offset ${req.query.offset}
       `;
     } else {
       sql = Prisma.sql`
-      select t.name, count(t.name) as count
-        from
-          ( select distinct name, participant_id 
-            from ${table} 
-            ${where_sql}
-          ) t
-        group by t.name
+        with results as (
+          select t.name, count(t.name) as count
+            from
+              ( select distinct name, participant_id 
+                from ${table} 
+                ${where_sql}
+              ) t
+            group by t.name
+        )
+        select *, count(*) over () as total_count
+        from results
         order by count desc
         limit ${req.query.limit} offset ${req.query.offset}
     `;
@@ -147,7 +155,13 @@ router.get(
       name,
       count: parseInt(count, 10),
     }));
-    res.json(updatedRows);
+
+    res.json({
+      metadata: {
+        total_count: Number(rows[0]?.total_count ?? 0),
+      },
+      results: updatedRows,
+    });
   }),
 );
 

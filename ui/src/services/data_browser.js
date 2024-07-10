@@ -27,11 +27,13 @@ class DataBrowserService {
     });
   }
 
-  getParticipantCountsByName({ category, keyword }) {
+  getParticipantCountsByName({ category, keyword, offset, limit }) {
     return api.get(`/phenotype/${category}/participant-counts-by-name`, {
       params: {
         cache_id: cache_busting_id,
         keyword,
+        offset,
+        limit,
       },
     });
   }
