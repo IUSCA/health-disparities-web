@@ -1,14 +1,6 @@
 <template>
-  <VaSkeleton
-    variant="rounded"
-    inline
-    height="300px"
-    v-if="loading"
-    animation="wave"
-    :delay="0"
-  />
-  <div v-else>
-    <p class="text-xl font-semibold my-1 text-center">Top 10 Terms</p>
+  <p class="text-xl font-semibold my-1 text-center">Top 10 Terms</p>
+  <div>
     <TopNHorizontalBarChart
       class="h-[300px]"
       :data="counts"

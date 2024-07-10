@@ -23,6 +23,19 @@
     />
   </div>
 
+  <div>
+    The table below displays the terms related to
+    {{ category_labels[props.category] }} that match the search keyword. The
+    participant count represents the number of participants who have the term in
+    their record.
+
+    <br />
+
+    The total number of participants in the database is
+    <b>{{ totalParticipantCount }}</b
+    >.
+  </div>
+
   <VaDataTable
     :columns="columns"
     :items="names"
@@ -94,6 +107,8 @@ const debouncedKeyword = refDebounced(filterInput, 500);
 const columns = [
   {
     key: "name",
+    tdStyle:
+      "white-space: pre-wrap; word-wrap: break-word; word-break: break-word;",
   },
   {
     key: "count",

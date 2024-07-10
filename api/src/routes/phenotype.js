@@ -108,46 +108,21 @@ router.get(
 
     const keyword = req.query.keyword || '';
 
-    const where_sql = keyword ? Prisma.sql`where name ilike ${`%${keyword}%`}` : Prisma.empty;
-    const table = Prisma.raw(req.params.category);
+    const name_sql = keyword ? Prisma.sql`and name ilike ${`%${keyword}%`}` : Prisma.empty;
 
-    let sql = Prisma.empty;
-    if (req.params.category === 'hospital') {
-      sql = Prisma.sql`
+    const sql = Prisma.sql`
         with results as (
-          select name, count(name) as count
-          from hospital h 
-          join 
-            ( select distinct name, code, code_system 
-              from dx
-              where "name" = any(
-                select name from dx_unique_name dun ${where_sql}
-              )
-            ) t on h.dx_code = t.code and h.dx_code_system = t.code_system
-          group by name
-        )
-        select *, count(*) over () as total_count
-        from results
-        order by count desc
-        limit ${req.query.limit} offset ${req.query.offset}
-      `;
-    } else {
-      sql = Prisma.sql`
-        with results as (
-          select t.name, count(t.name) as count
-            from
-              ( select distinct name, participant_id 
-                from ${table} 
-                ${where_sql}
-              ) t
-            group by t.name
+          select name, count
+          from ehr_participant_counts_by_name
+          where category = ${req.params.category} ${name_sql}
+              
         )
         select *, count(*) over () as total_count
         from results
         order by count desc
         limit ${req.query.limit} offset ${req.query.offset}
     `;
-    }
+
     // console.log(sql.sql, sql.values);
 
     const rows = await prisma.$queryRaw(sql);
