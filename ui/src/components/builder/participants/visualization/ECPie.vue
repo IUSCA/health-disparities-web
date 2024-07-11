@@ -33,22 +33,34 @@ const props = defineProps({
 const isDark = useDark();
 
 const data = computed(() => {
-  const all_date = Object.entries(props.data)
-    .sort(([_name, value]) => value) // sort by value descending
+  /**
+   * Only show props.topN+1 items in the pie chart
+   * Show the topN items and group the rest into "Others"
+   *
+   * props.data: {keyword1: count, keyword2: count, ...}
+   */
+
+  // sorted_data: [{name: keyword, value: count}, ...]
+  const sorted_data = Object.entries(props.data)
+    .sort((a, b) => b[1] - a[1]) // sort by value descending
     .map(([name, value]) => ({
       name,
       value,
     }));
-  const topN = all_date.slice(0, props.topN);
 
-  if (topN.length === all_date.length) {
-    return topN;
+  // if the number of items is less than topN, return all items
+  if (sorted_data.length <= props.topN) {
+    return sorted_data;
   }
 
-  const othersValue = all_date
+  const topN = sorted_data.slice(0, props.topN);
+
+  // sum the values of the rest of the items
+  const othersValue = sorted_data
     .slice(props.topN)
     .reduce((acc, { value }) => acc + value, 0);
-  console.log(topN, { name: "Others", value: othersValue });
+
+  // return topN items and "Others"
   return [...topN, { name: "Others", value: othersValue }];
 });
 
