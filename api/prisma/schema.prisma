@@ -528,8 +528,7 @@ model annotation {
   ref           String
   alt           String
   func          String?
-  gene1_id      Int?
-  gene2_id      Int?
+  gene_ids      Int[] // Array to store gene IDs associated with each variant
   exonic_func   String?
   aa_change     String?
   af_afr        Float?
@@ -555,18 +554,12 @@ model annotation {
   polyphen_max  Float?
   sift_max      Float?
 
-  gene1 gene? @relation(name: "first", fields: [gene1_id], references: [id])
-  gene2 gene? @relation(name: "second", fields: [gene2_id], references: [id])
-
   @@id([chr, position, ref, alt])
-  @@index([gene1_id, gene2_id])
 }
 
 model gene {
-  id      Int          @id @default(autoincrement())
-  name    String       @unique
-  firsts  annotation[] @relation(name: "first")
-  seconds annotation[] @relation(name: "second")
+  id   Int    @id @default(autoincrement())
+  name String @unique
 }
 
 model source {
