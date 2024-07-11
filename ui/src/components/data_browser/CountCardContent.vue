@@ -6,7 +6,7 @@
       </p>
     </VaAvatar>
     <div class="text-right">
-      <div class="min-w-[9rem]">
+      <div class="min-w-[11rem]">
         <div v-if="props.loading" class="ml-auto h-[2.5rem] py-1">
           <VaSkeleton height="100%" width="100%" animation="wave" :delay="0" />
         </div>

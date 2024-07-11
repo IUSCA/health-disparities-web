@@ -1,18 +1,21 @@
 <template>
-  <p class="text-xl font-semibold my-1 text-center">Top 10 Terms</p>
+  <p class="text-xl font-semibold my-1 text-center">
+    Top 10 Terms {{ labelWidth }}
+  </p>
   <div>
     <TopNHorizontalBarChart
       class="h-[300px]"
       :data="counts"
       title=""
       name="# participants"
-      :label-width="300"
+      :label-width="labelWidth"
     />
   </div>
 </template>
 
 <script setup>
 import dataBrowserService from "@/services/data_browser";
+import { useUIStore } from "@/stores/ui";
 
 const props = defineProps({
   keyword: {
@@ -25,8 +28,17 @@ const props = defineProps({
   },
 });
 
+const ui = useUIStore();
+
 const loading = ref(true);
 const counts = ref([]);
+
+const labelWidth = computed(() => {
+  if (ui.isMobileView) {
+    return 100;
+  }
+  return 300;
+});
 
 watch(() => props.keyword, getCounts);
 

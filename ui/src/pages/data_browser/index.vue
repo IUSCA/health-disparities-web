@@ -1,6 +1,6 @@
 <template>
   <p class="text-gray-500">
-    Browse and search through the data in the database.
+    Browse and search through the data in the Indiana Biobank.
   </p>
 
   <div class="mt-3">
@@ -84,9 +84,10 @@
 </template>
 
 <script setup>
+import config from "@/config";
 // const props = defineProps({});
 const filterInput = ref("");
-const debouncedKeyword = refDebounced(filterInput, 300);
+const debouncedKeyword = refDebounced(filterInput, config.debounce_ms);
 const cards = [
   {
     title: "Labs",

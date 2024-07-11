@@ -27,16 +27,17 @@
     </VaCard>
 
     <div class="mt-5">
-      The table below displays the terms related to
-      {{ category_labels[props.category] }} that match the search keyword. The
-      participant count represents the number of participants who have the term
-      in their record.
+      <p>
+        The table below displays the terms related to
+        {{ category_labels[props.category] }} that match the search keyword. The
+        participant count represents the number of participants who have the
+        term in their record.
+      </p>
 
-      <br />
-
-      The total number of participants in the database is
-      <b>{{ totalParticipantCount }}</b
-      >.
+      <p class="mt-2">
+        The total number of participants in the biobank is
+        <b> {{ totalParticipantCount }} </b>.
+      </p>
     </div>
 
     <VaDataTable
@@ -94,6 +95,7 @@
 </template>
 
 <script setup>
+import config from "@/config";
 import cohortService from "@/services/cohort2";
 import dataBrowserService from "@/services/data_browser";
 import { useNavStore } from "@/stores/nav";
@@ -132,28 +134,32 @@ const PAGE_SIZE_OPTIONS = [20, 50, 100];
 const totalResults = ref(0);
 
 const filterInput = ref(route.query?.keyword || "");
-const debouncedKeyword = refDebounced(filterInput, 500);
+const debouncedKeyword = refDebounced(filterInput, config.debounce_ms);
 
 const columns = [
   {
     key: "name",
     tdStyle:
-      "white-space: pre-wrap; word-wrap: break-word; word-break: break-word;",
+      "white-space: pre-wrap; word-wrap: break-word; word-break: break-word; min-width: 200px;",
   },
   {
     key: "count",
     label: "Participant Count",
-    width: "200px",
+    width: "130px",
+    thAlign: "center",
+    tdAlign: "center",
   },
   {
     key: "percentage",
-    width: "200px",
-    label: "% of Total Participants",
+    width: "130px",
+    label: "% of All Participants",
+    thAlign: "center",
+    tdAlign: "center",
   },
   {
     key: "actions",
     label: "Actions",
-    width: "100px",
+    width: "60px",
     thAlign: "center",
     tdAlign: "center",
   },
@@ -201,10 +207,6 @@ function handleClick({ row }) {
 </script>
 
 <style scoped>
-.datatable {
-  --va-data-table-cell-padding: 3px;
-}
-
 :deep(.va-data-table__table-tr--expanded) td {
   background: var(--va-background-border);
 }
