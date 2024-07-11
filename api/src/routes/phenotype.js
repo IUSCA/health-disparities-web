@@ -88,8 +88,9 @@ router.get(
       // server-side cache
       cache.set(CACHE_KEY, v);
     }
+
     // client side cache indefinitely - 1 year
-    // res.set('Cache-control', 'private, max-age=31536000');
+    res.set('Cache-control', 'private, max-age=31536000');
     res.json(v);
   }),
 );
@@ -131,6 +132,8 @@ router.get(
       count: parseInt(count, 10),
     }));
 
+    // client side cache indefinitely - 1 year
+    res.set('Cache-control', 'private, max-age=31536000');
     res.json({
       metadata: {
         total_count: Number(rows[0]?.total_count ?? 0),
@@ -183,6 +186,9 @@ router.get(
       )
       ${histogramSQL('data', 'age', req.query.bins)}
     `;
+
+    // client side cache indefinitely - 1 year
+    res.set('Cache-control', 'private, max-age=31536000');
     res.json(rows);
   }),
 );
@@ -236,6 +242,8 @@ router.get(
       return acc;
     }, {});
 
+    // client side cache indefinitely - 1 year
+    res.set('Cache-control', 'private, max-age=31536000');
     res.json(distinctValuesWithCounts);
   }),
 );
