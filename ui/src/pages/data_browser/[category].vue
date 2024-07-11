@@ -1,66 +1,96 @@
 <template>
-  <!-- search bar -->
-  <div class="flex">
-    <div class="flex-1">
-      <va-input
-        v-model="filterInput"
-        class="w-full"
-        placeholder="Search for data..."
-        outline
-        clearable
-      >
-        <template #prependInner>
-          <Icon icon="material-symbols:search" class="text-xl" />
-        </template>
-      </va-input>
+  <div class="">
+    <!-- search bar -->
+    <div class="flex">
+      <div class="flex-1">
+        <va-input
+          v-model="filterInput"
+          class="w-full"
+          placeholder="Search for data..."
+          outline
+          clearable
+        >
+          <template #prependInner>
+            <Icon icon="material-symbols:search" class="text-xl" />
+          </template>
+        </va-input>
+      </div>
     </div>
-  </div>
 
-  <div class="mt-3 px-3">
-    <PhenotypeTop10Terms
-      :category="props.category"
-      :keyword="debouncedKeyword"
+    <VaCard class="mt-3">
+      <VaCardContent>
+        <PhenotypeTop10Terms
+          :category="props.category"
+          :keyword="debouncedKeyword"
+        />
+      </VaCardContent>
+    </VaCard>
+
+    <div class="mt-5">
+      The table below displays the terms related to
+      {{ category_labels[props.category] }} that match the search keyword. The
+      participant count represents the number of participants who have the term
+      in their record.
+
+      <br />
+
+      The total number of participants in the database is
+      <b>{{ totalParticipantCount }}</b
+      >.
+    </div>
+
+    <VaDataTable
+      :columns="columns"
+      :items="names"
+      :loading="loading"
+      class="datatable mt-3"
+      clickable
+      hoverable
+      @row:click="handleClick"
+    >
+      <template #cell(percentage)="{ rowData }">
+        <span
+          v-if="
+            Number.isFinite(totalParticipantCount) && totalParticipantCount > 0
+          "
+        >
+          {{ ((rowData.count / totalParticipantCount) * 100).toFixed(2) }}%
+        </span>
+      </template>
+
+      <template #cell(actions)="{ isExpanded }">
+        <va-button
+          preset="plain"
+          :title="isExpanded ? 'Hide' : 'Visualize Participants'"
+        >
+          <Icon
+            :icon="isExpanded ? 'mdi:graph-box' : 'mdi-graph-box-outline'"
+            class="text-2xl"
+          />
+        </va-button>
+      </template>
+
+      <template #expandableRow="{ rowData }">
+        <div
+          class="pl-5 pt-2 pb-5 bg-[var(--va-background-element)] border border-solid border-t-0 border-[var(--va-background-border)]"
+        >
+          <DataBrowserParticipantVisualization
+            :category="props.category"
+            :name="rowData.name"
+          />
+        </div>
+      </template>
+    </VaDataTable>
+
+    <Pagination
+      class="mt-4 px-1 lg:px-3"
+      v-model:page="currPage"
+      v-model:page_size="pageSize"
+      :total_results="totalResults"
+      :curr_items="names.length"
+      :page_size_options="PAGE_SIZE_OPTIONS"
     />
   </div>
-
-  <div>
-    The table below displays the terms related to
-    {{ category_labels[props.category] }} that match the search keyword. The
-    participant count represents the number of participants who have the term in
-    their record.
-
-    <br />
-
-    The total number of participants in the database is
-    <b>{{ totalParticipantCount }}</b
-    >.
-  </div>
-
-  <VaDataTable
-    :columns="columns"
-    :items="names"
-    :loading="loading"
-    class="datatable mt-3 px-3"
-  >
-    <template #cell(percentage)="{ rowData }">
-      <span
-        v-if="
-          Number.isFinite(totalParticipantCount) && totalParticipantCount > 0
-        "
-      >
-        {{ ((rowData.count / totalParticipantCount) * 100).toFixed(2) }}%
-      </span>
-    </template>
-  </VaDataTable>
-
-  <Pagination
-    class="mt-4 px-1 lg:px-3"
-    v-model:page="currPage"
-    v-model:page_size="pageSize"
-    :total_results="totalResults"
-    :curr_items="names.length"
-    :page_size_options="PAGE_SIZE_OPTIONS"
-  />
 </template>
 
 <script setup>
@@ -120,6 +150,13 @@ const columns = [
     width: "200px",
     label: "% of Total Participants",
   },
+  {
+    key: "actions",
+    label: "Actions",
+    width: "100px",
+    thAlign: "center",
+    tdAlign: "center",
+  },
 ];
 
 watch([debouncedKeyword, pageSize], () => {
@@ -157,11 +194,23 @@ onMounted(() => {
     totalParticipantCount.value = res.data?.total || 0;
   });
 });
+
+function handleClick({ row }) {
+  row.toggleRowDetails();
+}
 </script>
 
 <style scoped>
 .datatable {
-  --va-data-table-cell-padding: 2px;
+  --va-data-table-cell-padding: 3px;
+}
+
+:deep(.va-data-table__table-tr--expanded) td {
+  background: var(--va-background-border);
+}
+
+:deep(.va-data-table__table-expanded-content) td {
+  background-color: var(--va-background-element);
 }
 </style>
 

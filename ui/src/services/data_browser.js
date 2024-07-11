@@ -48,7 +48,7 @@ class DataBrowserService {
     });
   }
 
-  getParticipantsPhenotypeAggregate({ category, field, name }) {
+  getParticipantAggregate({ category, field, name }) {
     return api.get(`/phenotype/${category}/participants/aggregate`, {
       params: {
         cache_id: cache_busting_id,

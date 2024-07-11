@@ -144,7 +144,7 @@ router.get(
   '/:category/participants/age/bins',
   isPermittedTo('read'),
   validate([
-    query('category').isIn(['lab', 'dx', 'medication']),
+    param('category').isIn(['lab', 'dx', 'medication', 'hospital']),
     query('name').isString().notEmpty(),
     query('bins').default(10).isInt({ min: 1, max: 100 }),
   ]),
@@ -153,14 +153,32 @@ router.get(
     // #swagger.summary = 'Get participants with the given phenotype.'
 
     const { name } = req.query;
-    const table = Prisma.sql`${req.params.category}`;
+    const table = Prisma.raw(req.params.category);
+
+    let sql = Prisma.empty;
+    if (req.params.category === 'hospital') {
+      sql = Prisma.sql`
+        WITH dx_codes AS (
+          SELECT DISTINCT code, code_system 
+          FROM dx 
+          WHERE name = ${name}
+        )
+        SELECT DISTINCT h.participant_id
+        FROM hospital h
+        JOIN dx_codes t
+        ON h.dx_code = t.code 
+        AND h.dx_code_system = t.code_system
+      `;
+    } else {
+      sql = Prisma.sql`select distinct participant_id from ${table} where name=${name}`;
+    }
 
     const rows = await prisma.$queryRaw`
       with data as (
         select extract(year from age(dob)) as age 
         from demographic d
         where d.participant_id = ANY(
-          select distinct participant_id from ${table} where name=${name}
+          ${sql}
         )
       )
       ${histogramSQL('data', 'age', req.query.bins)}
@@ -173,7 +191,7 @@ router.get(
   '/:category/participants/aggregate',
   isPermittedTo('read'),
   validate([
-    query('category').isIn(['lab', 'dx', 'medication']),
+    param('category').isIn(['lab', 'dx', 'medication', 'hospital']),
     query('name').isString().notEmpty(),
     query('field').isIn(['gender', 'race', 'ethnicity']),
   ]),
@@ -182,14 +200,32 @@ router.get(
     // #swagger.summary = 'Get participants with the given phenotype.'
 
     const { name, field } = req.query;
-    const table = Prisma.sql`${req.params.category}`;
-    const column = Prisma.sql`${field}`;
+    const table = Prisma.raw(req.params.category);
+    const column = Prisma.raw(field);
+
+    let sql = Prisma.empty;
+    if (req.params.category === 'hospital') {
+      sql = Prisma.sql`
+        WITH dx_codes AS (
+          SELECT DISTINCT code, code_system 
+          FROM dx 
+          WHERE name = ${name}
+        )
+        SELECT DISTINCT h.participant_id
+        FROM hospital h
+        JOIN dx_codes t
+        ON h.dx_code = t.code 
+        AND h.dx_code_system = t.code_system
+      `;
+    } else {
+      sql = Prisma.sql`select distinct participant_id from ${table} where name=${name}`;
+    }
 
     const _rows = await prisma.$queryRaw`
       select ${column}, count(*) as count 
       from demographic d
       where d.participant_id = ANY(
-        select distinct participant_id from ${table} where name=${name}
+        ${sql}
       )
       group by ${column}
       order by count desc
