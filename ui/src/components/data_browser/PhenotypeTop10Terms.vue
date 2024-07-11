@@ -1,7 +1,5 @@
 <template>
-  <p class="text-xl font-semibold my-1 text-center">
-    Top 10 Terms {{ labelWidth }}
-  </p>
+  <p class="text-xl font-semibold my-1 text-center">Top 10 Terms</p>
   <div>
     <TopNHorizontalBarChart
       class="h-[300px]"
