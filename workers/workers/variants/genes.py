@@ -20,15 +20,11 @@ class GeneInfo:
         If initfile is provided, the gene information will be updated with the new information.
         Creates new genes in the database if they do not exist.
 
-        # run this before re-ingesting the gene information
-        delete from gene;
-        ALTER SEQUENCE gene_id_seq RESTART WITH 1;
-
         @param vcf_file_path: Path to the VCF file containing gene information.
         @param outfile: Path to the output pickle file.
         @param initfile: Path to the initial pickle file containing gene information.
         """
-        self.gene_idx_map = {}
+        self.genes_curr = set()
         self.vcf_file_path = Path(vcf_file_path).resolve()
 
         self.outfile = outfile
@@ -41,9 +37,24 @@ class GeneInfo:
                 self.outfile = initfile
         assert self.outfile is not None
 
-    def _transform_vcf(self):
+    def _transform_vcf(self) -> tuple[dict[Site, dict[str, str]], set[str]]:
+        """
+        Transform the VCF file to a dictionary of gene information.
+        @return: genes_dict: Dictionary of gene information.
+        @return: genes_agg: Set of all genes in the VCF file.
+
+        genes_dict: {
+            Site(chrom, pos, ref, alt): {
+                'Func.refGene': str,
+                'Gene.refGene': List[str],
+                'GeneDetail.refGene': str,
+                'ExonicFunc.refGene': str,
+                'AAChange.refGene': str
+            }
+        """
+
         vcf = VCF(str(self.vcf_file_path))
-        gene_data = {}
+        genes_dict = {}
         genes_agg = set()
 
         for var in tqdm(vcf):
@@ -61,28 +72,24 @@ class GeneInfo:
                 'AAChange.refGene': None if aa_change == '.' else aa_change
             }
             s = Site(chrom=int(var.CHROM), pos=int(var.POS), ref=var.REF, alt=var.ALT[0])
-            gene_data[s] = val
+            genes_dict[s] = val
 
-        return gene_data, genes_agg
+        return genes_dict, genes_agg
 
     def extract(self):
         logger.info(f'Extracting gene information from VCF file: {self.vcf_file_path}')
-        self.gene_idx_map = fetch_all()
+        self.genes_curr = fetch_all()
 
         logger.info('Transforming VCF file to gene information pickle.')
-        gene_data, genes_agg = self._transform_vcf()
+        genes_dict, genes_agg = self._transform_vcf()
 
-        logger.info('Creating new genes in the database.')
-        new_genes = genes_agg - set(self.gene_idx_map.keys())
-        create_many(list(new_genes))
+        new_genes = genes_agg - self.genes_curr
+        if new_genes:
+            logger.info(f'Creating {len(new_genes)} new genes in the database.')
+            create_many(list(new_genes))
 
-        # fetch the gene_idx_map again to include the new genes
-        self.gene_idx_map = fetch_all()
-
-        # transform gene names to gene idx and update self.gene_data
-        for k, v in gene_data.items():
-            v['Gene.refGene'] = [self.gene_idx_map[g] for g in v['Gene.refGene']]
-            self.gene_data[k] = v
+        # update the gene data with the new information
+        self.gene_data.update(genes_dict)
 
         # Save the dictionary as a pickle file
         with open(self.outfile, 'wb') as f:

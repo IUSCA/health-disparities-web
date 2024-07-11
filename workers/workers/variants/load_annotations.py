@@ -198,7 +198,7 @@ class Loader:
 
     GNOMAD_COLUMNS = {'AF_afr', 'AF_amr', 'AF_asj', 'AF_eas', 'AF_fin', 'AF_nfe', 'AF_sas', 'AF_oth', 'cadd_phred',
                       'revel_max', 'polyphen_max', 'sift_max'}
-    GENE_COLUMNS = {'func', 'gene1_id', 'gene2_id', 'exonic_func', 'aa_change'}
+    GENE_COLUMNS = {'func', 'genes', 'exonic_func', 'aa_change'}
     CLINVAR_COLUMNS = {'cln_allele_id', 'cln_dis_db', 'cln_dn', 'cln_hgvs', 'cln_rev_stat', 'cln_sig', 'cln_vc',
                        'cln_vcso', 'cln_geneinfo', 'cln_mc'}
 
@@ -261,9 +261,7 @@ class Loader:
                     print('Unable to fetch gene annotations for', s, e)
                 if _gene is not None:
                     ann.func = _gene['Func.refGene']
-                    gene_ids = _gene['Gene.refGene']
-                    ann.gene1_id = gene_ids[0] if len(gene_ids) > 0 else None
-                    ann.gene2_id = gene_ids[1] if len(gene_ids) > 1 else None
+                    ann.genes = _gene['Gene.refGene']
                     ann.exonic_func = _gene['ExonicFunc.refGene']
                     ann.aa_change = _gene['AAChange.refGene']
 

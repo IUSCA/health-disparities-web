@@ -13,8 +13,7 @@ class Annotation:
     ref: str
     alt: str
     func: str = None
-    gene1_id: int = None
-    gene2_id: int = None
+    genes: list[str] = None
     exonic_func: str = None
     aa_change: str = None
     af_afr: float = None

@@ -1,11 +1,11 @@
 from workers.variants.database import conn
 
 
-def fetch_all() -> dict[str, int]:
-    q = '''select * from gene'''
+def fetch_all() -> set[str]:
+    q = '''select name from gene'''
     with conn.cursor() as cursor:
         cursor.execute(q)
-        return {name: _id for (_id, name) in cursor}
+        return set(row[0] for row in cursor.fetchall())
 
 
 def create_many(genes: list[str]):
