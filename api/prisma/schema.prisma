@@ -329,8 +329,8 @@ model lab {
   name           String
   date           DateTime
   category       String      @db.VarChar(100)
-  result         Decimal
-  unit           String      @db.VarChar(100)
+  result         Decimal?
+  unit           String?      @db.VarChar(100)
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
   // any given study_id and ib_id pair may have multiple labs associated
@@ -357,8 +357,8 @@ model covid_vax {
   date           DateTime
   manufacturer   String
   dose_number    Int
-  series_doses   Int
-  is_booster     String
+  series_doses   Int?
+  is_booster     String?
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
   // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id

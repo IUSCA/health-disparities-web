@@ -34,6 +34,7 @@ def create_participants_csv(data_dir, enroll_snapshot_id, out_file='participants
     Read phenotypes csv files from data_dir and extract unique ib_id and associated study_id columns.
     Merge these mappings into a single dictionary and write to out_file.
     """
+    ib_id_map = fetch_all()
     pids = {}
     for csv_file in data_dir.glob('*.csv'):
         print(f'processing {csv_file}')
@@ -41,7 +42,8 @@ def create_participants_csv(data_dir, enroll_snapshot_id, out_file='participants
         participant_df, invalid_df = get_participants_from_csv(csv_file)
 
         for ib_id, study_id in participant_df['STUDY_ID'].items():
-            pids[ib_id] = study_id
+            if ib_id not in ib_id_map:
+                pids[ib_id] = study_id
 
         num_invalid = invalid_df.shape[0]
         print(key, 'num_invalid', num_invalid)
@@ -73,7 +75,7 @@ def load_participants(csv_file):
     ON CONFLICT DO NOTHING;
     """
 
-    conn.autocommit = False
+    # conn.autocommit = False
     try:
         with conn.cursor() as cursor:
 

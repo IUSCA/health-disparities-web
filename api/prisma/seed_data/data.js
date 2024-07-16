@@ -341,11 +341,13 @@ const sources = [
     id: 1,
     name: 'source-1',
     author_id: 1,
+    build: 'hg38',
   },
   {
     id: 2,
     name: 'source-2',
     author_id: 2,
+    build: 'hg38',
   },
 ];
 

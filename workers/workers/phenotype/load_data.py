@@ -1,3 +1,4 @@
+import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
@@ -10,6 +11,20 @@ from workers import api
 from workers import utils
 from workers.phenotype import participants
 from workers.variants.database import conn
+
+
+# refresh materialized views after loading data
+def refresh_mat_views():
+    """
+    This function is used to refresh the materialized views in the database.
+    It executes SQL commands to refresh two views: 'dx_unique_name' and 'ehr_participant_counts_by_name'.
+    After executing the commands, it commits the changes to the database.
+
+    """
+    with conn.cursor() as cursor:
+        cursor.execute('REFRESH MATERIALIZED VIEW dx_unique_name')
+        cursor.execute('REFRESH MATERIALIZED VIEW ehr_participant_counts_by_name')
+        conn.commit()
 
 
 def parse_date(date_string):
@@ -97,7 +112,7 @@ class PhenotypeDataLoader(ABC):
         5. register phenotype_file in db
         """
         df = pd.read_csv(self.csv_file)
-        df2 = self.transform(df, self.ib_id_map)
+        df2 = self.transform(df.copy(), self.ib_id_map)
         valid_idx = self.filter(df2)
         valid_df, invalid_df = df2[valid_idx], df[~valid_idx]
 
@@ -137,6 +152,7 @@ class CovidTest(PhenotypeDataLoader):
 class CovidVax(PhenotypeDataLoader):
     table_name = 'covid_vax'
     columns = ['name', 'date', 'manufacturer', 'dose_number', 'series_doses', 'is_booster', 'participant_id']
+    non_null_columns = ['name', 'date', 'manufacturer', 'dose_number', 'participant_id']
 
     def transform(self, df, ib_id_map):
         df['date'] = df['DEID_IM_DATE'].map(parse_date)
@@ -207,6 +223,7 @@ class Hospital(PhenotypeDataLoader):
 class Lab(PhenotypeDataLoader):
     table_name = 'lab'
     columns = ['name', 'date', 'category', 'result', 'unit', 'participant_id']
+    non_null_columns = ['name', 'date', 'category', 'participant_id']
 
     def transform(self, df, ib_id_map):
         df['date'] = df['DEID_LABDATE'].map(parse_date)
@@ -288,6 +305,9 @@ def main(data_dir,
         except Exception as e:
             print('Error while processing', csv_file)
             print(e)
+            traceback.print_exc()
+
+    refresh_mat_views()
 
 
 if __name__ == '__main__':
