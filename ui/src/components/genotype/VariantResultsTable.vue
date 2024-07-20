@@ -27,8 +27,8 @@
 
 <script setup>
 import {
-NUMERIC_PRECISION,
-PAGE_SIZE_OPTIONS,
+  NUMERIC_PRECISION,
+  PAGE_SIZE_OPTIONS,
 } from "@/components/genotype/constants";
 import { useVariantsStore } from "@/stores/variants";
 import _ from "lodash";

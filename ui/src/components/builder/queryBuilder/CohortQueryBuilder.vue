@@ -113,10 +113,10 @@ import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
 import {
-cohortFilters,
-flatten,
-isUnaryOperator,
-operators,
+  cohortFilters,
+  flatten,
+  isUnaryOperator,
+  operators,
 } from "../cohortFilters";
 import QBAsyncSelect from "./filterComponents/QBAsyncSelect.vue";
 import QBDate from "./filterComponents/QBDate.vue";

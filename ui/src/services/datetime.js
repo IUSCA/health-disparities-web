@@ -105,4 +105,3 @@ function formatDuration(duration) {
 }
 
 export { absolute, date, formatDuration, fromNow, readableDuration, time };
-

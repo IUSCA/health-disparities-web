@@ -92,9 +92,9 @@ import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
 import {
-flatten,
-isUnaryOperator,
-operators,
+  flatten,
+  isUnaryOperator,
+  operators,
 } from "@/components/builder/cohortFilters";
 import { variantFilters } from "@/components/genotype/filters/variantFilters";
 

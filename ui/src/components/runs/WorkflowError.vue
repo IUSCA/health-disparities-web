@@ -67,5 +67,6 @@ const failed_task_run = computed(() => {
       return failed_step.last_task_run;
     }
   }
+  return null;
 });
 </script>

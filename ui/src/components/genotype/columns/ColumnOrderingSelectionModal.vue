@@ -60,8 +60,8 @@
 
 // Object of available columns (key to column object): {chr: {label: 'Chromosome', ...}, ...}
 import {
-COLUMNS,
-getDefaultColumns,
+  COLUMNS,
+  getDefaultColumns,
 } from "@/components/genotype/columns/columns";
 import { useVariantsStore } from "@/stores/variants";
 import { storeToRefs } from "pinia";
