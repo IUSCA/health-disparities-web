@@ -29,6 +29,7 @@
           class="flex items-center justify-end mb-2 md:mb-0 gap-3"
           v-if="!cohort.is_locked && cohort.supports_editing"
         >
+          <!-- undo -->
           <VaButton
             size="small"
             preset="primary"
@@ -42,6 +43,7 @@
             Undo
           </VaButton>
 
+          <!-- redo -->
           <VaButton
             size="small"
             preset="primary"
@@ -55,6 +57,7 @@
             Redo
           </VaButton>
 
+          <!-- clear all filters -->
           <VaButton
             @click="clearFilters"
             size="small"
