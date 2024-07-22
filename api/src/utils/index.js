@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const _ = require('lodash/fp');
+const { performance } = require('perf_hooks');
 
 function renameKey(oldKey, newKey) {
   return (obj) => {
@@ -238,6 +239,31 @@ function readUsersFromJSON(fname) {
   }
 }
 
+function measurePerformanceAsync(fn, logger) {
+  return async (...args) => {
+    const start_time = performance.now();
+    let result;
+    let error;
+
+    try {
+      result = await fn(...args);
+    } catch (err) {
+      error = err;
+    }
+    const end_time = performance.now();
+    const execution_time = end_time - start_time;
+
+    // Call the logger function with the original args and the execution time
+    try {
+      await logger(args, execution_time, error);
+    } catch (loggerError) {
+      console.error('Logger failed:', loggerError);
+    }
+
+    return result;
+  };
+}
+
 module.exports = {
   renameKey,
   setDifference,
@@ -249,4 +275,5 @@ module.exports = {
   numericStringsToNumbers,
   isIntegerArray,
   readUsersFromJSON,
+  measurePerformanceAsync,
 };

@@ -1,8 +1,9 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { body, query } = require('express-validator');
+const { param, body, query } = require('express-validator');
 const createError = require('http-errors');
 const _ = require('lodash/fp');
+const { performance } = require('perf_hooks');
 
 const prisma = new PrismaClient();
 const asyncHandler = require('../middleware/asyncHandler');
@@ -18,6 +19,25 @@ async function getCohortById(id) {
   const sql = cohortService.getCohortByIdQuery(id);
   const cohorts = await prisma.$queryRaw(sql);
   return cohorts[0];
+}
+
+// asynchronously log the query and its sql
+// ignore errors
+function logQuery({
+  queryJson, sqlQuery, execution_time, author_username,
+}) {
+  return prisma.query_analytics.create({
+    data: {
+      query: queryJson,
+      sql: sqlQuery.sql,
+      values: sqlQuery.values,
+      author_username,
+      execution_time,
+    },
+  }).catch((e) => {
+    // eslint-disable-next-line no-console
+    console.error('Error logging cohort search', e);
+  });
 }
 
 router.get(
@@ -77,7 +97,9 @@ router.get(
 router.get(
   '/:id',
   isPermittedTo('read'),
-  validate([]),
+  validate([
+    param('id').isUUID(),
+  ]),
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Get a cohort by id'
@@ -142,6 +164,7 @@ router.patch(
   '/:id',
   isPermittedTo('update'),
   validate([
+    param('id').isUUID(),
     body('name').optional().isString().notEmpty(),
     body('query').optional()
       .custom(cohortModel.validate).bail()
@@ -210,7 +233,9 @@ router.patch(
 router.delete(
   '/:id',
   isPermittedTo('delete'),
-  validate([]),
+  validate([
+    param('id').isUUID(),
+  ]),
   // eslint-disable-next-line no-unused-vars
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['cohorts']
@@ -223,7 +248,9 @@ router.delete(
 router.post(
   '/export/:id',
   isPermittedTo('read'),
-  validate([]),
+  validate([
+    param('id').isUUID(),
+  ]),
   // eslint-disable-next-line no-unused-vars
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['cohorts']
@@ -233,4 +260,41 @@ router.post(
   }),
 );
 
+router.post(
+  '/search',
+  isPermittedTo('read'),
+  validate([
+    body('query')
+      .custom(cohortService.validate)
+      .bail()
+      .customSanitizer(cohortService.sanitize),
+    query('search_id').optional().isUUID(),
+  ]),
+  asyncHandler(async (req, res) => {
+    // #swagger.tags = ['cohorts']
+    // #swagger.summary = 'Search participants based on a query'
+    /* #swagger.description = 'creates a temporary cohort based on the query and
+          returns the participant count'
+    */
+    const start_time = performance.now();
+
+    const searchQuery = cohortService.searchParticipantsQuery(req.body.query);
+    const saveQuery = cohortService.saveSearchResults(req.query.search_id, searchQuery);
+    const rows = await prisma.$queryRaw(saveQuery);
+    res.json({
+      count: Number(rows[0].count),
+      search_id: rows[0].id,
+    });
+
+    // log the query and its sql
+    const end_time = performance.now();
+    const execution_time = end_time - start_time;
+    logQuery({
+      queryJson: req.body.query,
+      sqlQuery: searchQuery,
+      execution_time,
+      author_username: req.user.username,
+    });
+  }),
+);
 module.exports = router;

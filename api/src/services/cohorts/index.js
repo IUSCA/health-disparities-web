@@ -1,4 +1,5 @@
 const { Prisma } = require('@prisma/client');
+const config = require('config');
 const { PHENOTYPE, GENOTYPE, COMBINATION } = require('./model');
 const phenotypeService = require('./phenotype');
 const combinationService = require('./combination');
@@ -99,6 +100,48 @@ function searchCohortsQuery({
   `;
 }
 
+/**
+ * Saves the search results to the cohort table as a temporary cohort.
+ * If id is null, it will create a new cohort.
+ * If a cohort with id already exists, it will update the participants and the updated_at field.
+ * If a cohort with id does not exist, it will insert a new cohort with this id.
+ *
+ * @param {number} id - The ID of the cohort.
+ * @param {string} searchQuery - The search query.
+ * @returns {string} - The SQL query to save the search results.
+ *                     The SQL query returns the ID of the cohort and the count of participants.
+ */
+function saveSearchResultsQuery(id, searchQuery) {
+  const TEMP_COHORT_NAME = 'temp_cohort';
+  const AUTHOR_USERNAME = config.system_user.username; // "svc_tasks" non-user account
+  const insertSql = Prisma.sql`
+  INSERT INTO cohort (name, query, participants, is_temp, author_username)
+  SELECT
+      ${TEMP_COHORT_NAME},
+      '{}',
+      ARRAY(${searchQuery}),
+      true,
+      ${AUTHOR_USERNAME}
+  RETURNING id, array_length(participants, 1) AS count
+  `;
+
+  const upsertSql = Prisma.sql`
+  INSERT INTO cohort (id, name, query, participants, is_temp, author_username)
+  SELECT
+      ${id}::UUID,
+      ${TEMP_COHORT_NAME},
+      '{}',
+      ARRAY(${searchQuery}),
+      true,
+      ${AUTHOR_USERNAME}
+  ON CONFLICT (id) DO UPDATE SET
+      participants = EXCLUDED.participants,
+      updated_at = CURRENT_TIMESTAMP
+  RETURNING id, array_length(participants, 1) AS count
+  `;
+  return id != null ? upsertSql : insertSql;
+}
+
 function searchParticipantsQuery(query, { count = false } = {}) {
   if (query.schema.name === PHENOTYPE) {
     return phenotypeService.buildParticipantsQuery(query.body, { count });
@@ -115,4 +158,5 @@ module.exports = {
   getCohortByIdQuery,
   searchCohortsQuery,
   searchParticipantsQuery,
+  saveSearchResultsQuery,
 };
