@@ -1,0 +1,61 @@
+import api from "./api";
+const cache_busting_id = "41e81fd";
+
+class ParticipantService {
+  getTotalCount() {
+    return api.get("/participants/total-count", {
+      params: {
+        cache_id: cache_busting_id,
+      },
+    });
+  }
+
+  getByCohortId({ cohort_id, limit = null, offset = null }) {
+    return api.get(`/participants`, {
+      params: {
+        cohort_id,
+        limit,
+        offset,
+      },
+    });
+  }
+
+  details({ participant_id }) {
+    return api.get(`/participants/${participant_id}`, {
+      params: {
+        cache_id: cache_busting_id,
+      },
+    });
+  }
+
+  aggregate({ cohort_id, field }) {
+    return api.get(`/participants/aggregate`, {
+      params: {
+        cohort_id,
+        field,
+      },
+    });
+  }
+
+  bins({ cohort_id, field, bins }) {
+    return api.get(`/participants/bins`, {
+      params: {
+        cohort_id,
+        field,
+        bins,
+      },
+    });
+  }
+
+  dateBins({ cohort_id, field, bins }) {
+    return api.get(`/participants/date/bins`, {
+      params: {
+        cohort_id,
+        field,
+        bins,
+      },
+    });
+  }
+}
+
+export default new ParticipantService();
