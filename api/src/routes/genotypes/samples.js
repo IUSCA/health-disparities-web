@@ -4,8 +4,8 @@ const { PrismaClient } = require('@prisma/client');
 // const _ = require('lodash/fp');
 
 // const { validate } = require('../middleware/validators');
-const asyncHandler = require('../middleware/asyncHandler');
-const { accessControl } = require('../middleware/auth');
+const asyncHandler = require('../../middleware/asyncHandler');
+const { accessControl } = require('../../middleware/auth');
 
 const isPermittedTo = accessControl('genotype_sample');
 const router = express.Router();

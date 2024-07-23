@@ -1,9 +1,9 @@
 import api from "./api";
 
 class GenAIService {
-  generate_name_description({ criteria }) {
+  generate_name_description({ filters }) {
     return api.post("/gen-ai/generate/name-description", {
-      criteria,
+      filters,
     });
   }
 

@@ -96,8 +96,8 @@
 
 <script setup>
 import config from "@/config";
-import cohortService from "@/services/cohort2";
 import dataBrowserService from "@/services/data_browser";
+import participantsService from "@/services/participants";
 import { useNavStore } from "@/stores/nav";
 
 const props = defineProps({
@@ -196,7 +196,7 @@ function getParticipantCounts() {
 onMounted(() => {
   getParticipantCounts();
 
-  cohortService.getTotalParticipants().then((res) => {
+  participantsService.getTotalCount().then((res) => {
     totalParticipantCount.value = res.data?.total || 0;
   });
 });

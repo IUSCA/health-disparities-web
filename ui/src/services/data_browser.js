@@ -3,7 +3,7 @@ const cache_busting_id = "41e81fd";
 
 class DataBrowserService {
   getGenomicDataCounts() {
-    return api.get("/variants/stats/counts", {
+    return api.get("/genotypes/stats/counts", {
       params: {
         cache_id: cache_busting_id,
       },
@@ -11,7 +11,7 @@ class DataBrowserService {
   }
 
   getAnnotationCounts({ source }) {
-    return api.get(`/variants/stats/${source}/count`, {
+    return api.get(`/genotypes/stats/${source}/count`, {
       params: {
         cache_id: cache_busting_id,
       },
@@ -19,7 +19,7 @@ class DataBrowserService {
   }
 
   getPhenotypeDataCounts({ category, keyword }) {
-    return api.get(`/phenotype/${category}/counts`, {
+    return api.get(`/phenotypes/${category}/counts`, {
       params: {
         cache_id: cache_busting_id,
         keyword,
@@ -28,7 +28,7 @@ class DataBrowserService {
   }
 
   getParticipantCountsByName({ category, keyword, offset, limit }) {
-    return api.get(`/phenotype/${category}/participant-counts-by-name`, {
+    return api.get(`/phenotypes/${category}/participant-counts-by-name`, {
       params: {
         cache_id: cache_busting_id,
         keyword,
@@ -39,7 +39,7 @@ class DataBrowserService {
   }
 
   getParticipantAgeBins({ category, name, num_bins = 10 }) {
-    return api.get(`/phenotype/${category}/participants/age/bins`, {
+    return api.get(`/phenotypes/${category}/participants/age/bins`, {
       params: {
         cache_id: cache_busting_id,
         name,
@@ -49,7 +49,7 @@ class DataBrowserService {
   }
 
   getParticipantAggregate({ category, field, name }) {
-    return api.get(`/phenotype/${category}/participants/aggregate`, {
+    return api.get(`/phenotypes/${category}/participants/aggregate`, {
       params: {
         cache_id: cache_busting_id,
         field,
