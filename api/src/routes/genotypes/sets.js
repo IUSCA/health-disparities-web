@@ -3,9 +3,9 @@ const { PrismaClient } = require('@prisma/client');
 const { body, param } = require('express-validator');
 const _ = require('lodash/fp');
 
-const { validate } = require('../middleware/validators');
-const asyncHandler = require('../middleware/asyncHandler');
-const { accessControl } = require('../middleware/auth');
+const { validate } = require('../../middleware/validators');
+const asyncHandler = require('../../middleware/asyncHandler');
+const { accessControl } = require('../../middleware/auth');
 
 const isPermittedTo = accessControl('genotype_set');
 const router = express.Router();

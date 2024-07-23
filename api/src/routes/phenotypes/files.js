@@ -3,9 +3,9 @@ const { PrismaClient } = require('@prisma/client');
 const { body, query } = require('express-validator');
 const _ = require('lodash/fp');
 
-const { validate } = require('../middleware/validators');
-const asyncHandler = require('../middleware/asyncHandler');
-const { accessControl } = require('../middleware/auth');
+const { validate } = require('../../middleware/validators');
+const asyncHandler = require('../../middleware/asyncHandler');
+const { accessControl } = require('../../middleware/auth');
 
 const isPermittedTo = accessControl('phenotype_file');
 const router = express.Router();

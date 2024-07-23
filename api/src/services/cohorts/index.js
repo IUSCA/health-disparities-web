@@ -142,11 +142,11 @@ function saveSearchResultsQuery(id, searchQuery) {
   return id != null ? upsertSql : insertSql;
 }
 
-function searchParticipantsQuery(query, { count = false } = {}) {
+async function searchParticipantsQueryAsync(query, { count = false } = {}) {
   if (query.schema.name === PHENOTYPE) {
     return phenotypeService.buildParticipantsQuery(query.body, { count });
   } if (query.name === GENOTYPE) {
-    return genotypeService.buildParticipantsQuery(query.body, { count });
+    return genotypeService.buildParticipantsQueryAsync(query.body, { count });
   } if (query.name === COMBINATION) {
     return combinationService.buildParticipantsQuery(query.body, { count });
   }
@@ -157,6 +157,6 @@ function searchParticipantsQuery(query, { count = false } = {}) {
 module.exports = {
   getCohortByIdQuery,
   searchCohortsQuery,
-  searchParticipantsQuery,
+  searchParticipantsQueryAsync,
   saveSearchResultsQuery,
 };

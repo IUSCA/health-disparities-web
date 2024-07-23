@@ -1,45 +1,18 @@
 const { Prisma } = require('@prisma/client');
-const { getGeneRegions, geneFilterSQL } = require('./genes');
-const { SQL_OP_MAP, isUnaryOp } = require('../common');
+const { histogramSQL } = require('../../queries');
+const { transformRanges, buildRangesSQL } = require('./ranges');
+const { buildFiltersSQL } = require('./filters');
 
-async function transformRanges(ranges, build) {
-  return Promise.all(
-    ranges.map(async (range) => {
-      if (range.type === 'gene') {
-        const regions = await getGeneRegions(range.value.name, build);
-        return {
-          ...range,
-          value: {
-            ...range.value,
-            regions,
-          },
-        };
-      }
-      return range;
-    }),
-  );
-}
-
-function buildRangesSQL(ranges) {
-  const range_sqls = ranges.map((range) => {
-    if (range.type === 'gene') {
-      // can return null if gene is not found
-      return geneFilterSQL(range.value.regions);
-    }
-    if (range.type === 'region') {
-      return Prisma.sql`(chr = ${range.value.chr} AND position BETWEEN ${range.value.start} AND ${range.value.end})`;
-    }
-    // variant
-    return Prisma.sql`(chr = ${range.value.chr} AND position = ${range.value.position} AND ref = ${range.value.ref} AND alt = ${range.value.alt})`;
-  }).filter((r) => r != null);
-
-  if (range_sqls.length === 0) {
-    return null;
-  }
-
-  return Prisma.join(range_sqls, ' OR  ');
-}
-
+/**
+ * Builds the base SQL filter for querying genotype data based on the provided parameters.
+ *
+ * @param {Object} options - The options for building the query.
+ * @param {number} options.source_id - The source ID.
+ * @param {number} options.snapshot_id - The snapshot ID.
+ * @param {number} options.protocol_id - The protocol ID.
+ * @param {Array} options.ranges - The ranges for the query.
+ * @returns {Prisma.sql} The base SQL query.
+ */
 function buildBaseQuerySQL({
   source_id, snapshot_id, protocol_id, ranges,
 }) {
@@ -56,73 +29,69 @@ function buildBaseQuerySQL({
   `;
 }
 
-function buildField(field, op, value) {
-  const sql_op = Prisma.raw(SQL_OP_MAP[op]);
-  let sql_value = value;
-  if (op === 'in' || op === 'not_in') {
-    sql_value = Prisma.sql`(${Prisma.join(value)})`;
-  }
-  if (op === 'contains' || op === 'not_contains') {
-    sql_value = Prisma.sql`${`%${value}%`}`;
-  }
-  if (op === 'starts_with') {
-    sql_value = Prisma.sql`${`%${value}`}`;
-  }
-  if (op === 'ends_with') {
-    sql_value = Prisma.sql`${`${value}%`}`;
-  }
-  if (isUnaryOp(op)) {
-    sql_value = Prisma.empty;
-  }
-  const _field = field.split('.')[1];
-  const field_sql = Prisma.raw(_field);
-  return Prisma.sql`${field_sql} ${sql_op} ${sql_value}`;
-}
-
-function buildFilters(queryJson) {
-  // console.log({ queryJson });
-  const { operator, children } = queryJson;
-  if (children) {
-    if (children.length === 0) {
-      return Prisma.empty;
-    }
-    // non-leaf node
-    let negation = Prisma.empty;
-    let _operator = operator;
-    if (operator === 'NOT_AND') {
-      negation = Prisma.raw('NOT');
-      _operator = 'AND';
-    }
-    if (operator === 'NOT_OR') {
-      negation = Prisma.raw('NOT');
-      _operator = 'OR';
-    }
-    const query = Prisma.join(children.map((child) => buildFilters(child)), ` ${_operator} `);
-    return Prisma.sql`${negation}(${query})`;
-  }
-
-  // leaf node
-  const {
-    field, operator: op, value,
-  } = queryJson;
-  return buildField(field, op, value);
-}
-
-function buildSQLVarIds({
-  base_query, json_query,
+/**
+ * Builds and returns a SQL query for retrieving variant IDs based on the provided parameters.
+ * A variant ID is a tuple of chr, position, ref, alt, source_id
+ *
+ * @param {Object} options - The options for building the SQL query.
+ * @param {string} options.base_query - The base query made from ranges.
+ * @param {Object} options.filters - The filter tree object to apply.
+ * @returns {Object} The SQL query for retrieving genotype data.
+ */
+function searchVariantIDsSQL({
+  base_query, filters,
 }) {
   const base_query_sql = buildBaseQuerySQL(base_query);
 
-  const json_query_sql = buildFilters(json_query);
-  // console.log(json_query_sql.sql, json_query_sql.values);
+  const filters_sql = buildFiltersSQL(filters);
+  // console.log(filters_sql.sql, filters_sql.values);
 
-  const where = json_query_sql === Prisma.empty
+  const where = filters_sql === Prisma.empty
     ? Prisma.sql`WHERE (${base_query_sql})`
-    : Prisma.sql`WHERE (${base_query_sql}) AND (${json_query_sql})`;
+    : Prisma.sql`WHERE (${base_query_sql}) AND (${filters_sql})`;
   const query = Prisma.sql`
       SELECT chr, position, ref, alt, source_id
       FROM gt_stats_annotations
       ${where}
+  `;
+  return query;
+}
+
+/**
+ * Constructs a SQL query for searching genotype data.
+ * Queries the gt_stats_annotations table
+ * Query returns the pagination data and the total count of results.
+ * The total count is returned in the 'total_count' column which is the same for all rows.
+ *
+ *
+ * @param {Object} options - The options for constructing the query.
+ * @param {string} options.base_query - The base query object.
+ * @param {Object} options.filters - The filters to apply.
+ * @param {number} options.limit - The maximum number of results to return.
+ * @param {number} options.offset - The number of results to skip.
+ * @returns {string} The constructed SQL query.
+ */
+function searchGenotypeDataSQL({
+  base_query, filters, limit, offset,
+}) {
+  const base_query_sql = buildBaseQuerySQL(base_query);
+
+  const filters_sql = buildFiltersSQL(filters);
+  // console.log(filters_sql.sql, filters_sql.values);
+
+  const where = filters_sql === Prisma.empty
+    ? Prisma.sql`WHERE (${base_query_sql})`
+    : Prisma.sql`WHERE (${base_query_sql}) AND (${filters_sql})`;
+  const query = Prisma.sql`WITH results AS (
+      SELECT *
+      FROM gt_stats_annotations
+      ${where}
+    )
+    select *, count(*) over () as total_count
+    from results
+    ORDER BY "chr", "position", "ref", "alt" ASC 
+    LIMIT ${limit}
+    OFFSET ${offset};
   `;
   return query;
 }
@@ -181,7 +150,18 @@ function participantsWithVariantsSQL({
   return query;
 }
 
-async function buildParticipantsQuery(body, protocol_id, username, { count = false } = {}) {
+/**
+ * Builds a query to retrieve participants based on the provided parameters.
+ *
+ * @param {Object} body - The cohort query body containing the query parameters.
+ * @param {string} protocol_id - Requestors protocol ID.
+ * @param {string} username - The username of the requestor.
+ * @param {Object} options - Additional options for the query.
+ * @param {boolean} [options.count=false] - Whether to include the count of participants
+ * in the query result.
+ * @returns {Promise<Prisma.Sql>} - A promise that resolves when the query is built.
+ */
+async function buildParticipantsQueryAsync(body, protocol_id, username, { count = false } = {}) {
   const {
     source_id, snapshot_id, ranges, filters, zygosities,
   } = body;
@@ -193,12 +173,12 @@ async function buildParticipantsQuery(body, protocol_id, username, { count = fal
     ranges: resolvedRanges,
   };
 
-  const variants_sql = buildSQLVarIds({
+  const variants_sql = searchVariantIDsSQL({
     base_query,
-    json_query: filters,
+    filters,
   });
 
-  participantsWithVariantsSQL({
+  return participantsWithVariantsSQL({
     variants_sql,
     zygosities,
     snapshot_id,
@@ -207,6 +187,70 @@ async function buildParticipantsQuery(body, protocol_id, username, { count = fal
   });
 }
 
+/**
+ * Returns a SQL query for retrieving distinct values of an annotation field
+ *  for a given base query parameters.
+ *
+ * @param {string} field - The annotation field to retrieve distinct values for.
+ * @param {object} base_query_params - The base query parameters.
+ * @param {number} base_query_params.source_id - The source ID.
+ * @param {number} base_query_params.snapshot_id - The snapshot ID.
+ * @param {number} base_query_params.protocol_id - The protocol ID of the requestor.
+ * @param {Array} base_query_params.ranges - The ranges for the query.
+ * @returns {object} - The distinct annotations query.
+ */
+function distinctAnnotationsQuery(field, base_query_params) {
+  const field_sql = Prisma.raw(field);
+  return Prisma.sql`
+    select ${field_sql} as value, count(*) as count
+    from gt_stats_annotations
+    where ${buildBaseQuerySQL(base_query_params)}
+    and ${field_sql} is not null
+    group by ${field_sql}
+    order by count desc
+  `;
+}
+
+function annotationHistogramSQL(query, _column, _num_bins) {
+  const histSQL = histogramSQL('data', _column, _num_bins);
+  return Prisma.sql`
+  with data as (
+    select * from gt_stats_annotations
+    WHERE ${query}
+  )
+  ${histSQL}
+  `;
+}
+
+/**
+ * Builds a SQL query to calculate the total count of records in the `gt_stats_annotations` table
+ * based on the provided `base_query_params`.
+ *
+ * @param {Object} base_query_params - The base query parameters used to build the SQL query.
+ * @param {number} base_query_params.source_id - The source ID.
+ * @param {number} base_query_params.snapshot_id - The snapshot ID.
+ * @param {number} base_query_params.protocol_id - The protocol ID of the requestor.
+ * @param {Array} base_query_params.ranges - The ranges for the query.
+ * @returns {Object} - The SQL query object.
+ */
+function buildTotalCountSQL(base_query_params) {
+  const base_query_sql = buildBaseQuerySQL(base_query_params);
+
+  // TODO: why query gt_stats_annotations?
+  // what is the row count difference between  variants, annotations, gt_stats_annotations?
+  const query = Prisma.sql`
+    SELECT COUNT(*) as count
+    FROM gt_stats_annotations
+    WHERE (${base_query_sql})
+  `;
+  return query;
+}
+
 module.exports = {
-  buildParticipantsQuery,
+  buildParticipantsQueryAsync,
+  distinctAnnotationsQuery,
+  annotationHistogramSQL,
+  buildTotalCountSQL,
+  buildBaseQuerySQL,
+  searchGenotypeDataSQL,
 };

@@ -3,10 +3,15 @@ const config = require('config');
 
 const prisma = new PrismaClient();
 
+/**
+ * Merges overlapping intervals.
+ *
+ * @param {Array<Array<number>>} intervals - Array of intervals represented as
+ * 2-tuples [[start, end], [start, end], ...].
+ * intervals are assumed to be sorted by start and then end
+ * @returns {Array<Array<number>>} - Array of merged intervals.
+ */
 function mergeIntervals(intervals) {
-  // merge overlapping intervals
-  // intervals is array of 2-tuples [[start, end], [start, end], ...]
-  // intervals are assumed to be sorted by start and then end
   const merged = [intervals[0]];
 
   for (let i = 1; i < intervals.length; i += 1) {
@@ -24,6 +29,18 @@ function mergeIntervals(intervals) {
   return merged;
 }
 
+/**
+ * Retrieves distinct ranges for a gene based on the provided gene name and build.
+ * Queries the ncbiRefSeqCurated table.
+ *
+ * @param {string} gene_name - The name of the gene.
+ * @param {string} build - The build version.
+ * @returns {Promise<Array<Object>>} - An array of objects representing the
+ * distinct ranges of the gene. Each object has the following properties:
+ * - chr: The chromosome number.
+ * - start: The start position.
+ * - end: The end position.
+ */
 async function getDistinctRangesFromGene(gene_name, build) {
   const rows = await prisma.$queryRaw`
     select distinct chr, "txStart" as start, "txEnd" as end 
@@ -38,10 +55,15 @@ async function getDistinctRangesFromGene(gene_name, build) {
   }));
 }
 
+/**
+ * Retrieves the gene regions (distinct ranges) for a given gene name and build.
+ * @param {string} gene_name - The name of the gene.
+ * @param {string} build - The build version.
+ * @returns {Promise<Array<Object>>} An array of gene regions,
+ * each containing the chromosome, start, and end positions.
+ * returns [{chr, start, end}, ...]
+ */
 async function getGeneRegions(gene_name, build) {
-  // get distinct ranges for the gene by looking up the gene in the ncbiRefSeqCurated table
-  // returns [{chr, start, end}, ...]
-
   const ranges = await getDistinctRangesFromGene(gene_name, build);
 
   // group by chr
@@ -73,6 +95,16 @@ async function getGeneRegions(gene_name, build) {
     ).flat();
 }
 
+/**
+ * Generates SQL filter conditions based on the given regions.
+ * Each filter is like `(chr = ${chr} AND position BETWEEN ${start} AND ${end})`.
+ * The filters are joined with OR.
+ *
+ * @param {Array<Object>} regions - An array of region objects containing
+ * `chr`, `start`, and `end` properties.
+ * @returns {string|null} - The generated SQL filter conditions joined with OR,
+ * or null if no regions are provided.
+ */
 function geneFilterSQL(regions) {
   // convert ranges to SQL
   const region_sqls = regions

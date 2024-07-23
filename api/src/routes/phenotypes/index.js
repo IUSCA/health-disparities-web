@@ -2,17 +2,20 @@ const express = require('express');
 const { Prisma, PrismaClient } = require('@prisma/client');
 const NodeCache = require('node-cache');
 const { param, query } = require('express-validator');
-const asyncHandler = require('../middleware/asyncHandler');
-const { accessControl } = require('../middleware/auth');
-const { validate } = require('../middleware/validators');
+const asyncHandler = require('../../middleware/asyncHandler');
+const { accessControl } = require('../../middleware/auth');
+const { validate } = require('../../middleware/validators');
 const {
   histogramSQL,
-} = require('../services/queries');
+} = require('../../services/queries');
+const { CATEGORIES } = require('../../services/cohorts/phenotype/fields');
 
 const isPermittedTo = accessControl('cohort');
 const router = express.Router();
 const prisma = new PrismaClient();
 const cache = new NodeCache();
+
+router.use('/files', require('./files'));
 
 router.get(
   '/:category/counts',
@@ -245,6 +248,98 @@ router.get(
     // client side cache indefinitely - 1 year
     res.set('Cache-control', 'private, max-age=31536000');
     res.json(distinctValuesWithCounts);
+  }),
+);
+
+router.get(
+  '/:category/:field/unique',
+  accessControl('participant')('read'),
+  validate([
+    param('category').isIn(CATEGORIES),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const { category, field } = req.params;
+    const _rows = await prisma[category].groupBy({
+      by: [field],
+      _count: {
+        [field]: true,
+      },
+      orderBy: {
+        _count: {
+          [field]: 'desc',
+        },
+      },
+    });
+    const distinctValuesWithCounts = _rows.reduce((acc, item) => {
+      acc[item[field]] = item._count[field];
+      return acc;
+    }, {});
+
+    // cache indefinitely - 1 year
+    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+    res.set('Cache-control', 'private, max-age=31536000');
+    return res.json(distinctValuesWithCounts);
+  }),
+);
+
+router.get(
+  '/:category/:field/startswith/:prefix',
+  accessControl('participant')('read'),
+  validate([
+    param('category').isIn(CATEGORIES),
+    query('limit').default(10).isInt({ min: 1, max: 1000 })
+      .toInt(),
+    query('offset').default(0).isInt({ min: 0 })
+      .toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const { category, field } = req.params;
+    const _rows = await prisma[category].findMany({
+      where: {
+        [field]: {
+          startsWith: req.params.prefix || '',
+        },
+      },
+      orderBy: {
+        [field]: 'asc',
+      },
+      take: req.query.limit,
+      skip: req.query.offset,
+      distinct: [field],
+    });
+
+    // cache indefinitely - 1 year
+    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+    // res.set('Cache-control', 'private, max-age=31536000');
+    return res.json(_rows.map((row) => row[field]));
+  }),
+);
+
+router.get(
+  '/dxname',
+  accessControl('participant')('read'),
+  validate([
+    query('limit').default(10).isInt({ min: 1, max: 1000 })
+      .toInt(),
+    query('offset').default(0).isInt({ min: 0 })
+      .toInt(),
+    query('text').default(''),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const searchText = req.query.text || '';
+    const _rows = await prisma.$queryRaw`
+      select name
+      from dx_unique_name dun
+      where similarity(name, ${searchText}) >= 0.1
+      order by similarity(name, ${searchText}) desc
+      limit ${req.query.limit}
+      offset ${req.query.offset}
+    `;
+
+    // cache indefinitely - 1 year
+    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+    // res.set('Cache-control', 'private, max-age=31536000');
+    return res.json(_rows.map((row) => row.name));
   }),
 );
 

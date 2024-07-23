@@ -136,7 +136,7 @@ router.post(
       cohort_data.is_locked = true;
     }
 
-    const sqlQuery = cohortService.searchParticipants(req.body.query);
+    const sqlQuery = await cohortService.searchParticipantsQueryAsync(req.body.query);
     // eslint-disable-next-line no-console
     // console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
@@ -206,7 +206,7 @@ router.patch(
     }
 
     if (cohort_data.query) {
-      const sqlQuery = cohortService.searchParticipantsQuery(cohort_data.query);
+      const sqlQuery = await cohortService.searchParticipantsQueryAsync(cohort_data.query);
       // eslint-disable-next-line no-console
       // console.log(sqlQuery.sql, sqlQuery.values);
       const rows = await prisma.$queryRaw(sqlQuery);
@@ -278,7 +278,7 @@ router.post(
     */
     const start_time = performance.now();
 
-    const searchQuery = cohortService.searchParticipantsQuery(req.body.query);
+    const searchQuery = await cohortService.searchParticipantsQueryAsync(req.body.query);
     const saveQuery = cohortService.saveSearchResults(req.query.search_id, searchQuery);
     const rows = await prisma.$queryRaw(saveQuery);
     res.json({

@@ -376,4 +376,5 @@ module.exports = {
   validateRanges,
   sanitizeZygosities: encode_zygosities,
   toJSON,
+  decode_chromosome,
 };

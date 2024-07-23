@@ -19,19 +19,13 @@ router.use('/workflows', require('./workflows'));
 router.use('/projects', require('./projects'));
 router.use('/statistics', require('./statistics'));
 
-router.use('/cohorts', require('./cohort2'));
-// router.use('/cohort', require('./cohort'));
-// router.use('/participant', require('./participant'));
-router.use('/variants', require('./variants/index'));
-
+router.use('/cohorts', require('./cohorts'));
+router.use('/participants', require('./participants'));
+router.use('/genotypes', require('./genotypes/index'));
+router.use('/phenotypes', require('./phenotypes/index'));
 router.use('/snapshots', require('./snapshots'));
 router.use('/sources', require('./sources'));
 router.use('/protocols', require('./protocols'));
-router.use('/phenotype_files', require('./phenotype_files'));
-router.use('/genotype_sets', require('./genotype_sets'));
-router.use('/genotype_files', require('./genotype_files'));
-router.use('/genotype_samples', require('./genotype_samples'));
 router.use('/gen-ai', require('./gen_ai'));
-router.use('/phenotype', require('./phenotype'));
 
 module.exports = router;
