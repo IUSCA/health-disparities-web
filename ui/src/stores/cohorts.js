@@ -2,7 +2,13 @@ import { CombinationCohort } from "@/components/cohorts/models";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
-export const useCohortsStore = defineStore("cohorts2", () => {
+export const useCohortsStore = defineStore("cohorts", () => {
+  // maintain "dirty" state for each cohort to track which cohorts are not yet saved
+  // - new cohorts are inherently dirty: constructors and createEmpty methods on Cohort class
+  // - when a cohort is saved, it gets clean: save method on Cohort class
+  // - when a cohort is loaded, it is clean: fromJson method on Cohort class
+  // - when query of a cohort is changed, it gets dirty: Cohort Component
+
   const enableTitleGeneration = ref(
     useLocalStorage("cohort.enableTitleGeneration", false),
   );
