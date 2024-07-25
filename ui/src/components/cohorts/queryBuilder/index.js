@@ -1,4 +1,4 @@
-import { isUnaryOperator } from "../cohortFilters";
+import { isUnaryOperator } from "@/components/cohorts/common";
 
 /**
  * Returns a default query object.
@@ -8,20 +8,23 @@ export function defaultQuery() {
   return { operatorIdentifier: "AND", children: [] };
 }
 
+export function defaultStandardQuery() {
+  return { operator: "AND", children: [] };
+}
 /**
  * Transforms the query object to a standard format.
  * Removes filters with empty values ("", null, []) and removes empty groups.
  * @param {Object} query - The query object to transform.
  * @returns {Object|null} The transformed query object, or null if the input query is falsy.
  */
-export function transformQueryForApi(query) {
+export function standardizeQuery(query) {
   if (!query) return null;
   return {
     operator: query.operatorIdentifier,
     children: query.children
       .map((child) => {
         if (child.children) {
-          return transformQueryForApi(child);
+          return standardizeQuery(child);
         }
         return {
           field: child.identifier,
@@ -49,17 +52,17 @@ export function transformQueryForApi(query) {
 }
 
 /**
- * Transforms the stored standardized query object to a format that can be used in the query builder.
+ * Transforms the standardized query object to a format that can be used in the query builder.
  * @param {Object} query - The stored query object to transform.
  * @returns {Object|null} The transformed query object, or null if the input query is falsy.
  */
-export function transformStoredQuery(query) {
+export function fromStandardQuery(query) {
   if (!query) return null;
   return {
     operatorIdentifier: query.operator,
     children: query.children.map((child) => {
       if (child.children) {
-        return transformStoredQuery(child);
+        return fromStandardQuery(child);
       }
       return {
         identifier: child.field,
@@ -71,10 +74,10 @@ export function transformStoredQuery(query) {
 }
 
 export function isQueryEmpty(query) {
-  const query2 = transformQueryForApi(query);
-  return isAPIQueryEmpty(query2);
+  const query2 = standardizeQuery(query);
+  return isStandardQueryEmpty(query2);
 }
 
-export function isAPIQueryEmpty(query) {
+export function isStandardQueryEmpty(query) {
   return !query || query.children.length === 0;
 }

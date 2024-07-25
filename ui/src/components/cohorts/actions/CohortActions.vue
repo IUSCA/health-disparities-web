@@ -59,8 +59,7 @@
 </template>
 
 <script setup>
-import { Cohort, CombinationCohort } from "@/components/builder/models";
-import { PhenotypeCohort } from "@/components/builder/models/phenotype";
+import { Cohort } from "@/components/cohorts/models";
 const props = defineProps({
   cohort: Cohort,
   hideRemove: {
@@ -83,10 +82,7 @@ const isSaveDisabled = computed(() => {
 // or if this cohort was never saved
 const isCopyDisabled = computed(() => {
   return (
-    !(
-      props.cohort instanceof CombinationCohort ||
-      props.cohort instanceof PhenotypeCohort
-    ) ||
+    !props.cohort.supports_copying ||
     props.cohort.isEmpty() ||
     props.cohort.isNew()
   );

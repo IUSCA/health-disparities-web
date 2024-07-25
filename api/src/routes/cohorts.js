@@ -152,6 +152,15 @@ router.post(
       },
       select: {
         id: true,
+        name: true,
+        description: true,
+        created_at: true,
+        updated_at: true,
+        query: true,
+        is_published: true,
+        is_locked: true,
+        is_protected: true,
+        metadata: true,
       },
     });
 
@@ -222,6 +231,15 @@ router.patch(
       data: cohort_data,
       select: {
         id: true,
+        name: true,
+        description: true,
+        created_at: true,
+        updated_at: true,
+        query: true,
+        is_published: true,
+        is_locked: true,
+        is_protected: true,
+        metadata: true,
       },
     });
 
@@ -261,7 +279,7 @@ router.post(
 );
 
 router.post(
-  '/search',
+  '/search-participants',
   isPermittedTo('read'),
   validate([
     body('query')
@@ -279,7 +297,7 @@ router.post(
     const start_time = performance.now();
 
     const searchQuery = await cohortService.searchParticipantsQueryAsync(req.body.query);
-    const saveQuery = cohortService.saveSearchResults(req.query.search_id, searchQuery);
+    const saveQuery = cohortService.saveSearchResultsQuery(req.query.search_id, searchQuery);
     const rows = await prisma.$queryRaw(saveQuery);
     res.json({
       count: Number(rows[0].count),

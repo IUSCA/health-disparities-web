@@ -41,7 +41,7 @@ class CohortService {
 
   searchParticipants({ query, search_id = null }) {
     return api.post(
-      "/cohorts/search",
+      "/cohorts/search-participants",
       {
         query,
       },

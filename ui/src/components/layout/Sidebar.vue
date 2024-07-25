@@ -131,7 +131,7 @@ const user_items = ref([
   {
     icon: "mdi:account-multiple",
     title: "Cohort Builder",
-    path: "/cohort",
+    path: "/cohorts",
   },
 
   {

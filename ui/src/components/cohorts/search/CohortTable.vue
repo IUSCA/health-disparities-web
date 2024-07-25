@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import cohortService from "@/services/cohort2";
+import cohortService from "@/services/cohorts";
 import * as datetime from "@/services/datetime";
 import { useColors } from "vuestic-ui/web-components";
 

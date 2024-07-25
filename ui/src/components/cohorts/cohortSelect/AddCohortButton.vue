@@ -101,10 +101,8 @@
 </template>
 
 <script setup>
-import { DEFAULT_LOGICAL_OPERATOR } from "@/components/builder/cohortSelect/combination/constants";
-import { GenotypeCohort } from "@/components/builder/models/genotype";
-import { PhenotypeCohort } from "@/components/builder/models/phenotype";
-import { createCohort } from "@/components/builder/models/utils";
+import { DEFAULT_LOGICAL_OPERATOR } from "@/components/cohorts/combination/constants";
+import * as model from "@/components/cohorts/models";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
@@ -117,7 +115,7 @@ const cohortSearchModal = ref(null);
 function addNewPTCohort() {
   // add an empty phenotype cohort - dirty: true
   cohortsStore.appendCohort(
-    PhenotypeCohort.createEmpty(),
+    new model.PhenotypeCohort(),
     DEFAULT_LOGICAL_OPERATOR,
   );
 }
@@ -125,14 +123,17 @@ function addNewPTCohort() {
 function addNewGTCohort() {
   // add an empty phenotype cohort - dirty: true
   cohortsStore.appendCohort(
-    GenotypeCohort.createEmpty(),
+    new model.GenotypeCohort(),
     DEFAULT_LOGICAL_OPERATOR,
   );
 }
 
 function addCohort(cohort) {
   // add an existing cohort - dirty: false
-  cohortsStore.appendCohort(createCohort(cohort), DEFAULT_LOGICAL_OPERATOR);
+  cohortsStore.appendCohort(
+    model.createCohort(cohort),
+    DEFAULT_LOGICAL_OPERATOR,
+  );
 }
 </script>
 

@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { filterId } from "./cohortFilters";
+import { filterId } from "@/components/cohorts/phenotype/filters";
 
 const props = defineProps({
   filters: Object,

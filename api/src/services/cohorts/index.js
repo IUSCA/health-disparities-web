@@ -44,7 +44,7 @@ function getCohortByIdQuery(id) {
 
  *
  * @param {Object} options - The search options.
- * @param {string|null} options.name - The name of the cohort.
+ * @param {string|null} options.search_term - The search term to filter by name or description.
  * @param {string|null} options.author_username - The username of the author.
  * @param {boolean|null} options.is_published - Indicates if the cohort is published.
  * @param {boolean|null} options.is_locked - Indicates if the cohort is locked.

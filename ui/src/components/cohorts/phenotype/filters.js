@@ -1,4 +1,4 @@
-export const cohortFilters = [
+export const filters = [
   {
     label: "Demographics",
     key: "demographic",
@@ -444,8 +444,4 @@ export function flatten(filters) {
       };
     }),
   );
-}
-
-export function isUnaryOperator(operator) {
-  return ["is_null", "is_not_null"].includes(operator);
 }

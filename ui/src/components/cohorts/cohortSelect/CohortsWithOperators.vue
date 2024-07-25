@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-import { combinations } from "@/components/builder/cohortSelect/combination/constants";
+import { combinations } from "@/components/cohorts/combination/constants";
 import { stringToRGB } from "@/services/colors";
 const props = defineProps({
   cohorts: {

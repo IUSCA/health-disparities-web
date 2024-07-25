@@ -1,5 +1,5 @@
 <template>
-  <div v-if="cohorts.length > 1 && cohortsWithEmptyQueries.length > 0">
+  <div v-if="props.cohorts.length > 1 && cohortsWithEmptyQueries.length > 0">
     <VaAlert color="warning" icon="warning">
       <div class="md:ml-3">
         <p class="font-semibold text-lg">
@@ -19,11 +19,18 @@
 </template>
 
 <script setup>
-import { storeToRefs } from "pinia";
+// import { storeToRefs } from "pinia";
 
-import { useCohortsStore } from "@/stores/cohorts";
-// const props = defineProps({})
+// import { useCohortsStore } from "@/stores/cohorts";
 
-const cohortsStore = useCohortsStore();
-const { cohorts, cohortsWithEmptyQueries } = storeToRefs(cohortsStore);
+// const cohortsStore = useCohortsStore();
+// const { cohorts, cohortsWithEmptyQueries } = storeToRefs(cohortsStore);
+
+const props = defineProps({
+  cohorts: Array,
+});
+
+const cohortsWithEmptyQueries = computed(() => {
+  return props.cohorts.filter((c) => c.isEmpty());
+});
 </script>

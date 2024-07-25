@@ -14,7 +14,6 @@
 </template>
 
 <script setup>
-// import { cohortFilters } from "@/components/builder/cohortFilters";
 import { stringToRGB } from "@/services/colors";
 
 const props = defineProps({

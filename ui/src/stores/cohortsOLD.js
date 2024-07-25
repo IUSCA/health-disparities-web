@@ -1,21 +1,18 @@
-import { CombinationCohort } from "@/components/cohorts/models";
+import { CombinationCohort } from "@/components/builder/models";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
-export const useCohortsStore = defineStore("cohorts2", () => {
-  const enableTitleGeneration = ref(
-    useLocalStorage("cohort.enableTitleGeneration", false),
-  );
-  const enableChatbot = ref(useLocalStorage("cohort.enableChatbot", false));
-  const totalParticipants = ref(0);
+export const useCohortsStore = defineStore("cohorts", () => {
+  // maintain "dirty" state for each cohort to track which cohorts are not yet saved
+  // - new cohorts are inherently dirty: constructors and createEmpty methods on Cohort class
+  // - when a cohort is saved, it gets clean: save method on Cohort class
+  // - when a cohort is loaded, it is clean: fromJson method on Cohort class
+  // - when query of a cohort is changed, it gets dirty: Cohort Component
+
   const cohorts = ref([]);
-  const combinationCohort = ref(new CombinationCohort());
-  // sequence of set operations to be applied interleaved with cohorts
-  // modifies the combinationCohort
-  const operators = computed({
-    get: () => combinationCohort.value?.query?.operators || [],
-    set: (value) => (combinationCohort.value.query.operators = value),
-  });
+
+  const totalParticipants = ref(0);
+
   const cohortsWithEmptyQueries = computed(() => {
     return cohorts.value.filter((c) => c.isEmpty());
   });
@@ -25,10 +22,18 @@ export const useCohortsStore = defineStore("cohorts2", () => {
     );
   });
 
-  function reset() {
-    totalParticipants.value = 0;
-    cohorts.value = [];
-  }
+  const combinationCohort = ref(CombinationCohort.createEmpty());
+  // sequence of set operations to be applied interleaved with cohorts
+  // modifies the combinationCohort
+  const operators = computed({
+    get: () => combinationCohort.value?.criteria?.operators || [],
+    set: (value) => (combinationCohort.value.criteria.operators = value),
+  });
+
+  const enableTitleGeneration = ref(
+    useLocalStorage("cohort.enableTitleGeneration", false),
+  );
+  const enableChatbot = ref(useLocalStorage("cohort.enableChatbot", false));
 
   function appendCohort(cohort, op = null) {
     // op is the operator to be applied to the last cohort and this new cohort
@@ -71,19 +76,35 @@ export const useCohortsStore = defineStore("cohorts2", () => {
     operators.value[idx1] = op;
   }
 
+  function makeNewName(baseName = "Untitled") {
+    let name = baseName;
+    let i = 1;
+    while (cohorts.value.some((c) => c.name === name)) {
+      name = `${baseName} ${i}`;
+      i++;
+    }
+    return name;
+  }
+
+  function setCombinationCohort(cohort) {
+    combinationCohort.value = cohort;
+  }
+
   return {
-    enableTitleGeneration,
-    enableChatbot,
-    totalParticipants,
     cohorts,
-    combinationCohort,
     operators,
+    totalParticipants,
+    cohortsWithEmptyQueries,
     isInCombineMode,
-    reset,
+    combinationCohort,
     appendCohort,
     deleteCohort,
     updateCohort,
     updateOperator,
+    makeNewName,
+    setCombinationCohort,
+    enableTitleGeneration,
+    enableChatbot,
   };
 });
 

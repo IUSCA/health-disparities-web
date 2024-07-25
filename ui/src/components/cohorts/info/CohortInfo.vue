@@ -13,7 +13,7 @@
         class="text-lg leading-5 whitespace-nowrap overflow-clip overflow-ellipsis"
       >
         {{
-          (props.cohort.name.startsWith("Untitled")
+          (props.cohort.name.startsWith("Cohort")
             ? props.cohort.suggested_name
             : props.cohort.name) || props.cohort.name
         }}

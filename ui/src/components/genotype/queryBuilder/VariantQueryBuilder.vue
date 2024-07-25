@@ -98,8 +98,8 @@ import {
 } from "@/components/builder/cohortFilters";
 import { variantFilters } from "@/components/genotype/filters/variantFilters";
 
-import QBDate from "@/components/builder/queryBuilder/filterComponents/QBDate.vue";
-import QBInput from "@/components/builder/queryBuilder/filterComponents/QBInput.vue";
+import QBDate from "@/components/cohorts/queryBuilder/filterComponents/QBDate.vue";
+import QBInput from "@/components/cohorts/queryBuilder/filterComponents/QBInput.vue";
 import AnnotationSelect from "@/components/genotype/queryBuilder/filterComponents/AnnotationSelect.vue";
 
 const props = defineProps({
