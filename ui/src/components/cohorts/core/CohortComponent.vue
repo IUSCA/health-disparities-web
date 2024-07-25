@@ -1,4 +1,5 @@
 <template>
+  {{ JSON.stringify(history, null, 2) }}
   <VaInnerLoading :loading="loading">
     <div class="flex flex-col md:flex-row gap-3">
       <!-- Info, Actions, History -->
@@ -183,9 +184,8 @@ function exportCohort() {
   console.log("Export cohort", cohort.value, props.idx);
 }
 
+// clone the cohort, save it, and append it to the store
 function copyCohort() {
-  // clone the cohort, save it, and append it to the store
-  console.log("Copy cohort", cohort.value, props.idx);
   loading.value = true;
   const cohortCopy = cohort.value.copy();
   cohortCopy
@@ -206,9 +206,11 @@ function copyCohort() {
 const stateToTrack = computed({
   get: () => ({
     size: cohort.value.size,
-    query: cohort.value.query,
+    query: JSON.parse(JSON.stringify(cohort.value.query)),
   }),
   set: ({ query }) => {
+    // console.log("Setting cohort.query", JSON.stringify(query, null, 2));
+    // console.log("previous value", JSON.stringify(cohort.value.query, null, 2));
     cohort.value.query = query;
   },
 });
@@ -224,11 +226,6 @@ function constrainedCommit() {
   // when undo or redo is called, the query is set. this triggers another commit
   // to the history. we don't want that, so we check if the query is different
   // from the last commit
-  console.log(
-    "Constrained commit",
-    history.value[0].snapshot.query,
-    cohort.value.query,
-  );
   if (
     JSON.stringify(cohort.value.query) !==
     JSON.stringify(history.value[0].snapshot.query)

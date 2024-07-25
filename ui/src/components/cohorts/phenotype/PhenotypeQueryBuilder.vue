@@ -104,22 +104,35 @@ const props = defineProps({
 const query = ref();
 
 // bi-directional binding between standard query and query
-let updating = false;
+let updating_sdq = false;
+let updating_q = false;
 watch(
   standardQuery,
-  (value) => {
-    if (updating) return;
-    query.value = fromStandardQuery(value);
+  async (value) => {
+    if (updating_sdq) return;
+    updating_q = true;
+    const v = fromStandardQuery(value);
+    console.log("setting query", JSON.stringify(v, null, 2));
+    query.value = v;
+    await nextTick();
+    updating_q = false;
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 );
 
-watch(query, async (value) => {
-  updating = true;
-  standardQuery.value = standardizeQuery(value);
-  await nextTick();
-  updating = false;
-});
+watch(
+  query,
+  async (value) => {
+    if (updating_q) return;
+    updating_sdq = true;
+    const v = standardizeQuery(value);
+    console.log("setting standardQuery", JSON.stringify(v, null, 2));
+    standardQuery.value = v;
+    await nextTick();
+    updating_sdq = false;
+  },
+  { deep: true },
+);
 
 const filterSelectModal = ref(null);
 
