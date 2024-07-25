@@ -92,6 +92,7 @@
 <script setup>
 import { DEFAULT_LOGICAL_OPERATOR } from "@/components/cohorts/combination/constants";
 import { Cohort } from "@/components/cohorts/models";
+import toast from "@/services/toast";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 import CombinationCohortComponent from "./CombinationCohortComponent.vue";
@@ -119,6 +120,7 @@ function resolveComponent(cohort) {
 }
 
 function search() {
+  loading.value = true;
   emit("beforeSearch");
   return cohort.value
     .searchParticipants()
@@ -126,10 +128,12 @@ function search() {
       emit("afterSearch");
     })
     .catch((err) => {
+      toast.error("Error searching for participants");
       emit("afterSearch", err);
     })
     .finally(() => {
       constrainedCommit();
+      loading.value = false;
     });
 }
 
@@ -142,7 +146,7 @@ function search() {
 // updates cohort's size and search_id with the API response
 // commit finally after the API call (success or failure)
 watchDebounced(
-  () => cohort.value.query,
+  () => ({ ...cohort.value.query }),
   (newQuery, oldQuery) => {
     if (cohort.value.isEmpty(newQuery)) {
       cohort.value.size = totalParticipants.value;
@@ -220,6 +224,11 @@ function constrainedCommit() {
   // when undo or redo is called, the query is set. this triggers another commit
   // to the history. we don't want that, so we check if the query is different
   // from the last commit
+  console.log(
+    "Constrained commit",
+    history.value[0].snapshot.query,
+    cohort.value.query,
+  );
   if (
     JSON.stringify(cohort.value.query) !==
     JSON.stringify(history.value[0].snapshot.query)

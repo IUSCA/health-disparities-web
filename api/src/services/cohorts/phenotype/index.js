@@ -89,7 +89,7 @@ function buildFilters(queryJson) {
 
 function buildParticipantsQuery(query, { count = false } = {}) {
   const select = Prisma.raw(count ? 'COUNT(p.id) as count' : 'p.id as participant_id');
-  const sqlQuery = buildFilters(query);
+  const sqlQuery = buildFilters(query.filters);
   const where = sqlQuery === Prisma.empty ? Prisma.empty : Prisma.sql`WHERE ${sqlQuery}`;
   return Prisma.sql`
   SELECT ${select}
@@ -99,5 +99,8 @@ function buildParticipantsQuery(query, { count = false } = {}) {
 }
 
 module.exports = {
+  buildCustomField,
+  buildField,
+  buildFilters,
   buildParticipantsQuery,
 };

@@ -40,6 +40,13 @@ function logQuery({
   });
 }
 
+function toJSON(cohort) {
+  return {
+    ...cohort,
+    query: cohortModel.toJSON(cohort.query),
+  };
+}
+
 router.get(
   '/',
   isPermittedTo('read'),
@@ -89,7 +96,7 @@ router.get(
     });
 
     const rows = await prisma.$queryRaw(sql);
-    const cohorts = rows.map(cohortModel.toJSON);
+    const cohorts = rows.map(toJSON);
     res.json(cohorts);
   }),
 );
@@ -107,7 +114,7 @@ router.get(
     if (!cohort) {
       return res.sendStatus(404);
     }
-    res.json(cohortModel.toJSON(cohort));
+    res.json(toJSON(cohort));
   }),
 );
 
@@ -165,7 +172,7 @@ router.post(
     });
 
     const cohort = await getCohortById(createdCohort.id);
-    return res.json(cohortModel.toJSON(cohort));
+    return res.json(toJSON(cohort));
   }),
 );
 
@@ -283,9 +290,9 @@ router.post(
   isPermittedTo('read'),
   validate([
     body('query')
-      .custom(cohortService.validate)
+      .custom(cohortModel.validate)
       .bail()
-      .customSanitizer(cohortService.sanitize),
+      .customSanitizer(cohortModel.sanitize),
     query('search_id').optional().isUUID(),
   ]),
   asyncHandler(async (req, res) => {

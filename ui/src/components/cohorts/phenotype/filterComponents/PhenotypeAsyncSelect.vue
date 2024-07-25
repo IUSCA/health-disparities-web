@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import cohortsService from "@/services/cohort2";
+import phenotypesService from "@/services/phenotypes";
 
 const model = defineModel();
 const props = defineProps({
@@ -49,7 +49,7 @@ const deboundeSearch = useDebounceFn(handleSearch, props.debounceMs);
 
 function fecthMatchingOptions(search) {
   const [category, field] = props.identifier.split(props.separator);
-  return cohortsService
+  return phenotypesService
     .textFieldAutoComplete(category, field, search)
     .then((res) => {
       return res.data;

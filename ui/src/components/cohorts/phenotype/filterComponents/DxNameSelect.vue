@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import cohortsService from "@/services/cohort2";
+import phenotypesService from "@/services/phenotypes";
 import Multiselect from "@vueform/multiselect";
 // const props = defineProps({});
 
@@ -34,7 +34,7 @@ const debouncedSearch = useDebounceFn(fecthMatchingOptions, 300);
 function fecthMatchingOptions(searchQuery) {
   if (searchQuery === "" || searchQuery == null) return Promise.resolve([]);
   loading.value = true;
-  return cohortsService
+  return phenotypesService
     .dxNameAutoComplete(searchQuery)
     .then((res) => {
       return res.data;

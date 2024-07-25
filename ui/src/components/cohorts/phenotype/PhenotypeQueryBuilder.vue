@@ -90,26 +90,38 @@ import {
   flatten,
   operators,
 } from "@/components/cohorts/phenotype/filters";
-import {
-  fromStandardQuery,
-  standardizeQuery,
-} from "@/components/cohorts/queryBuilder";
 import QBDate from "@/components/cohorts/queryBuilder/filterComponents/QBDate.vue";
 import QBInput from "@/components/cohorts/queryBuilder/filterComponents/QBInput.vue";
+import { fromStandardQuery, standardizeQuery } from "../queryBuilder";
 import DxNameSelect from "./filterComponents/DxNameSelect.vue";
 import PhenotypeAsyncSelect from "./filterComponents/PhenotypeAsyncSelect.vue";
 import PhenotypeSelect from "./filterComponents/PhenotypeSelect.vue";
 
 const standardQuery = defineModel();
-const props = defineProps({});
+const props = defineProps({
+  locked: Boolean,
+});
+const query = ref();
+
+// bi-directional binding between standard query and query
+let updating = false;
+watch(
+  standardQuery,
+  (value) => {
+    if (updating) return;
+    query.value = fromStandardQuery(value);
+  },
+  { immediate: true },
+);
+
+watch(query, async (value) => {
+  updating = true;
+  standardQuery.value = standardizeQuery(value);
+  await nextTick();
+  updating = false;
+});
 
 const filterSelectModal = ref(null);
-
-// bi-directional mapping between standard query and query
-const query = computed({
-  get: () => fromStandardQuery(standardQuery.value),
-  set: (v) => (standardQuery.value = standardizeQuery(v)),
-});
 
 /**
  * Default operators for different data types.

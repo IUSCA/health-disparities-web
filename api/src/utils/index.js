@@ -264,6 +264,11 @@ function measurePerformanceAsync(fn, logger) {
   };
 }
 
+// Helper function to normalize white space
+function normalizeWhiteSpace(str) {
+  return str.replace(/\s+/g, ' ').trim();
+}
+
 module.exports = {
   renameKey,
   setDifference,
@@ -276,4 +281,5 @@ module.exports = {
   isIntegerArray,
   readUsersFromJSON,
   measurePerformanceAsync,
+  normalizeWhiteSpace,
 };

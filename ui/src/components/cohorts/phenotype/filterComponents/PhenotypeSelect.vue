@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import cohortService from "@/services/cohort2";
+import phenotypesService from "@/services/phenotypes";
 
 const props = defineProps({
   identifier: String,
@@ -38,7 +38,7 @@ watch(
   () => {
     const [category, field] = props.identifier.split(props.separator);
     loading.value = true;
-    cohortService
+    phenotypesService
       .unique(category, field)
       .then((res) => {
         options.value = Object.keys(res.data);

@@ -1,10 +1,6 @@
 const assert = require('assert');
+const { normalizeWhiteSpace } = require('../../../utils');
 const { distinctAnnotationsQuery } = require('./index');
-
-// Helper function to normalize white space
-function normalizeWhiteSpace(str) {
-  return str.replace(/\s+/g, ' ').trim();
-}
 
 describe('distinctAnnotationsQuery', () => {
   it('should return the correct SQL query for distinct annotations', async () => {
