@@ -107,7 +107,7 @@ import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
 const cohortsStore = useCohortsStore();
-const { cohorts } = storeToRefs(cohortsStore);
+const { cohorts, totalParticipants } = storeToRefs(cohortsStore);
 
 // const props = defineProps({});
 const cohortSearchModal = ref(null);
@@ -115,7 +115,9 @@ const cohortSearchModal = ref(null);
 function addNewPTCohort() {
   // add an empty phenotype cohort - dirty: true
   cohortsStore.appendCohort(
-    new model.PhenotypeCohort(),
+    new model.PhenotypeCohort({
+      size: totalParticipants.value,
+    }),
     DEFAULT_LOGICAL_OPERATOR,
   );
 }
@@ -123,15 +125,17 @@ function addNewPTCohort() {
 function addNewGTCohort() {
   // add an empty phenotype cohort - dirty: true
   cohortsStore.appendCohort(
-    new model.GenotypeCohort(),
+    new model.GenotypeCohort({
+      size: totalParticipants.value,
+    }),
     DEFAULT_LOGICAL_OPERATOR,
   );
 }
 
-function addCohort(cohort) {
+function addCohort(cohort_data) {
   // add an existing cohort - dirty: false
   cohortsStore.appendCohort(
-    model.createCohort(cohort),
+    model.createCohort(cohort_data),
     DEFAULT_LOGICAL_OPERATOR,
   );
 }
