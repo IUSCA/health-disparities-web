@@ -145,9 +145,9 @@ function saveSearchResultsQuery(id, searchQuery) {
 async function searchParticipantsQueryAsync(query, { count = false } = {}) {
   if (query.schema.name === PHENOTYPE) {
     return phenotypeService.buildParticipantsQuery(query.body, { count });
-  } if (query.name === GENOTYPE) {
+  } if (query.schema.name === GENOTYPE) {
     return genotypeService.buildParticipantsQueryAsync(query.body, { count });
-  } if (query.name === COMBINATION) {
+  } if (query.schema.name === COMBINATION) {
     return combinationService.buildParticipantsQuery(query.body, { count });
   }
   // won't reach here because of query validation

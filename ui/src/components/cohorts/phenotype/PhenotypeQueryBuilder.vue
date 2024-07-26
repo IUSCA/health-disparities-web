@@ -101,9 +101,15 @@ const standardQuery = defineModel();
 const props = defineProps({
   locked: Boolean,
 });
-const query = ref();
+
+const query = ref(fromStandardQuery(standardQuery.value));
 
 // bi-directional binding between standard query and query
+// when query is updated, update standard query,
+// but prevent additional update of query when standard query is updated
+// and vice versa
+// vue batches updates, so we need to use nextTick to ensure that the flag is not unset in the current loop
+// after the current loop is finished, flag is unset
 let updating_sdq = false;
 let updating_q = false;
 watch(
@@ -111,9 +117,7 @@ watch(
   async (value) => {
     if (updating_sdq) return;
     updating_q = true;
-    const v = fromStandardQuery(value);
-    console.log("setting query", JSON.stringify(v, null, 2));
-    query.value = v;
+    query.value = fromStandardQuery(value);
     await nextTick();
     updating_q = false;
   },
@@ -122,12 +126,15 @@ watch(
 
 watch(
   query,
-  async (value) => {
+  async (newValue, oldValue) => {
     if (updating_q) return;
+    const newStandardValue = standardizeQuery(newValue);
+    const oldStandardValue = standardizeQuery(oldValue);
+    if (JSON.stringify(newStandardValue) === JSON.stringify(oldStandardValue))
+      return;
+
     updating_sdq = true;
-    const v = standardizeQuery(value);
-    console.log("setting standardQuery", JSON.stringify(v, null, 2));
-    standardQuery.value = v;
+    standardQuery.value = newStandardValue;
     await nextTick();
     updating_sdq = false;
   },

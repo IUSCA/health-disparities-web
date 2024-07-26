@@ -61,15 +61,15 @@ const saveModal = ref(null);
 const isSaveDisabled = computed(() => {
   return (
     combinationCohort.value.is_locked ||
-    combinationCohort.value.criteria.cohort_ids.length < 2 ||
+    combinationCohort.value.query.cohort_ids.length < 2 ||
     cohorts.value.some((c) => c.is_dirty)
   );
 });
 
 function handleSave() {
   // if the control is here it means no cohort is dirty and all cohorts will have ids
-  // however, we need to update cohort_ids in the criteria with the latest ids
-  combinationCohort.value.criteria.cohort_ids = cohorts.value.map((c) => c.id);
+  // however, we need to update cohort_ids in the query with the latest ids
+  combinationCohort.value.query.cohort_ids = cohorts.value.map((c) => c.id);
   saveModal.value.show();
 }
 

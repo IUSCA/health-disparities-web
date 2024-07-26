@@ -84,7 +84,7 @@ function toJSON(query) {
       schema: query.schema,
       body: genotypeModel.toJSON(query.body),
     };
-  } if (schema.name === COMBINATION) {
+  } if (query.schema.name === COMBINATION) {
     return {
       schema: query.schema,
       body: combinationModel.toJSON(query.body),

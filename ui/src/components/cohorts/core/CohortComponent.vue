@@ -1,5 +1,4 @@
 <template>
-  {{ JSON.stringify(history, null, 2) }}
   <VaInnerLoading :loading="loading">
     <div class="flex flex-col md:flex-row gap-3">
       <!-- Info, Actions, History -->
@@ -138,14 +137,8 @@ function search() {
     });
 }
 
-// watch for changes in the query
-// deep compare old and new queries to avoid unnecessary API calls
-// if the query has changed (debounce), call the API to get the count of participants
-// set cohort as dirty
-// emits beforeSearch before API call
-// emits afterSearch after API call succeeds or afterSearch with error if API call fails
-// updates cohort's size and search_id with the API response
-// commit finally after the API call (success or failure)
+// getter source with deep watch does not provice old value
+// but returning the shallow copy somehow does
 watchDebounced(
   () => ({ ...cohort.value.query }),
   (newQuery, oldQuery) => {
@@ -157,14 +150,12 @@ watchDebounced(
       return;
     }
 
-    if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
-      console.log("Cohort query changed", newQuery, oldQuery);
+    console.log("Cohort query changed", newQuery, oldQuery);
 
-      cohort.value.is_dirty = true;
-      search();
+    cohort.value.is_dirty = true;
+    search();
 
-      // gen-ai services
-    }
+    // gen-ai services
   },
   {
     deep: true,
@@ -218,6 +209,7 @@ const stateToTrack = computed({
 const { history, commit, undo, redo, canUndo, canRedo } = useManualRefHistory(
   stateToTrack,
   {
+    clone: true,
     capacity: 30,
   },
 );

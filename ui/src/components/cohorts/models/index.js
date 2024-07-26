@@ -113,13 +113,13 @@ class Cohort {
   }
 
   copy() {
-    return new this({
+    return new this.constructor({
       id: _.uniqueId("cohort_"),
       name: `Copy of ${this.name}`,
       description: this.description,
       size: this.size,
-      schema: structuredClone(this.schema),
-      query: structuredClone(this.query),
+      schema: structuredClone(toRaw(this.schema)),
+      query: structuredClone(toRaw(this.query)),
     });
   }
 
