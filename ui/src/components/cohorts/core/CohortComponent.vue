@@ -75,13 +75,10 @@
           <div class="middle" v-if="cohort.is_locked">
             <i-mdi-lock class="text-3xl text-gray-600 dark:text-gray-100" />
           </div>
-          <div :class="cohort.is_locked ? 'locked-form' : ''">
-            <div :class="cohort.is_locked ? 'pointer-events-none' : ''">
-              <component
-                :is="resolveComponent(cohort)"
-                v-model:cohort="cohort"
-              />
-            </div>
+          <div
+            :class="cohort.is_locked ? 'locked-form pointer-events-none' : ''"
+          >
+            <component :is="resolveComponent(cohort)" v-model:cohort="cohort" />
           </div>
         </div>
       </div>

@@ -41,13 +41,13 @@
 
       <!-- user chooses a cohort to view its participants data / visualization -->
       <!-- if that cohort "updates" (participants change), fetch data -->
-      <div class="">
+      <!-- <div class="">
         <VaCard>
           <VaCardContent>
             <CohortData />
           </VaCardContent>
         </VaCard>
-      </div>
+      </div> -->
     </VaInnerLoading>
   </div>
   <Chat @message="handleUserMessage" ref="chat" v-if="enableChatbot" />
@@ -173,7 +173,7 @@ function handleAfterSearch(err) {
 // load the cohort from the server and update store
 // if it is a combination cohort, load the cohorts that are part of the combination
 function loadCohort(id) {
-  cohortService.get(id).then((res) => {
+  cohortService.getById(id).then((res) => {
     const cohort = createCohort(res.data);
     if (cohort instanceof CombinationCohort) {
       combinationCohort.value = cohort;
