@@ -18,13 +18,8 @@
 </template>
 
 <script setup>
-import variantService from "@/services/variants";
-import { useVariantsStore } from "@/stores/variants";
-import _ from "lodash";
-import { storeToRefs } from "pinia";
-
-const variantsStore = useVariantsStore();
-const { source, snapshot_id, searchParams } = storeToRefs(variantsStore);
+import { injectionKeys } from "@/components/genotype/constants";
+import genotypeService from "@/services/genotypes";
 
 const props = defineProps({
   identifier: String,
@@ -38,17 +33,20 @@ const model = defineModel();
 const options = ref([]);
 const loading = ref(false);
 const teleportOptions = ref(null);
+const snapshot_id = inject(injectionKeys.snapshotId);
+const source_id = inject(injectionKeys.sourceId);
+const ranges = inject(injectionKeys.ranges);
 
 watch(
-  () => props.identifier,
+  [() => props.identifier, snapshot_id, source_id, ranges],
   () => {
     const [_cat, field] = props.identifier.split(props.separator);
     loading.value = true;
-    variantService
+    genotypeService
       .getAnnotationsUniqueValues(field, {
-        source_id: source.value?.id || 1, // TODO
-        snapshot_id: snapshot_id.value || 1,
-        ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
+        source_id: source_id.value,
+        snapshot_id: snapshot_id.value,
+        ranges: ranges.value,
       })
       .then((res) => {
         options.value = Object.keys(res.data);

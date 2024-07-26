@@ -161,9 +161,12 @@ function participantsWithVariantsSQL({
  * in the query result.
  * @returns {Promise<Prisma.Sql>} - A promise that resolves when the query is built.
  */
-async function buildParticipantsQueryAsync(body, protocol_id, username, { count = false } = {}) {
+async function buildParticipantsQueryAsync(
+  body,
+  { count = false } = {},
+) {
   const {
-    source_id, snapshot_id, ranges, filters, zygosities,
+    source_id, snapshot_id, ranges, filters, zygosities, protocol_id, username,
   } = body;
   const resolvedRanges = await transformRanges(ranges, 'hg38');
   const base_query = {

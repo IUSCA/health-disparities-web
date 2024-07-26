@@ -16,7 +16,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 router.post(
-  '/annotations/:field/unique',
+  '/:field/unique',
   isPermittedTo('read'),
   validate([
     body('source_id').isInt({ min: 1 }).toInt(),
@@ -46,15 +46,15 @@ router.post(
     });
     const rows = await prisma.$queryRaw(sql);
     const distinctValuesWithCounts = rows.reduce((acc, row) => {
-      acc[row.value] = row.count;
+      acc[row.value] = Number(row.count);
       return acc;
-    });
+    }, {});
     res.json(distinctValuesWithCounts);
   }),
 );
 
 router.post(
-  '/annotations/:field/histogram',
+  '/:field/histogram',
   isPermittedTo('read'),
   validate([
     param('field').isIn(fields.NUMERIC_FIELDS),

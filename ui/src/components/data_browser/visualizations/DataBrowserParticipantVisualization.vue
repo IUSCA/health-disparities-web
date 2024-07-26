@@ -16,9 +16,9 @@
 </template>
 
 <script setup>
+import ECHistogram from "@/components/cohorts/participants/visualization/ECHistogram.vue";
+import ECPie from "@/components/cohorts/participants/visualization/ECPie.vue";
 import dataBrowserService from "@/services/data_browser";
-import ECHistogram from "@/components/builder/participants/visualization/ECHistogram.vue";
-import ECPie from "@/components/builder/participants/visualization/ECPie.vue";
 
 const props = defineProps({
   category: String,

@@ -95,18 +95,60 @@ import {
   flatten,
   isUnaryOperator,
   operators,
-} from "@/components/builder/cohortFilters";
+} from "@/components/cohorts/common";
 import { variantFilters } from "@/components/genotype/filters/variantFilters";
 
+import {
+  fromStandardQuery,
+  standardizeQuery,
+} from "@/components/cohorts/queryBuilder";
 import QBDate from "@/components/cohorts/queryBuilder/filterComponents/QBDate.vue";
 import QBInput from "@/components/cohorts/queryBuilder/filterComponents/QBInput.vue";
 import AnnotationSelect from "@/components/genotype/queryBuilder/filterComponents/AnnotationSelect.vue";
 
+const standardQuery = defineModel("query");
 const props = defineProps({
   locked: Boolean,
 });
 
-const query = defineModel("query");
+const query = ref(fromStandardQuery(standardQuery.value));
+
+// bi-directional binding between standard query and query
+// when query is updated, update standard query,
+// but prevent additional update of query when standard query is updated
+// and vice versa
+// vue batches updates, so we need to use nextTick to ensure that the flag is not unset in the current loop
+// after the current loop is finished, flag is unset
+let updating_sdq = false;
+let updating_q = false;
+watch(
+  standardQuery,
+  async (value) => {
+    if (updating_sdq) return;
+    updating_q = true;
+    query.value = fromStandardQuery(value);
+    await nextTick();
+    updating_q = false;
+  },
+  { immediate: true, deep: true },
+);
+
+watch(
+  query,
+  async (newValue, oldValue) => {
+    if (updating_q) return;
+    const newStandardValue = standardizeQuery(newValue);
+    const oldStandardValue = standardizeQuery(oldValue);
+    if (JSON.stringify(newStandardValue) === JSON.stringify(oldStandardValue))
+      return;
+
+    updating_sdq = true;
+    standardQuery.value = newStandardValue;
+    await nextTick();
+    updating_sdq = false;
+  },
+  { deep: true },
+);
 
 const filterSelectModal = ref(null);
 

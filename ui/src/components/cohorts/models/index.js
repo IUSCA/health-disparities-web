@@ -229,11 +229,7 @@ class GenotypeCohort extends Cohort {
 
   isEmpty(_query) {
     const query = _query || this.query;
-    return (
-      queryBuilder.isStandardQueryEmpty(query.filters) ||
-      _.isEmpty(query.ranges) ||
-      _.isEmpty(query.zygosities)
-    );
+    return _.isEmpty(query.ranges) || _.isEmpty(query.zygosities);
   }
 
   defaultQuery() {

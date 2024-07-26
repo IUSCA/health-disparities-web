@@ -11,5 +11,11 @@ export {
   DEFAULT_ZYGOSITIES,
   EXAMPLE_SEARCHES,
   NUMERIC_PRECISION,
-  PAGE_SIZE_OPTIONS,
+  PAGE_SIZE_OPTIONS
+};
+
+export const injectionKeys = {
+  snapshotId: Symbol("snapshotId"),
+  sourceId: Symbol("sourceId"),
+  ranges: Symbol("ranges"),
 };

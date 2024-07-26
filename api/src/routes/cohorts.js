@@ -303,8 +303,17 @@ router.post(
     */
     const start_time = performance.now();
 
-    const searchQuery = await cohortService.searchParticipantsQueryAsync(req.body.query);
+    const searchQuery = await cohortService.searchParticipantsQueryAsync({
+      schema: req.body.query.schema,
+      body: {
+        ...req.body.query.body,
+        protocol_id: 1, // todo
+        username: req.user.username,
+      },
+    });
     const saveQuery = cohortService.saveSearchResultsQuery(req.query.search_id, searchQuery);
+    // console.log('searchQuery:', searchQuery.sql, searchQuery.values);
+    // console.log('saveQuery:', saveQuery.sql, saveQuery.values);
     const rows = await prisma.$queryRaw(saveQuery);
     res.json({
       count: Number(rows[0].count),

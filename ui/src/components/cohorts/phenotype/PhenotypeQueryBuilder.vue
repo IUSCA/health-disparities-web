@@ -77,19 +77,19 @@
       </div>
     </template>
   </QueryBuilder>
-  <PhenotypeFilterSelectModal :filters="filters" ref="filterSelectModal" />
+  <FilterSelectModal :filters="filters" ref="filterSelectModal" />
 </template>
 
 <script setup>
 import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
-import { isUnaryOperator } from "@/components/cohorts/common";
 import {
-  filters,
   flatten,
+  isUnaryOperator,
   operators,
-} from "@/components/cohorts/phenotype/filters";
+} from "@/components/cohorts/common";
+import { filters } from "@/components/cohorts/phenotype/filters";
 import QBDate from "@/components/cohorts/queryBuilder/filterComponents/QBDate.vue";
 import QBInput from "@/components/cohorts/queryBuilder/filterComponents/QBInput.vue";
 import { fromStandardQuery, standardizeQuery } from "../queryBuilder";

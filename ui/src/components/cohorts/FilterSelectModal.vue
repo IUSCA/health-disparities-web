@@ -7,7 +7,7 @@
     hide-default-actions
     @close="hide"
   >
-    <PhenotypeFilterSelect :filters="props.filters" @select="handleSelect" />
+    <FilterSelect :filters="props.filters" @select="handleSelect" />
   </va-modal>
 </template>
 
