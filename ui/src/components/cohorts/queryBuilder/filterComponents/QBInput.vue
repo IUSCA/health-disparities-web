@@ -33,7 +33,7 @@ watch(val, () => {
 });
 
 watch(
-  () => props.range,
+  [() => props.range, () => props.modelValue],
   () => {
     if (props.range) {
       if (!Array.isArray(props.modelValue)) {
@@ -52,15 +52,6 @@ watch(
   },
   { immediate: true },
 );
-
-// watch(, (v) => {
-//   if (props.range) {
-//     min.value = v[0];
-//     max.value = v[1];
-//   } else {
-//     model.value = v;
-//   }
-// });
 </script>
 
 <style scoped lang="scss">
