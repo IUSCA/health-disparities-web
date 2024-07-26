@@ -5,7 +5,7 @@
       <VaTabs v-model="selectedCategory" grow class="pt-1">
         <template #tabs>
           <VaTab
-            v-for="category in cohortFilters"
+            v-for="category in filters"
             :key="category.key"
             :name="category.key"
           >
@@ -51,8 +51,8 @@
 </template>
 
 <script setup>
-import { cohortFilters } from "@/components/builder/cohortFilters";
-import cohortService from "@/services/cohort2";
+import { filters } from "@/components/cohorts/phenotype/filters";
+import participantsService from "@/services/participants";
 import CovidTests from "./details/CovidTests.vue";
 import CovidVaccines from "./details/CovidVaccines.vue";
 import Demographic from "./details/Demographics.vue";
@@ -97,8 +97,8 @@ const loading = ref(false);
 
 onMounted(() => {
   loading.value = true;
-  cohortService
-    .getParticipantDetails({ participant_id: props.participant_id })
+  participantsService
+    .details({ participant_id: props.participant_id })
     .then((res) => {
       participant.value = res.data;
     })

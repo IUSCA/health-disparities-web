@@ -40,9 +40,9 @@
 </template>
 
 <script setup>
-import { Cohort } from "@/components/builder/models";
-import cohortService from "@/services/cohort2";
+import { Cohort } from "@/components/cohorts/models";
 import * as datetime from "@/services/datetime";
+import participantsService from "@/services/participants";
 
 const props = defineProps({
   cohort: {
@@ -66,9 +66,9 @@ async function fetchParticipants() {
   console.log("fetchParticipants cohort id", cohort_id);
 
   if (cohort_id && !props.cohort.isEmpty()) {
-    return cohortService
-      .getParticipants({
-        id: cohort_id,
+    return participantsService
+      .getByCohortId({
+        cohort_id,
         limit: pageSize.value,
         offset: offset.value,
       })

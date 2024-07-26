@@ -41,13 +41,13 @@
 
       <!-- user chooses a cohort to view its participants data / visualization -->
       <!-- if that cohort "updates" (participants change), fetch data -->
-      <!-- <div class="">
+      <div class="">
         <VaCard>
           <VaCardContent>
             <CohortData />
           </VaCardContent>
         </VaCard>
-      </div> -->
+      </div>
     </VaInnerLoading>
   </div>
   <Chat @message="handleUserMessage" ref="chat" v-if="enableChatbot" />

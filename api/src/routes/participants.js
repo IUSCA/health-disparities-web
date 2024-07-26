@@ -27,37 +27,6 @@ router.get(
 );
 
 router.get(
-  '/:participant_id',
-  isPermittedTo('read'),
-  validate([
-    param('participant_id').isInt().toInt(),
-  ]),
-  asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['participants']
-    // #swagger.summary = 'Get details of a participant by id.'
-
-    const participant = await prisma.participant.findUniqueOrThrow({
-      where: {
-        id: req.params.participant_id,
-      },
-      include: {
-        demographics: true,
-        labs: true,
-        covid_tests: true,
-        covid_vaxes: true,
-        dxs: true,
-        hospitals: true,
-        medications: true,
-      },
-    });
-    // cache indefinitely - 1 year
-    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
-    res.set('Cache-control', 'private, max-age=31536000');
-    res.json(participant);
-  }),
-);
-
-router.get(
   '/',
   isPermittedTo('read'),
   validate([
@@ -118,7 +87,7 @@ router.get(
     // #swagger.summary = 'Get aggregate of a field for a cohort.'
     const { field, cohort_id } = req.query;
 
-    const sql = visualization.aggregateFieldSQL(cohort_id, field);
+    const sql = visualization.aggregateColumnSQL(cohort_id, field);
     const _rows = await prisma.$queryRaw(sql);
 
     const distinctValuesWithCounts = _rows.reduce((acc, item) => {
@@ -149,7 +118,7 @@ router.get(
 );
 
 router.get(
-  '/bins/date',
+  '/date/bins',
   isPermittedTo('read'),
   validate([
     query('cohort_id').isUUID(),
@@ -161,6 +130,37 @@ router.get(
     const { field, bins, cohort_id } = req.query;
     const _rows = await visualization.dateHistogram(cohort_id, field, bins);
     res.json(_rows);
+  }),
+);
+
+router.get(
+  '/:participant_id',
+  isPermittedTo('read'),
+  validate([
+    param('participant_id').isInt().toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['participants']
+    // #swagger.summary = 'Get details of a participant by id.'
+
+    const participant = await prisma.participant.findUniqueOrThrow({
+      where: {
+        id: req.params.participant_id,
+      },
+      include: {
+        demographics: true,
+        labs: true,
+        covid_tests: true,
+        covid_vaxes: true,
+        dxs: true,
+        hospitals: true,
+        medications: true,
+      },
+    });
+    // cache indefinitely - 1 year
+    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+    res.set('Cache-control', 'private, max-age=31536000');
+    res.json(participant);
   }),
 );
 

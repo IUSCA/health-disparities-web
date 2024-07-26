@@ -16,8 +16,8 @@
 </template>
 
 <script setup>
-import { Cohort } from "@/components/builder/models";
-import cohortService from "@/services/cohort2";
+import { Cohort } from "@/components/cohorts/models";
+import participantsService from "@/services/participants";
 import ECDateHistogram from "./ECDateHistogram.vue";
 import ECHistogram from "./ECHistogram.vue";
 import ECPie from "./ECPie.vue";
@@ -92,24 +92,22 @@ function fetchVizData() {
 
   if (cohort_id && !props.cohort.isEmpty()) {
     Object.keys(graphs.categoricals).map((field) => {
-      return cohortService
-        .getParticipantAggregate({ id: cohort_id, field })
-        .then((res) => {
-          graphs.categoricals[field].data.value = res.data;
-        });
+      return participantsService.aggregate({ cohort_id, field }).then((res) => {
+        graphs.categoricals[field].data.value = res.data;
+      });
     });
 
     Object.keys(graphs.numericals).map((field) => {
-      return cohortService
-        .getParticipantBins({ id: cohort_id, field, bins: 10 })
+      return participantsService
+        .bins({ cohort_id, field, bins: 10 })
         .then((res) => {
           graphs.numericals[field].data.value = res.data;
         });
     });
 
     Object.keys(graphs.dates).map((field) => {
-      return cohortService
-        .getParticipantDateBins({ id: cohort_id, field, bins: 10 })
+      return participantsService
+        .dateBins({ cohort_id, field, bins: 10 })
         .then((res) => {
           graphs.dates[field].data.value = res.data;
         });
