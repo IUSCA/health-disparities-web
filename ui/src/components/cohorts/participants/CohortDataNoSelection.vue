@@ -1,15 +1,15 @@
 <template>
   <div
-    class="py-4 md:py-8 px-4 md:px-8 flex flex-col items-center justify-center"
+    class="py-4 md:py-8 px-4 md:px-8 flex flex-col items-center justify-center opacity-65 hover:opacity-100 transition-opacity duration-300"
   >
     <div
-      class="illustration-bg w-full max-w-xl h-36 md:h-48 mb-8 bg-no-repeat bg-center bg-contain"
+      class="illustration-bg w-full max-w-xl h-24 md:h-36 mb-8 bg-no-repeat bg-center bg-contain"
     ></div>
 
-    <h2 class="text-2xl font-bold text-center mb-2">
+    <h2 class="text-xl font-semibold text-center">
       {{ props.isVisualization ? "Visualizations" : "Participant Data" }}
     </h2>
-    <p class="text-lg text-center">
+    <p class="text-center">
       <span v-if="props.isVisualization">
         Please select a cohort from the dropdown to see visualizations.
       </span>
