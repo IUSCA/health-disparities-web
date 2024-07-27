@@ -3,13 +3,13 @@
     class="py-4 md:py-8 px-4 md:px-8 flex flex-col items-center justify-center"
   >
     <div
-      class="illustration-bg w-full max-w-xl h-36 md:h-48 mb-8 bg-no-repeat bg-center bg-contain"
+      class="illustration-bg w-full max-w-xl h-24 md:h-36 mb-8 bg-no-repeat bg-center bg-contain"
     ></div>
 
-    <h2 class="text-2xl font-bold text-center mb-2">
+    <h2 class="text-xl font-semibold text-center mb-2">
       No Participants in Selected Cohort
     </h2>
-    <p class="text-lg text-center">
+    <p class="text text-center">
       Please select another cohort or update its query to include participants.
     </p>
   </div>
