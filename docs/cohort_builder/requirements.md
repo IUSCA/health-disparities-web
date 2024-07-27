@@ -44,3 +44,7 @@ Annotation Integration: Users should have access to genotype annotations for dee
 - Search and Filter Existing Cohorts: Allow users to search existing cohorts based on various filters like creator, publication status, name, and description.
 - Edit, Save, and Publish Options: Users should have the ability to edit, save, and publish cohorts based on their requirements.
 - Export Participant Data: Enable users to export both phenotype and genotype data of participants of a cohorts.
+
+
+- New cohorts should have the size same as the total number of participants in the database.
+- Navigating away from the page should not lose the progress of the user.

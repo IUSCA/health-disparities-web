@@ -41,13 +41,13 @@
 
       <!-- user chooses a cohort to view its participants data / visualization -->
       <!-- if that cohort "updates" (participants change), fetch data -->
-      <!-- <div class="">
+      <div class="">
         <VaCard>
           <VaCardContent>
             <CohortData />
           </VaCardContent>
         </VaCard>
-      </div> -->
+      </div>
     </VaInnerLoading>
   </div>
   <Chat @message="handleUserMessage" ref="chat" v-if="enableChatbot" />
@@ -102,7 +102,6 @@ onBeforeRouteLeave(() => {
 // when a cohort is added / removed (numCohorts changes)
 // or when an operator is changed
 // or when a cohort query is changed and search succeeds
-
 // do a set operation on the cohorts if there is more than one cohort with non-empty query
 // update cohort_ids and operators in combinationCohort (store)
 function checkAndCombine() {
@@ -127,7 +126,7 @@ function checkAndCombine() {
   }
   return Promise.resolve();
 }
-// deduplicate the calls to checkAndCombine from
+// todo: deduplicate the calls to checkAndCombine from
 // possible "collision" of afterSearch and watch([numCohorts, operators])
 
 const numCohorts = computed(() => cohorts.value.length);
