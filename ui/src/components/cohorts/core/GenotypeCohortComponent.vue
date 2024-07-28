@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="flex items-center gap-3">
-      <VariantSearchForm2
-        v-model:search-params="cohort.query.ranges"
+      <VariantSearchForm
+        :search-params="cohort.query.ranges"
         :example_searches="EXAMPLE_SEARCHES"
         @add="addSearchParam"
         class="flex-grow"

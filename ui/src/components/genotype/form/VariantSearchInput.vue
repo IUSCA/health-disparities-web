@@ -27,8 +27,10 @@
         </template>
         <template #body>
           <VariantSearchExample
-            :example_searches="props.example_searches"
+            :example-searches="props.example_searches"
             @search="(val) => (model = val)"
+            link-class="text-blue-200 hover:cursor-pointer hover:text-blue-500"
+            class="text-sm"
           />
         </template>
       </VaPopover>
@@ -50,4 +52,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["clear"]);
+
+// const isDark = useDark();
 </script>

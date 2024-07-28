@@ -4,28 +4,31 @@
     <p>
       <span class="font-bold"> Gene </span> :
       <button
-        class="va-link underline"
-        @click="emit('search', props.example_searches['gene'])"
+        :class="props.linkClass"
+        class="underline"
+        @click="emit('search', props.exampleSearches['gene'])"
       >
-        {{ props.example_searches["gene"] }}
+        {{ props.exampleSearches["gene"] }}
       </button>
     </p>
     <p>
       <span class="font-bold"> Variant </span>:
       <button
-        class="va-link underline"
-        @click="emit('search', props.example_searches['variant'])"
+        :class="props.linkClass"
+        class="underline"
+        @click="emit('search', props.exampleSearches['variant'])"
       >
-        {{ props.example_searches["variant"] }}
+        {{ props.exampleSearches["variant"] }}
       </button>
     </p>
     <p>
       <span class="font-bold"> Genomic Region </span>:
       <button
-        class="va-link underline"
-        @click="emit('search', props.example_searches['genomic_region'])"
+        :class="props.linkClass"
+        class="underline"
+        @click="emit('search', props.exampleSearches['genomic_region'])"
       >
-        {{ props.example_searches["genomic_region"] }}
+        {{ props.exampleSearches["genomic_region"] }}
       </button>
     </p>
   </div>
@@ -33,7 +36,11 @@
 
 <script setup>
 const props = defineProps({
-  example_searches: Object,
+  exampleSearches: Object,
+  linkClass: {
+    type: String,
+    default: "va-link",
+  },
 });
 const emit = defineEmits(["search"]);
 </script>

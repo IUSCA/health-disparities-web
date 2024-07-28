@@ -13,23 +13,26 @@
       :disabled="error || param.trim() === ''"
       class="flex-none"
     >
-      {{ variantsStore.searchParams.length > 0 ? "Add" : "Search" }}
+      {{ searchParams.length > 0 ? "Add" : "Search" }}
     </VaButton>
   </div>
 </template>
 
 <script setup>
 import { parseQuery } from "@/components/genotype/lib";
-import { useVariantsStore } from "@/stores/variants";
-
-const variantsStore = useVariantsStore();
 
 const props = defineProps({
+  searchParams: {
+    type: Array,
+    required: true,
+  },
   example_searches: {
     type: Object,
     required: true,
   },
 });
+
+const emit = defineEmits(["add"]);
 
 const param = ref("");
 
@@ -42,7 +45,7 @@ function hadleClick() {
   if (error.value) return;
 
   if (parsedParam.value) {
-    variantsStore.addSearchParam(parsedParam.value);
+    emit("add", parsedParam.value);
     param.value = "";
   }
 }
