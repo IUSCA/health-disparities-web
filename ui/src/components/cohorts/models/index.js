@@ -29,9 +29,12 @@ class Cohort {
       namespace: "edu.iu.biobank",
       version: "1.0.0",
     };
+    this.NAME_PREFIX = "Cohort ";
+    this.ID_PREFIX = "cohort_";
+
     const uniqueId = _.uniqueId();
-    this.id = id || `cohort_${uniqueId}`;
-    this.name = name || `Cohort ${uniqueId}`;
+    this.id = id || `${this.ID_PREFIX}${uniqueId}`;
+    this.name = name || `${this.NAME_PREFIX}${uniqueId}`;
     this.description = description || "";
     this.created_at = created_at;
     this.updated_at = updated_at;
@@ -80,14 +83,22 @@ class Cohort {
   }
 
   isNew() {
-    return !this.id || this.id.startsWith("cohort_");
+    // never saved to the server
+    return !this.id || this.id.startsWith(this.ID_PREFIX);
   }
 
   hasUnsavedChanges() {
-    return this.is_dirty && !this.isNew();
+    // never saved or has been modified since the last save
+    if (this.isNew() && !this.search_id) {
+      // if the cohort is new and has not been searched yet,
+      // it is not considered to have unsaved changes
+      return false;
+    }
+    return this.is_dirty;
   }
 
   isCopyingDisabled() {
+    // cannot copy if the cohort is empty, new (never saved), or does not support copying
     return this.isEmpty() || this.isNew() || !this.supports_copying;
   }
 
@@ -115,7 +126,7 @@ class Cohort {
 
   copy() {
     return new this.constructor({
-      id: _.uniqueId("cohort_"),
+      id: _.uniqueId(this.ID_PREFIX),
       name: `Copy of ${this.name}`,
       description: this.description,
       size: this.size,
@@ -130,7 +141,10 @@ class Cohort {
     this.query = this.defaultQuery();
   }
 
-  searchParticipants() {
+  searchParticipants(set_as_dirty = true) {
+    if (set_as_dirty) {
+      this.is_dirty = true;
+    }
     return cohortService
       .searchParticipants({
         query: {
@@ -143,6 +157,18 @@ class Cohort {
         this.size = res.data.count;
         this.search_id = res.data.search_id;
       });
+  }
+
+  getLatestId() {
+    // returns an id of the latest searched / saved cohort row in the table
+    // in some edge cases, between the query being updated in the cohort and search being completed,
+    // the returned id may be null or may not be found in the table
+    // always use this method after searchParticipants() / save() to get a valid id
+    return this.is_dirty ? this.search_id : this.id;
+  }
+
+  isSavingDisabled() {
+    return this.isEmpty() || this.is_locked;
   }
 
   // subclass should implement the below methods

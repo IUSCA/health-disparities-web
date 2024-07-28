@@ -149,7 +149,6 @@ watchDebounced(
 
     console.log("Cohort query changed", newQuery, oldQuery);
 
-    cohort.value.is_dirty = true;
     search();
 
     // gen-ai services
@@ -159,13 +158,6 @@ watchDebounced(
     debounce: 300,
   },
 );
-
-// when a cohort component is mounted, if it is dirty with a non-empty query, search and save so that combine can be done
-onMounted(() => {
-  if (cohort.value.is_dirty && !cohort.value.isEmpty()) {
-    search();
-  }
-});
 
 /* ***** cohort actions - start ****** */
 function exportCohort() {

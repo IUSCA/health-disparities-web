@@ -74,17 +74,10 @@ const saveModal = ref(null);
 // disable save button when cohort is published
 // - if user cannot edit the cohort (todo)
 const isSaveDisabled = computed(() => {
-  return props.cohort.isEmpty() || props.cohort.is_published;
+  return props.cohort.isSavingDisabled();
 });
 
-// disable copy button when cohort is empty
-// or if cohort is not a combination or phenotype cohort
-// or if this cohort was never saved
 const isCopyDisabled = computed(() => {
-  return (
-    !props.cohort.supports_copying ||
-    props.cohort.isEmpty() ||
-    props.cohort.isNew()
-  );
+  return props.cohort.isCopyingDisabled();
 });
 </script>

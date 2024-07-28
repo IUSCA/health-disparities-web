@@ -61,8 +61,8 @@ const saveModal = ref(null);
 const isSaveDisabled = computed(() => {
   return (
     combinationCohort.value.is_locked ||
-    combinationCohort.value.query.cohort_ids.length < 2 ||
-    cohorts.value.some((c) => c.is_dirty)
+    combinationCohort.value.isEmpty() ||
+    cohorts.value.some((c) => c.hasUnsavedChanges())
   );
 });
 

@@ -88,9 +88,7 @@ onMounted(() => {
 
 // prevent navigation when there are unsaved changes
 onBeforeRouteLeave(() => {
-  const anyEditedCohorts = cohorts.value.some(
-    (c) => c.is_dirty && !c.isEmpty(),
-  );
+  const anyEditedCohorts = cohorts.value.some((c) => c.hasUnsavedChanges());
   if (!anyEditedCohorts) return true;
   const answer = window.confirm(
     "Do you really want to leave? you have unsaved changes!",
@@ -107,11 +105,7 @@ onBeforeRouteLeave(() => {
 function checkAndCombine() {
   if (isInCombineMode.value) {
     // get the ids of the cohorts to be combined
-    // if the cohort is dirty, use the search_id
-    // otherwise use the id (for saved cohorts)
-    const cohort_ids = cohorts.value.map((c) =>
-      c.is_dirty ? c.search_id : c.id,
-    );
+    const cohort_ids = cohorts.value.map((c) => c.getLatestId());
 
     // if some cohort_ids are null, exit early
     if (cohort_ids.some((id) => !id)) {
@@ -139,16 +133,6 @@ watch(
   },
   { deep: true },
 );
-
-// when number of cohorts goes from 1 to 2, search and save results so that combine can be done
-// needed only if cohort is dirty but query is not empty
-watch(numCohorts, (newVal, oldVal) => {
-  if (newVal === 2 && oldVal === 1) {
-    cohorts.value
-      .filter((c) => c.is_dirty && !c.isEmpty())
-      .forEach((c) => c.searchParticipants());
-  }
-});
 
 function handleBeforeSearch() {
   // when in combine mode, show global loading to prevent user from interacting with the other cohorts or operators
