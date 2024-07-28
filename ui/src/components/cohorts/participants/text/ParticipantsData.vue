@@ -40,14 +40,16 @@
 </template>
 
 <script setup>
-import { Cohort } from "@/components/cohorts/models";
 import * as datetime from "@/services/datetime";
 import participantsService from "@/services/participants";
 
 const props = defineProps({
-  cohort: {
-    type: Cohort,
+  cohortId: {
+    type: String,
     required: true,
+  },
+  lastUpdated: {
+    type: Number,
   },
 });
 
@@ -58,44 +60,32 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const offset = computed(() => (currPage.value - 1) * pageSize.value);
 
 async function fetchParticipants() {
-  console.log(props.cohort.is_dirty, props.cohort.search_id, props.cohort.id);
-  if (!props.cohort) return;
-  const cohort_id = props.cohort.is_dirty
-    ? props.cohort.search_id
-    : props.cohort.id;
-  console.log("fetchParticipants cohort id", cohort_id);
+  console.log("fetchParticipants cohort id", props.cohortId);
 
-  if (cohort_id && !props.cohort.isEmpty()) {
-    return participantsService
-      .getByCohortId({
-        cohort_id,
-        limit: pageSize.value,
-        offset: offset.value,
-      })
-      .then((response) => {
-        participants.value = response.data;
-      });
-  }
+  return participantsService
+    .getByCohortId({
+      cohort_id: props.cohortId,
+      limit: pageSize.value,
+      offset: offset.value,
+    })
+    .then((response) => {
+      participants.value = response.data;
+    });
 }
 // throttled fn runs at most once every 100ms
 // it'll run on first call without delay and then ignores calls for 100ms
 const throttledFecth = useThrottleFn(fetchParticipants, 100);
 
 watch(
-  () => props.cohort,
+  [() => props.cohortId, () => props.lastUpdated, pageSize],
   () => {
     currPage.value = 1;
     throttledFecth();
   },
   {
     immediate: true,
-    deep: true,
   },
 );
 
-watch(pageSize, () => {
-  currPage.value = 1;
-  throttledFecth();
-});
 watch(currPage, throttledFecth);
 </script>

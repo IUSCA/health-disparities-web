@@ -32,8 +32,8 @@
               :idx="idx"
               :cohort="cohort"
               @update:cohort="(updatedCohort) => (cohorts[idx] = updatedCohort)"
-              @beforeSearch="handleBeforeSearch"
-              @afterSearch="handleAfterSearch"
+              @beforeSearch="(...params) => handleBeforeSearch(idx, ...params)"
+              @afterSearch="(...params) => handleAfterSearch(idx, ...params)"
             />
           </VaCardContent>
         </VaCard>
@@ -44,7 +44,7 @@
       <div class="">
         <VaCard>
           <VaCardContent>
-            <CohortData />
+            <CohortData :last-updated="lastUpdated" />
           </VaCardContent>
         </VaCard>
       </div>
@@ -73,6 +73,7 @@ const {
 } = storeToRefs(cohortsStore);
 
 const globalLoading = ref(false);
+const lastUpdated = ref(Date.now());
 
 onMounted(() => {
   participantsService.getTotalCount().then((res) => {
@@ -129,6 +130,7 @@ watch(
   () => {
     checkAndCombine().finally(() => {
       globalLoading.value = false;
+      lastUpdated.value = Date.now();
     });
   },
   { deep: true },
@@ -140,7 +142,7 @@ function handleBeforeSearch() {
   if (isInCombineMode.value) globalLoading.value = true;
 }
 
-function handleAfterSearch(err) {
+function handleAfterSearch(idx, err) {
   // if there is an error with cohort search
   // abandon the combine search
   if (err) {
@@ -149,6 +151,7 @@ function handleAfterSearch(err) {
     globalLoading.value = true;
     checkAndCombine().finally(() => {
       globalLoading.value = false;
+      lastUpdated.value = Date.now();
     });
   }
 }

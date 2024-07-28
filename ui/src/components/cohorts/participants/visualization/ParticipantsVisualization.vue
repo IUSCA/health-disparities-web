@@ -16,14 +16,14 @@
 </template>
 
 <script setup>
-import { Cohort } from "@/components/cohorts/models";
 import participantsService from "@/services/participants";
 import ECDateHistogram from "./ECDateHistogram.vue";
 import ECHistogram from "./ECHistogram.vue";
 import ECPie from "./ECPie.vue";
 
 const props = defineProps({
-  cohort: { type: Cohort, required: true },
+  cohortId: { type: String, required: true },
+  lastUpdated: { type: Number },
 });
 
 // const data = { F: 27418, M: 19298, U: 12 };
@@ -83,46 +83,40 @@ const graphList = computed(() => {
 });
 
 function fetchVizData() {
-  console.log(props.cohort.is_dirty, props.cohort.search_id, props.cohort.id);
-  if (!props.cohort) return;
-  const cohort_id = props.cohort.is_dirty
-    ? props.cohort.search_id
-    : props.cohort.id;
-  console.log("fetchVizData cohort id", cohort_id);
+  console.log("fetchVizData cohort id", props.cohortId);
 
-  if (cohort_id && !props.cohort.isEmpty()) {
-    Object.keys(graphs.categoricals).map((field) => {
-      return participantsService.aggregate({ cohort_id, field }).then((res) => {
+  Object.keys(graphs.categoricals).map((field) => {
+    return participantsService
+      .aggregate({ cohort_id: props.cohortId, field })
+      .then((res) => {
         graphs.categoricals[field].data.value = res.data;
       });
-    });
+  });
 
-    Object.keys(graphs.numericals).map((field) => {
-      return participantsService
-        .bins({ cohort_id, field, bins: 10 })
-        .then((res) => {
-          graphs.numericals[field].data.value = res.data;
-        });
-    });
+  Object.keys(graphs.numericals).map((field) => {
+    return participantsService
+      .bins({ cohort_id: props.cohortId, field, bins: 10 })
+      .then((res) => {
+        graphs.numericals[field].data.value = res.data;
+      });
+  });
 
-    Object.keys(graphs.dates).map((field) => {
-      return participantsService
-        .dateBins({ cohort_id, field, bins: 10 })
-        .then((res) => {
-          graphs.dates[field].data.value = res.data;
-        });
-    });
-  }
+  Object.keys(graphs.dates).map((field) => {
+    return participantsService
+      .dateBins({ cohort_id: props.cohortId, field, bins: 10 })
+      .then((res) => {
+        graphs.dates[field].data.value = res.data;
+      });
+  });
 }
 
 watch(
-  () => props.cohort,
+  [() => props.cohortId, () => props.lastUpdated],
   () => {
     fetchVizData();
   },
   {
     immediate: true,
-    deep: true,
   },
 );
 </script>

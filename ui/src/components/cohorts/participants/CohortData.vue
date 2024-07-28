@@ -18,17 +18,23 @@
       class="flex-none"
     />
   </div>
-  <div class="mt-3" v-if="selectedCohort">
+  <div class="mt-3" v-if="selectValue">
     <div v-if="selectedCohort?.size === 0">
       <CohortDataNoParticipants />
     </div>
     <div v-else>
       <div v-if="mode === 'data'">
-        <ParticipantsData :cohort="selectedCohort" />
+        <ParticipantsData
+          :cohort-id="selectValue"
+          :lastUpdated="props.lastUpdated"
+        />
       </div>
       <!-- visualization -->
       <div v-if="mode === 'visualization'">
-        <ParticipantsVisualization :cohort="selectedCohort" />
+        <ParticipantsVisualization
+          :cohort-id="selectValue"
+          :lastUpdated="props.lastUpdated"
+        />
       </div>
     </div>
   </div>
@@ -40,7 +46,14 @@
 <script setup>
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
-// const props = defineProps({})
+
+// lastUpdated is a timestamp and is a proxy for change events that parent can emit and pass down
+// whenever a cohort is searched, lastUpdated is updated to current time so that child components can re-fetch data
+const props = defineProps({
+  lastUpdated: {
+    type: Number,
+  },
+});
 
 const cohortsStore = useCohortsStore();
 const { cohorts, combinationCohort, isInCombineMode } =
@@ -57,82 +70,44 @@ const options = [
   },
 ];
 
-// If the options of VaSelect component are the instances of Cohort class then
-// vue converts to plain object when assigning to v-model
-// so we track the id of the selected cohort and use it to find the cohort object
-const selectValue = ref(null);
-const selectedCohort = ref(null);
 const mode = ref("visualization");
+const selectValue = ref(null);
 
-// selectable cohorts (list) are non-empty cohorts and the combination cohort if in combine mode
-const selectableCohorts = computed(() => {
-  console.log("selectableCohorts computation done");
+const nonEmptyCohortIds = computed(() => {
+  return cohorts.value.filter((c) => !c.isEmpty());
+});
+
+const _selectableCohorts = computed(() => {
   return (isInCombineMode.value ? [combinationCohort.value] : []).concat(
-    cohorts.value.filter((c) => !c.isEmpty()).map((c) => toRaw(c)),
+    nonEmptyCohortIds.value,
   );
 });
 
-// watch the selectValue and update the selectedCohort
-watch(selectValue, (val) => {
-  console.log("watch selectValue", val);
-  selectedCohort.value = selectableCohorts.value.find((c) => c.id === val);
+// used to show options for the select dropdown
+const selectableCohorts = computed(() => {
+  return _selectableCohorts.value.map((c) => {
+    return {
+      id: c.getLatestId(),
+      name: c.name,
+    };
+  });
 });
 
-// automatically choose a default selected cohort
-// when entering combine mode, choose the combination cohort
-// when exiting combine mode, choose the first non-empty cohort
-watch(
-  isInCombineMode,
-  (newVal, oldVal) => {
-    console.log("watch isInCombineMode", newVal, oldVal);
-    if (newVal && !oldVal) {
-      // entering combine mode
-      selectValue.value = combinationCohort.value.id;
-      return;
-    }
-    if (!newVal && oldVal) {
-      // exiting combine mode
-      selectValue.value = cohorts.value.find((c) => !c.isEmpty())?.id;
-    }
-  },
-  {
-    immediate: true,
-  },
-);
+// used to show no results message
+const selectedCohort = computed(() => {
+  return cohorts.value.find((c) => c.getLatestId() === selectValue.value);
+});
 
-// update the selectedCohort when cohorts or combinationCohort changes
-// watch(
-//   [cohorts, combinationCohort],
-//   () => {
-//     // if there is no selected cohort, choose the first non-empty cohort
-//     // when not in combine mode. The above watch handles the case when
-//     // entering and exiting the combine mode
-//     if (selectValue.value == null) {
-//       if (!isInCombineMode.value) {
-//         const c = cohorts.value.find((c) => !c.isEmpty());
-//         if (c) selectValue.value = c.id;
-//       }
-//       return;
-//     }
-//     // if the selected cohort is still in the list of cohorts or combinationCohort
-//     // update it
-//     // else set it to null
-//     if (combinationCohort.value.id === selectedCohort.value.id) {
-//       selectedCohort.value = combinationCohort.value;
-//       console.log("setting selectedCohort", selectedCohort.value);
-//       return;
-//     }
-//     const c = cohorts.value.find((c) => c.id === selectedCohort.value.id);
-//     if (c) {
-//       selectedCohort.value = c;
-//       console.log("setting selectedCohort", selectedCohort.value);
-//       return;
-//     }
-//     selectValue.value = null;
-//   },
-//   {
-//     deep: true,
-//     immediate: true,
-//   },
-// );
+watch(
+  selectableCohorts,
+  (newVal, oldVal) => {
+    if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+      console.log("selectableCohorts changed", newVal);
+      if (newVal.length > 0) {
+        selectValue.value = newVal[0]?.id;
+      }
+    }
+  },
+  { immediate: true },
+);
 </script>
