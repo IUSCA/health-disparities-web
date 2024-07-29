@@ -380,6 +380,18 @@ onMounted(() => {
       .finally(() => {
         loading.value = false;
       });
+    return;
+  }
+  if (route.query.body) {
+    try {
+      const body = JSON.parse(route.query.body);
+      cohort.value = new GenotypeCohort({
+        query: body,
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to parse query");
+    }
   }
 });
 </script>

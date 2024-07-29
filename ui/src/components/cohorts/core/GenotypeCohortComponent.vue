@@ -30,6 +30,21 @@
         />
       </div>
     </div>
+
+    <div>
+      <RouterLink
+        v-if="!cohort.isEmpty()"
+        :to="{
+          path: '/variantXplorer',
+          query: cohort.hasUnsavedChanges()
+            ? { body: JSON.stringify(cohort.query) }
+            : { cohort_id: cohort.id },
+        }"
+        class="mt-3"
+      >
+        Open in Variant Explorer
+      </RouterLink>
+    </div>
   </div>
 </template>
 
