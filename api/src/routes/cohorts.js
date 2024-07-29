@@ -143,9 +143,16 @@ router.post(
       cohort_data.is_locked = true;
     }
 
-    const sqlQuery = await cohortService.searchParticipantsQueryAsync(req.body.query);
+    const sqlQuery = await cohortService.searchParticipantsQueryAsync({
+      schema: cohort_data.query.schema,
+      body: {
+        ...cohort_data.query.body,
+        protocol_id: 1, // todo
+        username: req.user.username,
+      },
+    });
     // eslint-disable-next-line no-console
-    // console.log(sqlQuery.sql, sqlQuery.values);
+    console.log(sqlQuery.sql, sqlQuery.values);
     const rows = await prisma.$queryRaw(sqlQuery);
 
     // rows is like [{participant_id: 1}, {participant_id: 2}, ...]
@@ -222,7 +229,14 @@ router.patch(
     }
 
     if (cohort_data.query) {
-      const sqlQuery = await cohortService.searchParticipantsQueryAsync(cohort_data.query);
+      const sqlQuery = await cohortService.searchParticipantsQueryAsync({
+        schema: cohort_data.query.schema,
+        body: {
+          ...cohort_data.query.body,
+          protocol_id: 1, // todo
+          username: req.user.username,
+        },
+      });
       // eslint-disable-next-line no-console
       // console.log(sqlQuery.sql, sqlQuery.values);
       const rows = await prisma.$queryRaw(sqlQuery);
