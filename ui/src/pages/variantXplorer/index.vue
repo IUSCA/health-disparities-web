@@ -88,7 +88,9 @@
               <p class="flex gap-1 items-center font-semibold mb-3">
                 <i-mdi-filter-variant />
                 <span> Variant Filters </span>
-                <span class="ml-auto font-normal"> Genome Build: HG38 </span>
+                <span class="ml-auto font-normal">
+                  Genome Build: {{ config.cohort.genome_build }}
+                </span>
               </p>
               <div class="ml-3">
                 <VariantQueryBuilder
@@ -192,6 +194,7 @@ import {
   injectionKeys,
 } from "@/components/genotype/constants";
 import { parseQuery } from "@/components/genotype/lib";
+import config from "@/config";
 import cohortService from "@/services/cohorts";
 import genotypeService from "@/services/genotypes";
 import toast from "@/services/toast";

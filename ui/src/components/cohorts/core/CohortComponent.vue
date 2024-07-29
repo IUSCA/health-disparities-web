@@ -15,7 +15,7 @@
             @remove="() => cohortsStore.deleteCohort(props.idx)"
           />
         </div>
-        <div class="mt-5" v-if="!cohort.is_locked">
+        <div class="mt-5" v-if="!cohort.is_locked && cohort.supports_editing">
           <QueryHistory :history="history" @restore="restore" />
         </div>
       </div>

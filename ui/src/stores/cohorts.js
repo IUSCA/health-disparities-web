@@ -15,7 +15,7 @@ export const useCohortsStore = defineStore("cohorts", () => {
   const enableChatbot = ref(useLocalStorage("cohort.enableChatbot", false));
   const totalParticipants = ref(0);
   const cohorts = ref([]);
-  const combinationCohort = ref(new CombinationCohort());
+  const combinationCohort = ref(new CombinationCohort({ is_dirty: true }));
   // sequence of set operations to be applied interleaved with cohorts
   // modifies the combinationCohort
   const operators = computed({

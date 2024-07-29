@@ -47,7 +47,7 @@ class Cohort {
     this.search_id = search_id;
     this.supports_editing = supports_editing || false;
     this.supports_copying = supports_copying || false;
-    this.is_dirty = is_dirty == null ? this.supports_editing : is_dirty;
+    this.is_dirty = is_dirty == null ? null : is_dirty;
   }
 
   /**
@@ -220,7 +220,7 @@ class CombinationCohort extends Cohort {
     super({
       ...params,
       schema: SCHEMA,
-      supports_editing: true,
+      supports_editing: false,
       supports_copying: true,
     });
   }

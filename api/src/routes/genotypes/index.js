@@ -1,8 +1,8 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { body } = require('express-validator');
+const config = require('config');
 
-// const config = require('config');
 const { validate } = require('../../middleware/validators');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { accessControl } = require('../../middleware/auth');
@@ -41,7 +41,7 @@ router.post(
       source_id, snapshot_id, ranges, filters,
     } = req.body.query;
 
-    const resolvedRanges = await transformRanges(ranges, 'hg38');
+    const resolvedRanges = await transformRanges(ranges, config.get('variant_search.genome_build'));
 
     const base_query = {
       source_id,

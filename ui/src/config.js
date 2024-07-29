@@ -74,6 +74,7 @@ const exports = {
         version: "1.0.0",
       },
     },
+    genome_build: "hg38",
   },
   debounce_ms: 300,
 };

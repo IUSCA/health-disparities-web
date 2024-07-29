@@ -1,4 +1,6 @@
 const { Prisma } = require('@prisma/client');
+const config = require('config');
+
 const { histogramSQL } = require('../../queries');
 const { transformRanges, buildRangesSQL } = require('./ranges');
 const { buildFiltersSQL } = require('./filters');
@@ -168,7 +170,7 @@ async function buildParticipantsQueryAsync(
   const {
     source_id, snapshot_id, ranges, filters, zygosities, protocol_id, username,
   } = body;
-  const resolvedRanges = await transformRanges(ranges, 'hg38');
+  const resolvedRanges = await transformRanges(ranges, config.get('variant_search.genome_build'));
   const base_query = {
     source_id,
     snapshot_id,

@@ -109,7 +109,8 @@
     "gene": {
       "left_padding": 2500,
       "right_padding": 2500
-    }
+    },
+    "genome_build": "hg38"
   },
   "openai": {
     "base_url":"http://rc-156-247.rci.uits.iu.edu/api/chat",

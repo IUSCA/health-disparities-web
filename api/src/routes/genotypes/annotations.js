@@ -2,6 +2,7 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { body, param } = require('express-validator');
 
+const config = require('config');
 const { validate } = require('../../middleware/validators');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { accessControl } = require('../../middleware/auth');
@@ -37,7 +38,7 @@ router.post(
     // or precompute unique values for each annotation field - treat as a static resource
 
     const { field } = req.params;
-    const resolvedRanges = await transformRanges(req.body.ranges, 'hg38');
+    const resolvedRanges = await transformRanges(req.body.ranges, config.get('variant_search.genome_build'));
     const sql = genotypeService.distinctAnnotationsQuery(field, {
       source_id: req.body.source_id,
       snapshot_id: req.body.snapshot_id,
@@ -77,7 +78,7 @@ router.post(
     const column = req.params.field;
     const num_bins = req.body.bins;
 
-    const resolvedRanges = await transformRanges(req.body.ranges, 'hg38');
+    const resolvedRanges = await transformRanges(req.body.ranges, config.get('variant_search.genome_build'));
     const querySql = genotypeService.buildBaseQuerySQL({
       source_id: req.body.source_id,
       snapshot_id: req.body.snapshot_id,
@@ -113,7 +114,7 @@ router.post(
       source_id, snapshot_id, ranges,
     } = req.body;
 
-    const resolvedRanges = await transformRanges(ranges, 'hg38');// TODO
+    const resolvedRanges = await transformRanges(ranges, config.get('variant_search.genome_build'));
 
     const sql = genotypeService.buildTotalCountSQL({
       source_id,

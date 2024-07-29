@@ -21,7 +21,9 @@
       <p class="flex gap-1 items-center font-semibold mb-3">
         <i-mdi-filter-variant />
         <span> Variant Filters </span>
-        <span class="ml-auto font-normal"> Genome Build: hg38 </span>
+        <span class="ml-auto font-normal">
+          Genome Build: {{ config.cohort.genome_build }}
+        </span>
       </p>
       <div class="ml-3">
         <VariantQueryBuilder
@@ -54,6 +56,7 @@ import {
   EXAMPLE_SEARCHES,
   injectionKeys,
 } from "@/components/genotype/constants";
+import config from "@/config";
 import _ from "lodash";
 
 const cohort = defineModel("cohort", {
