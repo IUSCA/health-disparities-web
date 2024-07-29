@@ -1,14 +1,20 @@
 <template>
   <VaInnerLoading :loading="resultsView && loading">
     <div class="flex flex-col gap-3">
+      <!-- source, snapshot, searchParams forms, search button, reset button -->
       <VaCard>
         <VaCardContent>
           <div class="flex items-center gap-3">
-            <SourceSelect v-model="source" class="flex-none" />
-            <SnapshotSelect v-model="snapshot_id" class="flex-none" />
+            <SourceSelect v-model="cohort.query.source_id" class="flex-none" />
+            <SnapshotSelect
+              v-model="cohort.query.snapshot_id"
+              class="flex-none"
+            />
             <VariantSearchForm
+              :search-params="cohort.query.ranges"
               :example_searches="EXAMPLE_SEARCHES"
               class="flex-grow"
+              @add="addSearchParam"
             />
 
             <VaButton
@@ -19,22 +25,27 @@
               outline
               preset="primary"
               class="ml-auto"
-              v-if="searchParams.length > 0"
+              v-if="cohort.query.ranges.length > 0"
             >
               Clear All
             </VaButton>
           </div>
 
           <!-- Selected variant search parameters -->
-          <VariantSearchParameters class="mt-3" />
+          <VariantSearchParameters
+            class="mt-3"
+            :search-params="cohort.query.ranges"
+            @remove="removeSearchParam"
+          />
 
+          <!-- Zygosity selectot and participant count + save as cohort button -->
           <div v-if="resultsView" class="mt-3">
             <VaDivider class="mt-4 mb-5" />
             <div class="flex flex-col md:flex-row gap-3">
               <div
                 class="md:w-9/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px]"
               >
-                <ZygositySelector v-model="zygosities" />
+                <ZygositySelector v-model="cohort.query.zygosities" />
               </div>
               <va-divider class="md:hidden" />
               <div class="md:w-3/12">
@@ -43,26 +54,19 @@
                 >
                   <span class="text-lg">
                     <NumberTransition
-                      :target="participant_count"
+                      :target="cohort.size"
                       :debounce="100"
                       :duration="30"
                       class="mr-1 font-semibold"
                     />
-                    {{
-                      maybePluralize(
-                        participant_count,
-                        "Participant",
-                        "s",
-                        false,
-                      )
-                    }}
+                    {{ maybePluralize(cohort.size, "Participant", "s", false) }}
                   </span>
 
                   <VaButton
                     class="flex-none"
                     preset="secondary"
                     color="success"
-                    :disabled="participant_count === 0"
+                    :disabled="cohort.size === 0"
                     @click="saveCohortModal.show()"
                   >
                     <i-mdi-content-save-edit />
@@ -84,12 +88,13 @@
               <p class="flex gap-1 items-center font-semibold mb-3">
                 <i-mdi-filter-variant />
                 <span> Variant Filters </span>
-                <span class="ml-auto font-normal">
-                  Genome Build: {{ source.build }}
-                </span>
+                <span class="ml-auto font-normal"> Genome Build: HG38 </span>
               </p>
               <div class="ml-3">
-                <VariantQueryBuilder v-model:query="criteria" :locked="false" />
+                <VariantQueryBuilder
+                  v-model:query="cohort.query.filters"
+                  :locked="false"
+                />
               </div>
             </div>
 
@@ -168,223 +173,191 @@
             query:
           </p>
           <VariantSearchExample
-            :example_searches="EXAMPLE_SEARCHES"
-            @search="(val) => variantsStore.addSearchParam(parseQuery(val))"
+            :example-searches="EXAMPLE_SEARCHES"
+            @search="(val) => addSearchParam(parseQuery(val))"
           />
         </div>
       </div>
     </div>
   </VaInnerLoading>
-
   <ColumnOrderingSelectionModal ref="columnOrderingModal" />
   <ColumnLegendModal ref="columnLegendModal" />
-  <GenotypeCohortSaveModal ref="saveCohortModal" @save="handleOnSave" />
+  <CohortSaveModal ref="saveCohortModal" :cohort="cohort" />
 </template>
 
 <script setup>
+import { GenotypeCohort } from "@/components/cohorts/models";
 import {
-  defaultQuery,
-  transformQueryForApi,
-} from "@/components/builder/queryBuilder/cohortQueryBuilder";
-import {
-  DEFAULT_ZYGOSITIES,
   EXAMPLE_SEARCHES,
+  injectionKeys,
 } from "@/components/genotype/constants";
 import { parseQuery } from "@/components/genotype/lib";
+import genotypeService from "@/services/genotypes";
 import toast from "@/services/toast";
 import { maybePluralize } from "@/services/utils";
-import variantService from "@/services/variants";
 import { useVariantsStore } from "@/stores/variants";
 import { SemipolarSpinner } from "epic-spinners";
 import _ from "lodash";
 import { storeToRefs } from "pinia";
 import { useColors } from "vuestic-ui";
 
-const { colors } = useColors();
-// const props = defineProps({})
-const number_formatter = Intl.NumberFormat("en");
-
 const variantsStore = useVariantsStore();
-const { currPage, pageSize, source, snapshot_id, searchParams } =
-  storeToRefs(variantsStore);
+const { currPage, pageSize } = storeToRefs(variantsStore);
 
-const criteria = ref(null);
-const zygosities = ref(DEFAULT_ZYGOSITIES);
-const loading = ref(false);
+const { colors } = useColors();
+const number_formatter = Intl.NumberFormat("en");
 
 const columnOrderingModal = ref(null);
 const columnLegendModal = ref(null);
 const saveCohortModal = ref(null);
 
+const loading = ref(false);
 const resultsView = ref(false);
-const variants = ref([]);
 const variant_count = ref(0);
 const total_count = ref(0);
-const participant_count = ref(0);
+const cohort = ref(new GenotypeCohort());
 
-const canon_query = ref(transformQueryForApi(criteria.value));
+const variants = ref([]);
 
-// for every change in the query, transform it to the API query format (canonical query)
-watchDebounced(
-  criteria,
-  (newQuery) => {
-    canon_query.value = transformQueryForApi(newQuery);
-  },
-  {
-    debounce: 300,
-    deep: true,
-  },
+provide(
+  injectionKeys.ranges,
+  computed(() => cohort.value.query.ranges),
+);
+provide(
+  injectionKeys.snapshotId,
+  computed(() => cohort.value.query.snapshot_id),
+);
+provide(
+  injectionKeys.sourceId,
+  computed(() => cohort.value.query.source_id),
 );
 
-function reset() {
-  console.log("reset");
-  resultsView.value = false;
-  searchParams.value = [];
-  variants.value = [];
-  variant_count.value = 0;
-  total_count.value = 0;
-  participant_count.value = 0;
-  criteria.value = defaultQuery();
-  zygosities.value = DEFAULT_ZYGOSITIES;
-  currPage.value = 1;
-  pageSize.value = 50;
-}
-
-// get total count of variants when snapshot or source or searchParams changes
-// reset page to 1
-// reset criteria to default query
-// if searchParams is empty, set resultsView to false
-watch(
-  [snapshot_id, source, searchParams],
-  () => {
-    if (searchParams.value.length === 0) {
-      resultsView.value = false;
-      return;
-    }
-
-    // reset page to 1
-    currPage.value = 1;
-
-    // reset criteria to default query
-    criteria.value = defaultQuery();
-
-    variantService
-      .getTotalCount({
-        source_id: source.value?.id,
-        snapshot_id: snapshot_id.value,
-        ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
-      })
-      .then((res) => {
-        total_count.value = res.data?.count || 0;
-      })
-      .catch((err) => {
-        console.error("Error getting total count", err);
-      });
-  },
-  { deep: true },
-);
-
-function makeVariantSearchQuery() {
-  return {
-    query: {
-      name: "genotype",
-      namespace: "edu.iu.sca.biobank",
-      version: "1.0.0",
-      source_id: source.value?.id,
-      snapshot_id: snapshot_id.value,
-      ranges: searchParams.value.map((p) => _.omit(p, ["text"])),
-      zygosities: zygosities.value,
-      criteria: canon_query.value || transformQueryForApi(defaultQuery()),
-    },
-    offset: (currPage.value - 1) * pageSize.value,
-    limit: pageSize.value,
-  };
-}
-
-function handleSearch() {
-  if (searchParams.value.length === 0 || zygosities.value.length === 0) {
+// throttled fn runs at most once every 100ms
+// it'll run on first call without delay and then ignores calls for 100ms
+const searchVariants = useThrottleFn(function () {
+  if (cohort.value.query.ranges.length === 0) {
     return;
   }
   loading.value = true;
-  variantService
-    .search(makeVariantSearchQuery())
+  return genotypeService
+    .search({
+      offset: (currPage.value - 1) * pageSize.value,
+      limit: pageSize.value,
+      query: cohort.value.query,
+    })
     .then((res) => {
+      variants.value = res.data.variants;
+      variant_count.value = res.data.metadata.total_count;
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error("Failed to fetch variants");
+    })
+    .finally(() => {
+      loading.value = false;
       resultsView.value = true;
-      variants.value = res.data?.variants || [];
-      variant_count.value = res.data?.metadata?.variant_count || 0;
-      participant_count.value = res.data?.metadata?.participant_count || 0;
+    });
+}, 500);
+
+const searchParticipants = useThrottleFn(function () {
+  if (cohort.value.isEmpty()) {
+    cohort.value.size = 0;
+    return Promise.resolve();
+  }
+  loading.value = true;
+  return cohort.value
+    .searchParticipants()
+    .catch((err) => {
+      console.error(err);
+      toast.error("Failed to fetch participant count");
     })
     .finally(() => {
       loading.value = false;
     });
-}
-const throttledSearch = useThrottleFn(handleSearch, 100);
+}, 500);
 
-// watch for changes in the search parameters and call the API
+// when current page changes, fetch variants
+watch(currPage, () => {
+  searchVariants();
+});
+
+watch(pageSize, () => {
+  currPage.value = 1;
+  searchVariants();
+});
+
+// when zygosities change, fetch participants
+watch(() => cohort.value.query.zygosities, searchParticipants, {
+  deep: true,
+});
+
+// when ranges change, reset filters, currPage and fetch both variants and participant count
 watch(
-  [snapshot_id, source, searchParams, currPage, pageSize, zygosities],
-  throttledSearch,
+  () => cohort.value.query.ranges,
+  () => {
+    cohort.value.query.filters = cohort.value.defaultQuery().filters;
+    currPage.value = 1;
+    searchParticipants();
+    searchVariants();
+  },
   {
     deep: true,
   },
 );
 
-// watch for changes in the canonical query
-// do not run on unsupported queries
-// if the canonical query is empty, set the variants count to the total count
-// deep compare old and new canonical queries to avoid unnecessary API calls
-// if the query has changed, call the API
-watch(
-  canon_query,
-  (newQuery, oldQuery) => {
-    // if (isAPIQueryEmpty(newQuery)) {
-    //   variant_count.value = total_count.value;
-    //   return;
-    // }
-    if (JSON.stringify(oldQuery) !== JSON.stringify(newQuery)) {
-      console.log("query changed", newQuery, oldQuery);
-
-      // reset page to 1
-      currPage.value = 1;
-
-      throttledSearch();
-    }
+// when filters change, fetch variants and participant count
+watchDebounced(
+  () => cohort.value.query.filters,
+  () => {
+    currPage.value = 1;
+    searchParticipants();
+    searchVariants();
   },
-  { deep: true },
+  { deep: true, debounce: 300 },
 );
 
-const cohort_id = ref(null);
-function handleOnSave(cohort_data) {
-  const isNewCohort = !cohort_id.value;
-  const req_body = {
-    ...cohort_data,
-    query: makeVariantSearchQuery().query,
-  };
-  if (isNewCohort) {
-    variantService
-      .createCohort(req_body)
-      .then((res) => {
-        cohort_id.value = res.data.id;
-        toast.success("Cohort saved successfully");
-        saveCohortModal.value.hide();
-      })
-      .catch((err) => {
-        console.error(err);
-        toast.error("Error saving cohort");
-      });
-  } else {
-    variantService
-      .updateCohort(cohort_id.value, req_body)
-      .then(() => {
-        toast.success("Cohort updated successfully");
-        saveCohortModal.value.hide();
-      })
-      .catch((err) => {
-        console.error(err);
-        toast.error("Error updating cohort");
-      });
-  }
+// when either of source or snapshot change, reset cohort query, results view, current page
+watch(
+  [() => cohort.value.query.source_id, () => cohort.value.query.snapshot_id],
+  () => {
+    resultsView.value = false;
+    variants.value = [];
+    variant_count.value = 0;
+    total_count.value = 0;
+    currPage.value = 1;
+    pageSize.value = 50;
+
+    // cohort.value.clearQuery() resets source and snapshot
+    // to avoid resetting source and snapshot, we reset ranges, zygosities, filters
+    const { ranges, zygosities, filters } = cohort.value.defaultQuery();
+    cohort.value.query.ranges = ranges;
+    cohort.value.query.zygosities = zygosities;
+    cohort.value.query.filters = filters;
+  },
+);
+
+function reset() {
+  resultsView.value = false;
+  variants.value = [];
+  variant_count.value = 0;
+  total_count.value = 0;
+  currPage.value = 1;
+  pageSize.value = 50;
+  cohort.value.clearQuery();
 }
+
+function addSearchParam(param) {
+  // add if not already present
+  const existing = cohort.value.query.ranges.find((p) => _.isEqual(p, param));
+  if (!existing) cohort.value.query.ranges.push(param);
+}
+
+function removeSearchParam(param) {
+  const index = cohort.value.query.ranges.findIndex((p) => _.isEqual(p, param));
+  if (index > -1) cohort.value.query.ranges.splice(index, 1);
+}
+
+// todo:  load cohort from query params
 </script>
 
 <route lang="yaml">

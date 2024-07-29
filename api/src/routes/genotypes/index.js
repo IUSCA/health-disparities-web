@@ -38,7 +38,7 @@ router.post(
     // #swagger.summary = 'Search for variants given a genotype cohort query body'
 
     const {
-      source_id, snapshot_id, ranges, filters, zygosities,
+      source_id, snapshot_id, ranges, filters,
     } = req.body.query;
 
     const resolvedRanges = await transformRanges(ranges, 'hg38');
@@ -52,7 +52,7 @@ router.post(
 
     const sql = genotypeService.searchGenotypeDataSQL({
       base_query,
-      json_query: filters,
+      filters,
       limit: req.body.limit,
       offset: req.body.offset,
     });
@@ -60,29 +60,9 @@ router.post(
 
     const results = await prisma.$queryRaw(sql) ?? [];
 
-    let count = 0;
-    if (results.length !== 0) {
-      const variants_sql = genotypeService.searchVariantIDsSQL({
-        base_query,
-        filters,
-      });
-      // console.time('participantsWithVariants')
-      const count_sql = await genotypeService.participantsWithVariantsSQL({
-        variants_sql,
-        zygosities,
-        snapshot_id,
-        username: req.user.username,
-        count: true,
-      });
-      const rows = await prisma.$queryRaw(count_sql);
-      count = rows[0].count;
-      // console.timeEnd('participantsWithVariants')
-    }
-
     res.json({
       metadata: {
-        variant_count: Number(results[0]?.total_count ?? 0),
-        participant_count: parseInt(count, 10),
+        total_count: Number(results[0]?.total_count ?? 0),
       },
       variants: results.map((result) => {
         // eslint-disable-next-line no-unused-vars

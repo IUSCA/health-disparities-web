@@ -22,7 +22,6 @@
           <VaButton
             @click="
               filterSelectModal.show((node) => {
-                console.log('node', node);
                 if (!node) return;
                 grpCtrlProps.addRule(node.id);
               })

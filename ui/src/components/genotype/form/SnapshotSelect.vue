@@ -1,6 +1,6 @@
 <template>
   <va-select
-    class="w-[220px]"
+    class="flex-none w-[220px]"
     v-model="model"
     :options="snapshot_options"
     text-by="name"

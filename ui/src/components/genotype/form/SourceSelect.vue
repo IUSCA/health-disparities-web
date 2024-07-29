@@ -8,6 +8,7 @@
     searchable
     inner-label
     text-by="name"
+    value-by="id"
     :highlight-matched-text="false"
   >
     <template #appendInner>
@@ -27,6 +28,6 @@ const source_options = ref([]);
 
 sourceSerice.getAll().then((res) => {
   source_options.value = res.data;
-  model.value = source_options.value[0];
+  model.value = source_options.value[0].id;
 });
 </script>

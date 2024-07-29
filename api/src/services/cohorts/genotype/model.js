@@ -356,14 +356,11 @@ function rangeToJSON(range) {
   return range;
 }
 
-function toJSON(query) {
+function toJSON(query_body) {
   return {
-    schema: query.schema,
-    body: {
-      ...query.body,
-      ranges: query.body.ranges.map(rangeToJSON),
-      zygosities: decode_zygosities(query.body.zygosities),
-    },
+    ...query_body,
+    ranges: query_body.ranges.map(rangeToJSON),
+    zygosities: decode_zygosities(query_body.zygosities),
   };
 }
 

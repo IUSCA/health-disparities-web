@@ -9,8 +9,8 @@
       />
     </div>
 
-    <VariantSearchParameters2
-      v-model:search-params="cohort.query.ranges"
+    <VariantSearchParameters
+      :search-params="cohort.query.ranges"
       @remove="removeSearchParam"
       class="mt-3"
     />
