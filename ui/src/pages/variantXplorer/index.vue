@@ -192,6 +192,7 @@ import {
   injectionKeys,
 } from "@/components/genotype/constants";
 import { parseQuery } from "@/components/genotype/lib";
+import cohortService from "@/services/cohorts";
 import genotypeService from "@/services/genotypes";
 import toast from "@/services/toast";
 import { maybePluralize } from "@/services/utils";
@@ -206,6 +207,8 @@ const { currPage, pageSize } = storeToRefs(variantsStore);
 
 const { colors } = useColors();
 const number_formatter = Intl.NumberFormat("en");
+
+const route = useRoute();
 
 const columnOrderingModal = ref(null);
 const columnLegendModal = ref(null);
@@ -357,7 +360,28 @@ function removeSearchParam(param) {
   if (index > -1) cohort.value.query.ranges.splice(index, 1);
 }
 
-// todo:  load cohort from query params
+// load cohort from query params
+onMounted(() => {
+  if (route.query?.cohort_id) {
+    loading.value = true;
+    cohortService
+      .getById(route.query.cohort_id)
+      .then((res) => {
+        if (res.data.query.schema.name !== "genotype") {
+          toast.error("Cannot load cohorts of other types");
+          return;
+        }
+        cohort.value = GenotypeCohort.fromApiData(res.data);
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load cohort");
+      })
+      .finally(() => {
+        loading.value = false;
+      });
+  }
+});
 </script>
 
 <route lang="yaml">
