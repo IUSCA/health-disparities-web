@@ -7,6 +7,9 @@ const DEFAULT_SNAPSHOT_ID = 1; // todo
 const DEFAULT_SOURCE_ID = 1; // todo
 
 class Cohort {
+  static NAME_PREFIX = "Cohort ";
+  static ID_PREFIX = "cohort_";
+
   constructor({
     id,
     name,
@@ -30,12 +33,13 @@ class Cohort {
       namespace: "edu.iu.biobank",
       version: "1.0.0",
     };
-    this.NAME_PREFIX = "Cohort ";
-    this.ID_PREFIX = "cohort_";
 
-    const uniqueId = _.uniqueId();
-    this.id = id || `${this.ID_PREFIX}${uniqueId}`;
-    this.name = name || `${this.NAME_PREFIX}${uniqueId}`;
+    let uniqueId = null;
+    if (!id || !name) {
+      uniqueId = _.uniqueId();
+    }
+    this.id = id || this.constructor.uniqueId();
+    this.name = name || `${this.constructor.NAME_PREFIX}${uniqueId}`;
     this.description = description || "";
     this.created_at = created_at;
     this.updated_at = updated_at;
@@ -69,6 +73,10 @@ class Cohort {
     });
   }
 
+  static uniqueId() {
+    return _.uniqueId(this.ID_PREFIX);
+  }
+
   toApiPayload() {
     return {
       id: this.id,
@@ -86,7 +94,7 @@ class Cohort {
 
   isNew() {
     // never saved to the server
-    return !this.id || this.id.startsWith(this.ID_PREFIX);
+    return !this.id || this.id.startsWith(this.constructor.ID_PREFIX);
   }
 
   hasUnsavedChanges() {
@@ -128,7 +136,7 @@ class Cohort {
 
   copy() {
     return new this.constructor({
-      id: _.uniqueId(this.ID_PREFIX),
+      id: this.constructor.uniqueId(),
       name: `Copy of ${this.name}`,
       description: this.description,
       size: this.size,

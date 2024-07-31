@@ -94,6 +94,7 @@ const selectableCohorts = computed(() => {
 // used to show no results message
 const selectedCohort = computed(() => {
   return cohorts.value
+    .concat(combinationCohort.value)
     .filter((c) => c.getLatestId())
     .find((c) => c.getLatestId() === selectValue.value);
 });
