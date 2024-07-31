@@ -32,11 +32,13 @@
       class="mt-3"
     />
 
-    <VaDivider class="mt-3 mb-3" />
-    <ZygositySelector v-model="cohort.query.zygosities" class="mt-3 pl-1" />
+    <div v-if="cohort.query.ranges.length > 0">
+      <VaDivider class="mt-3 mb-3" />
+      <ZygositySelector v-model="cohort.query.zygosities" class="mt-3 pl-1" />
+    </div>
 
-    <VaDivider class="mt-3 mb-3" />
-    <div class="mt-3">
+    <div class="" v-if="cohort.query.ranges.length > 0">
+      <VaDivider class="mt-3 mb-3" />
       <div class="flex gap-3 items-center font-semibold mb-3">
         <i-mdi-filter-variant />
         <span> Variant Filters </span>
@@ -92,4 +94,15 @@ function removeSearchParam(param) {
   const index = cohort.value.query.ranges.findIndex((p) => _.isEqual(p, param));
   if (index > -1) cohort.value.query.ranges.splice(index, 1);
 }
+
+// reset filters when ranges change
+watch(
+  () => cohort.value.query.ranges,
+  () => {
+    cohort.value.query.filters = cohort.value.defaultQuery().filters;
+  },
+  {
+    deep: true,
+  },
+);
 </script>
