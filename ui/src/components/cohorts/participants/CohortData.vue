@@ -73,19 +73,17 @@ const options = [
 const mode = ref("visualization");
 const selectValue = ref(null);
 
-const nonEmptyCohortIds = computed(() => {
-  return cohorts.value.filter((c) => !c.isEmpty());
-});
-
-const _selectableCohorts = computed(() => {
-  return (isInCombineMode.value ? [combinationCohort.value] : []).concat(
-    nonEmptyCohortIds.value,
-  );
-});
-
 // used to show options for the select dropdown
 const selectableCohorts = computed(() => {
-  return _selectableCohorts.value.map((c) => {
+  const nonEmptyCohort = cohorts.value.filter(
+    (c) => !c.isEmpty() && c.getLatestId() != null,
+  );
+
+  const _selectableCohorts = (
+    isInCombineMode.value ? [combinationCohort.value] : []
+  ).concat(nonEmptyCohort);
+
+  return _selectableCohorts.map((c) => {
     return {
       id: c.getLatestId(),
       name: c.name,
@@ -95,14 +93,15 @@ const selectableCohorts = computed(() => {
 
 // used to show no results message
 const selectedCohort = computed(() => {
-  return cohorts.value.find((c) => c.getLatestId() === selectValue.value);
+  return cohorts.value
+    .filter((c) => c.getLatestId())
+    .find((c) => c.getLatestId() === selectValue.value);
 });
 
 watch(
   selectableCohorts,
   (newVal, oldVal) => {
     if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
-      console.log("selectableCohorts changed", newVal);
       if (newVal.length > 0) {
         selectValue.value = newVal[0]?.id;
       }

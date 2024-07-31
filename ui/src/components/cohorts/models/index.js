@@ -164,7 +164,14 @@ class Cohort {
     // in some edge cases, between the query being updated in the cohort and search being completed,
     // the returned id may be null or may not be found in the table
     // always use this method after searchParticipants() / save() to get a valid id
-    return this.is_dirty ? this.search_id : this.id;
+    if (this.is_dirty) {
+      return this.search_id;
+    } else {
+      if (this.isNew()) {
+        return null;
+      }
+      return this.id;
+    }
   }
 
   isSavingDisabled() {

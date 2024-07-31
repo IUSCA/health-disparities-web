@@ -60,9 +60,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const offset = computed(() => (currPage.value - 1) * pageSize.value);
 const total_count = ref(0);
 
-async function fetchParticipants() {
-  console.log("fetchParticipants cohort id", props.cohortId);
-
+function fetchParticipants() {
   return participantsService
     .getByCohortId({
       cohort_id: props.cohortId,
