@@ -54,8 +54,14 @@
 </template>
 
 <script setup>
-import { CombinationCohort, createCohort } from "@/components/cohorts/models";
+import { DEFAULT_LOGICAL_OPERATOR } from "@/components/cohorts/combination/constants";
+import {
+  CombinationCohort,
+  createCohort,
+  PhenotypeCohort,
+} from "@/components/cohorts/models";
 import cohortService from "@/services/cohorts";
+import genAIService from "@/services/gen_ai";
 import participantsService from "@/services/participants";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
@@ -184,19 +190,17 @@ function loadCohort(id) {
 
 const chat = ref(null);
 function handleUserMessage(text) {
-  console.log("handleUserMessage", text);
-  // genAIService
-  //   .generate_cohort({ text })
-  //   .then((res) => {
-  //     const cohort = PhenotypeCohort.createEmpty();
-  //     cohort.criteria = transformStoredQuery(res.data.criteria);
-  //     cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
-  //     chat.value.addBotMessage("Done!");
-  //   })
-  //   .catch((err) => {
-  //     console.error(err);
-  //     chat.value.addBotMessage("Unable to generate cohort. Please try again.");
-  //   });
+  genAIService
+    .generate_cohort({ text })
+    .then((res) => {
+      const cohort = new PhenotypeCohort({ query: res.data.query.body });
+      cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
+      chat.value.addBotMessage("Done!");
+    })
+    .catch((err) => {
+      console.error(err);
+      chat.value.addBotMessage("Unable to generate cohort. Please try again.");
+    });
 }
 </script>
 

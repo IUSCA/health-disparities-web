@@ -98,9 +98,7 @@ const { isValid, validate } = useForm("formRef");
 // });
 watch([() => props.cohort.suggested_name], (sg_name) => {
   if (sg_name)
-    data.value.name = props.cohort.name.startsWith("Untitled")
-      ? sg_name
-      : props.cohort.name;
+    data.value.name = props.cohort.isNew() ? sg_name : props.cohort.name;
 });
 watch([() => props.cohort.suggested_description], () => {
   data.value.description = props.cohort.suggested_description;

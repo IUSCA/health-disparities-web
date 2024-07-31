@@ -102,13 +102,13 @@ model medication {
 const json_schema = {
   type: 'object',
   properties: {
-    criteria: {
+    filters: {
       anyOf: [
         { $ref: '#/definitions/query' },
       ],
     },
   },
-  required: ['criteria'],
+  required: ['filters'],
   additionalProperties: false,
   definitions: {
     query: {
@@ -152,16 +152,12 @@ const json_schema = {
 
 const example_text = 'female participants with diabetes who are 50 years of age or older';
 const example_json_query = {
-  query: {
-    criteria: {
-      operator: 'AND',
-      children: [
-        { field: 'demographic.gender', operator: 'in', value: ['F'] },
-        { field: 'demographic.age', operator: 'gte', value: '50' },
-        { field: 'dx.name', operator: 'in', value: ['diabetes'] },
-      ],
-    },
-  },
+  operator: 'AND',
+  children: [
+    { field: 'demographic.gender', operator: 'in', value: ['F'] },
+    { field: 'demographic.age', operator: 'gte', value: '50' },
+    { field: 'dx.name', operator: 'in', value: ['diabetes'] },
+  ],
 };
 const example_metadata = {
   title: 'Female Diabetics 50+',

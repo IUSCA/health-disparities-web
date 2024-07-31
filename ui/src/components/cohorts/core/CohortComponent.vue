@@ -89,6 +89,7 @@
 <script setup>
 import { DEFAULT_LOGICAL_OPERATOR } from "@/components/cohorts/combination/constants";
 import { Cohort } from "@/components/cohorts/models";
+import genAIService from "@/services/gen_ai";
 import toast from "@/services/toast";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
@@ -106,7 +107,7 @@ const props = defineProps({
 const emit = defineEmits(["saved", "beforeSearch", "afterSearch"]);
 
 const cohortsStore = useCohortsStore();
-const { totalParticipants } = storeToRefs(cohortsStore);
+const { totalParticipants, enableTitleGeneration } = storeToRefs(cohortsStore);
 const loading = ref(false);
 
 function resolveComponent(cohort) {
@@ -150,10 +151,22 @@ watchDebounced(
     search();
 
     // gen-ai services
+    if (enableTitleGeneration.value && cohort.value.supports_genai) {
+      genAIService
+        .generate_name_description({ filters: newQuery })
+        .then((res) => {
+          cohort.value.suggested_name = res.data.title;
+          cohort.value.suggested_description = res.data.description;
+        })
+        .catch((error) => {
+          console.error("Error generating name and description", error);
+        });
+    }
   },
   {
     deep: true,
     debounce: 300,
+    immediate: true,
   },
 );
 

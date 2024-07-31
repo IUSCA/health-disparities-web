@@ -23,6 +23,7 @@ class Cohort {
     search_id,
     supports_editing,
     supports_copying,
+    supports_genai,
   } = {}) {
     const SCHEMA = {
       name: "default",
@@ -47,6 +48,7 @@ class Cohort {
     this.search_id = search_id;
     this.supports_editing = supports_editing || false;
     this.supports_copying = supports_copying || false;
+    this.supports_genai = supports_genai || false;
     this.is_dirty = is_dirty == null ? null : is_dirty;
   }
 
@@ -200,6 +202,7 @@ class PhenotypeCohort extends Cohort {
       schema: SCHEMA,
       supports_editing: true,
       supports_copying: true,
+      supports_genai: true,
     });
   }
 

@@ -38,8 +38,8 @@ router.post(
         snapshot_id: 1, // todo: get from request
       },
     };
-    validate(query); // throws error if invalid
-    res.json(query);
+    validate(query.body); // throws error if invalid
+    res.json({ query });
   }),
 );
 
