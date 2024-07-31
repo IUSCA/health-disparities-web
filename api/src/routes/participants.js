@@ -48,6 +48,7 @@ router.get(
       req.query.offset,
       req.query.offset + req.query.limit,
     );
+    const total_count = cohort.participants.length;
     const participants = await prisma.participant.findMany({
       where: {
         id: {
@@ -71,7 +72,14 @@ router.get(
         demographics: demographics?.[0],
       };
     });
-    res.json(_participants);
+    res.json({
+      metadata: {
+        total_count,
+        limit: req.query.limit,
+        offset: req.query.offset,
+      },
+      participants: _participants,
+    });
   }),
 );
 

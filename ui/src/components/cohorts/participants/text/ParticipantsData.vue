@@ -32,7 +32,7 @@
       class="mt-4 px-1 lg:px-3"
       v-model:page="currPage"
       v-model:page_size="pageSize"
-      :total_results="props.cohort.size"
+      :total_results="total_count"
       :curr_items="participants.length"
       :page_size_options="PAGE_SIZE_OPTIONS"
     />
@@ -58,6 +58,7 @@ const currPage = ref(1);
 const pageSize = ref(10);
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const offset = computed(() => (currPage.value - 1) * pageSize.value);
+const total_count = ref(0);
 
 async function fetchParticipants() {
   console.log("fetchParticipants cohort id", props.cohortId);
@@ -69,7 +70,8 @@ async function fetchParticipants() {
       offset: offset.value,
     })
     .then((response) => {
-      participants.value = response.data;
+      participants.value = response.data.participants;
+      total_count.value = response.data.metadata.total_count;
     });
 }
 // throttled fn runs at most once every 100ms
