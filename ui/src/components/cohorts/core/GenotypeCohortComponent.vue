@@ -1,12 +1,29 @@
 <template>
-  <div>
+  <div class="mt-3">
     <div class="flex items-center gap-3">
+      <SourceSelect v-model="cohort.query.source_id" class="flex-none" />
       <VariantSearchForm
         :search-params="cohort.query.ranges"
         :example_searches="EXAMPLE_SEARCHES"
         @add="addSearchParam"
         class="flex-grow"
       />
+
+      <!-- link to variant explorer -->
+      <div>
+        <RouterLink
+          v-if="!cohort.isEmpty()"
+          :to="{
+            path: '/variantXplorer',
+            query: cohort.hasUnsavedChanges()
+              ? { body: JSON.stringify(cohort.query) }
+              : { cohort_id: cohort.id },
+          }"
+          class="mt-3 font-normal va-link hover:underline"
+        >
+          Open in Variant Explorer
+        </RouterLink>
+      </div>
     </div>
 
     <VariantSearchParameters
@@ -15,37 +32,25 @@
       class="mt-3"
     />
 
+    <VaDivider class="mt-3 mb-3" />
     <ZygositySelector v-model="cohort.query.zygosities" class="mt-3 pl-1" />
 
+    <VaDivider class="mt-3 mb-3" />
     <div class="mt-3">
-      <p class="flex gap-1 items-center font-semibold mb-3">
+      <div class="flex gap-3 items-center font-semibold mb-3">
         <i-mdi-filter-variant />
         <span> Variant Filters </span>
+
         <span class="ml-auto font-normal">
           Genome Build: {{ config.cohort.genome_build }}
         </span>
-      </p>
+      </div>
       <div class="ml-3">
         <VariantQueryBuilder
           v-model:query="cohort.query.filters"
           :locked="false"
         />
       </div>
-    </div>
-
-    <div>
-      <RouterLink
-        v-if="!cohort.isEmpty()"
-        :to="{
-          path: '/variantXplorer',
-          query: cohort.hasUnsavedChanges()
-            ? { body: JSON.stringify(cohort.query) }
-            : { cohort_id: cohort.id },
-        }"
-        class="mt-3"
-      >
-        Open in Variant Explorer
-      </RouterLink>
     </div>
   </div>
 </template>
