@@ -16,6 +16,7 @@
       value-by="id"
       placeholder="Select a cohort"
       class="flex-none"
+      noOptionsText="No valid cohorts available"
     />
   </div>
   <div class="mt-3" v-if="selectValue">
@@ -105,6 +106,8 @@ watch(
     if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
       if (newVal.length > 0) {
         selectValue.value = newVal[0]?.id;
+      } else {
+        selectValue.value = null;
       }
     }
   },
