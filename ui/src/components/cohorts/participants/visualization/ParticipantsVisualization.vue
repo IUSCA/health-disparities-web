@@ -83,8 +83,6 @@ const graphList = computed(() => {
 });
 
 function fetchVizData() {
-  console.log("fetchVizData cohort id", props.cohortId);
-
   Object.keys(graphs.categoricals).map((field) => {
     return participantsService
       .aggregate({ cohort_id: props.cohortId, field })

@@ -147,8 +147,6 @@ watchDebounced(
       return;
     }
 
-    console.log("Cohort query changed", newQuery, oldQuery);
-
     search();
 
     // gen-ai services
@@ -160,9 +158,7 @@ watchDebounced(
 );
 
 /* ***** cohort actions - start ****** */
-function exportCohort() {
-  console.log("Export cohort", cohort.value, props.idx);
-}
+function exportCohort() {}
 
 // clone the cohort, save it, and append it to the store
 function copyCohort() {

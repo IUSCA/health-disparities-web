@@ -161,7 +161,6 @@ watch(
   [() => props.params, sortBy, sortingOrder],
   () => {
     data_loading.value = true;
-    console.log("newParams", props.params);
     offset.value = 0;
     infinitescrollDisabled.value = false;
 
@@ -182,7 +181,6 @@ function onClick(event) {
 }
 
 function onScrollToEnd() {
-  console.log("scroll to end");
   // load more data
   offset.value += LIMIT;
   return fetch().then((data) => {
