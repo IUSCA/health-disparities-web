@@ -113,7 +113,7 @@
     "genome_build": "hg38"
   },
   "openai": {
-    "base_url":"http://rc-156-247.rci.uits.iu.edu/api/chat",
+    "base_url":"http://rc-156-247.rci.uits.iu.edu/api/v1/chat",
     "api_key": ""
   }
 }

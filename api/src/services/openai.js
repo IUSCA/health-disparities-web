@@ -3,7 +3,9 @@ const config = require('config');
 
 const client = axios.create({
   baseURL: config.get('openai.base_url'),
+  headers: { 'X-API-Key': config.get('openai.api_key') },
 });
+const model = 'Llama-3-8B-Instruct-GPTQ-4-Bit';
 
 const db_schema = `model participant {
   id           Int           @id @default(autoincrement())
@@ -166,7 +168,7 @@ const example_metadata = {
 
 async function generate_cohort(text) {
   const res = await client.post('/completions', {
-    model: 'Llama-3-8B-Instruct-GPTQ-4-Bit',
+    model,
     messages: [
       {
         role: 'system',
@@ -185,7 +187,7 @@ async function generate_cohort(text) {
 
 async function generate_cohort_name_description(query) {
   const res = await client.post('/completions', {
-    model: 'Llama-3-8B-Instruct-GPTQ-4-Bit',
+    model,
     messages: [
       {
         role: 'system',
