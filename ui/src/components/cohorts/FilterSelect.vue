@@ -4,9 +4,31 @@
       v-model="searchText"
       placeholder="Search for filters and categories"
       clearable
-      class="w-72"
+      class="w-9/12"
     />
     <VaCheckbox v-model="expandAll" label="Expand All" class="" />
+  </div>
+
+  <div class="my-3 pl-1" v-if="recentFilters.length > 0">
+    <div class="flex justify-between items-center">
+      <p class="va-text-secondary">Recent Selections:</p>
+      <VaButton
+        size="small"
+        icon="clear"
+        preset="plain"
+        color="secondary"
+        class="py-[0.0625rem] px-[0.25rem]"
+        @click="emit('clearRecentFilters')"
+      >
+        Clear
+      </VaButton>
+    </div>
+
+    <RecentFilterSelections
+      :filters="props.filters"
+      :recentFilters="props.recentFilters"
+      @select="(x) => emit('select', x)"
+    />
   </div>
 
   <VaTreeView
@@ -41,9 +63,10 @@ import { filterId } from "@/components/cohorts/common";
 
 const props = defineProps({
   filters: Object,
+  recentFilters: Array,
 });
 
-const emit = defineEmits(["select"]);
+const emit = defineEmits(["select", "clearRecentFilters"]);
 
 const searchText = ref("");
 const expandAll = ref(false);

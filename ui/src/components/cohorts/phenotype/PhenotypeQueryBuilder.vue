@@ -68,6 +68,7 @@
           :identifier="ruleCtrl.ruleIdentifier"
           :model-value="ruleCtrl.ruleData"
           :range="ruleCtrl.connectorValue === 'between'"
+          :read-only="props.locked"
           @update:model-value="
             (v) => {
               ruleCtrl.updateRuleData(v);
@@ -77,7 +78,11 @@
       </div>
     </template>
   </QueryBuilder>
-  <FilterSelectModal :filters="filters" ref="filterSelectModal" />
+  <FilterSelectModal
+    :filters="filters"
+    v-model:recents="recentPhenotypeFilters"
+    ref="filterSelectModal"
+  />
 </template>
 
 <script setup>
@@ -89,9 +94,12 @@ import {
   isUnaryOperator,
   operators,
 } from "@/components/cohorts/common";
+// import ICDSearch from "@/components/cohorts/phenotype/filterComponents/ICDSearch.vue";
 import { filters } from "@/components/cohorts/phenotype/filters";
 import QBDate from "@/components/cohorts/queryBuilder/filterComponents/QBDate.vue";
 import QBInput from "@/components/cohorts/queryBuilder/filterComponents/QBInput.vue";
+import { useCohortsStore } from "@/stores/cohorts";
+import { storeToRefs } from "pinia";
 import { fromStandardQuery, standardizeQuery } from "../queryBuilder";
 import DxNameSelect from "./filterComponents/DxNameSelect.vue";
 import PhenotypeAsyncSelect from "./filterComponents/PhenotypeAsyncSelect.vue";
@@ -101,6 +109,8 @@ const standardQuery = defineModel();
 const props = defineProps({
   locked: Boolean,
 });
+
+const { recentPhenotypeFilters } = storeToRefs(useCohortsStore());
 
 const query = ref(fromStandardQuery(standardQuery.value));
 
@@ -184,6 +194,9 @@ const config = {
 };
 
 function getComponent(field) {
+  // if (["dx.code", "hospital.dx_code"].includes(field.id)) {
+  //   return ICDSearch;
+  // }
   if (field.id === "dx.name") {
     return DxNameSelect;
   }

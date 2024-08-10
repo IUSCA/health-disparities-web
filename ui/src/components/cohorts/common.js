@@ -181,3 +181,19 @@ export function flatten(filters) {
     }),
   );
 }
+
+export function getFilterDetailsById({ filters, id }) {
+  const [category_key, filter_key] = id.split(".");
+  const category = filters.find((category) => category.key === category_key);
+  if (!category) {
+    throw new Error(`Category with key ${category_key} not found.`);
+  }
+  const { filters: category_filters, ...rest } = category;
+  const filter = category_filters.find((filter) => filter.key === filter_key);
+  if (!filter) {
+    throw new Error(
+      `Filter with key ${filter_key} not found in category ${category_key}.`,
+    );
+  }
+  return { category: rest, filter };
+}

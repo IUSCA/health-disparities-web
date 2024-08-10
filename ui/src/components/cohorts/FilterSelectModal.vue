@@ -6,15 +6,25 @@
     close-button
     hide-default-actions
     @close="hide"
+    size="large"
   >
-    <FilterSelect :filters="props.filters" @select="handleSelect" />
+    <FilterSelect
+      :filters="props.filters"
+      :recent-filters="sortedRecents"
+      @select="handleSelect"
+      @clear-recent-filters="recentFilters = {}"
+    />
   </va-modal>
 </template>
 
 <script setup>
+const recentFilters = defineModel("recents", {
+  type: Object,
+});
 const props = defineProps({
   filters: Object,
 });
+const emit = defineEmits(["select"]);
 
 // parent component can invoke these methods through the template ref
 defineExpose({
@@ -51,5 +61,29 @@ function handleSelect(node) {
     resolve = null;
   }
   hide();
+  emit("select", node);
+  handleFilterSelect(node);
+}
+
+const MAX_RECENT_FILTERS = 5;
+const sortedRecents = computed(() => {
+  return Object.entries(recentFilters.value)
+    .sort((a, b) => {
+      // sort by timestamp descending
+      return b[1] - a[1];
+    })
+    .map(([id, _]) => id)
+    .slice(0, MAX_RECENT_FILTERS); // show only 5 recent filters
+});
+
+function handleFilterSelect(node) {
+  recentFilters.value[node.id] = Date.now();
+  // remove the oldest filter if more than 5 filters are present
+  if (Object.keys(recentFilters.value).length > MAX_RECENT_FILTERS) {
+    const oldestKey = Object.entries(recentFilters.value)
+      .sort((a, b) => a[1] - b[1])
+      .map(([id, _]) => id)[0];
+    delete recentFilters.value[oldestKey];
+  }
 }
 </script>

@@ -31,13 +31,13 @@ const filter = ref(null);
 watch(
   () => props.identifier,
   () => {
-    const [category_key, filer_key] = props.identifier.split(props.seperator);
+    const [category_key, filter_key] = props.identifier.split(props.seperator);
 
     category.value = props.filters.find(
       (category) => category.key === category_key,
     );
     filter.value = category.value.filters.find(
-      (filter) => filter.key === filer_key,
+      (filter) => filter.key === filter_key,
     );
   },
   {

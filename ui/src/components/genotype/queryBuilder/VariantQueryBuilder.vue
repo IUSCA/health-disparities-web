@@ -83,10 +83,15 @@
     </QueryBuilder>
   </div>
 
-  <FilterSelectModal :filters="variantFilters" ref="filterSelectModal" />
+  <FilterSelectModal
+    :filters="variantFilters"
+    v-model:recents="recentGenotypeFilters"
+    ref="filterSelectModal"
+  />
 </template>
 
 <script setup>
+import { useCohortsStore } from "@/stores/cohorts";
 import { QueryBuilder } from "@metal_brains/query-builder-vue";
 import "@metal_brains/query-builder-vue/dist/style.css";
 
@@ -104,11 +109,14 @@ import {
 import QBDate from "@/components/cohorts/queryBuilder/filterComponents/QBDate.vue";
 import QBInput from "@/components/cohorts/queryBuilder/filterComponents/QBInput.vue";
 import AnnotationSelect from "@/components/genotype/queryBuilder/filterComponents/AnnotationSelect.vue";
+import { storeToRefs } from "pinia";
 
 const standardQuery = defineModel("query");
 const props = defineProps({
   locked: Boolean,
 });
+
+const { recentGenotypeFilters } = storeToRefs(useCohortsStore());
 
 const query = ref(fromStandardQuery(standardQuery.value));
 

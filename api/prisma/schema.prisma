@@ -330,7 +330,7 @@ model lab {
   date           DateTime
   category       String      @db.VarChar(100)
   result         Decimal?
-  unit           String?      @db.VarChar(100)
+  unit           String?     @db.VarChar(100)
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
   // any given study_id and ib_id pair may have multiple labs associated
@@ -810,3 +810,28 @@ enum cds_type {
   incmpl
   cmpl
 }
+
+model icd_code {
+  id          Int             @id
+  code        String
+  name        String
+  domain_id   String
+  class       String
+  system      String
+  ancestors   icd_hierarchy[] @relation("child")
+  descendants icd_hierarchy[] @relation("parent")
+}
+
+model icd_hierarchy {
+  descendant_id Int
+  ancestor_id   Int
+  level         Int
+
+  child    icd_code @relation(fields: [descendant_id], references: [id], name: "child")
+  ancestor icd_code @relation(fields: [ancestor_id], references: [id], name: "parent")
+
+  @@id([descendant_id, ancestor_id, level])
+}
+
+// COPY icd_code (id, name, domain_id, system, class, code) FROM '/opt/sca/scripts/icd10.csv' DELIMITER ',' CSV HEADER;
+// COPY icd_hierarchy FROM '/opt/sca/scripts/icd10_hierarchy.csv' DELIMITER ',' CSV HEADER;
