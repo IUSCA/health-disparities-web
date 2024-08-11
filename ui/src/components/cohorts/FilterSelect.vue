@@ -9,7 +9,7 @@
     <VaCheckbox v-model="expandAll" label="Expand All" class="" />
   </div>
 
-  <div class="my-3 pl-1" v-if="recentFilters.length > 0">
+  <div class="mt-3 mb-1 pl-1" v-if="recentFilters.length > 0">
     <div class="flex justify-between items-center">
       <p class="va-text-secondary">Recent Selections:</p>
       <VaButton

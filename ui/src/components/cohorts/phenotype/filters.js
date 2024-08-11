@@ -84,16 +84,16 @@ export const filters = [
     key: "dx",
     icon: "mdi-stethoscope",
     filters: [
-      {
-        key: "name",
-        type: "select",
-        label: "Name",
-        info: null,
-      },
+      // {
+      //   key: "name",
+      //   type: "select",
+      //   label: "Name",
+      //   info: null,
+      // },
       {
         key: "code",
-        type: "asyncSelect",
-        label: "Code",
+        type: "select",
+        label: "ICD10",
         info: null,
       },
       {
@@ -102,12 +102,12 @@ export const filters = [
         label: "Date",
         info: null,
       },
-      {
-        key: "code_system",
-        type: "select",
-        label: "Code System",
-        info: null,
-      },
+      // {
+      //   key: "code_system",
+      //   type: "select",
+      //   label: "Code System",
+      //   info: null,
+      // },
     ],
   },
   {
@@ -184,16 +184,16 @@ export const filters = [
       },
       {
         key: "dx_code",
-        type: "asyncSelect",
-        label: "DX Code",
-        info: null,
-      },
-      {
-        key: "dx_code_system",
         type: "select",
-        label: "DX Code System",
+        label: "Diagnosis",
         info: null,
       },
+      // {
+      //   key: "dx_code_system",
+      //   type: "select",
+      //   label: "DX Code System",
+      //   info: null,
+      // },
     ],
   },
   {

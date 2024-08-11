@@ -1,10 +1,13 @@
 <template>
-  <div v-if="props.category != null && props.filter != null" class="flex">
-    <span class="text-xs"> {{ props.category.label }} </span>
+  <div
+    v-if="props.category != null && props.filter != null"
+    class="flex items-center"
+  >
+    <span class="text-sm"> {{ props.category.label }} </span>
 
     <i-mdi-chevron-right class="" />
 
-    <span class="">
+    <span class="text-sm">
       {{ props.filter.label }}
     </span>
   </div>

@@ -49,9 +49,13 @@
 
     <template #rule="ruleCtrl">
       <div
-        class="flex flex-wrap items-center gap-2 md:gap-3 text-sm w-[calc(100%-2rem)] max-w-3xl"
+        class="flex flex-nowrap items-start gap-2 md:gap-3 text-sm w-[calc(100%-2rem)] max-w-4xl"
       >
-        <FilterChip :filters="filters" :identifier="ruleCtrl.ruleIdentifier" />
+        <FilterChip
+          :filters="filters"
+          :identifier="ruleCtrl.ruleIdentifier"
+          class="flex-none"
+        />
         <VaSelect
           :model-value="ruleCtrl.connectorValue"
           @update:model-value="(v) => ruleCtrl.updateConnectorValue(v)"
@@ -62,19 +66,21 @@
           size="small"
         >
         </VaSelect>
-        <component
-          v-if="!isUnaryOperator(ruleCtrl.connectorValue)"
-          :is="ruleCtrl.ruleComponent"
-          :identifier="ruleCtrl.ruleIdentifier"
-          :model-value="ruleCtrl.ruleData"
-          :range="ruleCtrl.connectorValue === 'between'"
-          :read-only="props.locked"
-          @update:model-value="
-            (v) => {
-              ruleCtrl.updateRuleData(v);
-            }
-          "
-        />
+        <div class="max-h-32 overflow-y-scroll">
+          <component
+            v-if="!isUnaryOperator(ruleCtrl.connectorValue)"
+            :is="ruleCtrl.ruleComponent"
+            :identifier="ruleCtrl.ruleIdentifier"
+            :model-value="ruleCtrl.ruleData"
+            :range="ruleCtrl.connectorValue === 'between'"
+            :read-only="props.locked"
+            @update:model-value="
+              (v) => {
+                ruleCtrl.updateRuleData(v);
+              }
+            "
+          />
+        </div>
       </div>
     </template>
   </QueryBuilder>
@@ -94,14 +100,13 @@ import {
   isUnaryOperator,
   operators,
 } from "@/components/cohorts/common";
-// import ICDSearch from "@/components/cohorts/phenotype/filterComponents/ICDSearch.vue";
+import ICDSearch from "@/components/cohorts/phenotype/filterComponents/ICDSearch.vue";
 import { filters } from "@/components/cohorts/phenotype/filters";
 import QBDate from "@/components/cohorts/queryBuilder/filterComponents/QBDate.vue";
 import QBInput from "@/components/cohorts/queryBuilder/filterComponents/QBInput.vue";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 import { fromStandardQuery, standardizeQuery } from "../queryBuilder";
-import DxNameSelect from "./filterComponents/DxNameSelect.vue";
 import PhenotypeAsyncSelect from "./filterComponents/PhenotypeAsyncSelect.vue";
 import PhenotypeSelect from "./filterComponents/PhenotypeSelect.vue";
 
@@ -194,11 +199,8 @@ const config = {
 };
 
 function getComponent(field) {
-  // if (["dx.code", "hospital.dx_code"].includes(field.id)) {
-  //   return ICDSearch;
-  // }
-  if (field.id === "dx.name") {
-    return DxNameSelect;
+  if (["dx.code", "hospital.dx_code"].includes(field.id)) {
+    return ICDSearch;
   }
   switch (field.type) {
     case "number":

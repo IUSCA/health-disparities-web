@@ -36,6 +36,12 @@ export const useCohortsStore = defineStore("cohorts", () => {
       cohorts.value.length > 1 && cohortsWithEmptyQueries.value.length === 0
     );
   });
+  const recentPhenotypeFilters = ref(
+    useLocalStorage("cohort.recentPhenotypeFilters", {}),
+  );
+  const recentGenotypeFilters = ref(
+    useLocalStorage("cohort.recentGenotypeFilters", {}),
+  );
 
   function reset() {
     totalParticipants.value = 0;
@@ -96,6 +102,8 @@ export const useCohortsStore = defineStore("cohorts", () => {
     deleteCohort,
     updateCohort,
     updateOperator,
+    recentPhenotypeFilters,
+    recentGenotypeFilters,
   };
 });
 

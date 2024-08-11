@@ -1,6 +1,6 @@
 const { Prisma, PrismaClient } = require('@prisma/client');
 const config = require('config');
-const { SQL_OP_MAP, isUnaryOp } = require('../cohort/participants');
+const { SQL_OP_MAP, isUnaryOp } = require('../cohorts/common');
 const { histogramSQL } = require('../queries');
 
 const prisma = new PrismaClient();

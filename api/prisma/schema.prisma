@@ -811,27 +811,47 @@ enum cds_type {
   cmpl
 }
 
-model icd_code {
-  id          Int             @id
-  code        String
-  name        String
-  domain_id   String
-  class       String
-  system      String
-  ancestors   icd_hierarchy[] @relation("child")
-  descendants icd_hierarchy[] @relation("parent")
+model concept {
+  concept_id         Int                    @id
+  concept_name       String 
+  domain_id          String
+  vocabulary_id      String
+  concept_class_id   String
+  standard_concept   String?
+  concept_code       String
+  valid_start_date   DateTime?
+  valid_end_date     DateTime?
+  invalid_reason     String?
+  concept_synonyms   concept_synonym[]
+  left_relationship  concept_relationship[] @relation("left_relationship")
+  right_relationship concept_relationship[] @relation("right_relationship")
+
+  // @@index([concept_name(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([vocabulary_id])
+  @@index([concept_class_id])
+  @@index([concept_code])
 }
 
-model icd_hierarchy {
-  descendant_id Int
-  ancestor_id   Int
-  level         Int
+model concept_relationship {
+  concept_id_1     Int
+  concept_id_2     Int
+  relationship_id  String
+  valid_start_date DateTime?
+  valid_end_date   DateTime?
+  invalid_reason   String?
+  concept1         concept   @relation(name: "left_relationship", fields: [concept_id_1], references: [concept_id])
+  concept2         concept   @relation(name: "right_relationship", fields: [concept_id_2], references: [concept_id])
 
-  child    icd_code @relation(fields: [descendant_id], references: [id], name: "child")
-  ancestor icd_code @relation(fields: [ancestor_id], references: [id], name: "parent")
-
-  @@id([descendant_id, ancestor_id, level])
+  @@id([concept_id_1, concept_id_2, relationship_id])
 }
 
-// COPY icd_code (id, name, domain_id, system, class, code) FROM '/opt/sca/scripts/icd10.csv' DELIMITER ',' CSV HEADER;
-// COPY icd_hierarchy FROM '/opt/sca/scripts/icd10_hierarchy.csv' DELIMITER ',' CSV HEADER;
+model concept_synonym {
+  concept_id           Int
+  concept_synonym_name String // gin gin_trgm_ops
+  language_concept_id  Int
+  concept              concept @relation(fields: [concept_id], references: [concept_id])
+
+  @@id([concept_id, concept_synonym_name, language_concept_id])
+  // @@index([concept_synonym_name(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([concept_id])
+}

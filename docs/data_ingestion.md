@@ -220,3 +220,10 @@ poetry shell
 python -m workers.variants.ingest_refseq --data_path  /N/project/biobank/annotations/refseq/hg38/ncbiRefSeqCurated.txt --build hg38
 python -m workers.variants.ingest_refseq --data_path  /N/project/biobank/annotations/refseq/hg19/ncbiRefSeqCurated.txt --build hg19
 ```
+
+### OMOP
+```sql
+COPY concept FROM '/opt/sca/scripts/concept_icd10_snomed.csv' DELIMITER ',' CSV HEADER;
+COPY concept_relationship FROM '/opt/sca/scripts/concept_relationship_icd10_snomed.csv' DELIMITER ',' CSV HEADER;
+COPY concept_synonym FROM '/opt/sca/scripts/concept_synonym_snomed_english.csv' DELIMITER ',' CSV HEADER;
+```
