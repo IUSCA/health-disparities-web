@@ -6,7 +6,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 // const { accessControl } = require('../middleware/auth');
 const { validate } = require('../middleware/validators');
 const icd10Service = require('../services/icd10');
-const esClient = require('../elasticsearch');
+// const esClient = require('../elasticsearch');
 
 // const isPermittedTo = accessControl('cohort');
 const router = express.Router();
@@ -212,68 +212,68 @@ router.get('/search/tree2', asyncHandler(async (req, res, next) => {
   });
 }));
 
-router.get('/search/tree2/elasticsearch', asyncHandler(async (req, res, next) => {
-  const { keyword } = req.query;
-  if (!keyword) {
-    return res.json([]);
-  }
-  const esResult = await esClient.search({
-    index: 'concepts',
-    body: {
-      query: {
-        match: {
-          name: {
-            query: keyword,
-            fuzziness: 'AUTO',
-          },
-        },
-      },
-      size: 25, // Set the size to a large number to retrieve all matches
-      // min_score: 5.0,
-    },
-  });
+// router.get('/search/tree2/elasticsearch', asyncHandler(async (req, res, next) => {
+//   const { keyword } = req.query;
+//   if (!keyword) {
+//     return res.json([]);
+//   }
+//   const esResult = await esClient.search({
+//     index: 'concepts',
+//     body: {
+//       query: {
+//         match: {
+//           name: {
+//             query: keyword,
+//             fuzziness: 'AUTO',
+//           },
+//         },
+//       },
+//       size: 25, // Set the size to a large number to retrieve all matches
+//       // min_score: 5.0,
+//     },
+//   });
 
-  const searchResults = esResult.hits.hits
-    .map((hit) => ({ id: hit._source.id, score: hit._score }));
+//   const searchResults = esResult.hits.hits
+//     .map((hit) => ({ id: hit._source.id, score: hit._score }));
 
-  if (searchResults.length === 0) {
-    return res.json([]);
-  }
+//   if (searchResults.length === 0) {
+//     return res.json([]);
+//   }
 
-  const ids = searchResults.map((hit) => hit.id); // [45562342, 45594900, 45563241, 45541583];
-  // [13.910966, 10.795364, 8.769578, 7.589265];
-  const scores = searchResults.map((hit) => hit.score);
+//   const ids = searchResults.map((hit) => hit.id); // [45562342, 45594900, 45563241, 45541583];
+//   // [13.910966, 10.795364, 8.769578, 7.589265];
+//   const scores = searchResults.map((hit) => hit.score);
 
-  const ids_sql = Prisma.sql`ARRAY[${Prisma.join(ids, ', ')}]::int[]`;
-  const scores_sql = Prisma.sql`ARRAY[${Prisma.join(scores, ', ')}]::float[]`;
+//   const ids_sql = Prisma.sql`ARRAY[${Prisma.join(ids, ', ')}]::int[]`;
+//   const scores_sql = Prisma.sql`ARRAY[${Prisma.join(scores, ', ')}]::float[]`;
 
-  // where concept_class_id in ('ICD10 Hierarchy', 'ICD10 code')
-  const sql = Prisma.sql`
-    with matches as (
-      select unnest(${ids_sql}::int[]) as id, unnest(${scores_sql}::float[]) as score
-    ),
-    matches_and_parents as (
-      select distinct cast(unnest(string_to_array(ltree2text(path), '.')) as integer) as id
-      from concept c
-      join concept_metadata cm on cm.id = c.concept_id
-      join matches m on m.id = c.concept_id
-      where vocabulary_id = 'ICD10' 
-      and concept_class_id in ('ICD10 Hierarchy', 'ICD10 code')
-    )
-    select c.*, cm.path, m.score 
-    from concept c
-    join matches_and_parents sr on c.concept_id = sr.id
-    join concept_metadata cm on cm.id = c.concept_id
-    left join matches m on m.id = c.concept_id
-    where concept_class_id in ('ICD10 Hierarchy', 'ICD10 code')
-    order by score desc nulls last
-  `;
-  const rows = await prisma.$queryRaw(sql);
-  res.json({
-    matches: rows,
-    match_type: 'strict',
-  });
-}));
+//   // where concept_class_id in ('ICD10 Hierarchy', 'ICD10 code')
+//   const sql = Prisma.sql`
+//     with matches as (
+//       select unnest(${ids_sql}::int[]) as id, unnest(${scores_sql}::float[]) as score
+//     ),
+//     matches_and_parents as (
+//       select distinct cast(unnest(string_to_array(ltree2text(path), '.')) as integer) as id
+//       from concept c
+//       join concept_metadata cm on cm.id = c.concept_id
+//       join matches m on m.id = c.concept_id
+//       where vocabulary_id = 'ICD10'
+//       and concept_class_id in ('ICD10 Hierarchy', 'ICD10 code')
+//     )
+//     select c.*, cm.path, m.score
+//     from concept c
+//     join matches_and_parents sr on c.concept_id = sr.id
+//     join concept_metadata cm on cm.id = c.concept_id
+//     left join matches m on m.id = c.concept_id
+//     where concept_class_id in ('ICD10 Hierarchy', 'ICD10 code')
+//     order by score desc nulls last
+//   `;
+//   const rows = await prisma.$queryRaw(sql);
+//   res.json({
+//     matches: rows,
+//     match_type: 'strict',
+//   });
+// }));
 
 router.get('/descendants/:code', asyncHandler(async (req, res) => {
   // #swagger.tags = ['icd10']

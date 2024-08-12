@@ -20,11 +20,16 @@
       />
     </div>
 
+    <div class="text-base my-1 flex justify-end">
+      <span>
+        Selected Codes:
+        <span class="font-semibold"> {{ selectedNodes.length }} </span>
+      </span>
+    </div>
+
     <VaInnerLoading :loading="loading">
-      <div class="flex mt-5">
-        <div
-          class="w-9/12 overflow-scroll md:border-r md:border-solid md:border-gray-500 md:pr-3"
-        >
+      <div class="3">
+        <div class="overflow-scroll">
           <!-- hack to keep the tree expanded - assign a new unique value to key to force re-render the component -->
           <VaTreeView
             v-model:checked="selectedNodes"
@@ -69,19 +74,6 @@
               </div>
             </template>
           </VaTreeView>
-        </div>
-        <div class="w-3/12 pl-3">
-          <div class="text-base">
-            Selected Codes:
-            <span class="font-semibold"> {{ selectedNodes.length }} </span>
-          </div>
-
-          <ul class="min-h-[400px] max-h-[calc(100vh-14rem)] overflow-scroll">
-            <li v-for="node in selectedNodes.sort()" :key="node">
-              <!-- <div>{{ node.concept_code }} - {{ node.concept_name }}</div> -->
-              <span>{{ node }}</span>
-            </li>
-          </ul>
         </div>
       </div>
     </VaInnerLoading>

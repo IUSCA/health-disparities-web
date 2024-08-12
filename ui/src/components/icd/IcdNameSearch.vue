@@ -1,7 +1,7 @@
 <template>
   <div class="h-screen">
-    <div class="mb-5">
-      <div class="flex mb-3 gap-3">
+    <div class="mb-1">
+      <div class="flex mb-3 gap-3 items-center">
         <!-- search bar -->
         <div class="flex-1">
           <va-input
@@ -28,9 +28,10 @@
       </div>
 
       <!-- Synonyms -->
-      <div class="my-5 flex flex-nowrap items-center" v-if="showSynonyms">
+      <div class="flex flex-wrap items-start" v-if="showSynonyms">
         <span class="font-semibold flex-none mr-3">Similar Terms:</span>
         <IcdSynonyms
+          class="flex-1"
           :keyword="lastSearchKeyword"
           @search="
             (keyword) => {
@@ -44,97 +45,90 @@
 
     <!-- tree and selections -->
     <VaInnerLoading :loading="loading">
-      <div class="mb-5" v-if="fallback && !noResultsFound">
+      <div class="my-3" v-if="fallback && !noResultsFound">
         <VaAlert color="info" icon="info">
           The search query did not return any results. Displaying results that
           match any of the keywords.
         </VaAlert>
       </div>
-      <div v-if="noResultsFound">
+      <div class="my-3" v-if="noResultsFound">
         <VaAlert title="No results found" color="warning" icon="warning">
           Please refine your search to get more accurate results.
         </VaAlert>
       </div>
-      <div class="flex" v-else>
-        <div
-          class="w-9/12 overflow-scroll md:border-r md:border-solid md:border-gray-500 md:pr-3"
-        >
-          <!-- checkboxes -->
-          <div class="flex gap-3 my-1">
-            <VaCheckbox v-model="expandAll" label="Expland All" class="" />
-            <VaCheckbox
-              v-model="highlightKeyword"
-              label="Highlight Search Keyword"
-              class=""
-            />
-            <VaCheckbox
-              v-model="selectAll"
-              label="Select All Matches"
-              class=""
-            />
+      <div class="my-3 overflow-scroll" v-else>
+        <!-- checkboxes -->
+        <div class="flex gap-3 my-1 pl-1" v-if="nodes.length > 0">
+          <VaCheckbox
+            v-model="expandAll"
+            label="Expland All"
+            class="flex-none"
+          />
+          <VaCheckbox
+            v-model="highlightKeyword"
+            label="Highlight Search Keyword"
+            class="flex-none"
+          />
+          <VaCheckbox
+            v-model="selectAll"
+            label="Select All"
+            class="flex-none"
+          />
+
+          <!-- selected count -->
+          <div class="ml-auto flex-none">
+            <span class="text-base ml-auto">
+              Selected Codes:
+              <span class="font-semibold"> {{ selectedNodes.length }} </span>
+            </span>
           </div>
-          <VaTreeView
-            v-model:checked="selectedNodes"
-            :nodes="nodes"
-            selectable
-            trackBy="concept_id"
-            :valueBy="(x) => x.concept_code"
-            :expand-all="expandAll"
-            :key="expandAll"
-            class="whitespace-nowrap"
-          >
-            <!-- :color="stringToRGB('12345' + node.concept_code[0] + '678910')" -->
-            <template #content="node">
-              <div class="flex">
-                <div class="flex-none flex items-center">
-                  <span class="font-semibold mr-2">{{
-                    node.concept_code
-                  }}</span>
+        </div>
+        <VaTreeView
+          v-model:checked="selectedNodes"
+          :nodes="nodes"
+          selectable
+          trackBy="concept_id"
+          :valueBy="(x) => x.concept_code"
+          :expand-all="expandAll"
+          :key="expandAll"
+          class="whitespace-nowrap"
+        >
+          <!-- :color="stringToRGB('12345' + node.concept_code[0] + '678910')" -->
+          <template #content="node">
+            <div class="flex">
+              <div class="flex-none flex items-center">
+                <span class="font-semibold mr-2">{{ node.concept_code }}</span>
 
-                  <!-- concept name -->
-                  <HighlightText
-                    v-if="highlightKeyword"
-                    :content="node.concept_name"
-                    :keyword="lastSearchKeyword"
+                <!-- concept name -->
+                <HighlightText
+                  v-if="highlightKeyword"
+                  :content="node.concept_name"
+                  :keyword="lastSearchKeyword"
+                />
+                <span v-else> {{ node.concept_name }} </span>
+
+                <!-- domain id icon -->
+                <div
+                  v-if="node.domain_id"
+                  :title="`Domain: ${node.domain_id}`"
+                  class="ml-1"
+                >
+                  <Icon
+                    :icon="`mdi-alphabet-${node.domain_id.toLowerCase()[0]}-circle-outline`"
                   />
-                  <span v-else> {{ node.concept_name }} </span>
+                </div>
 
-                  <!-- domain id icon -->
-                  <div
-                    v-if="node.domain_id"
-                    :title="`Domain: ${node.domain_id}`"
-                    class="ml-1"
-                  >
-                    <Icon
-                      :icon="`mdi-alphabet-${node.domain_id.toLowerCase()[0]}-circle-outline`"
-                    />
-                  </div>
-
-                  <!-- is match icon -->
-                  <div class="ml-1" title="Better Match">
-                    <i-mdi:alphabet-m-box-outline
-                      v-if="node.is_a_search_result"
-                      class="text-[var(--va-success)]"
-                    />
-                  </div>
+                <!-- is match icon -->
+                <div class="ml-1" title="Better Match">
+                  <i-mdi:alphabet-m-box-outline
+                    v-if="node.is_a_search_result"
+                    class="text-[var(--va-success)]"
+                  />
                 </div>
               </div>
-            </template>
-          </VaTreeView>
-        </div>
-        <div class="w-3/12 pl-3">
-          <div class="text-base">
-            Selected Codes:
-            <span class="font-semibold"> {{ selectedNodes.length }} </span>
-          </div>
-
-          <ul class="min-h-[400px] max-h-[calc(100vh-14rem)] overflow-scroll">
-            <li v-for="node in selectedNodes.sort()" :key="node">
-              <!-- <div>{{ node.concept_code }} - {{ node.concept_name }}</div> -->
-              <span>{{ node }}</span>
-            </li>
-          </ul>
-        </div>
+            </div>
+          </template>
+        </VaTreeView>
       </div>
     </VaInnerLoading>
   </div>
