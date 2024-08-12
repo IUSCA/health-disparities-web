@@ -96,13 +96,19 @@ const { isValid, validate } = useForm("formRef");
 // watch([() => props.cohort.is_locked], () => {
 //   data.value.is_locked = props.cohort.is_locked;
 // });
-watch([() => props.cohort.suggested_name], (sg_name) => {
-  if (sg_name)
-    data.value.name = props.cohort.isNew() ? sg_name : props.cohort.name;
-});
-watch([() => props.cohort.suggested_description], () => {
-  data.value.description = props.cohort.suggested_description;
-});
+watch(
+  () => props.cohort.suggested_name,
+  (sg_name) => {
+    if (sg_name)
+      data.value.name = props.cohort.isNew() ? sg_name : props.cohort.name;
+  },
+);
+watch(
+  () => props.cohort.suggested_description,
+  () => {
+    data.value.description = props.cohort.suggested_description;
+  },
+);
 
 // is_locked should be true if is_published is true and cannot be changed
 // when is_published is false, is_locked can be toggled
