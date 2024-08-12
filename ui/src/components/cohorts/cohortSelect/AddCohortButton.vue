@@ -1,5 +1,5 @@
 <template>
-  <div v-if="cohorts.length > 0">
+  <div>
     <VaDropdown :offset="[0, 40]">
       <template #anchor>
         <va-button
@@ -48,54 +48,6 @@
         </div>
       </VaDropdownContent>
     </VaDropdown>
-  </div>
-  <div v-else>
-    <div class="flex flex-wrap gap-3 md:gap-5 items-center justify-center">
-      <!-- new cohort button -->
-      <VaDropdown :offset="[0, 40]">
-        <template #anchor>
-          <va-button icon="add" class="" size="large"> New Cohort </va-button>
-        </template>
-        <VaDropdownContent>
-          <div class="flex flex-col gap-1 py-1 items-start">
-            <!-- new phenotype cohort button -->
-            <va-button
-              @click="addNewPTCohort"
-              preset="secondary"
-              icon="group_add"
-              class="cohort-select-buttons w-full"
-            >
-              New Cohort (Phenotypes)
-            </va-button>
-
-            <!-- new genotype cohort button -->
-            <va-button
-              @click="addNewGTCohort"
-              preset="secondary"
-              icon="group_add"
-              class="cohort-select-buttons w-full"
-            >
-              New Cohort (Genotypes)
-            </va-button>
-          </div>
-        </VaDropdownContent>
-      </VaDropdown>
-
-      <!-- Search for cohort -->
-      <!-- opens the CohortSearchModal -->
-      <!-- which emits select event when user clicks on cohort from search resutls -->
-      <!-- addCohort is the handler -->
-      <va-button
-        preset="primary"
-        icon="search"
-        class=""
-        size="large"
-        border-color="primary"
-        @click="() => cohortSearchModal.show()"
-      >
-        Search Cohorts
-      </va-button>
-    </div>
   </div>
   <CohortSearchModal ref="cohortSearchModal" @select="addCohort" />
 </template>
