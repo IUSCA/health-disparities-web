@@ -2,8 +2,49 @@
   <!-- AI checkboxes -->
   <CohortAICheckboxes />
 
-  <div v-if="cohorts.length === 0">
-    <CohortBuilderLanding />
+  <div v-if="cohorts.length === 0" class="mt-5">
+    <div>
+      <div>
+        <h2 class="text-3xl font-bold text-center mb-4">
+          Welcome to Cohort Builder!
+        </h2>
+        <p class="text-lg text-center mb-4 md:mb-6">
+          Streamline your cohort creation process with ease.
+        </p>
+      </div>
+      <div class="flex justify-center gap-5">
+        <!-- new phenotype cohort button -->
+        <va-button
+          @click="addNewPTCohort"
+          preset="primary"
+          icon="add"
+          class="flex-none"
+          color="primary"
+          size="large"
+          border-color="primary"
+        >
+          New Phenotype Cohort
+        </va-button>
+
+        <!-- new genotype cohort button -->
+        <va-button
+          @click="addNewGTCohort"
+          preset="primary"
+          icon="add"
+          class="flex-none"
+          color="primary"
+          size="large"
+          border-color="primary"
+        >
+          New Genotype Cohort
+        </va-button>
+      </div>
+    </div>
+    <VaCard class="mt-5">
+      <VaCardContent>
+        <CohortSearch @select="addCohort" />
+      </VaCardContent>
+    </VaCard>
   </div>
   <div v-else>
     <!-- Cohort Selector -->
@@ -58,6 +99,7 @@ import { DEFAULT_LOGICAL_OPERATOR } from "@/components/cohorts/combination/const
 import {
   CombinationCohort,
   createCohort,
+  GenotypeCohort,
   PhenotypeCohort,
 } from "@/components/cohorts/models";
 import cohortService from "@/services/cohorts";
@@ -202,6 +244,33 @@ function handleUserMessage(text) {
       chat.value.addBotMessage("Unable to generate cohort. Please try again.");
     });
 }
+
+function addCohort(cohort_data) {
+  // add an existing cohort - dirty: false
+  cohortsStore.appendCohort(
+    createCohort(cohort_data),
+    DEFAULT_LOGICAL_OPERATOR,
+  );
+}
+function addNewPTCohort() {
+  // add an empty phenotype cohort - dirty: true
+  cohortsStore.appendCohort(
+    new PhenotypeCohort({
+      size: totalParticipants.value,
+    }),
+    DEFAULT_LOGICAL_OPERATOR,
+  );
+}
+
+function addNewGTCohort() {
+  // add an empty phenotype cohort - dirty: true
+  cohortsStore.appendCohort(
+    new GenotypeCohort({
+      size: totalParticipants.value,
+    }),
+    DEFAULT_LOGICAL_OPERATOR,
+  );
+}
 </script>
 
 <route lang="yaml">
@@ -213,5 +282,13 @@ meta:
 <style scoped lang="scss">
 .cohort-card {
   --va-card-padding: 0.75rem;
+}
+
+/* image is from 
+https://freeillustrations.xyz/illustration/technology-illustrations/ and 
+https://www.reshot.com/free-vector-illustrations/item/robot-scientist-N8RWCS437D/ 
+*/
+.illustration-bg {
+  background-image: url("/illustration.svg");
 }
 </style>
