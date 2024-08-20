@@ -93,7 +93,7 @@ export const filters = [
       {
         key: "code",
         type: "select",
-        label: "ICD10",
+        label: "Name / Code",
         info: null,
       },
       {
