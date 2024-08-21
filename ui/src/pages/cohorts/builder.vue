@@ -81,10 +81,6 @@ const lastUpdated = ref(Date.now());
 const numCohorts = computed(() => cohorts.value.length);
 
 onMounted(() => {
-  if (numCohorts.value === 0) {
-    router.replace("/cohorts");
-  }
-
   participantsService.getTotalCount().then((res) => {
     totalParticipants.value = res.data.total;
   });
@@ -92,7 +88,15 @@ onMounted(() => {
   // check if the route has a query parameter id
   // if it does, load the cohort
   if (route.query.id) {
-    loadCohort(route.query.id);
+    loadCohort(route.query.id).finally(() => {
+      if (numCohorts.value === 0) {
+        router.replace("/cohorts");
+      }
+    });
+  } else {
+    if (numCohorts.value === 0) {
+      router.replace("/cohorts");
+    }
   }
 });
 
@@ -178,7 +182,7 @@ function handleAfterSearch(idx, err) {
 // load the cohort from the server and update store
 // if it is a combination cohort, load the cohorts that are part of the combination
 function loadCohort(id) {
-  cohortService.getById(id).then((res) => {
+  return cohortService.getById(id).then((res) => {
     const cohort = createCohort(res.data);
     if (cohort instanceof CombinationCohort) {
       combinationCohort.value = cohort;
@@ -191,7 +195,7 @@ function loadCohort(id) {
       });
       // wait for all the cohorts to be loaded
       // set the cohorts ref in store
-      Promise.all(promises).then((operand_cohorts) => {
+      return Promise.all(promises).then((operand_cohorts) => {
         cohorts.value = operand_cohorts;
       });
     } else {

@@ -58,7 +58,8 @@ function handleEdit() {
     message: "Opens in a new tab. Do you want to continue?",
     okText: "Edit in a new tab",
   }).then((ok) => {
-    ok && window.open(`/cohorts?edit=true&id=${cohort.value.id}`, "_blank");
+    ok &&
+      window.open(`/cohorts/builder?edit=true&id=${cohort.value.id}`, "_blank");
   });
 }
 </script>
