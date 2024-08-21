@@ -46,6 +46,11 @@ export const useCohortsStore = defineStore("cohorts", () => {
   function reset() {
     totalParticipants.value = 0;
     cohorts.value = [];
+    combinationCohort.value = new CombinationCohort({
+      is_dirty: true,
+      name: "Combined Cohort",
+      id: `${CombinationCohort.ID_PREFIX}0`,
+    });
   }
 
   function appendCohort(cohort, op = null) {
