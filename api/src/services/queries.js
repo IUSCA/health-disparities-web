@@ -21,6 +21,42 @@ function histogramSQL(_table, _column, _num_bins) {
   return sql;
 }
 
+function histogramSQL2(_table, _column, _bin_width) {
+  const table = Prisma.raw(_table);
+  const column = Prisma.raw(_column);
+  const bin_width = Prisma.raw(_bin_width);
+
+  const sql = Prisma.sql`select
+    width_bucket(${column}, min_value, max_value, num_bins) AS bin_number,
+    min_value + (
+      width_bucket(${column}, min_value, max_value, num_bins) - 1
+    ) * ${bin_width} AS bin_start,
+    min_value + (
+      width_bucket(${column}, min_value, max_value, num_bins)
+    ) * ${bin_width} as bin_end,
+    count(*) :: int AS bin_count
+  from
+    ${table},
+    (
+      select
+        floor(min(${column}) / ${bin_width}) * ${bin_width} as min_value,
+        ceil(max(${column}) / ${bin_width}) * ${bin_width} as max_value,
+        ceil(
+          (ceil(max(${column}) / ${bin_width}) * ${bin_width} - floor(min(${column}) / ${bin_width}) * ${bin_width}) / ${bin_width}
+        ) :: int AS num_bins
+      from
+        ${table}
+    ) as range_values
+  group by
+    bin_number,
+    bin_start,
+    bin_end
+  order by
+    bin_number;
+  `;
+  return sql;
+}
+
 // alternative implementation
 // the range is derived from the data in that bucket itself
 // this fails when there are empty buckets
@@ -113,4 +149,5 @@ module.exports = {
   aggregateDateByYearSQL,
   aggregateDateByYearsSQL,
   dateRangeSQL,
+  histogramSQL2,
 };

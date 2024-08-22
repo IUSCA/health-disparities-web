@@ -1,6 +1,6 @@
 const { Prisma, PrismaClient } = require('@prisma/client');
 const {
-  histogramSQL,
+  histogramSQL2,
   dateRangeSQL,
   aggregateDateByMonthYearSQL,
   aggregateDateByYearSQL,
@@ -9,7 +9,7 @@ const {
 
 const prisma = new PrismaClient();
 
-function ageHistogramSQL(cohort_id, num_bins) {
+function ageHistogramSQL(cohort_id, bin_width) {
   return Prisma.sql`
     with data as (
       select extract(year from age(dob)) as age from demographic d
@@ -19,7 +19,7 @@ function ageHistogramSQL(cohort_id, num_bins) {
         WHERE id = CAST(${cohort_id} AS UUID)
       ) c ON d.participant_id = ANY(c.participants)
     )
-    ${histogramSQL('data', 'age', num_bins)}
+    ${histogramSQL2('data', 'age', bin_width)}
   `;
 }
 

@@ -6,7 +6,7 @@ const asyncHandler = require('../../middleware/asyncHandler');
 const { accessControl } = require('../../middleware/auth');
 const { validate } = require('../../middleware/validators');
 const {
-  histogramSQL,
+  histogramSQL2,
 } = require('../../services/queries');
 const { CATEGORIES } = require('../../services/cohorts/phenotype/fields');
 
@@ -187,7 +187,7 @@ router.get(
           ${sql}
         )
       )
-      ${histogramSQL('data', 'age', req.query.bins)}
+      ${histogramSQL2('data', 'age', req.query.bins)}
     `;
 
     // client side cache indefinitely - 1 year
