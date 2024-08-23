@@ -36,9 +36,10 @@ class Cohort {
 
     let uniqueId = null;
     if (!id || !name) {
+      // generate one unique id for both id and name
       uniqueId = _.uniqueId();
     }
-    this.id = id || this.constructor.uniqueId();
+    this.id = id || this.constructor.uniqueId(uniqueId);
     this.name = name || `${this.constructor.NAME_PREFIX}${uniqueId}`;
     this.description = description || "";
     this.created_at = created_at;
@@ -73,7 +74,10 @@ class Cohort {
     });
   }
 
-  static uniqueId() {
+  static uniqueId(id) {
+    if (id) {
+      return `${this.ID_PREFIX}${id}`;
+    }
     return _.uniqueId(this.ID_PREFIX);
   }
 
