@@ -22,12 +22,15 @@
       <span class="uppercase text-sm">{{ rowData?.query?.name }}</span>
     </template> -->
 
-        <template #cell(created_at)="{ value }">
+        <template #cell(updated_at)="{ value }">
           <span>{{ datetime.date(value) }}</span>
         </template>
 
-        <template #cell(updated_at)="{ value }">
-          <span>{{ datetime.date(value) }}</span>
+        <template #cell(author_username)="{ rowData }">
+          <UserAvatar
+            :username="rowData.author_username"
+            :name="rowData.author_name"
+          />
         </template>
 
         <template #cell(status)="{ rowData }">
@@ -101,6 +104,12 @@ const columns = [
   //   width: "100px",
   // },
   {
+    key: "author_username",
+    label: "Author",
+    sortable: true,
+    width: "100px",
+  },
+  {
     key: "size",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
@@ -109,15 +118,8 @@ const columns = [
     tdAlign: "center",
   },
   {
-    key: "created_at",
-    label: "Created on",
-    sortable: true,
-    sortingOptions: ["desc", "asc", null],
-    width: "100px",
-  },
-  {
     key: "updated_at",
-    label: "Updated on",
+    label: "Last Updated",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
     width: "100px",
