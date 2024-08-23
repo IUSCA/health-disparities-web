@@ -135,11 +135,12 @@ function search() {
     });
 }
 
-// getter source with deep watch does not provice old value
+// getter source ()=>cohort.value.query with deep watch does not provice old value
 // but returning the shallow copy somehow does
 watchDebounced(
   () => ({ ...cohort.value.query }),
   (newQuery, oldQuery) => {
+    if (oldQuery == null) return; // ignore the initial call -- when cohort is added to the store
     if (cohort.value.isEmpty(newQuery)) {
       cohort.value.size = totalParticipants.value;
       if (!cohort.value.isEmpty(oldQuery)) {

@@ -77,7 +77,11 @@ const {
 } = storeToRefs(cohortsStore);
 
 const globalLoading = ref(false);
-const lastUpdated = ref(Date.now());
+const lastUpdated = ref(Date.now()); // used to send a signal to the CohortData component to update itself
+// when is lastUpdated set?
+// initially set to Date.now() in the setup
+// when a cohort has performed a search and the participants have been updated - afterSearch
+// when a cohort has been added or removed or operator has been changed and the combinationCohort has performed a search - watch([numCohorts, operators])
 const numCohorts = computed(() => cohorts.value.length);
 
 onMounted(() => {
@@ -129,30 +133,37 @@ function checkAndCombine() {
     // if some cohort_ids are null, exit early
     if (cohort_ids.some((id) => !id)) {
       console.log("some cohort_ids are null exit early", cohort_ids);
-      return Promise.resolve();
+      return Promise.resolve(false);
     }
     combinationCohort.value.query.cohort_ids = cohort_ids;
     globalLoading.value = true;
-    return combinationCohort.value.searchParticipants().catch((err) => {
-      console.error(err);
-    });
+    return combinationCohort.value
+      .searchParticipants()
+      .then(() => true)
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        globalLoading.value = false;
+      });
   }
-  return Promise.resolve();
+  return Promise.resolve(false);
 }
 // todo: deduplicate the calls to checkAndCombine from
 // possible "collision" of afterSearch and watch([numCohorts, operators])
 
 watch(
   [numCohorts, operators],
-  () => {
-    checkAndCombine().finally(() => {
-      globalLoading.value = false;
-      lastUpdated.value = Date.now();
+  (newVals, oldVals) => {
+    if (oldVals[0] === 0) return; // ignore initial call -- when old numCohorts is 0
+    checkAndCombine().then((searchPerformed) => {
+      if (searchPerformed) lastUpdated.value = Date.now();
     });
   },
   { deep: true },
 );
 
+// if all cohorts are removed, redirect to /cohorts
 watch(numCohorts, (value) => {
   if (value === 0) {
     router.replace("/cohorts");
@@ -171,7 +182,9 @@ function handleAfterSearch(idx, err) {
   if (err) {
     globalLoading.value = false;
   } else {
-    globalLoading.value = true;
+    // if the search is successful
+    // if not in combination mode - update the lastUpdated
+    // else, do a combine search and then update the lastUpdated
     checkAndCombine().finally(() => {
       globalLoading.value = false;
       lastUpdated.value = Date.now();
