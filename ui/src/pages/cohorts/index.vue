@@ -52,6 +52,7 @@ import {
   GenotypeCohort,
   PhenotypeCohort,
 } from "@/components/cohorts/models";
+import participantsService from "@/services/participants";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
@@ -93,6 +94,12 @@ function addNewGTCohort() {
 
   router.push("/cohorts/builder");
 }
+
+onMounted(() => {
+  participantsService.getTotalCount().then((res) => {
+    totalParticipants.value = res.data.total;
+  });
+});
 </script>
 
 <route lang="yaml">
