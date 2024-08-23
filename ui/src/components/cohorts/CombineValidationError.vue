@@ -11,7 +11,19 @@
         </p>
         <p class="mt-2">Here are the empty cohorts:</p>
         <ul class="list-disc ml-5">
-          <li v-for="c in cohortsWithEmptyQueries" :key="c.id">{{ c.name }}</li>
+          <li v-for="c in cohortsWithEmptyQueries" :key="c.id">
+            <div class="flex gap-1 items-center my-1">
+              <span> {{ c.name }} </span>
+              <VaButton
+                preset="secondary"
+                size="small"
+                icon="close"
+                color="danger"
+                @click="emit('remove', c.id)"
+                title="Remove cohort"
+              ></VaButton>
+            </div>
+          </li>
         </ul>
       </div>
     </VaAlert>
@@ -29,6 +41,8 @@
 const props = defineProps({
   cohorts: Array,
 });
+
+const emit = defineEmits(["remove"]);
 
 const cohortsWithEmptyQueries = computed(() => {
   return props.cohorts.filter((c) => c.isEmpty());

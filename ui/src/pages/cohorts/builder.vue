@@ -10,7 +10,7 @@
       </div>
 
       <div class="mb-5">
-        <CombineValidationError :cohorts="cohorts" />
+        <CombineValidationError :cohorts="cohorts" @remove="handleRemove" />
       </div>
 
       <!-- Cohorts -->
@@ -231,6 +231,11 @@ function handleUserMessage(text) {
       console.error(err);
       chat.value.addBotMessage("Unable to generate cohort. Please try again.");
     });
+}
+
+function handleRemove(id) {
+  const idx = cohorts.value.findIndex((c) => c.id === id);
+  cohortsStore.deleteCohort(idx);
 }
 </script>
 
