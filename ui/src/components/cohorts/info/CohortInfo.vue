@@ -10,7 +10,7 @@
         />
       </div> -->
       <div
-        class="text-lg leading-5 whitespace-nowrap overflow-clip overflow-ellipsis"
+        class="text-lg leading-5 w-10/12 whitespace-nowrap overflow-clip overflow-ellipsis"
       >
         {{
           (props.cohort.isNew()
