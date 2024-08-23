@@ -5,12 +5,21 @@
       @reset="reset"
       class="mb-3 w-full"
     />
-    <CohortTable :params="params" @select="(x) => emit('select', x)" />
+    <CohortTable
+      :params="params"
+      @select="(x) => emit('select', x)"
+      :selected="cohort_ids"
+    />
   </div>
 </template>
 
 <script setup>
+import { useCohortsStore } from "@/stores/cohorts";
+import { storeToRefs } from "pinia";
 // const props = defineProps({});
+
+const { cohorts } = storeToRefs(useCohortsStore());
+const cohort_ids = computed(() => cohorts.value.map((c) => c.id));
 
 const emit = defineEmits(["select"]);
 

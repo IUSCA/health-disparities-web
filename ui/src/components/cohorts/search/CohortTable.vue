@@ -16,6 +16,7 @@
         :loading="data_loading"
         disableClientSideSorting
         @row:click="onClick"
+        :row-bind="getRowBind"
       >
         <!-- <template #cell(type)="{ rowData }">
       <span class="uppercase text-sm">{{ rowData?.query?.name }}</span>
@@ -76,6 +77,10 @@ import { useColors } from "vuestic-ui/web-components";
 
 const props = defineProps({
   params: Object, // search params
+  selected: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(["select"]);
@@ -177,6 +182,10 @@ watch(
 
 function onClick(event) {
   const row = event.item;
+  // do not select if already selected
+  if (props.selected.includes(row.id)) {
+    return;
+  }
   emit("select", row);
 }
 
@@ -190,4 +199,17 @@ function onScrollToEnd() {
     cohorts.value = cohorts.value.concat(data || []);
   });
 }
+
+function getRowBind(row) {
+  if (props.selected.includes(row.id)) {
+    return { class: ["disabled-row"] };
+  }
+}
 </script>
+
+<style scoped lang="scss">
+:deep(.disabled-row) {
+  background-color: var(--va-muted);
+  cursor: not-allowed !important;
+}
+</style>
