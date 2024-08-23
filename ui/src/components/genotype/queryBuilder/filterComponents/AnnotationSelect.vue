@@ -1,8 +1,14 @@
+<!-- 
+  Make any changes made to this component to PhenotypeSelect.vue as well
+-->
 <template>
   <div class="flex-grow">
     <VaSelect
       v-model="model"
       :options="options"
+      text-by="name"
+      value-by="name"
+      track-by="name"
       class="text-sm cohort-builder-select w-full"
       multiple
       :loading="loading"
@@ -12,6 +18,13 @@
       :highlight-matched-text="false"
       :teleport="teleportOptions"
     >
+      <template #option-content="{ option }">
+        <span>
+          <!-- fallback to "string" model when the possible options haven't been fetched -->
+          {{ option.name || option }}
+          <span class="select-option-count"> ({{ option.count }}) </span>
+        </span>
+      </template>
     </VaSelect>
     <div ref="teleportOptions" class="custom-options"></div>
   </div>
@@ -49,7 +62,10 @@ watch(
         ranges: ranges.value,
       })
       .then((res) => {
-        options.value = Object.keys(res.data);
+        options.value = Object.entries(res.data).map(([name, count]) => ({
+          name,
+          count,
+        }));
       })
       .finally(() => {
         loading.value = false;
@@ -73,5 +89,10 @@ watch(
     min-height: 1.75rem;
     flex: none;
   }
+}
+
+// hide the count in the select input because using option-content slot shows the count in both the dropdown and the input
+:deep(.va-input-wrapper__text .select-option-count) {
+  display: none;
 }
 </style>
