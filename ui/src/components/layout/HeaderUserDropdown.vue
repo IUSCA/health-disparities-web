@@ -2,7 +2,7 @@
   <va-dropdown>
     <template #anchor>
       <div class="flex items-center gap-2">
-        <UserAvatar :username="auth.user.name" :name="auth.user.name" />
+        <UserAvatar :username="auth.user.username" :name="auth.user.name" />
         <span class="hidden md:inline"> {{ auth.user.username }} </span>
       </div>
     </template>
