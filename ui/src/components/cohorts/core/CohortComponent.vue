@@ -3,7 +3,7 @@
     <div class="flex flex-col md:flex-row gap-3">
       <!-- Info, Actions, History -->
       <div
-        class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px]"
+        class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 max-w-[350px]"
       >
         <CohortInfo :cohort="cohort" :total-count="totalParticipants" />
         <div class="mt-3">
@@ -23,7 +23,7 @@
       <va-divider class="md:hidden" />
 
       <!-- undo, redo, clearFilters buttons, and query builder -->
-      <div class="md:w-9/12">
+      <div class="md:w-9/12 flex-1">
         <!-- buttons -->
         <div
           class="flex items-center justify-end mb-2 md:mb-0 gap-3"

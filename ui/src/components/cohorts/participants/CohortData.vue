@@ -17,6 +17,12 @@
       placeholder="Select a cohort"
       class="flex-none"
       noOptionsText="No valid cohorts available"
+      style="
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      "
     />
   </div>
   <div class="mt-3" v-if="selectValue">

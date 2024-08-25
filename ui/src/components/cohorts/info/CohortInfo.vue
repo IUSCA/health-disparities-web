@@ -9,16 +9,18 @@
           }"
         />
       </div> -->
-      <div
-        class="text-lg leading-5 w-10/12 whitespace-nowrap overflow-clip overflow-ellipsis"
-      >
-        {{
-          (props.cohort.isNew()
-            ? props.cohort.suggested_name
-            : props.cohort.name) || props.cohort.name
-        }}
+      <div class="w-10/12">
+        <div
+          class="w-full text-lg leading-5 whitespace-nowrap overflow-clip overflow-ellipsis"
+        >
+          {{
+            (props.cohort.isNew()
+              ? props.cohort.suggested_name
+              : props.cohort.name) || props.cohort.name
+          }}
+        </div>
       </div>
-      <div class="flex ml-auto">
+      <div class="flex ml-auto w-2/12">
         <!-- published / unpublished -->
         <CohortPublishedIcon :is_published="props.cohort.is_published" />
 
