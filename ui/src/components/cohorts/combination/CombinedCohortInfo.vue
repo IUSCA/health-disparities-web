@@ -23,14 +23,28 @@
 
       <!-- save -->
       <div class="ml-3 h-full mt-auto mb-auto">
+        <VaPopover v-if="isSaveDisabled" :message="saveDisabledReason">
+          <div>
+            <va-button
+              color="success"
+              icon="save"
+              preset="primary"
+              size="small"
+              disabled
+              round
+            >
+              Save
+            </va-button>
+          </div>
+        </VaPopover>
         <va-button
+          v-else
           color="success"
           @click="handleSave"
           icon="save"
           preset="primary"
           size="small"
-          :disabled="isSaveDisabled"
-          :border-color="isSaveDisabled ? null : 'success'"
+          border-color="success"
           round
         >
           Save
@@ -64,6 +78,19 @@ const isSaveDisabled = computed(() => {
     combinationCohort.value.isEmpty() ||
     cohorts.value.some((c) => c.hasUnsavedChanges())
   );
+});
+
+const saveDisabledReason = computed(() => {
+  if (combinationCohort.value.is_locked) {
+    return "Combined Cohort is locked";
+  }
+  if (combinationCohort.value.isEmpty()) {
+    return "Combined Cohort is empty";
+  }
+  if (cohorts.value.some((c) => c.hasUnsavedChanges())) {
+    return "Underlying cohorts have unsaved changes";
+  }
+  return null;
 });
 
 function handleSave() {
