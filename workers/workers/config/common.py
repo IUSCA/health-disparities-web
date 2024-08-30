@@ -126,6 +126,10 @@ config = {
                 {
                     'name': 'delete source',
                     'task': 'delete_source'
+                },
+                {
+                    'name': 'clean up staged files',
+                    'task': 'cleanup_staged'
                 }
             ]
         }

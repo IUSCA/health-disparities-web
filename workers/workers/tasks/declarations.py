@@ -123,3 +123,11 @@ def ingest_vcf(celery_task, dummy, **kwargs):
 def ingest_vcf(celery_task, chromosome, **kwargs):
     from workers.variants.load_annotations import ingest_annotations as task_body
     return task_body(celery_task, chromosome, **kwargs)
+
+@app.task(base=WorkflowTask, bind=True, name='cleanup_staged',
+          autoretry_for=(Exception,),
+          max_retries=3,
+          default_retry_delay=5)
+def delete_dataset(celery_task, dataset_id, **kwargs):
+    from workers.tasks.cleanup_staged import cleanup_staged as task_body
+    return task_body(celery_task, dataset_id, **kwargs)
