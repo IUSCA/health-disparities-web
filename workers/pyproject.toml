@@ -10,14 +10,14 @@ python = "~3.10"
 celery = "~5.2.7"        # 3.3 has broken the app
 python-dotenv = "^1.0.1"
 sca-rhythm = "^0.6.15"
-requests = "^2.32.0"
+requests = "^2.32.3"
 urllib3 = "<2"           # because of ssl conflicts
 glom = "^23.5.0"
 cyvcf2 = "^0.30.28"      # macos has issues: ImportError: dlopen(...): symbol not found in flat namespace '_bcf_float_missing' - Fixed by "poetry remove cyvcf2; pip install --no-binary :all: cyvcf2"
-tqdm = "^4.66.2"
+tqdm = "^4.66.5"
 psycopg2 = "^2.9.9"
 pytest = "^7.4.4"
-pandas = "^2.2.1"
+pandas = "^2.2.2"
 fire = "^0.5.0"
 psycopg2-binary = "^2.9.9"
 python-slugify = "^8.0.4"
@@ -26,7 +26,7 @@ pysam = "^0.22.0"
 tzdata = "^2023.4"
 
 [tool.poetry.group.dev.dependencies]
-jupyterlab = "^4.1.5"
+jupyterlab = "^4.2.5"
 diagrams = "^0.23.3"
 
 [build-system]
