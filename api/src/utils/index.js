@@ -213,6 +213,11 @@ const isIntegerArray = (value) => {
   return true;
 };
 
+function decodeJWT(token) {
+  const payload = token.split('.')[1];
+  return JSON.parse(Buffer.from(payload, 'base64').toString());
+}
+
 function readUsersFromJSON(fname) {
   try {
     const fpath = path.join(global.__basedir, fname);
@@ -279,6 +284,7 @@ module.exports = {
   groupByAndAggregate,
   numericStringsToNumbers,
   isIntegerArray,
+  decodeJWT,
   readUsersFromJSON,
   measurePerformanceAsync,
   normalizeWhiteSpace,

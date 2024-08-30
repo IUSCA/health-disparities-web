@@ -58,6 +58,7 @@
     "postgres": "^3.3.5",
     "swagger-autogen": "^2.23.5",
     "swagger-ui-express": "^5.0.0",
+    "uuid": "^9.0.1",
     "winston": "^3.10.0"
   },
   "prisma": {

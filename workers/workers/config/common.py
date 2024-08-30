@@ -151,6 +151,10 @@ config = {
         'host': 'localhost',
         'port': '5432',
     },
+    'email': {
+        'from_addr': 'scauser@iu.edu',
+        'sendmail_path': '/usr/sbin/sendmail'
+    },
     'workflow': {
         'purge': {
             'types': ['integrated', 'stage', 'delete'],

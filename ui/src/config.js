@@ -4,6 +4,10 @@ const exports = {
   // to http://${config.apiHost}:${config.apiPort} in dev environment
   apiBasePath: "/api",
   casReturn: import.meta.env.VITE_CAS_RETURN || "https://localhost/auth/iucas",
+  googleReturn:
+    import.meta.env.VITE_GOOGLE_RETURN || "https://localhost/auth/google",
+  cilogonReturn:
+    import.meta.env.VITE_CILOGON_RETURN || "https://localhost/auth/cil",
   refreshTokenTMinusSeconds: 300,
   analyticsId: "G-FOO",
   appTitle: "Biobank",
@@ -42,6 +46,10 @@ const exports = {
     SLATE_SCRATCH: "/N/scratch",
     SLATE_SCRATCH_FILES: "/N/scratch files",
   },
+  auth_enabled: {
+    google: false,
+    cilogon: false,
+  },
   dashboard: {
     active_tasks: {
       steps: [
@@ -77,6 +85,10 @@ const exports = {
     genome_build: "hg38",
   },
   debounce_ms: 300,
+  alertForEnvironments: ["ci"],
+  enabledFeatures: {
+    genomeBrowser: false,
+  },
 };
 
 export default exports;
