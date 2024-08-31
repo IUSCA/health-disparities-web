@@ -4,12 +4,10 @@ const express = require('express');
 
 const asyncHandler = require('../middleware/asyncHandler');
 const { accessControl } = require('../middleware/auth');
-// const ollamaService = require('../services/ollama');
-// const quarryService = require('../services/quarry');
 const openaiService = require('../services/openai');
 const { validate } = require('../services/cohorts/phenotype/model');
 
-const isPermittedTo = accessControl('ollama');
+const isPermittedTo = accessControl('genai');
 const router = express.Router();
 
 router.post(

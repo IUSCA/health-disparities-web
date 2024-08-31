@@ -114,13 +114,6 @@
   "system_user": {
     "username": "svc_tasks"
   },
-  "ollama": {
-    "host": "",
-    "port": 11434
-  },
-  "quarry": {
-    "base_url": ""
-  },
   "variant_search": {
     "gene": {
       "left_padding": 2500,

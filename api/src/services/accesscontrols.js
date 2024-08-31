@@ -99,7 +99,7 @@ const grantsObject = {
     participant: {
       'read:any': ['*'],
     },
-    ollama: {
+    genai: {
       'create:any': ['*'],
     },
   },
@@ -208,7 +208,7 @@ const grantsObject = {
       'update:any': ['*'],
       'delete:any': ['*'],
     },
-    ollama: {
+    genai: {
       'create:any': ['*'],
     },
   },

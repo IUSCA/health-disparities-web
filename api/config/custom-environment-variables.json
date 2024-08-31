@@ -39,12 +39,6 @@
   "download_server": {
     "base_url": "DOWNLOAD_SERVER_BASE_URL"
   },
-  "ollama": {
-    "host": "OLLAMA_HOST"
-  },
-  "quarry": {
-    "base_url": "QUARRY_BASE_URL"
-  },
   "openai": {
     "api_key": "OPENAI_API_KEY"
   },

@@ -90,15 +90,6 @@ services:
   #       - ./data:/opt/sca/data
   #   extra_hosts:
   #     - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
-
-  # run this once
-  # docker compose exec ollama ollama pull mistral:latest
-  ollama:
-    image: ollama/ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ./db/ollama:/root/.ollama
       
 volumes:
   ui_modules:
