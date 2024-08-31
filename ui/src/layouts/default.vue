@@ -4,7 +4,7 @@
     @toggle-sidebar-visibility="toggleSidebarVisibility"
   >
   </Header>
-  <div class="flex flex-row min-h-screen">
+  <div class="flex flex-row h-screen">
     <nav
       aria-label="menu nav"
       class="relative h-full content-center flex-none shadow-xl"
@@ -12,7 +12,7 @@
       <Sidebar :isSidebarCollapsed="isSidebarCollapsed"></Sidebar>
     </nav>
     <main id="main" class="w-full overflow-y-scroll">
-      <div class="px-2 md:px-6 pb-10 pt-4 min-h-[calc(100vh-55px)]">
+      <div class="px-2 md:px-6 pb-10 pt-4 min-h-screen">
         <LeaveBreadcrumbs class="mb-2" />
         <router-view></router-view>
       </div>
