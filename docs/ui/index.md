@@ -109,7 +109,7 @@ Using
   import { useColors } from "vuestic-ui";
   const colors = useColors()
 
-  const colorByStatus = status == 'FAILED' ? colors.danger : color.primary
+  const colorByStatus = status == 'FAILED' ? colors.danger : colors.primary
 </script>
 
 <style scoped>

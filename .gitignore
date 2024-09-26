@@ -72,8 +72,6 @@ data_ingestion_*
 !db/backups
 db/backups/*.sql
 db/backups/*.psql
-todo.md
-todo2.md
-todo3.md
+todo*.md
 
 .pm2

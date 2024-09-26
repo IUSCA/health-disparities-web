@@ -3,7 +3,7 @@
     <!-- open save modal when clicked -->
     <va-button
       color="success"
-      @click="saveModal.show()"
+      @click="emit('edit')"
       icon="save"
       preset="primary"
       size="small"
@@ -54,11 +54,6 @@
       Remove
     </va-button>
   </div>
-  <CohortSaveModal
-    ref="saveModal"
-    :cohort="props.cohort"
-    @saved="emit('saved')"
-  />
 </template>
 
 <script setup>
@@ -70,8 +65,7 @@ const props = defineProps({
     default: false,
   },
 });
-const emit = defineEmits(["saved", "export", "remove", "copy"]);
-const saveModal = ref(null);
+const emit = defineEmits(["edit", "export", "remove", "copy"]);
 
 // do not save cohorts with empty queries
 // disable save button when cohort is published

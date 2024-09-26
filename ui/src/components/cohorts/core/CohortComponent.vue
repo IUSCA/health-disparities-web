@@ -5,11 +5,15 @@
       <div
         class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px] max-w-[350px]"
       >
-        <CohortInfo :cohort="cohort" :total-count="totalParticipants" />
+        <CohortInfo
+          :cohort="cohort"
+          :total-count="totalParticipants"
+          @edit="saveModal.show()"
+        />
         <div class="mt-3">
           <CohortActions
             :cohort="cohort"
-            @saved="emit('saved')"
+            @edit="saveModal.show()"
             @copy="copyCohort(cohort, idx)"
             @export="exportCohort(cohort, idx)"
             @remove="() => cohortsStore.deleteCohort(props.idx)"
@@ -18,6 +22,11 @@
         <div class="mt-5" v-if="!cohort.is_locked && cohort.supports_editing">
           <QueryHistory :history="history" @restore="restore" />
         </div>
+        <CohortSaveModal
+          ref="saveModal"
+          :cohort="cohort"
+          @saved="emit('saved')"
+        />
       </div>
 
       <va-divider class="md:hidden" />
@@ -109,6 +118,7 @@ const emit = defineEmits(["saved", "beforeSearch", "afterSearch"]);
 const cohortsStore = useCohortsStore();
 const { totalParticipants, enableTitleGeneration } = storeToRefs(cohortsStore);
 const loading = ref(false);
+const saveModal = ref(null);
 
 function resolveComponent(cohort) {
   if (cohort.schema.name === "phenotype") return PhenotypeCohortComponent;
