@@ -154,9 +154,43 @@ async function searchParticipantsQueryAsync(query, { count = false } = {}) {
   throw new Error(`Invalid cohort query name: ${query.name}`);
 }
 
+function getDependentCohortsQuery(id, requester_username) {
+  // This is a recursive query that finds all dependent cohorts (both direct and indirect) of a given cohort
+  // A cohort is dependent on another cohort if it is a combination cohort that includes the other cohort
+  // Only cohorts of the requester that are not published and not temporary are considered.
+  // the given cohort is assued to be not temporary and not published
+  return Prisma.sql`
+    with recursive dependent_cohorts as (
+      select c.id
+      from cohort c
+      WHERE query->'schema'->>'name' = 'combination'
+        AND query->'body'->'cohort_ids' @> to_jsonb(array[CAST(${id} AS UUID)])
+        and is_temp = false
+        and author_username = ${requester_username}
+        and is_published = false
+      
+      union
+      
+      select c.id
+      from cohort c
+      join dependent_cohorts dc on c.query->'body'->'cohort_ids' @> to_jsonb(array[dc.id])
+      where 
+        c.query->'schema'->>'name' = 'combination' 
+        and c.is_temp = false
+        and c.author_username = ${requester_username}
+        and c.is_published = false
+    )
+    ${cohort_select}
+    from dependent_cohorts dc
+    join cohort c on dc.id = c.id
+    join "user" u on c.author_username = u.username
+  `;
+}
+
 module.exports = {
   getCohortByIdQuery,
   searchCohortsQuery,
   searchParticipantsQueryAsync,
   saveSearchResultsQuery,
+  getDependentCohortsQuery,
 };

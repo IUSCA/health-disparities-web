@@ -52,6 +52,18 @@ class CohortService {
       },
     );
   }
+
+  delete({ id, delete_dependents }) {
+    return api.delete(`/cohorts/${id}`, {
+      params: {
+        delete_dependents,
+      },
+    });
+  }
+
+  isDeletable(id) {
+    return api.get(`/cohorts/${id}/is-deletable`);
+  }
 }
 
 export default new CohortService();

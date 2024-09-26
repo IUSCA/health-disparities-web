@@ -126,7 +126,7 @@ const grantsObject = {
       'read:any': ['*'],
     },
     cohort: {
-      'create:own': ['*'],
+      'create:any': ['*'],
       'read:any': ['*'],
       'update:own': ['*'],
       'delete:own': ['*'],

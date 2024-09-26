@@ -11,16 +11,23 @@
         v-model:sorting-order="sortingOrder"
         :items="cohorts"
         :columns="columns"
-        hoverable
-        clickable
         :loading="data_loading"
         disableClientSideSorting
-        @row:click="onClick"
         :row-bind="getRowBind"
       >
-        <!-- <template #cell(type)="{ rowData }">
-      <span class="uppercase text-sm">{{ rowData?.query?.name }}</span>
-    </template> -->
+        <template #cell(name)="{ rowData }">
+          <span
+            class="va-link text-left"
+            @click="onClick(rowData)"
+            @keydown.enter="onClick(rowData)"
+            role="button"
+            tabindex="0"
+            v-if="!props.selected.includes(rowData.id)"
+          >
+            {{ rowData.name }}
+          </span>
+          <span v-else>{{ rowData.name }}</span>
+        </template>
 
         <template #cell(updated_at)="{ value }">
           <span>{{ datetime.date(value) }}</span>
@@ -40,27 +47,33 @@
           </div>
         </template>
 
-        <!-- <template #cell(actions)="{ rowData }">
-      <div>
-        <va-button
-          size="small"
-          color="primary"
-          @click="onCopy(rowData)"
-          class="mr-1"
-        >
-          Copy
-        </va-button>
-        <va-button
-          size="small"
-          color="danger"
-          @click="onDelete(rowData)"
-          class="mr-1"
-          :disabled="rowData?.is_locked"
-        >
-          Delete
-        </va-button>
-      </div>
-    </template> -->
+        <template #cell(actions)="{ rowData }">
+          <div>
+            <!-- <va-button
+              size="small"
+              color="primary"
+              @click="onCopy(rowData)"
+              class="mr-1"
+            >
+              Copy
+            </va-button> -->
+            <!-- cannot delete published cohort -->
+            <!-- cannot delete currently selected cohorts -->
+            <va-button
+              size="small"
+              color="danger"
+              @click="onDelete(rowData)"
+              class="mr-1"
+              :disabled="
+                rowData?.is_published || props.selected.includes(rowData.id)
+              "
+              v-if="props.showDelete"
+              icon="delete"
+              preset="primary"
+            >
+            </va-button>
+          </div>
+        </template>
       </va-data-table>
       <div
         v-if="infinitescrollDisabled"
@@ -71,6 +84,7 @@
       </div>
     </va-infinite-scroll>
   </div>
+  <CohortDeleteModal ref="deleteModal" @update="onDeleteSuccess" />
 </template>
 
 <script setup>
@@ -84,11 +98,17 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  showDelete: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const emit = defineEmits(["select"]);
 
 const { colors } = useColors();
+
+const deleteModal = ref(null);
 
 // table parent div's width is 944px
 const columns = [
@@ -96,8 +116,8 @@ const columns = [
     key: "name",
     sortable: true,
     sortingOptions: ["desc", "asc", null],
-    tdClass: "truncate",
     width: "400px",
+    tdClass: "truncate",
   },
   // {
   //   key: "type",
@@ -130,12 +150,12 @@ const columns = [
     tdAlign: "center",
     width: "80px",
   },
-  // {
-  //   key: "actions",
-  //   thAlign: "center",
-  //   tdAlign: "center",
-  //   width: "120px",
-  // },
+  {
+    key: "actions",
+    thAlign: "center",
+    tdAlign: "center",
+    width: "120px",
+  },
 ];
 
 const cohorts = ref([]);
@@ -182,8 +202,7 @@ watch(
   { deep: true, immediate: true },
 );
 
-function onClick(event) {
-  const row = event.item;
+function onClick(row) {
   // do not select if already selected
   if (props.selected.includes(row.id)) {
     return;
@@ -207,11 +226,39 @@ function getRowBind(row) {
     return { class: ["disabled-row"] };
   }
 }
+
+function onDelete(row) {
+  deleteModal.value.show(row);
+}
+
+function onDeleteSuccess() {
+  data_loading.value = true;
+  offset.value = 0;
+  infinitescrollDisabled.value = false;
+
+  fetch()
+    .then((data) => {
+      cohorts.value = data;
+    })
+    .finally(() => {
+      data_loading.value = false;
+    });
+}
 </script>
+
+<style lang="scss">
+:root {
+  --disabled-row-bg: #b5b5b5;
+}
+
+html.dark {
+  --disabled-row-bg: #4a4a4a;
+}
+</style>
 
 <style scoped lang="scss">
 :deep(.disabled-row) {
-  background-color: var(--va-muted);
+  background-color: var(--disabled-row-bg);
   cursor: not-allowed !important;
 }
 </style>

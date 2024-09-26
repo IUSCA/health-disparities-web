@@ -15,13 +15,11 @@
           required
           placeholder="Enter a name for the cohort"
           :rules="[(v) => !!v || 'Name is required']"
-          inner-label
         />
         <VaTextarea
           v-model="data.description"
           label="Description"
           placeholder="Enter a description for the cohort"
-          inner-label
           :max-rows="5"
         />
         <div class="flex flex-col gap-1">

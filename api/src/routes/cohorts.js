@@ -269,18 +269,98 @@ router.patch(
   }),
 );
 
+router.get(
+  '/:id/is-deletable',
+  isPermittedTo('delete'),
+  asyncHandler(async (req, res) => {
+  // #swagger.tags = ['cohorts']
+  // #swagger.summary = 'Check if a cohort is deletable'
+
+    const { id } = req.params;
+    const cohort = await prisma.cohort.findFirstOrThrow({
+      where: {
+        id,
+        author_username: req.user.username,
+      },
+    });
+
+    if (cohort.is_published) {
+      return res.json({
+        is_deletable: false,
+        reason: 'COHORT_IS_PUBLISHED',
+      });
+    }
+
+    const sql = cohortService.getDependentCohortsQuery(cohort.id, req.user.username);
+    const dependentCohorts = await prisma.$queryRaw(sql);
+    const isCohortUsedAsDependency = dependentCohorts.length > 0;
+    if (isCohortUsedAsDependency) {
+      return res.json({
+        is_deletable: false,
+        reason: 'COHORT_IS_A_DEPENDENCY',
+        dependent_cohorts: dependentCohorts,
+      });
+    }
+    return res.json({
+      is_deletable: true,
+    });
+  }),
+);
+
 router.delete(
   '/:id',
   isPermittedTo('delete'),
   validate([
     param('id').isUUID(),
+    query('delete_dependents').default(false).toBoolean(),
   ]),
   // eslint-disable-next-line no-unused-vars
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Delete a cohort'
 
-    createError(501, 'Not implemented');
+    // cannot delete a cohort if they are not the author
+    // cannot delete a published cohort
+    // cannot delete a cohort if it is used in a combination cohort
+    const { id } = req.params;
+    const cohortToDelete = await prisma.cohort.findFirstOrThrow({
+      where: {
+        id,
+        author_username: req.user.username,
+      },
+    });
+
+    if (cohortToDelete.is_published) {
+      return next(createError(409, 'COHORT_IS_PUBLISHED'));
+    }
+
+    const sql = cohortService.getDependentCohortsQuery(cohortToDelete.id, req.user.username);
+    const dependentCohorts = await prisma.$queryRaw(sql);
+    const dependentCohortIds = dependentCohorts.map((c) => c.id);
+
+    if (req.query.delete_dependents) {
+      const idsToDelete = [id, ...dependentCohortIds];
+      const deletes = await prisma.cohort.deleteMany({
+        where: {
+          id: { in: idsToDelete },
+        },
+      });
+      res.json(deletes); // todo
+    }
+
+    if (dependentCohortIds.length > 0) {
+      return next(createError(409, {
+        reason: 'COHORT_IS_A_DEPENDENCY',
+        dependent_cohorts: dependentCohorts,
+      }));
+    }
+    await prisma.cohort.delete({
+      where: {
+        id,
+      },
+    });
+
+    res.json({ count: 1 }); // todo
   }),
 );
 

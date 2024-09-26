@@ -9,6 +9,7 @@
       :params="params"
       @select="(x) => emit('select', x)"
       :selected="cohort_ids"
+      :show-delete="params.is_mine"
     />
   </div>
 </template>
