@@ -3,7 +3,7 @@
     <div class="flex flex-col md:flex-row gap-3">
       <!-- Info, Actions, History -->
       <div
-        class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 max-w-[350px]"
+        class="md:w-3/12 md:border-r md:border-solid md:border-gray-500 md:pr-3 min-w-[280px] max-w-[350px]"
       >
         <CohortInfo :cohort="cohort" :total-count="totalParticipants" />
         <div class="mt-3">

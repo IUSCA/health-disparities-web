@@ -10,6 +10,7 @@
       :disabled="isSaveDisabled"
       :border-color="isSaveDisabled ? null : 'success'"
       round
+      class="min-w-[55px]"
     >
       Save
     </va-button>
@@ -23,6 +24,7 @@
       round
       :border-color="isCopyDisabled ? null : 'primary'"
       :disabled="isCopyDisabled"
+      class="min-w-[55px]"
     >
       Copy
     </VaButton>
@@ -35,6 +37,7 @@
       size="small"
       disabled
       round
+      class="min-w-[62px]"
     >
       Export
     </va-button>
@@ -45,7 +48,7 @@
       icon="close"
       preset="primary"
       size="small"
-      class="ml-auto"
+      class="ml-auto min-w-[62px]"
       v-if="!props.hideRemove"
     >
       Remove
