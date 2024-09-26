@@ -83,6 +83,12 @@ const exports = {
       },
     },
     genome_build: "hg38",
+    genai: {
+      defaults: {
+        enableTitleGeneration: true,
+        enableChatbot: true,
+      },
+    },
   },
   debounce_ms: 300,
   alertForEnvironments: ["ci"],

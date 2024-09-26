@@ -1,4 +1,5 @@
 import { CombinationCohort } from "@/components/cohorts/models";
+import config from "@/config";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -10,9 +11,17 @@ export const useCohortsStore = defineStore("cohorts", () => {
   // - when query of a cohort is changed, it gets dirty: Cohort Component
 
   const enableTitleGeneration = ref(
-    useLocalStorage("cohort.enableTitleGeneration", false),
+    useLocalStorage(
+      "cohort.enableTitleGeneration",
+      config.cohort.genai.defaults.enableTitleGeneration,
+    ),
   );
-  const enableChatbot = ref(useLocalStorage("cohort.enableChatbot", false));
+  const enableChatbot = ref(
+    useLocalStorage(
+      "cohort.enableChatbot",
+      config.cohort.genai.defaults.enableChatbot,
+    ),
+  );
   const totalParticipants = ref(0);
   const cohorts = ref([]);
   const combinationCohort = ref(
