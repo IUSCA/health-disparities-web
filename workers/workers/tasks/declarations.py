@@ -131,3 +131,12 @@ def ingest_vcf(celery_task, chromosome, **kwargs):
 def delete_dataset(celery_task, dataset_id, **kwargs):
     from workers.tasks.cleanup_staged import cleanup_staged as task_body
     return task_body(celery_task, dataset_id, **kwargs)
+
+
+@app.task(base=WorkflowTask, bind=True, name='stage_dataset_direct',
+          autoretry_for=(Exception,),
+          max_retries=3,
+          default_retry_delay=5)
+def stage_dataset2(celery_task, dataset_id, **kwargs):
+    from workers.tasks.stage_direct import stage_dataset as task_body
+    return task_body(celery_task, dataset_id, **kwargs)
