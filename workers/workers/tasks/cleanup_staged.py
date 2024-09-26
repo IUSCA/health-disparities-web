@@ -12,7 +12,7 @@ app.config_from_object(celeryconfig)
 
 
 def cleanup_staged(celery_task, dataset_id, **kwargs):
-    dataset = api.get_dataset(dataset_id=dataset_id)
+    dataset = api.get_dataset(dataset_id=dataset_id, bundle=True)
     staged_path = Path(dataset['staged_path'])
     bundle_path = Path(get_bundle_staged_path(dataset=dataset))
 

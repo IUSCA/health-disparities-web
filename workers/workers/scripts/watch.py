@@ -94,7 +94,7 @@ class Register:
         return any([fnmatch.fnmatchcase(name, pat) for pat in self.rejects])
 
     def get_registered_dataset_names(self):
-        datasets = api.get_all_datasets(dataset_type=self.dataset_type)
+        datasets = api.get_all_datasets(dataset_type=self.dataset_type, archived=None)
         return [b['name'] for b in datasets]
 
     def register(self, event: str, new_dirs: list[Path]) -> None:
