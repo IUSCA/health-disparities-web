@@ -172,4 +172,599 @@ router.get(
   }),
 );
 
+
+router.post('/all', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+  const { currentPage, itemsPerPage, sortBy, sortingOrder } = req.body
+
+  const data = await prisma.participant.findMany({
+    take: itemsPerPage,
+    skip: (currentPage - 1) * itemsPerPage,
+    orderBy: {
+      [sortBy]: sortingOrder
+    },
+    include: {
+      demographics: true,
+    }
+  })
+  const count = await prisma.participant.count()
+
+  return res.json({ data, count })
+}))
+
+router.get('/:id/details', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+  const { id } = req.params
+
+  const data = await prisma.participant.findUnique({
+    where: {
+      id: parseInt(id)
+    },
+    include: {
+      demographics: true,
+    }
+  })
+
+  return res.json(data)
+}))
+
+router.post('/:id/:category/:view', isPermittedTo('read'), asyncHandler(async (req, res, next) => {
+
+  const { id, category, view } = req.params
+  const { dateRange } = req.body
+
+  let data = []
+
+  switch(category) {
+    case 'Overview':
+      data = await process_overview(id, view, dateRange)
+      break;
+    case 'Diagnosis':
+      data = await process_diagnosis(id, view, dateRange)
+      break;
+    case 'Medications':
+      data = await process_medication(id, view, dateRange)
+      break;
+    case 'Labs':
+      data = await process_lab(id, view, dateRange)
+      break;
+    case 'Hospital Visits':
+      data = await process_hospital(id, view, dateRange)
+      break;
+    case 'Covid Tests':
+      data = await process_covid_test(id, view, dateRange)
+      break;
+    case 'Covid Vaccines':
+      data = await process_covid_vaccine(id, view, dateRange)
+      break;
+    default:
+      break;
+    
+  }
+
+  console.log('DATA: ', data)
+
+  return res.json(data)
+}))
+
+const process_overview = async (id, view, dateRange) => {
+  const data = {}
+
+  if(view === 'timeline') {
+    const participants = await prisma.participant.findMany({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        dxs: true,
+        medications: true,
+        labs: true,
+        hospitals: true,
+        covid_tests: true,
+        covid_vaxes: true,
+      }
+        
+    });
+
+    for(const participant of participants) {
+      for(const key of Object.keys(participant)) {
+        if(key === 'dxs') {
+          data['diagnosis'] = []
+          for(const dx of participant[key]) {
+            const type = dx.name
+            const startDate = dx.date
+
+            
+              data['diagnosis'].push({
+                label: type,
+                startDate: startDate,
+              })
+       
+          }
+        } else if(key === 'medications') {
+          data['medications'] = []
+          for(const med of participant[key]) {
+            const type = med.name
+            const startDate = med.start_date
+
+            
+              data['medications'].push({
+                label: type,
+                startDate: startDate,
+              })
+          
+          }
+        } else if(key === 'labs') {
+          data['labs'] = []
+          for(const lab of participant[key]) {
+            const type = lab.name
+            const startDate = lab.date
+
+            
+              data['labs'].push({
+                label: type,
+                startDate: startDate,
+              })
+          
+          }
+        } else if(key === 'hospitals') {
+          data['hospitals'] = []
+          for(const hospital of participant[key]) {
+            const type = hospital.dx_code
+            const startDate = hospital.admit_date
+            const endDate = hospital.discharge_date
+
+
+              data['hospitals'].push({
+                label: type,
+                startDate: startDate,
+                endDate: endDate
+              })
+            
+          }
+        } else if(key === 'covid_tests') {
+          data['covid_tests'] = []
+          for(const test of participant[key]) {
+            const type = test.result
+            const startDate = test.date
+
+
+              data['covid_tests'].push({
+                label: type,
+                startDate: startDate,
+              })
+            
+          }
+        } else if(key === 'covid_vaxes') {
+          data['covid_vaxes'] = []
+          for(const vax of participant[key]) {
+            const type = vax.name
+            const startDate = vax.date
+
+        
+              data['covid_vaxes'].push({
+                label: type,
+                startDate: startDate,
+              }) 
+            
+          }
+        }
+      }
+    }
+
+} else if(view === 'graph') {
+
+  data['diagnosis'] = await process_diagnosis(id, view, dateRange)
+  data['medications'] = await process_medication(id, view, dateRange)
+  data['labs'] = await process_lab(id, view, dateRange)
+  data['hospitals'] = await process_hospital(id, view, dateRange)
+  data['covid_tests'] = await process_covid_test(id, view, dateRange)
+  data['covid_vaxes'] = await process_covid_vaccine(id, view, dateRange)
+
+  console.log(data)
+}
+  return data
+}
+
+const process_diagnosis = async (id, view, dateRange) => {
+  const data = {}
+
+  const whereClause = {
+    participant_id: parseInt(id),
+  };
+  
+  if (view === 'graph') {
+    whereClause.date = {
+  
+        gte: new Date(dateRange[0]),
+        lte: new Date(dateRange[1]),
+
+    };
+  }
+  
+  const results = await prisma.dx.findMany({
+    where: whereClause,
+
+  });
+
+  // sort and check for null values
+  results.sort((a, b) => (a.date ? new Date(a.date) : -9999) - (b.date ? new Date(b.date) : -9999));
+  results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  
+
+
+  for(const result of results) {
+    if(view === 'graph') {
+      // console.log(result)
+      const type = result.name
+      const date = result.date
+
+      // Get count of each diagnosis
+      if(type in data) {
+        data[type]['value'].push(1)
+        data[type]['date'].push(date)
+      } else {
+        data[type] = {
+          value: [1],
+          unit: 'count',
+          date: [date],
+          type: type
+        }
+      }
+
+
+    } else if(view === 'timeline') {
+      // console.log(result)
+      const type = result.name
+      const startDate = result.date
+
+      if(type in data) {
+        data[type].push({
+          label: type,
+          startDate: startDate,
+        })
+      } else {
+        data[type] = [{
+          label: type,
+          startDate: startDate,
+        }]
+      }
+    }
+  }
+
+
+  return data
+}
+
+const process_medication = async (id, view, dateRange) => {
+  const data = {}
+
+  const whereClause = {
+    participant_id: parseInt(id),
+  };
+  
+  if (view === 'graph') {
+    whereClause.start_date = {
+  
+        gte: new Date(dateRange[0]),
+        lte: new Date(dateRange[1]),
+
+    };
+  }
+  
+  const results = await prisma.medication.findMany({
+    where: whereClause,
+
+  });
+
+  results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  for(const result of results) {
+    if(view === 'graph') {
+      // console.log(result)
+      const type = result.name
+      const date = result.start_date
+      const value = result.strength_dose
+      const unit = result.strength_dose_unit
+      
+
+      // Get count of each diagnosis
+      if(type in data) {
+        data[type]['value'].push(value)
+        data[type]['date'].push(date)
+      } else {
+        data[type] = {
+          value: [value],
+          unit: unit,
+          date: [date],
+          type: type
+        }
+      }
+    } else if(view === 'timeline') {
+      // console.log(result)
+      const type = result.name
+      const startDate = result.start_date
+
+
+      if(type in data) {
+        data[type].push({
+          label: type,
+          startDate: startDate,
+        })
+      } else {
+        data[type] = [{
+          label: type,
+          startDate: startDate,
+        }]
+      }
+    }
+  }
+
+  return data
+}
+
+const process_lab = async (id, view, dateRange) => {
+  const data = {}
+
+  const whereClause = {
+    participant_id: parseInt(id),
+  };
+  
+  if (view === 'graph') {
+    whereClause.date = {
+  
+        gte: new Date(dateRange[0]),
+        lte: new Date(dateRange[1]),
+
+    };
+  }
+  
+  const results = await prisma.lab.findMany({
+    where: whereClause,
+
+  });
+
+  results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  for(const result of results) {
+    if(view === 'graph') {
+      // console.log(result)
+      const type = result.name
+      const date = result.date
+      const value = result.result
+      const unit = result.unit
+
+      // Get count of each diagnosis
+      if(type in data) {
+        data[type]['value'].push(value)
+        data[type]['date'].push(date)
+      } else {
+        data[type] = {
+          value: [value],
+          unit: unit,
+          date: [date],
+          type: type
+        }
+      }
+    } else if(view === 'timeline') {
+      // console.log(result)
+      const type = result.name
+      const startDate = result.date
+
+      if(type in data) {
+        data[type].push({
+          label: type,
+          startDate: startDate,
+        })
+      } else {
+        data[type] = [{
+          label: type,
+          startDate: startDate,
+        }]
+      }
+    }
+  }
+
+  return data
+}
+
+const process_hospital = async (id, view, dateRange) => {
+  const data = {}
+
+  const whereClause = {
+    participant_id: parseInt(id),
+  };
+  
+  if (view === 'graph') {
+    whereClause.admit_date = {
+  
+        gte: new Date(dateRange[0]),
+        lte: new Date(dateRange[1]),
+
+    };
+  }
+  
+  const results = await prisma.hospital.findMany({
+    where: whereClause,
+
+  });
+
+  results.sort((a, b) => new Date(a.admit_date) - new Date(b.admit_date));
+
+  for(const result of results) {
+    if(view === 'graph') {
+      // console.log(result)
+      const type = result.dx_code
+      const date = result.admit_date
+      const value = 1
+      const unit = 'count'
+
+      // Get count of each diagnosis
+      if(type in data) {
+        data[type]['value'].push(value)
+        data[type]['date'].push(date)
+      } else {
+        data[type] = {
+          value: [value],
+          unit: unit,
+          date: [date],
+          type: type
+        }
+      }
+    } else if(view === 'timeline') {
+      // console.log(result)
+      const type = result.dx_code
+      const startDate = result.admit_date
+      const endDate = result.discharge_date
+
+      if(type in data) {
+        data[type].push({
+          label: type,
+          startDate: startDate,
+          endDate: endDate
+        })
+      } else {
+        data[type] = [{
+          label: type,
+          startDate: startDate,
+          endDate: endDate
+        }]
+      }
+    }
+  }
+
+  return data
+}
+
+const process_covid_test = async (id, view, dateRange) => {
+  const data = {}
+
+  const whereClause = {
+    participant_id: parseInt(id),
+  };
+  
+  if (view === 'graph') {
+    whereClause.date = {
+  
+        gte: new Date(dateRange[0]),
+        lte: new Date(dateRange[1]),
+
+    };
+  }
+  
+  const results = await prisma.covid_test.findMany({
+    where: whereClause,
+
+  });
+
+
+
+  results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  for(const result of results) {
+    if(view === 'graph') {
+      // console.log(result)
+      const type = result.result
+      const date = result.date
+      const value = 1
+      const unit = result.name
+
+      // Get count of each diagnosis
+      if(type in data) {
+        data[type]['value'].push(value)
+        data[type]['date'].push(date)
+      } else {
+        data[type] = {
+          value: [value],
+          unit: unit,
+          date: [date],
+          type: type
+        }
+      }
+    } else if(view === 'timeline') {
+      // console.log(result)
+      const type = result.result
+      const startDate = result.date
+
+      if(type in data) {
+        data[type].push({
+          label: type,
+          startDate: startDate,
+        })
+      } else {
+        data[type] = [{
+          label: type,
+          startDate: startDate,
+        }]
+      }
+    }
+  }
+
+  return data
+}
+
+const process_covid_vaccine = async (id, view, dateRange) => {
+  const data = {}
+
+  const whereClause = {
+    participant_id: parseInt(id),
+  };
+  
+  if (view === 'graph') {
+    whereClause.date = {
+  
+        gte: new Date(dateRange[0]),
+        lte: new Date(dateRange[1]),
+
+    };
+  }
+  
+  const results = await prisma.covid_vax.findMany({
+    where: whereClause,
+
+  });
+
+  results.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  for(const result of results) {
+    if(view === 'graph') {
+      // console.log(result)
+      const type = result.name
+      const date = result.date
+      const value = result.dose_number
+      const unit = result.manufacturer
+
+      // Get count of each diagnosis
+      if(type in data) {
+        data[type]['value'].push(value)
+        data[type]['date'].push(date)
+      } else {
+        data[type] = {
+          value: [value],
+          unit: unit,
+          date: [date],
+          type: type
+        }
+      }
+    } else if(view === 'timeline') {
+      // console.log(result)
+      const type = result.name
+      const startDate = result.date
+
+      if(type in data) {
+        data[type].push({
+          label: type,
+          startDate: startDate,
+        })
+      } else {
+        data[type] = [{
+          label: type,
+          startDate: startDate,
+        }]
+      }
+    }
+  }
+
+  return data
+}
+
 module.exports = router;

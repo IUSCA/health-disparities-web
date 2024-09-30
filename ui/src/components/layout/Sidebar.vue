@@ -127,11 +127,11 @@ const user_items = ref([
   //   title: "Categories",
   //   path: "/categories/data",
   // },
-  // {
-  //   icon: "material-symbols:person",
-  //   title: "Participants",
-  //   path: "/participants/demographic",
-  // },
+  {
+    icon: "material-symbols:person",
+    title: "Participants",
+    path: "/participants",
+  },
   {
     icon: "mdi-table-search",
     title: "Data Browser",
