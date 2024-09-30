@@ -224,8 +224,10 @@ function handleUserMessage(text) {
     .generate_cohort({ text })
     .then((res) => {
       const cohort = new PhenotypeCohort({ query: res.data.query.body });
-      cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
-      chat.value.addBotMessage("Done!");
+      cohort.searchParticipants().then(() => {
+        cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
+        chat.value.addBotMessage("Done!");
+      });
     })
     .catch((err) => {
       console.error(err);
