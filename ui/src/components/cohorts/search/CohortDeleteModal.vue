@@ -27,20 +27,42 @@
           </span>
         </div>
         <div v-if="reason === 'COHORT_IS_A_DEPENDENCY'">
-          <ul class="list-disc list-inside">
-            <li
-              v-for="c in dependentCohorts"
-              :key="c.id"
-              class="ml-4 font-medium"
-            >
-              <span> {{ c.name }} {{ c.size }} </span>
+          <ul class="list-item space-y-2">
+            <li v-for="c in dependentCohorts" :key="c.id" class="ml-4">
+              <!-- cohort name and size -->
+              <div class="flex flex-nowrap items-center gap-3">
+                <!-- icon -->
+                <div>
+                  <i-mdi-account-group
+                    class="text-2xl"
+                    :style="{
+                      color: stringToRGB(`${c.id}-${c.name}`),
+                    }"
+                  />
+                </div>
+                <!-- details -->
+                <div class="flex items-center gap-3">
+                  <div
+                    class="leading-4 max-w-[600px] whitespace-nowrap overflow-clip overflow-ellipsis"
+                    :title="c.name"
+                  >
+                    {{ c.name }}
+                  </div>
+                  <div class="text-sm va-text-secondary w-[72px]">
+                    <span class="font-semibold">
+                      {{ c.size }}
+                    </span>
+                    <span> pax. </span>
+                  </div>
+                </div>
+              </div>
             </li>
           </ul>
 
           <VaCheckbox
             v-model="deleteDependents"
             label="Delete all dependent cohorts as well"
-            class="mt-4"
+            class="mt-5"
           />
 
           <div class="my-4" :class="{ invisible: !deleteDependents }">
@@ -75,6 +97,7 @@
 
 <script setup>
 import cohortService from "@/services/cohorts";
+import { stringToRGB } from "@/services/colors";
 import toast from "@/services/toast";
 import { maybePluralize } from "@/services/utils";
 
