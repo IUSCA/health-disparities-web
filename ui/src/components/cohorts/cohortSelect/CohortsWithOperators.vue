@@ -20,9 +20,9 @@
       <div>
         <div
           class="font-semibold leading-4 max-w-[144px] whitespace-nowrap overflow-clip overflow-ellipsis"
-          :title="cohort.name"
+          :title="cohort.getDisplayName()"
         >
-          {{ cohort.name }}
+          {{ cohort.getDisplayName() }}
         </div>
         <div class="text-sm va-text-secondary w-[72px]">
           <span class="font-semibold">

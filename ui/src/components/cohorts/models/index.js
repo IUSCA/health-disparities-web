@@ -200,6 +200,12 @@ class Cohort {
   defaultQuery() {
     throw new Error('must implement "defaultQuery" method');
   }
+
+  // suggested_name is set by genAI
+  // if it is not set, use the name
+  getDisplayName() {
+    return (this.isNew() ? this.suggested_name : this.name) || this.name;
+  }
 }
 
 class PhenotypeCohort extends Cohort {

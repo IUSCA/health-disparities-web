@@ -93,7 +93,7 @@ const selectableCohorts = computed(() => {
   return _selectableCohorts.map((c) => {
     return {
       id: c.getLatestId(),
-      name: c.name,
+      name: c.getDisplayName(),
     };
   });
 });

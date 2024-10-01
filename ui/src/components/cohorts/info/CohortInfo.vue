@@ -4,9 +4,9 @@
       <div class="w-9/12">
         <div
           class="w-full text-lg leading-5 whitespace-nowrap overflow-clip overflow-ellipsis"
-          :title="name"
+          :title="props.cohort.getDisplayName()"
         >
-          {{ name }}
+          {{ props.cohort.getDisplayName() }}
         </div>
       </div>
 
@@ -56,10 +56,4 @@ const props = defineProps({
 const emit = defineEmits(["edit"]);
 
 const number_formatter = Intl.NumberFormat("en");
-const name = computed(() => {
-  return (
-    (props.cohort.isNew() ? props.cohort.suggested_name : props.cohort.name) ||
-    props.cohort.name
-  );
-});
 </script>
