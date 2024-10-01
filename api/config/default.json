@@ -101,6 +101,21 @@
         }
       ]
     },
+    "stage_direct": {
+      "steps": [
+        {
+          "name": "stage_direct",
+          "task": "stage_dataset_direct",
+          "kwargs": {
+            "stage_root_dir": "/N/project/INB_mtDNA/data/rawData"
+          }
+        },
+        {
+          "name": "validate",
+          "task": "validate_dataset"
+        }
+      ]
+    },
     "delete": {
       "steps": [
         {
