@@ -47,7 +47,9 @@
       </VaForm>
       <div class="flex justify-end gap-3">
         <VaButton preset="secondary" @click="hide">Cancel</VaButton>
-        <VaButton @click="handleSave" :disabled="!isValid">Save</VaButton>
+        <VaButton @click="handleSave" :disabled="!isValid" color="success">
+          Save
+        </VaButton>
       </div>
     </VaInnerLoading>
   </va-modal>

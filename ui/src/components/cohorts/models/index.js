@@ -116,9 +116,24 @@ class Cohort {
     return this.isEmpty() || this.isNew() || !this.supports_copying;
   }
 
-  save({ name, description, is_published, is_locked } = {}) {
+  save({
+    name,
+    description,
+    is_published,
+    is_locked,
+    use_suggested_name_if_new = false,
+  } = {}) {
     const updates = _.omitBy(
-      { name, description, is_published, is_locked },
+      {
+        name:
+          name ||
+          (use_suggested_name_if_new && this.isNew()
+            ? this.suggested_name
+            : null),
+        description,
+        is_published,
+        is_locked,
+      },
       _.isNil,
     );
     const data = Object.assign(this.toApiPayload(), updates);

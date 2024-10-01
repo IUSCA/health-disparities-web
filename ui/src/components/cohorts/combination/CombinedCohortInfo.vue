@@ -58,6 +58,7 @@
 <script setup>
 // import config from "@/config";
 import { stringToRGB } from "@/services/colors";
+import toast from "@/services/toast";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
 
@@ -71,13 +72,8 @@ const saveModal = ref(null);
 // can only save when
 // - cohort is not locked
 // - cohort_ids > 1
-// - all underlying cohorts are saved
 const isSaveDisabled = computed(() => {
-  return (
-    combinationCohort.value.is_locked ||
-    combinationCohort.value.isEmpty() ||
-    cohorts.value.some((c) => c.hasUnsavedChanges())
-  );
+  return combinationCohort.value.is_locked || combinationCohort.value.isEmpty();
 });
 
 const saveDisabledReason = computed(() => {
@@ -87,23 +83,30 @@ const saveDisabledReason = computed(() => {
   if (combinationCohort.value.isEmpty()) {
     return "Combined Cohort is empty";
   }
-  if (cohorts.value.some((c) => c.hasUnsavedChanges())) {
-    return "Underlying cohorts have unsaved changes";
-  }
   return null;
 });
 
 function handleSave() {
-  // if the control is here it means no cohort is dirty and all cohorts will have ids
-  // however, we need to update cohort_ids in the query with the latest ids
-  combinationCohort.value.query.cohort_ids = cohorts.value.map((c) => c.id);
-  saveModal.value.show();
+  // save all underlying cohorts which have unsaved changes
+  const unsavedCohorts = cohorts.value.filter((c) => c.hasUnsavedChanges());
+  const savePromises = unsavedCohorts.map((c) =>
+    c.save({ use_suggested_name_if_new: true }),
+  );
+  Promise.all(savePromises)
+    .then(() => {
+      // if the control is here it means no cohort is dirty and all cohorts will have ids
+      // however, we need to update cohort_ids in the query with the latest ids
+      combinationCohort.value.query.cohort_ids = cohorts.value.map((c) => c.id);
+      saveModal.value.show();
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error("Failed to save underlying cohorts");
+    });
 }
 
 // todo
 // to lock or publish a combined cohort, all underlying cohorts must be locked or published
-
-// todo: show reasons why save is disabled
 
 // todo: better placement of save button
 </script>
