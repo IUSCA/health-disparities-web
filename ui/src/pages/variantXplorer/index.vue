@@ -222,6 +222,7 @@ const resultsView = ref(false);
 const variant_count = ref(0);
 const total_count = ref(0);
 const cohort = ref(new GenotypeCohort());
+const isInitializing = ref(false);
 
 const variants = ref([]);
 
@@ -241,6 +242,7 @@ provide(
 // throttled fn runs at most once every 100ms
 // it'll run on first call without delay and then ignores calls for 100ms
 const searchVariants = useThrottleFn(function () {
+  // console.log("searching variants");
   if (cohort.value.query.ranges.length === 0) {
     return;
   }
@@ -266,6 +268,7 @@ const searchVariants = useThrottleFn(function () {
 }, 500);
 
 const searchParticipants = useThrottleFn(function () {
+  // console.log("searching participants");
   if (cohort.value.isEmpty()) {
     cohort.value.size = 0;
     return Promise.resolve();
@@ -284,27 +287,35 @@ const searchParticipants = useThrottleFn(function () {
 
 // when current page changes, fetch variants
 watch(currPage, () => {
-  searchVariants();
+  searchVariants(); // throttled
 });
 
 watch(pageSize, () => {
   currPage.value = 1;
-  searchVariants();
+  searchVariants(); // throttled
 });
 
 // when zygosities change, fetch participants
-watch(() => cohort.value.query.zygosities, searchParticipants, {
-  deep: true,
-});
+watch(
+  () => cohort.value.query.zygosities,
+  searchParticipants, // throttled
+  {
+    deep: true,
+  },
+);
 
 // when ranges change, reset filters, currPage and fetch both variants and participant count
 watch(
   () => cohort.value.query.ranges,
   () => {
-    cohort.value.query.filters = cohort.value.defaultQuery().filters;
-    currPage.value = 1;
-    searchParticipants();
-    searchVariants();
+    // console.log("ranges changed", isInitializing.value);
+    if (!isInitializing.value) {
+      // console.log("resetting filters");
+      cohort.value.query.filters = cohort.value.defaultQuery().filters;
+      currPage.value = 1;
+    }
+    searchParticipants(); // throttled
+    searchVariants(); // throttled
   },
   {
     deep: true,
@@ -315,9 +326,10 @@ watch(
 watchDebounced(
   () => cohort.value.query.filters,
   () => {
+    // console.log("filters changed");
     currPage.value = 1;
-    searchParticipants();
-    searchVariants();
+    searchParticipants(); // throttled
+    searchVariants(); // throttled
   },
   { deep: true, debounce: 300 },
 );
@@ -326,6 +338,7 @@ watchDebounced(
 watch(
   [() => cohort.value.query.source_id, () => cohort.value.query.snapshot_id],
   () => {
+    // console.log("source or snapshot changed");
     resultsView.value = false;
     variants.value = [];
     variant_count.value = 0;
@@ -363,38 +376,57 @@ function removeSearchParam(param) {
   if (index > -1) cohort.value.query.ranges.splice(index, 1);
 }
 
-// load cohort from query params
+// isInitializing - used to prevent resetting filters when cohort is being initialized
+// vue batches updates, so we need to use nextTick to ensure that the flag is not unset
+// in the current loop
+
+async function loadCohortFromUrl() {
+  try {
+    isInitializing.value = true;
+    const body = JSON.parse(route.query.body);
+    cohort.value = new GenotypeCohort({
+      query: body,
+    });
+    await nextTick();
+  } catch (e) {
+    console.error(e);
+    toast.error("Failed to parse query");
+  } finally {
+    isInitializing.value = false;
+  }
+}
+
+// as fetching cohort is async, we don't have to use nextTick
+// since the finally block will be executed after the promise is resolved which is not in the current loop
+
+function loadCohortFromId(cohort_id) {
+  isInitializing.value = true;
+  loading.value = true;
+  return cohortService
+    .getById(cohort_id)
+    .then((res) => {
+      if (res.data.query.schema.name !== "genotype") {
+        toast.error("Cannot load cohorts of other types");
+        return;
+      }
+      cohort.value = GenotypeCohort.fromApiData(res.data);
+    })
+    .catch((err) => {
+      console.error(err);
+      toast.error("Failed to load cohort");
+    })
+    .finally(() => {
+      loading.value = false;
+      isInitializing.value = false;
+    });
+}
+
+// load cohort from query params - id or body
 onMounted(() => {
   if (route.query?.cohort_id) {
-    loading.value = true;
-    cohortService
-      .getById(route.query.cohort_id)
-      .then((res) => {
-        if (res.data.query.schema.name !== "genotype") {
-          toast.error("Cannot load cohorts of other types");
-          return;
-        }
-        cohort.value = GenotypeCohort.fromApiData(res.data);
-      })
-      .catch((err) => {
-        console.error(err);
-        toast.error("Failed to load cohort");
-      })
-      .finally(() => {
-        loading.value = false;
-      });
-    return;
-  }
-  if (route.query.body) {
-    try {
-      const body = JSON.parse(route.query.body);
-      cohort.value = new GenotypeCohort({
-        query: body,
-      });
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to parse query");
-    }
+    loadCohortFromId(route.query.cohort_id);
+  } else if (route.query?.body) {
+    loadCohortFromUrl();
   }
 });
 </script>
