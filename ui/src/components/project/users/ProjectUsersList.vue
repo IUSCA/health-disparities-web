@@ -4,7 +4,7 @@
   >
     <va-list-item v-for="(user, index) in props.users" :key="index" class="">
       <va-list-item-section avatar>
-        <UserAvatar :username="user.name" :name="user.name" />
+        <UserAvatar :username="user?.username" :name="user?.name" />
       </va-list-item-section>
 
       <va-list-item-section>
