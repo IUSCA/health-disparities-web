@@ -224,10 +224,21 @@ function handleUserMessage(text) {
     .generate_cohort({ text })
     .then((res) => {
       const cohort = new PhenotypeCohort({ query: res.data.query.body });
-      cohort.searchParticipants().then(() => {
-        cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
-        chat.value.addBotMessage("Done!");
-      });
+      genAIService
+        .generate_name_description({ filters: cohort.query })
+        .then((res) => {
+          cohort.suggested_name = res.data.title;
+          cohort.suggested_description = res.data.description;
+        })
+        .catch((error) => {
+          console.error("Error generating name and description", error);
+        })
+        .finally(() => {
+          cohort.searchParticipants().then(() => {
+            cohortsStore.appendCohort(cohort, DEFAULT_LOGICAL_OPERATOR);
+            chat.value.addBotMessage("Done!");
+          });
+        });
     })
     .catch((err) => {
       console.error(err);

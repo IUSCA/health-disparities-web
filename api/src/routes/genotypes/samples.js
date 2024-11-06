@@ -27,7 +27,7 @@ router.get(
   }),
 );
 
-router.put(
+router.post(
   '/',
   isPermittedTo('create'),
   asyncHandler(async (req, res, next) => {

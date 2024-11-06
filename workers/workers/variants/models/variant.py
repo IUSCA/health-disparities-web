@@ -1,6 +1,7 @@
 from collections import namedtuple
+from pathlib import Path
 
-from psycopg2 import sql
+from psycopg2 import sql, extras
 
 from workers.variants.database import conn
 
@@ -34,11 +35,13 @@ def create_many(data: list[dict]) -> None:
     @return: None
     """
     with conn.cursor() as cursor:
-        insert_query = f"INSERT INTO VARIANT (chr, position, ref, alt, source_id, phase, genotype)" \
-                       f"VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        insert_query = """
+                    INSERT INTO VARIANT (chr, position, ref, alt, source_id, phase, genotype)
+                    VALUES %s
+                """
         try:
             ins_data = [(*d['variant'], d['phase'], d['genotype']) for d in data]
-            cursor.executemany(insert_query, ins_data)
+            extras.execute_values(cursor, insert_query, ins_data, template=None, page_size=100)
             conn.commit()
         except Exception as e:
             conn.rollback()
@@ -68,3 +71,19 @@ def update_many(data: list[dict]) -> None:
         except Exception as e:
             conn.rollback()
             raise e
+
+
+def copy_data(csv_file: str | Path):
+    """
+    Copy data from a CSV file to VARIANT table.
+    @param csv_file:
+    @return:
+    """
+    with conn.cursor() as cursor:
+        copy_query = """
+                    COPY VARIANT (chr, position, ref, alt, source_id, phase, genotype)
+                    FROM STDIN DELIMITER ',' CSV HEADER
+                """
+        with open(csv_file, 'r') as f:
+            cursor.copy_expert(copy_query, f)
+            conn.commit()

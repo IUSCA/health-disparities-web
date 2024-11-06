@@ -1,5 +1,5 @@
 import api from "./api";
-const cache_busting_id = "41e81fd";
+const cache_busting_id = "41e81fe";
 
 class ParticipantService {
   getTotalCount() {
@@ -57,9 +57,15 @@ class ParticipantService {
     });
   }
 
-
- getAll = ({ currentPage, itemsPerPage, sortBy, sortingOrder}) => api.post('/participants/all', { currentPage, itemsPerPage, sortBy, sortingOrder})
- getDetails = (id ) => api.get(`/participants/${id}/details`)
- getCategoryDetails = ({id, category, view, dateRange }) => api.post(`/participants/${id}/${category}/${view}`, {dateRange })
+  getAll = ({ currentPage, itemsPerPage, sortBy, sortingOrder }) =>
+    api.post("/participants/all", {
+      currentPage,
+      itemsPerPage,
+      sortBy,
+      sortingOrder,
+    });
+  getDetails = (id) => api.get(`/participants/${id}/details`);
+  getCategoryDetails = ({ id, category, view, dateRange }) =>
+    api.post(`/participants/${id}/${category}/${view}`, { dateRange });
 }
 export default new ParticipantService();

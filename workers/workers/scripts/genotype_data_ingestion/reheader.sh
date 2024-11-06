@@ -39,9 +39,13 @@ if [ ! -f "$SAMPLE_MAPPING" ]; then
 fi
 
 # Reheader the vcf files
-for file in $1/*.vcf.gz; do
+for file in $1/*.vcf; do
     filename=$(basename -- "$file")
-    filename="${filename%.vcf.gz}"
+    filename="${filename%.vcf}"
     echo "processing $filename"
-    bcftools reheader -s $SAMPLE_MAPPING -o $2/$filename.reheader.vcf.gz $file
+    bcftools reheader -s $SAMPLE_MAPPING -o $2/$filename.reheader.vcf $file
+
+    # Index the vcf file
+    echo "indexing $filename"
+    tabix -p vcf $2/$filename.reheader.vcf
 done

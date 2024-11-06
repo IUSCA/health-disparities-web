@@ -102,11 +102,17 @@ watch(
     if (sg_name)
       data.value.name = props.cohort.isNew() ? sg_name : props.cohort.name;
   },
+  {
+    immediate: true,
+  },
 );
 watch(
   () => props.cohort.suggested_description,
   () => {
     data.value.description = props.cohort.suggested_description;
+  },
+  {
+    immediate: true,
   },
 );
 

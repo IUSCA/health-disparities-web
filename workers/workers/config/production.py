@@ -32,7 +32,7 @@ config = {
     },
     'registration': {
         'DATA_PRODUCT': {
-            'source_dir': '/N/project/biobank/phi_ingest_biobank_regeneron_KEEPTRXyunlong/WES/originalData/regeneron_grouped'
+            'source_dir': '/N/project/biobank/AnVIL_CCDG_WashU_CVD_Indiana_WGS/crams'
         },
     },
     'variant_database': {

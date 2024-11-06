@@ -121,7 +121,7 @@ def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, o
     tab_mapping_file_path = output_dir / TAB_MAPPING_FILE_NAME
 
     data_dir = Path(data_dir).resolve()
-    vcf_files = list(data_dir.glob('*.vcf.gz'))
+    vcf_files = list(data_dir.glob('*.vcf.gz')) + list(data_dir.glob('*.vcf'))
     print(f'found {len(vcf_files)} vcfs')
     if len(vcf_files) == 0:
         return

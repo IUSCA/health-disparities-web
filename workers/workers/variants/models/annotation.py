@@ -1,5 +1,8 @@
 from collections import namedtuple
+from pathlib import Path
+
 from dataclasses import dataclass, asdict
+from pathlib import Path
 
 from workers.variants.database import conn
 
@@ -137,7 +140,34 @@ def get_all_sites(chromosome: int = None):
             yield Site(chrom=int(row[0]), pos=int(row[1]), ref=row[2], alt=row[3])
 
 
-def total_count() -> int:
+def total_count(chromosome: int = None) -> int:
+    q = """
+            SELECT count(*) 
+            FROM annotation
+            """
+    params = []
+
+    if chromosome is not None:
+        q += " WHERE chr = %s"
+        params.append(chromosome)
+
     with conn.cursor() as cursor:
-        cursor.execute('SELECT count(*) FROM annotation')
+        print(q, params)
+        cursor.execute(q, params)
         return cursor.fetchone()[0]
+
+
+def copy_data(csv_file: str | Path):
+    """
+    Copy data from a CSV file to VARIANT table.
+    @param csv_file:
+    @return:
+    """
+    with conn.cursor() as cursor:
+        copy_query = """
+                    COPY ANNOTATION (chr,position,ref,alt,func,genes,exonic_func,aa_change,af_afr,af_amr,af_asj,af_eas,af_fin,af_nfe,af_sas,af_oth,cadd_phred,revel_max,polyphen_max,sift_max,cln_allele_id,cln_dis_db,cln_dn,cln_hgvs,cln_rev_stat,cln_sig,cln_vc,cln_vcso,cln_geneinfo,cln_mc)
+                    FROM STDIN DELIMITER ',' CSV HEADER NULL 'null'
+                """
+        with open(csv_file, 'r') as f:
+            cursor.copy_expert(copy_query, f)
+            conn.commit()

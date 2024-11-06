@@ -21,7 +21,7 @@ def fetch_all(cursor):
     return {row[1]: row[0] for row in cursor}
 
 
-def fetch_all_gt_idx(cursor):
+def fetch_all_gt_idx(cursor) -> dict[int, int]:
     """
     Returns a dict of participant_id -> genotype_idx
     """

@@ -1,4 +1,5 @@
 import itertools
+import time
 from pathlib import Path
 
 import fire
@@ -23,12 +24,12 @@ app = Celery("tasks")
 app.config_from_object(celeryconfig)
 
 
-def count_records(vcf_file_path: str) -> int:
-    """
-    Count the number of records in a VCF file.
-    """
-    vcf = VCF(str(vcf_file_path))
-    return sum(1 for _ in vcf)
+# def count_records(vcf_file_path: str) -> int:
+#     """
+#     Count the number of records in a VCF file.
+#     """
+#     vcf = VCF(str(vcf_file_path))
+#     return sum(1 for _ in vcf)
 
 
 def encode_genotype(genotype: tuple[int, int, bool]) -> int | None:
@@ -64,6 +65,72 @@ def encode_genotype(genotype: tuple[int, int, bool]) -> int | None:
         return 2
     if a == 1 and b == 1:
         return 3
+    
+
+def encode_genotype_vectorized(genotypes: np.ndarray) -> np.ndarray:
+    """
+    Vectorized version of encoding genotypes.
+
+    :param genotypes: A 2D NumPy array of shape (n_samples, 3)
+                      where each row is (a, b, phased).
+    :return: A 1D NumPy array of encoded genotypes.
+    """
+    a = genotypes[:, 0]
+    b = genotypes[:, 1]
+
+    # Initialize an output array with the same shape as the number of rows
+    output = np.full(a.shape, fill_value=np.nan, dtype=genotypes.dtype)
+
+    # Conditions for the encoding
+    mask_phased = (a == -1) | (b == -1)
+    output[mask_phased] = -1
+
+    mask_00 = (a == 0) & (b == 0)
+    output[mask_00] = 0
+
+    mask_01 = (a == 0) & (b == 1)
+    output[mask_01] = 1
+
+    mask_10 = (a == 1) & (b == 0)
+    output[mask_10] = 2
+
+    mask_11 = (a == 1) & (b == 1)
+    output[mask_11] = 3
+
+    return output
+
+
+def encode_genotype_vectorized(genotypes: np.ndarray) -> np.ndarray:
+    """
+    Vectorized version of encoding genotypes.
+
+    :param genotypes: A 2D NumPy array of shape (n_samples, 3)
+                      where each row is (a, b, phased).
+    :return: A 1D NumPy array of encoded genotypes.
+    """
+    a = genotypes[:, 0]
+    b = genotypes[:, 1]
+
+    # Initialize an output array with the same shape as the number of rows
+    output = np.full(a.shape, fill_value=np.nan, dtype=genotypes.dtype)
+
+    # Conditions for the encoding
+    mask_phased = (a == -1) | (b == -1)
+    output[mask_phased] = -1
+
+    mask_00 = (a == 0) & (b == 0)
+    output[mask_00] = 0
+
+    mask_01 = (a == 0) & (b == 1)
+    output[mask_01] = 1
+
+    mask_10 = (a == 1) & (b == 0)
+    output[mask_10] = 2
+
+    mask_11 = (a == 1) & (b == 1)
+    output[mask_11] = 3
+
+    return output
 
 
 def infer_phase(vcf_file_path: str) -> bool:
@@ -84,16 +151,16 @@ class VCFIngestor:
         Variants and genotype data is append-only.
 
         Before ingesting the genotype data, participants in the VCF are looked up:
-        - Case-A: All new participants - creates participants
+        - Case-A: All new participants - assigns new indexes to new participant
         - Case-B: All existing participants - does nothing
-        - Case-C: Mix of new and existing participants - creates participants
+        - Case-C: Mix of new and existing participants - assigns new indexes to new participant
 
         For each variant in the VCF:
         - Case-1: new variant and case-A,B,C - creates a new row with genotype data
         - Case-2: existing variant
-            - Case A: updates genotype array
-            - Case B: Assertion error / does nothing
-            - Case C: Assertion error / skip existing participants and updates genotype array for new participants
+            - Case A: updates (extend) genotype array
+            - Case B: does nothing
+            - Case C: skip existing participants and updates (extend) genotype array for new participants
 
         SQL creates for new variants
         SQL updates for existing variants and new participants
@@ -110,7 +177,8 @@ class VCFIngestor:
 
         self.celery_task = celery_task
         self.source_id = source_id
-        self.batch_size = batch_size
+        self.batch_size = 2000
+        print('batch_size', self.batch_size)
 
         self.idx_arr = np.array([])  # list of genotype array indices for each participant
         self.max_idx = None
@@ -120,14 +188,16 @@ class VCFIngestor:
 
         try:
             self.vcf = VCF(vcf_file_path)
+            # list of participant ids
+            # VCF is expected to have samples as participant ids - reheader step
             self.samples = [int(s) for s in self.vcf.samples]
-            self.phase = infer_phase(self.vcf_file_path)
+            self.phase: bool = infer_phase(self.vcf_file_path)
         except Exception as e:
             message = f'Unable to open vcf at {vcf_file_path}'
             print(message, e)
             raise IngestionFailed(message)
 
-        self.num_records = count_records(self.vcf_file_path)
+        self.num_records = self.vcf.num_records
         self.progress = None
         if self.celery_task:
             self.progress = Progress(celery_task=self.celery_task,
@@ -140,14 +210,15 @@ class VCFIngestor:
         if self.progress:
             self.progress.update(update)
         else:
+            # TODO: use tqdm to show progress
             print('progress: {} of {} ({}%)', update, self.num_records, round(100 * update / self.num_records))
 
     def resolve_gt_idx(self):
         """
-        Resolve genotype index for each participant.
+        Resolve genotype index for each participant in the VCF.
         """
         with conn.cursor() as cursor:
-            pid_idx = participant.fetch_all_gt_idx(cursor)
+            pid_idx: dict[int, int] = participant.fetch_all_gt_idx(cursor)
 
         # last used index from the current participants in the db
         _max_idx = max([idx for idx in pid_idx.values() if idx is not None], default=0)
@@ -155,6 +226,7 @@ class VCFIngestor:
         # infinite generator for new indexes, next index starts from max_idx + 1
         new_idx_gen = itertools.count(start=_max_idx + 1)
 
+        # new_idx_mask - True if participant never had a genotype index before
         self.new_idx_mask = np.array([pid_idx[pid] is None for pid in self.samples])
         self.idx_arr = np.array([pid_idx[pid] or next(new_idx_gen) for pid in self.samples])
         self.new_idx_arr = self.idx_arr[self.new_idx_mask]
@@ -214,7 +286,7 @@ class VCFIngestor:
 
         Create a subarray of genotype values for new participants, and rearrange it by their resolved (new) indices.
 
-        The return value is used for a partial update of the genotype array in the database, 
+        The return value is used for a partial update of the genotype array in the database,
         i.e. update values in the array only from start index to end index of the new participants.
         """
         new_genotype_vals = np.array(genotype_vals)[self.new_idx_mask]
@@ -232,20 +304,25 @@ class VCFIngestor:
 
     def ingest(self):
         num_processed, num_updates, num_creates = 0, 0, 0
-
+        print('ingestion start')
+        batch_start_time = time.perf_counter()
         for batch in batched(self.vcf, self.batch_size):
+            print(f'batch read time: {time.perf_counter() - batch_start_time:.3f} - num_processed: {num_processed}')
             # fetch all variant rows for the batch at once
             var_ids = [
                 Variant(encode_chromosome(var.CHROM), var.POS, var.REF, var.ALT[0], self.source_id)
                 for var in batch]
+            query_start = time.perf_counter()
             curr_variants = set(variant.find_many(var_ids))
+            print(f'query time: {time.perf_counter() - query_start:.3f}')
 
             # accumulate updates and create separately
             updates = []
             creates = []
             for var in batch:
                 variant_id = Variant(encode_chromosome(var.CHROM), var.POS, var.REF, var.ALT[0], self.source_id)
-                genotype_vals = [encode_genotype(gt) for gt in var.genotypes]
+                # genotype_vals = [encode_genotype(gt) for gt in var.genotypes]
+                genotype_vals = encode_genotype_vectorized(var.genotype.array())  # vectorized encoding
 
                 if variant_id in curr_variants:  # variant exists in db
                     if len(self.new_idx_arr) > 0:
@@ -269,12 +346,15 @@ class VCFIngestor:
             if updates:
                 variant.update_many(updates)
             if creates:
+                start_time = time.perf_counter()
                 variant.create_many(creates)
+                print(f'createMany time: {time.perf_counter() - start_time:.3f}')
 
             num_processed += len(batch)
             num_updates += len(updates)
             num_creates += len(creates)
             self.log_progress(num_processed)
+            batch_start_time = time.perf_counter()
 
         return {
             'num_participants': len(self.vcf.samples),
@@ -287,7 +367,7 @@ class VCFIngestor:
 
 
 # used to register celery task
-def ingest_vcf(celery_task, dummy, vcf_file_path=None, source_id=None, batch_size=100, **kwargs):
+def ingest_vcf(celery_task, dummy, vcf_file_path=None, source_id=None, batch_size=1000, **kwargs):
     """
     Ingest VCF data into the database.
 

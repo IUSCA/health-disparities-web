@@ -122,14 +122,6 @@ config = {
                 {
                     'name': 'setup download',
                     'task': 'setup_dataset_download'
-                },
-                {
-                    'name': 'delete source',
-                    'task': 'delete_source'
-                },
-                {
-                    'name': 'clean up staged files',
-                    'task': 'cleanup_staged'
                 }
             ]
         }

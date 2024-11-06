@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 from urllib.parse import urljoin
-import json
 
 import requests
 from glom import glom, assign as glom_assign
@@ -128,12 +127,12 @@ def dataset_setter(dataset: dict):
 
 
 def get_all_datasets(
-        dataset_type=None,
-        name=None,
-        days_since_last_staged=None,
-        deleted=False,
-        archived=None,
-        bundle=False):
+    dataset_type=None,
+    name=None,
+    days_since_last_staged=None,
+    deleted=False,
+    archived=None,
+    bundle=False):
     with APIServerSession() as s:
         payload = {
             'type': dataset_type,
@@ -278,7 +277,7 @@ def get_distinct_genotype_samples():
 
 def create_sample_mappings(samples: list[dict]):
     with APIServerSession() as s:
-        r = s.put('genotype/samples', json=samples)
+        r = s.post('genotypes/samples', json=samples)
         r.raise_for_status()
         return r.json()
 

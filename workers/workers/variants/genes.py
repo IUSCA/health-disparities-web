@@ -1,3 +1,4 @@
+import csv
 import logging
 import pickle
 from pathlib import Path
@@ -5,27 +6,32 @@ from pathlib import Path
 from cyvcf2 import VCF
 from fire import Fire
 from tqdm import tqdm
-
 from workers.variants.models.annotation import Site
 from workers.variants.models.gene import create_many, fetch_all
+from workers.variants.utils import encode_chromosome
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def count_lines(filepath):
+    with open(filepath, 'rb') as file:
+        return sum(1 for line in file)
+
+
 class GeneInfo:
-    def __init__(self, vcf_file_path, outfile=None, initfile=None):
+    def __init__(self, file_path, outfile=None, initfile=None):
         """
-        Extract gene information from a VCF file and save it as a pickle file.
+        Extract gene information from a VCF / TXT file and save it as a pickle file.
         If initfile is provided, the gene information will be updated with the new information.
         Creates new genes in the database if they do not exist.
 
-        @param vcf_file_path: Path to the VCF file containing gene information.
+        @param file_path: Path to the VCF / TXT file containing gene information.
         @param outfile: Path to the output pickle file.
         @param initfile: Path to the initial pickle file containing gene information.
         """
         self.genes_curr = set()
-        self.vcf_file_path = Path(vcf_file_path).resolve()
+        self.file_path = Path(file_path).resolve()
 
         self.outfile = outfile
         self.gene_data = {}
@@ -53,11 +59,11 @@ class GeneInfo:
             }
         """
 
-        vcf = VCF(str(self.vcf_file_path))
+        vcf = VCF(str(self.file_path))
         genes_dict = {}
         genes_agg = set()
 
-        for var in tqdm(vcf):
+        for var in tqdm(vcf, total=vcf.num_records, mininterval=5):
             genes = var.INFO.get('Gene.refGene').split('\\x3b')
             genes_agg.update(set(genes))
             # genes_mapped = [self.gene_idx_map[g] for g in genes]
@@ -71,17 +77,62 @@ class GeneInfo:
                 'ExonicFunc.refGene': None if exonic == '.' else exonic,
                 'AAChange.refGene': None if aa_change == '.' else aa_change
             }
-            s = Site(chrom=int(var.CHROM), pos=int(var.POS), ref=var.REF, alt=var.ALT[0])
+            s = Site(chrom=encode_chromosome(var.CHROM), pos=int(var.POS), ref=var.REF, alt=var.ALT[0])
             genes_dict[s] = val
 
         return genes_dict, genes_agg
 
+    def _transform_text(self) -> tuple[dict[Site, dict[str, str]], set[str]]:
+        """
+        Transform the txt file to a dictionary of gene information.
+        @return: genes_dict: Dictionary of gene information.
+        @return: genes_agg: Set of all genes in the txt file.
+
+        genes_dict: {
+            Site(chrom, pos, ref, alt): {
+                'Func.refGene': str,
+                'Gene.refGene': List[str],
+                'GeneDetail.refGene': str,
+                'ExonicFunc.refGene': str,
+                'AAChange.refGene': str
+            }
+        """
+        genes_dict = {}
+        genes_agg = set()
+        with open(self.file_path, newline='') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter='\t')
+            for row in tqdm(reader, total=count_lines(self.file_path) - 1, mininterval=5):
+                genes = [g for g in row['Gene.refGene'].split(';') if (g != '.' and g != '')]
+                genes_agg.update(set(genes))
+
+                func = row.get('Func.refGene', '.')
+                distances = row.get('GeneDetail.refGene', '.')
+                exonic = row.get('ExonicFunc.refGene', '.')
+                aa_change = row.get('AAChange.refGene', '.')
+                val = {
+                    'Func.refGene': None if func == '.' else func,
+                    'Gene.refGene': genes,
+                    'GeneDetail.refGene': None if distances == '.' else distances,
+                    'ExonicFunc.refGene': None if exonic == '.' else exonic,
+                    'AAChange.refGene': None if aa_change == '.' else aa_change
+                }
+
+                s = Site(
+                    chrom=encode_chromosome(row['Chr']),
+                    pos=int(row['Start']),
+                    ref=row['Ref'],
+                    alt=row['Alt']
+                )
+                genes_dict[s] = val
+        return genes_dict, genes_agg
+
     def extract(self):
-        logger.info(f'Extracting gene information from VCF file: {self.vcf_file_path}')
+        logger.info(f'Extracting gene information from file: {self.file_path}')
         self.genes_curr = fetch_all()
 
-        logger.info('Transforming VCF file to gene information pickle.')
-        genes_dict, genes_agg = self._transform_vcf()
+        logger.info('Transforming file to gene information pickle.')
+        is_txt = self.file_path.suffix == '.txt'
+        genes_dict, genes_agg = self._transform_text() if is_txt else self._transform_vcf()
 
         new_genes = genes_agg - self.genes_curr
         if new_genes:

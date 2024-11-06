@@ -12,6 +12,7 @@ Run the following command to populate / update the materialized view
 
 ```sql
 REFRESH MATERIALIZED view dx_unique_name;
+REFRESH MATERIALIZED view ehr_participant_counts_by_name;
 ```
 
 ## Regeneron Data Ingestion
@@ -22,7 +23,7 @@ Assumption: VCFs for each chromosome in the given directory will have the same s
 Make sure that the API is up
 
 Mode-1: Without mapping
-In this mode, the program attempts to resolve each sample in the VCF file to an "ib_id" (Identifier). Multiple strategies are employed for this resolution. If the program is unable to determine an "ib_id" for any given sample, it will generate a new_participants.csv file containing the problematic samples along with suggested "ib_id" values. The utility then exits, allowing users to manually update the "ib_id" values in the CSV file. Subsequent execution of the program with the mapping file provided will incorporate the corrected information.
+In this mode, the program attempts to resolve each sample in the VCF file to an "ib_id" (Identifier). Multiple strategies are employed for this resolution. If the program is unable to determine an "ib_id" for any given sample, it will generate a new_participants.csv file containing the problematic samples along with suggested "ib_id" values. The script then exits, allowing users to manually update the "ib_id" values in the CSV file. Subsequent execution of the program with the mapping file provided will incorporate the corrected information.
 
 <img src="assets/data_ingestion/resolve_samples_mode_1.png" >
 

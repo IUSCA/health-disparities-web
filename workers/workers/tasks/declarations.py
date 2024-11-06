@@ -119,10 +119,23 @@ def ingest_vcf(celery_task, dummy, **kwargs):
     return task_body(celery_task, dummy, **kwargs)
 
 
+@app.task(base=WorkflowTask, bind=True, name='transform_vcf', max_retries=0)
+def transform_vcf(celery_task, dummy, **kwargs):
+    from workers.variants.transform_vcf import transform_vcf as task_body
+    return task_body(celery_task, dummy, **kwargs)
+
+
 @app.task(base=WorkflowTask, bind=True, name='ingest_annotations', max_retries=3)
 def ingest_vcf(celery_task, chromosome, **kwargs):
     from workers.variants.load_annotations import ingest_annotations as task_body
     return task_body(celery_task, chromosome, **kwargs)
+
+
+@app.task(base=WorkflowTask, bind=True, name='transform_annotations', max_retries=3)
+def transform_annotations(celery_task, chromosome, **kwargs):
+    from workers.variants.transform_annotations import transform_annotations as task_body
+    return task_body(celery_task, chromosome, **kwargs)
+
 
 @app.task(base=WorkflowTask, bind=True, name='cleanup_staged',
           autoretry_for=(Exception,),

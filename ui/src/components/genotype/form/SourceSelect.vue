@@ -27,7 +27,10 @@ const model = defineModel();
 const source_options = ref([]);
 
 sourceSerice.getAll().then((res) => {
-  source_options.value = res.data;
-  model.value = source_options.value[0].id;
+  // change made for a demo:
+  // hide source - imputed data
+  // select by default AXIN source
+  source_options.value = res.data.filter((s) => s.id !== 2);
+  model.value = source_options.value[1].id;
 });
 </script>

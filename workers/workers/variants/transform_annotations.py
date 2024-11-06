@@ -1,5 +1,6 @@
 import csv
 import pickle
+from dataclasses import asdict
 from enum import Enum
 from pathlib import Path
 from typing import Iterable
@@ -9,7 +10,6 @@ import vcf
 from celery import Celery
 from sca_rhythm import Workflow
 from sca_rhythm.progress import Progress
-from tqdm import tqdm
 from vcf.model import _Record
 
 from workers.config import config, celeryconfig
@@ -208,11 +208,18 @@ class Loader:
         :param batch_size: Number of annotations to write into database in a single batch.
         """
         self.batch_size = batch_size
-        self.gnomadAnnotations = GnomadAnnotations(root_dir=gnomad_root_dir)
-        self.geneAnnotations = GeneAnnotations(root_dir=gene_root_dir)
-        self.clinvarAnnotations = ClinVarAnnotations(vcf_path=clinvar_vcf_path)
+        self.sources = []
+        if gnomad_root_dir is not None:
+            self.gnomadAnnotations = GnomadAnnotations(root_dir=gnomad_root_dir)
+            self.sources.append(Source.GNOMAD)
+        if gene_root_dir is not None:
+            self.geneAnnotations = GeneAnnotations(root_dir=gene_root_dir)
+            self.sources.append(Source.GENE)
+        if clinvar_vcf_path is not None:
+            self.clinvarAnnotations = ClinVarAnnotations(vcf_path=clinvar_vcf_path)
+            self.sources.append(Source.CLINVAR)
 
-    def fetch_annotations(self, sites: Iterable[Site], sources: tuple[Source] = tuple(Source)) -> Iterable[Annotation]:
+    def fetch_annotations(self, sites: Iterable[Site]) -> Iterable[Annotation]:
         """
         For each given site, annotation data is fetched from various sources and
         transformed into an Annotation object.
@@ -221,7 +228,6 @@ class Loader:
         
 
         :param sites: Iterable of sites to fetch annotations for.
-        :param sources: one or more sources to fetch annotations from.
         return: Iterable of Annotation objects.
 
         """
@@ -232,7 +238,7 @@ class Loader:
                 ref=s.ref,
                 alt=s.alt
             )
-            if Source.GNOMAD in sources:
+            if Source.GNOMAD in self.sources:
                 _ann = None
                 try:
                     _ann = self.gnomadAnnotations.fetch(s)
@@ -253,7 +259,7 @@ class Loader:
                     ann.polyphen_max = _ann['polyphen_max']
                     ann.sift_max = _ann['sift_max']
 
-            if Source.GENE in sources:
+            if Source.GENE in self.sources:
                 _gene = None
                 try:
                     _gene = self.geneAnnotations.fetch(s)
@@ -265,7 +271,7 @@ class Loader:
                     ann.exonic_func = _gene['ExonicFunc.refGene']
                     ann.aa_change = _gene['AAChange.refGene']
 
-            if Source.CLINVAR in sources:
+            if Source.CLINVAR in self.sources:
                 _clinvar = None
                 try:
                     _clinvar = self.clinvarAnnotations.fetch(s)
@@ -285,41 +291,13 @@ class Loader:
 
             yield ann
 
-    def create(self, sites: Iterable[Site]) -> None:
-        """
-        Fetch annotations for the given sites and write them into the database.
 
-        :param sites: Iterable of sites to fetch annotations for.
-        """
-        annotations = self.fetch_annotations(sites)
-        for batch in batched(annotations, self.batch_size):
-            annotation.create_many(batch)
-
-    def update(self, sites: Iterable[Site], sources: tuple[Source] = tuple(Source)) -> None:
-        """
-        Fetch annotations for the given sites and update the database.
-
-        :param sites: Iterable of sites to fetch annotations for.
-        :param sources: one or more sources to update. Defaults to all sources.
-        """
-        update_columns = set()
-        for s in set(sources):
-            if s == Source.GNOMAD:
-                update_columns.update(self.GNOMAD_COLUMNS)
-            elif s == Source.GENE:
-                update_columns.update(self.GENE_COLUMNS)
-            elif s == Source.CLINVAR:
-                update_columns.update(self.CLINVAR_COLUMNS)
-
-        annotations = self.fetch_annotations(sites, sources)
-        # non_nulls = (ann for ann in annotations if any(getattr(ann, k) is not None for k in update_columns))
-        for batch in batched(annotations, self.batch_size):
-            annotation.update_many(batch, update_columns)
-
-
-def ingest_annotations(celery_task, chromosome,
-                       gnomad_root_dir=None, gene_root_dir=None, clinvar_vcf_path=None,
-                       batch_size=100, **kwargs):
+def transform_annotations(celery_task, chromosome,
+                          gnomad_root_dir=None,
+                          gene_root_dir=None,
+                          clinvar_vcf_path=None,
+                          output_dir=None,
+                          batch_size=1000, **kwargs):
     if chromosome is None:
         print('chromosome is not provided')
         return
@@ -327,38 +305,58 @@ def ingest_annotations(celery_task, chromosome,
     num_records = annotation.count_missing(chromosome)
     print(f'Found {num_records} missing annotations for chromosome {chromosome}')
 
+    output_dir_path = Path(output_dir or '.').resolve()
+    output_dir_path.mkdir(parents=True, exist_ok=True)
+    csv_file_path = output_dir_path / Path(f'annotations_chr{chromosome}.csv').resolve()
+    column_names = Annotation.__annotations__.keys()
+
     loader = Loader(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, batch_size)
     progress = Progress(celery_task=celery_task,
                         name='ingest',
                         units='annotations',
                         throttle_time=10,
                         total=num_records)
-    loader.create(progress(sites))
+    annotations = loader.fetch_annotations(progress(sites))
+    with open(csv_file_path, 'w', newline='') as csvfile:
+        csvWriter = csv.DictWriter(csvfile, fieldnames=column_names)
+        csvWriter.writeheader()
+        for batch in batched(annotations, batch_size):
+            rows = [asdict(row) for row in batch]
+            for row in rows:
+                for key, value in row.items():
+                    if value is None:
+                        if key == 'genes':
+                            row[key] = '{}'
+                        else:
+                            row[key] = 'null'
+            csvWriter.writerows(rows)
+
     return chromosome,
 
 
-def launch_wfs(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, batch_size=100):
+def launch_wfs(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, output_dir, batch_size=100):
     gnomad_root_dir = Path(gnomad_root_dir).resolve()
     assert gnomad_root_dir.exists(), f'{gnomad_root_dir} does not exist'
 
     vcf_paths = list(gnomad_root_dir.glob('*.vcf.bgz'))
     assert len(vcf_paths) > 0, f'No .vcf.bgz files in {gnomad_root_dir}'
 
-    for chromosome in range(1, 25):
+    for chromosome in range(1,24):
         steps = [{
-            'name': f'chr{chromosome}',
-            'task': 'ingest_annotations',
+            'name': 'transform_annotations',
+            'task': 'transform_annotations',
             'queue': f'{config["app_id"]}.q',
             'kwargs': {
                 'gnomad_root_dir': str(gnomad_root_dir),
                 'gene_root_dir': gene_root_dir,
                 'clinvar_vcf_path': clinvar_vcf_path,
-                'batch_size': batch_size
+                'batch_size': batch_size,
+                'output_dir': str(output_dir)
             },
         }]
 
         wf_body = {
-            'name': 'Ingest Annotations',
+            'name': f'Annotations-Chr{chromosome}',
             'app_id': config['app_id'],
             'steps': steps
         }
@@ -367,57 +365,22 @@ def launch_wfs(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, batch_size=100)
         int_wf.start(chromosome)
 
 
-# def create_many(batch):
-#     print(batch)
-
-def read_from_csv(sites_csv: Path | str) -> Iterable[Site]:
-    with open(sites_csv, 'r') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            yield Site(chrom=int(row['chr']), pos=int(row['position']), ref=row['ref'], alt=row['alt'])
-
-
-def main(gnomad_root_dir: str, gene_root_dir: str, clinvar_vcf_path: str, batch_size: int = 1000, mode: str = 'db',
-         sites_csv: str = None, chromosome: int = None, update: bool = False, sources: tuple[str] = None):
+def main(
+    gnomad_root_dir: str = None,
+    gene_root_dir: str = None,
+    clinvar_vcf_path: str = None,
+    output_dir: str = None,
+    batch_size: int = 1000):
     """
     Load annotations from gnomAD (and others) into the database for a given list of sites.
 
-    @param sources: one or more sources to fetch annotations from. Options: gnomad, gene, clinvar. Default: all.
-    @param update: Update existing annotations.
+    @param output_dir:
     @param clinvar_vcf_path: Path to the ClinVar VCF file.
     @param gene_root_dir: Path to the directory containing the gene_info_chr*.pkl files.
     @param gnomad_root_dir: Path to the directory containing the gnomAD VCF files.
     @param batch_size: Number of annotations to write into the database in a single batch. Defaults to 100.
-    @param mode: Options: db, csv, celery.
-    If csv, sites are read from the csv file.
-    If db, sites in variant table but not in annotation table are read from the database. Default: db
-    If celery, launch a workflow to ingest annotations for all chromosomes using db mode.
-    @param sites_csv: Path to the CSV file containing the sites information with header: chr (1-24), position, ref, alt.
-    @param chromosome: when in db mode, add missing annotations only for this chromosome. int, 1-22,23(X), 24(Y)
     """
-
-    loader = Loader(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, batch_size)
-    # print(update, sources)
-    # return
-    if update:
-        if sources is not None:
-            if isinstance(sources, str):
-                sources = (sources,)
-            sources = tuple(Source[s.upper()] for s in sources)
-        sites = annotation.get_all_sites(chromosome)
-        total = annotation.total_count(chromosome)
-        print(total, chromosome, sources)
-        loader.update(tqdm(sites, total=total), sources)
-    else:
-        if mode == 'celery':
-            launch_wfs(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, batch_size)
-            return
-        if mode == 'csv':
-            assert sites_csv, 'sites_csv is required in csv mode'
-            sites = read_from_csv(sites_csv)
-        else:
-            sites = annotation.get_missing(chromosome)
-        loader.create(tqdm(sites))
+    launch_wfs(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, output_dir, batch_size)
 
 
 if __name__ == '__main__':
