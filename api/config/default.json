@@ -152,5 +152,10 @@
         "username": ""
       }
     }
+  },
+  "api_keys": {
+    "enabled": true,
+    "max_valid_days": 90,
+    "encryption_key": ""
   }
 }

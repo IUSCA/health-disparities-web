@@ -1,25 +1,52 @@
 const createError = require('http-errors');
 const _ = require('lodash/fp');
+const config = require('config');
 
 const authService = require('../services/auth');
+const userService = require('../services/user');
+const apiKeyService = require('../services/api_key');
 const { setIntersection } = require('../utils');
 const ac = require('../services/accesscontrols');
 const asyncHandler = require('./asyncHandler');
 
-function authenticate(req, res, next) {
+const authenticate = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization || '';
-  if (!authHeader) return next(createError.Unauthorized('Authentication failed. Token not found.'));
+  if (!authHeader) return next(createError.Unauthorized('Authentication failed. Authorization header not found.'));
 
-  const err = createError.Unauthorized('Authentication failed. Token is not valid.');
-  if (!authHeader.startsWith('Bearer ')) { return next(err); }
-  const token = authHeader.split(' ')[1];
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const auth = authService.checkJWT(token);
+    if (!auth) return next(createError.Unauthorized('Authentication failed. Token is not valid.'));
 
-  const auth = authService.checkJWT(token);
-  if (!auth) return next(err);
+    req.user = auth.profile;
+    return next();
+  }
+  if (config.get('api_keys.enabled') && authHeader.startsWith('Basic ')) {
+    const base64Credentials = authHeader.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials || '', 'base64').toString('ascii');
+    const [key, secret] = credentials.split(':');
+    if (!key || !secret) return next(createError.Unauthorized('Authentication failed. Invalid credentials format.'));
 
-  req.user = auth.profile;
-  next();
-}
+    try {
+      const apiKey = await apiKeyService.checkApiKey({ key, secret });
+      if (apiKey) {
+        const { user, ...restOfApiKey } = apiKey;
+        const user_profile = authService.get_user_profile(userService.transformUser(user));
+        req.user = user_profile;
+        req.api_key = restOfApiKey;
+        // console.log(JSON.stringify(req.user));
+        return next();
+      }
+      return next(createError.Unauthorized('Authentication failed. Api Key is not valid.'));
+    } catch (error) {
+      console.error('Error checking API key:', error);
+      return next(createError.InternalServerError(
+        'Authentication failed. An error occurred while checking the API key.',
+      ));
+    }
+  }
+  return next(createError.Unauthorized('Authentication failed. Auth method not supported.'));
+});
 
 // function checkRole(role) {
 //   // role can be a string indicating single role or an array of strings
@@ -73,6 +100,9 @@ const accessControl = _.curry((
   // resourceOwnerFn = null,
   // requesterFn = null,
 ) => {
+  // default checkOwnerShip is false, meaning '{action}:any' is checked
+  // if checkOwnerShip is true, '{action}:own' is checked instead of '{action}:any'
+
   // https://github.com/pawangspandey/accesscontrol-middleware/blob/master/index.js
   const actions = buildActions(action);
   // const _resourceOwnerFn = resourceOwnerFn || ((req) => req.params.username);
@@ -93,11 +123,21 @@ const accessControl = _.curry((
         ? acQuery[actions.own](resource)
         : acQuery[actions.any](resource);
       if (permission.granted) {
+        // check if the request is made by an API key
+        // if so, check if the required scope is one of the scopes of the API key
+        if (req.api_key) {
+          const requiredScope = `${action}:${resource}`;
+          if (!req.api_key.scopes.includes(requiredScope)) {
+            return next(createError(403, 'Insufficient scope'));
+          }
+          req.scope = requiredScope;
+        }
         req.permission = permission;
         return next();
       }
+      return next(createError(403, 'Insufficient permissions'));
     }
-    return next(createError(403));
+    return next(createError(403, 'No roles found'));
   };
 });
 

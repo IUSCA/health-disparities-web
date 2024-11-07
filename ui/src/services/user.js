@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import api from "./api";
 
 class UserService {
@@ -30,6 +31,26 @@ class UserService {
 
   deleteUser(username) {
     return api.delete(`/users/${username}`).then((response) => response.data);
+  }
+
+  getApiKeys() {
+    return api.get(`/users/api_keys`);
+  }
+
+  getApiKey(username) {
+    return api.get(`/users/${username}/api_key`);
+  }
+
+  createApiKey(username) {
+    return api.post(`/users/${username}/api_key`);
+  }
+
+  deleteApiKey(username) {
+    return api.delete(`/users/${username}/api_key`);
+  }
+
+  isApiKeyexpired(key) {
+    return dayjs(key.expires_at).diff(new Date()) < 0;
   }
 }
 

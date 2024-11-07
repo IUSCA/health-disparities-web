@@ -8,6 +8,23 @@ const grantsObject = {
       'update:any': ['*'],
       'delete:any': ['*'],
     },
+    api_keys: {
+      'create:any': ['*'],
+      'read:any': ['*', '!secret'], // cannot read the secret of the api key
+      'delete:any': ['*'],
+    },
+    scopes: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
+    api_keys_audit_logs: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
     workflow: {
       'create:any': ['*'],
       'read:any': ['*'],
@@ -110,6 +127,14 @@ const grantsObject = {
       'read:own': ['*'],
       'update:own': ['*'],
     },
+    api_keys: {
+      'read:own': ['*', '!secret'], // cannot read the secret of the api key
+      'create:own': ['*'],
+      'delete:own': ['*'],
+    },
+    scopes: {
+      'read:any': ['*'],
+    },
     projects: {
       'read:own': ['*', '!users'], // cannot read associated users to the project
     },
@@ -149,6 +174,14 @@ const grantsObject = {
       'read:any': ['*'],
       'update:any': ['*', '!roles'], // cannot update roles attribute of a user
       'create:any': ['*', '!roles'], // cannot set roles attribute while creating a user
+    },
+    api_keys: {
+      'read:own': ['*', '!secret'], // cannot read the secret of the api key
+      'create:own': ['*'],
+      'delete:own': ['*'],
+    },
+    scopes: {
+      'read:any': ['*'],
     },
     workflow: {
       'create:any': ['*'],

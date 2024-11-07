@@ -16,6 +16,7 @@ const {
   axiosErrorHandler,
   prismaConstraintFailedHandler,
 } = require('./middleware/error');
+const { apiKeyAuditLogger } = require('./middleware/loggers');
 
 // Register application
 const app = express();
@@ -25,6 +26,8 @@ app.disable('x-powered-by');
 
 // request logger - https://github.com/expressjs/morgan
 app.use(requestLogger('dev'));
+
+app.use(apiKeyAuditLogger);
 
 // request parsing middleware
 app.use(express.json({ limit: '50mb' }));

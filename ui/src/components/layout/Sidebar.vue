@@ -5,6 +5,7 @@
     width="13rem"
     minimizedWidth="0"
   >
+    <!-- user items -->
     <va-sidebar-item
       v-for="(item, i) in user_items"
       :key="i"
@@ -253,7 +254,17 @@ const bottom_items = ref([
   },
 ]);
 
-const admin_items = ref([]);
+const admin_items = ref([
+  ...(config.enabledFeatures?.apiKeys
+    ? [
+        {
+          icon: "mdi-key",
+          title: "API Keys",
+          path: "/apiKeys",
+        },
+      ]
+    : []),
+]);
 </script>
 
 <style>

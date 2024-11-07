@@ -95,6 +95,7 @@ const exports = {
   alertForEnvironments: ["ci"],
   enabledFeatures: {
     genomeBrowser: false,
+    apiKeys: true,
   },
   phenotype_data: {
     cache_busting_id: "41e81ff",
