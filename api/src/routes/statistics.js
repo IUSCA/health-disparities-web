@@ -19,6 +19,7 @@ router.get(
   '/data-access-timestamp-range',
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const dates = await prisma.$queryRaw`
     SELECT 
       MAX(timestamp) AS max_timestamp,
@@ -47,6 +48,7 @@ router.get(
     query('by_access_type').isBoolean().toBoolean().optional(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const start_date = dayjs(req.query.start_date).toDate();
     const end_date = dayjs(req.query.end_date).toDate();
     const { by_access_type } = req.query;
@@ -94,6 +96,7 @@ router.get(
   '/data-access-count-by-access-method',
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const data_access_counts = await prisma.$queryRaw`
       SELECT
         access_type as access_type,
@@ -122,6 +125,7 @@ router.get(
     query('include_datasets').isBoolean().toBoolean().optional(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const most_accessed_files = await prisma.$queryRaw`
       SELECT
         COUNT(*),
@@ -196,6 +200,7 @@ router.get(
     query('end_date').isISO8601(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const start_date = dayjs(req.query.start_date).toDate();
     const end_date = dayjs(req.query.end_date).toDate();
 
@@ -230,6 +235,7 @@ router.get(
     query('limit').isInt().toInt().optional(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const most_staged_datasets = await prisma.$queryRaw`
       SELECT
         d.id AS dataset_id,
@@ -256,6 +262,7 @@ router.get(
   '/stage-request-timestamp-range',
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const dates = await prisma.$queryRaw`
     SELECT 
       MAX(timestamp) AS max_timestamp,
@@ -275,6 +282,7 @@ router.get(
   '/user-count',
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const user_counts_by_date = await prisma.$queryRaw`
     select
       u.created_at::DATE,
@@ -300,6 +308,7 @@ router.get(
     query('limit').isInt().toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     const users_by_bandwidth = await prisma.$queryRaw`
       select 
         l.user_id,
@@ -332,6 +341,7 @@ router.post(
     query('dataset_id').isInt().toInt().optional(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Statistics']
     await prisma.data_access_log.create({
       data: {
         access_type: req.query.access_type,

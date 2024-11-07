@@ -111,18 +111,18 @@ router.get(
 router.get(
   '/current',
   isPermittedTo('read'),
-  asyncHandler(
-    async (req, res, next) => {
-      const workflows = await prisma.workflow.findMany();
-      res.json(workflows);
-    },
-  ),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Workflow']
+    const workflows = await prisma.workflow.findMany();
+    res.json(workflows);
+  }),
 );
 
 router.get(
   '/counts_by_status',
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Workflow']
     const counts = await wf_service.getCountsByStatus({ app_id: config.app_id });
     res.json(counts.data);
   }),
