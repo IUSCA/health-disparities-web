@@ -18,6 +18,15 @@ const router = express.Router();
 router.use('/scopes', require('./scopes'));
 router.use('/audit_logs', require('./audit_logs'));
 
+function addLastUsedAt(apiKey) {
+  const { audit_logs, ...rest } = apiKey;
+  const last_used_at = (audit_logs != null && audit_logs.length > 0) ? audit_logs[0].accessed_at : null;
+  return {
+    ...rest,
+    last_used_at,
+  };
+}
+
 router.get(
   '/',
   isPermittedTo('read'),
@@ -77,7 +86,9 @@ router.get(
         offset: req.query.offset,
       },
       // remove secret from the response
-      data: req.permission.filter(api_keys).map(apiKeyService.sanitizeApiKey),
+      data: req.permission.filter(api_keys)
+        .map(apiKeyService.sanitizeApiKey)
+        .map(addLastUsedAt),
     });
   }),
 );
@@ -129,7 +140,9 @@ router.get(
         offset: req.query.offset,
       },
       // remove secret from the response
-      data: req.permission.filter(api_keys).map(apiKeyService.sanitizeApiKey),
+      data: req.permission.filter(api_keys)
+        .map(apiKeyService.sanitizeApiKey)
+        .map(addLastUsedAt),
     });
   }),
 );
