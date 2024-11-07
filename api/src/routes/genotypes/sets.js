@@ -15,7 +15,7 @@ router.get(
   '/',
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['genotype_files']
+    // #swagger.tags = ['Genotype Files']
     const sets = await prisma.genotype_set.findMany({});
     res.json(sets);
   }),
@@ -30,7 +30,7 @@ router.put(
     param('source_id').isInt().toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['genotype_files']
+    // #swagger.tags = ['Genotype Files']
     const data = _.flow([
       _.pick(['path', 'description']),
       _.omitBy(_.isNil),

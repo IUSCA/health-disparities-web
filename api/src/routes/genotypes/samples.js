@@ -15,7 +15,7 @@ router.get(
   '/distinct/participant_id',
   isPermittedTo('read'),
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['genotype_samples']
+    // #swagger.tags = ['Genotype Samples']
     const distinctRows = await prisma.genotype_sample.groupBy({
       by: ['sample', 'participant_id'],
       select: {
@@ -31,7 +31,7 @@ router.post(
   '/',
   isPermittedTo('create'),
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['genotype_samples']
+    // #swagger.tags = ['Genotype Samples']
     const result = await prisma.genotype_sample.createMany({
       data: req.body,
       skipDuplicates: true,

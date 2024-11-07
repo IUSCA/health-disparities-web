@@ -24,7 +24,7 @@ router.get(
     param('category').isIn(['lab', 'dx', 'medication', 'hospital']),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['phenotype']
+    // #swagger.tags = ['Phenotype']
     // #swagger.summary = 'Get total number of labs, diagnosis, medications matching the keyword.'
 
     const keyword = req.query.keyword || '';
@@ -107,7 +107,7 @@ router.get(
     query('offset').default(0).isInt({ min: 0 }).toInt(),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['phenotype']
+    // #swagger.tags = ['Phenotype']
     // #swagger.summary = 'Get '
 
     const keyword = req.query.keyword || '';
@@ -155,7 +155,7 @@ router.get(
     query('bins').default(10).isInt({ min: 1, max: 100 }),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['phenotype']
+    // #swagger.tags = ['Phenotype']
     // #swagger.summary = 'Get participants with the given phenotype.'
 
     const { name } = req.query;
@@ -205,7 +205,7 @@ router.get(
     query('field').isIn(['gender', 'race', 'ethnicity']),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['phenotype']
+    // #swagger.tags = ['Phenotype']
     // #swagger.summary = 'Get participants with the given phenotype.'
 
     const { name, field } = req.query;
@@ -258,6 +258,7 @@ router.get(
     param('category').isIn(CATEGORIES),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Phenotype']
     const { category, field } = req.params;
     const _rows = await prisma[category].groupBy({
       by: [field],
@@ -293,6 +294,7 @@ router.get(
       .toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Phenotype']
     const { category, field } = req.params;
     const _rows = await prisma[category].findMany({
       where: {
@@ -326,6 +328,7 @@ router.get(
     query('text').default(''),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Phenotype']
     const searchText = req.query.text || '';
     const _rows = await prisma.$queryRaw`
       select name

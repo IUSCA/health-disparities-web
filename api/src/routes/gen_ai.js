@@ -14,6 +14,7 @@ router.post(
   '/generate/name-description',
   isPermittedTo('create'),
   asyncHandler(async (req, res) => {
+    // #swagger.tags = ['GenAI']
     const metadata = await openaiService.generate_cohort_name_description(req.body.filters);
     res.json(metadata);
   }),
@@ -23,6 +24,7 @@ router.post(
   '/generate/cohort',
   isPermittedTo('create'),
   asyncHandler(async (req, res) => {
+    // #swagger.tags = ['GenAI']
     const json = await openaiService.generate_cohort(req.body.text);
     // console.log(JSON.stringify(json, null, 2));
     const query = {

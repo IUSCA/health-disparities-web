@@ -49,6 +49,7 @@ router.get(
   isPermittedTo('read'),
   validate([param('id').isInt().toInt()]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['protocols']
     const protocol = await prisma.protocol.findFirstOrThrow({
       where: {
         id: req.params.id,
