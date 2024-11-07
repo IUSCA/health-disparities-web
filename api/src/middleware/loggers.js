@@ -2,11 +2,29 @@ const morgan = require('morgan');
 
 const apiKeyService = require('../services/api_key');
 
-morgan.token('api_key', (req) => req.api_key?.key || '-');
+const auditLogBuffer = [];
+const BATCH_SIZE = 20; // Maximum number of logs in a single batch
+const FLUSH_INTERVAL = 5000; // Flush logs every 5 seconds
+let isFlushing = false;
+
+morgan.token('api_key_id', (req) => req.api_key?.id || '-');
 morgan.token('scope', (req) => req.scope || '-');
 
+async function flushAuditLogs() {
+  if (isFlushing || auditLogBuffer.length === 0) return;
+  const logsToFlush = auditLogBuffer.splice(0, auditLogBuffer.length);
+  isFlushing = true;
+  try {
+    await apiKeyService.createAuditLogs(logsToFlush);
+  } catch (error) {
+    console.error('Failed to flush audit logs:', error);
+  } finally {
+    isFlushing = false;
+  }
+}
+
 const apiKeyAuditLogger = morgan(
-  ':method :url :scope :status :api_key :response-time[0]',
+  ':method :url :scope :status :api_key_id :response-time[0]',
   {
     // eslint-disable-next-line no-unused-vars
     skip: (req, res) => !req.api_key, // Only log requests with an API key
@@ -15,21 +33,26 @@ const apiKeyAuditLogger = morgan(
         // Parse log message
         // console.log('message:', message);
 
-        const [method, url, scope, status, api_key, response_time] = message.trim().split(' ');
+        const [method, url, scope, status, api_key_id, response_time] = message.trim().split(' ');
 
-        if (api_key && api_key !== '-') {
+        if (api_key_id && api_key_id !== '-' && !Number.isNaN(parseInt(api_key_id, 10))) {
           try {
             const status_code = parseInt(status, 10);
             const response_time_ms = parseInt(response_time, 10);
-            await apiKeyService.createAuditLog({
+            auditLogBuffer.push({
               accessed_at: new Date(),
-              key: api_key,
+              api_key_id: parseInt(api_key_id, 10),
               endpoint: url,
               http_method: method,
               status_code: Number.isNaN(status_code) ? null : status_code,
               response_time: Number.isNaN(response_time_ms) ? null : response_time_ms,
               scope: scope === '-' ? null : scope,
             });
+
+            // Flush immediately if batch size is reached
+            if (auditLogBuffer.length >= BATCH_SIZE) {
+              flushAuditLogs();
+            }
           } catch (error) {
             console.error('Failed to log API request:', error);
           }
@@ -38,6 +61,8 @@ const apiKeyAuditLogger = morgan(
     },
   },
 );
+
+setInterval(flushAuditLogs, FLUSH_INTERVAL);
 
 module.exports = {
   apiKeyAuditLogger,

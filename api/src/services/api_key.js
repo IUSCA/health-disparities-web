@@ -186,9 +186,73 @@ async function createAuditLog({
   });
 }
 
+const scopeCache = new Map();
+/**
+ * Resolves the scopes based on the provided names.
+ * Checks a local cache first, and only queries the database for missing scopes.
+ *
+ * @param {Set<string>} names - A set of scope names to resolve.
+ * @returns {Promise<Object>} A promise that resolves to an object where the keys are scope names and the values are scope IDs.
+ */
+async function resolveScopes(names) {
+  // Separate names into cached and missing (not in cache)
+  const cachedScopes = {};
+  const missingNames = [];
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const name of names) {
+    if (scopeCache.has(name)) {
+      cachedScopes[name] = scopeCache.get(name);
+    } else {
+      missingNames.push(name);
+    }
+  }
+
+  // If all scopes are found in cache, return them
+  if (missingNames.length === 0) {
+    return cachedScopes;
+  }
+
+  // Fetch only missing scopes from the database
+  // console.log('Fetching missing scopes:', missingNames);
+  const fetchedScopes = await prisma.scope.findMany({
+    where: {
+      name: {
+        in: missingNames,
+      },
+    },
+  });
+
+  // Update the cache and prepare results for missing scopes
+  // eslint-disable-next-line no-restricted-syntax
+  for (const scope of fetchedScopes) {
+    scopeCache.set(scope.name, scope.id); // Update cache
+    cachedScopes[scope.name] = scope.id; // Add to result
+  }
+
+  return cachedScopes;
+}
+
+async function createAuditLogs(logs) {
+  // resolve scope to an id in each log
+  const unique_scopes = new Set(logs.map((log) => log.scope).filter((scope) => scope !== null));
+  const scope_map = await resolveScopes(unique_scopes);
+
+  return prisma.api_audit_log.createMany({
+    data: logs.map((log) => {
+      const { scope, ...rest } = log;
+      return {
+        ...rest,
+        scope_id: scope_map[scope] || null,
+      };
+    }),
+  });
+}
+
 module.exports = {
   checkApiKey,
   createApiKey,
   createAuditLog,
   sanitizeApiKey,
+  createAuditLogs,
 };

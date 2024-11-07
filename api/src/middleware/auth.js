@@ -127,7 +127,7 @@ const accessControl = _.curry((
         // if so, check if the required scope is one of the scopes of the API key
         if (req.api_key) {
           const requiredScope = `${action}:${resource}`;
-          if (!req.api_key.scopes.includes(requiredScope)) {
+          if (!req.api_key.scopes?.includes(requiredScope)) {
             return next(createError(403, 'Insufficient scope'));
           }
           req.scope = requiredScope;
