@@ -7,7 +7,7 @@
 
       <template #cell(is_expired)="{ rowData }">
         <span>
-          {{ userService.isApiKeyexpired(rowData) ? "Expired" : "Active" }}
+          {{ apiKeyService.isExpired(rowData) ? "Expired" : "Active" }}
         </span>
       </template>
 
@@ -16,11 +16,23 @@
       </template>
 
       <template #cell(last_used_at)="{ value }">
-        <span>{{ value ? datetime.date(value) : "Never Used" }}</span>
+        <VaPopover
+          v-if="value"
+          :message="`Last used at: ${datetime.absolute(value)}`"
+        >
+          <span>{{ datetime.fromNow(value) }}</span>
+        </VaPopover>
+        <span v-else> Never Used </span>
       </template>
 
       <template #cell(expires_at)="{ value }">
-        <span>{{ datetime.date(value) }}</span>
+        <!-- ex: in 30 days -->
+        <VaPopover
+          v-if="value"
+          :message="`Expires at: ${datetime.absolute(value)}`"
+        >
+          <span>{{ maybePluralize(datetime.daysFromNow(value), "day") }}</span>
+        </VaPopover>
       </template>
 
       <!-- actions -->
@@ -29,9 +41,12 @@
           size="small"
           preset="primary"
           color="danger"
-          @click="handleDelete(rowData)"
+          @click="handleRevoke(rowData)"
         >
-          <i-mdi-delete />
+          <div class="flex gap-1 items-center">
+            <i-mdi-block-helper class="text-xs" />
+            <span>Revoke</span>
+          </div>
         </va-button>
       </template>
     </VaDataTable>
@@ -41,7 +56,8 @@
 <script setup>
 import * as datetime from "@/services/datetime";
 import toast from "@/services/toast";
-import userService from "@/services/user";
+import apiKeyService from "@/services/api_keys";
+import { maybePluralize } from "@/services/utils";
 
 // const props = defineProps({})
 const keys = ref([]);
@@ -68,11 +84,11 @@ const columns = [
   },
   {
     key: "expires_at",
-    label: "Expires",
+    label: "Expires in",
   },
   {
     key: "actions",
-    width: "75px",
+    width: "85px",
     tdAlign: "right",
     thAlign: "right",
   },
@@ -80,10 +96,10 @@ const columns = [
 
 function fetchKeys() {
   data_loading.value = true;
-  userService
-    .getApiKeys()
+  apiKeyService
+    .getAll()
     .then((res) => {
-      keys.value = res.data;
+      keys.value = res.data.data;
     })
     .catch((err) => {
       console.error(err);
@@ -96,17 +112,17 @@ function fetchKeys() {
 
 onMounted(fetchKeys);
 
-function handleDelete(row) {
+function handleRevoke(row) {
   console.log("delete", row);
-  userService
-    .deleteApiKey(row.user.username)
+  apiKeyService
+    .revoke(row.user.username)
     .then(() => {
-      toast.success("API key deleted");
+      toast.success("API key revoked");
       fetchKeys();
     })
     .catch((err) => {
       console.error(err);
-      toast.error("Failed to delete API key");
+      toast.error("Failed to revoke API key");
     });
 }
 </script>

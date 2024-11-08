@@ -44,7 +44,10 @@ router.get(
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['API Keys']
     const scopes = await prisma.scope.findMany({
-      orderBy: { resource: 'asc' },
+      orderBy: [
+        { resource: 'asc' },
+        { action: 'asc' },
+      ],
     });
     res.json(scopes);
   }),

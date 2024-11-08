@@ -260,7 +260,17 @@ const admin_items = ref([
         {
           icon: "mdi-key",
           title: "API Keys",
-          path: "/apiKeys",
+          path: "/keys",
+        },
+        {
+          icon: "mdi-security",
+          title: "Scopes",
+          path: "/scopes",
+        },
+        {
+          icon: "mdi-file-chart-outline",
+          title: "API Audit Logs",
+          path: "/audit_logs",
         },
       ]
     : []),
