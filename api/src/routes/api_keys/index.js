@@ -109,7 +109,10 @@ router.get(
   ]),
   asyncHandler(async (req, res, next) => {
   // #swagger.tags = ['API Keys']
-    const where = {};
+    const where = {
+      user: { username: req.params.username },
+      revoked: false,
+    };
     if (req.query.expired != null) {
     // expired is true - expires_at : { lt: new Date() }
     // expired is false - expires_at : { gte: new Date() }
@@ -180,11 +183,12 @@ router.post(
     });
 
     // validate that user does not have max number of keys
-    // // find number of non-revoked keys for the user
+    // // find number of non-revoked and non-expired keys for the user
     const numKeys = await prisma.api_key.count({
       where: {
         user: { username: req.params.username },
         revoked: false,
+        expires_at: { gte: new Date() },
       },
     });
     if (numKeys >= config.get('api_keys.max_per_user')) {
@@ -226,14 +230,29 @@ router.delete(
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['API Keys']
 
+    // ensure that the key exists and is associated with the user
+    const apiKey = await prisma.api_key.findFirstOrThrow({
+      where: {
+        key: req.params.key,
+        user: { username: req.params.username },
+      },
+    });
+
+    // if the key is already revoked, return 204
+    if (apiKey.revoked) {
+      return res.status(204).send();
+    }
+
     // revoke the API key
     await prisma.api_key.update({
       where: {
         key: req.params.key,
+        user: { username: req.params.username },
       },
       data: {
         revoked: true,
         revoked_at: new Date(),
+        revoker_username: req.user.username,
       },
     });
 

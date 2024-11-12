@@ -22,7 +22,7 @@ class ApiKeyService {
   }
 
   isExpired(key) {
-    return dayjs(key.expires_at).diff(new Date()) < 0;
+    return dayjs(key.expires_at).isBefore(dayjs());
   }
 
   getAllScopes() {

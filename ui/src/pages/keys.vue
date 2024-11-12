@@ -7,7 +7,7 @@
 
       <template #cell(is_expired)="{ rowData }">
         <span>
-          {{ apiKeyService.isExpired(rowData) ? "Expired" : "Active" }}
+          {{ getStatus(rowData) }}
         </span>
       </template>
 
@@ -112,6 +112,16 @@ function handleRevoke(row) {
       console.error(err);
       toast.error("Failed to revoke API key");
     });
+}
+
+function getStatus(row) {
+  if (row.revoked) {
+    return "Revoked";
+  }
+  if (apiKeyService.isExpired(row)) {
+    return "Expired";
+  }
+  return "Active";
 }
 </script>
 
