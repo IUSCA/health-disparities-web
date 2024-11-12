@@ -1,3 +1,13 @@
+/* need to use body to override styles being loaded after overrides.css namely va-color-variables-0 */
+/* body has more specificity than :root */
+html body {
+  --va-secondary: #6a6f7a;
+}
+html.dark body {
+  --va-secondary: #91969f;
+}
+
+
 :root {
   --va-popover-content-font-size: 0.8rem;
   --va-popover-content-padding: 0.5rem 0.5rem;
