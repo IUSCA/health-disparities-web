@@ -156,6 +156,7 @@
   "api_keys": {
     "enabled": true,
     "max_valid_days": 90,
-    "encryption_key": ""
+    "encryption_key": "",
+    "max_per_user": 5
   }
 }

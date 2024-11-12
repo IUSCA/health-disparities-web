@@ -36,6 +36,8 @@ router.get(
     query('expired').toBoolean().optional(),
     query('username').optional(),
     query('revoked').toBoolean().optional(),
+    query('sort_by').default('created_at').isIn(['created_at', 'expires_at']),
+    query('sort_order').default('desc').isIn(['asc', 'desc']),
   ]),
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['API Keys']
@@ -72,6 +74,9 @@ router.get(
       },
       take: req.query.limit,
       skip: req.query.offset,
+      orderBy: {
+        [req.query.sort_by]: req.query.sort_order,
+      },
     };
 
     const [api_keys, count] = await prisma.$transaction([
@@ -99,6 +104,8 @@ router.get(
   validate([
     query('limit').default(50).isInt({ min: 1, max: 100 }).toInt(),
     query('offset').default(0).isInt({ min: 0 }).toInt(),
+    query('sort_by').default('created_at').isIn(['created_at', 'expires_at']),
+    query('sort_order').default('desc').isIn(['asc', 'desc']),
   ]),
   asyncHandler(async (req, res, next) => {
   // #swagger.tags = ['API Keys']
@@ -126,6 +133,9 @@ router.get(
       },
       take: req.query.limit,
       skip: req.query.offset,
+      orderBy: {
+        [req.query.sort_by]: req.query.sort_order,
+      },
     };
 
     const [api_keys, count] = await prisma.$transaction([
@@ -168,6 +178,18 @@ router.post(
         is_deleted: false,
       },
     });
+
+    // validate that user does not have max number of keys
+    // // find number of non-revoked keys for the user
+    const numKeys = await prisma.api_key.count({
+      where: {
+        user: { username: req.params.username },
+        revoked: false,
+      },
+    });
+    if (numKeys >= config.get('api_keys.max_per_user')) {
+      return next(createError(400, 'The maximum number of API keys has been reached'));
+    }
 
     // validate that the scopes exist
     const allScopes = await prisma.scope.findMany({
@@ -212,6 +234,25 @@ router.delete(
       data: {
         revoked: true,
         revoked_at: new Date(),
+      },
+    });
+
+    res.status(204).send();
+  }),
+);
+
+// hard delete an API key
+router.delete(
+  '/:key',
+  isPermittedTo('delete'),
+  asyncHandler(async (req, res, next) => {
+  // #swagger.tags = ['API Keys']
+
+    // delete the API key
+    // also deletes the audit logs, and scope associations
+    await prisma.api_key.delete({
+      where: {
+        key: req.params.key,
       },
     });
 

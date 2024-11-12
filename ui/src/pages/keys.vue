@@ -16,23 +16,12 @@
       </template>
 
       <template #cell(last_used_at)="{ value }">
-        <VaPopover
-          v-if="value"
-          :message="`Last used at: ${datetime.absolute(value)}`"
-        >
-          <span>{{ datetime.fromNow(value) }}</span>
-        </VaPopover>
-        <span v-else> Never Used </span>
+        <LastUsed :lastUsedAt="value" />
       </template>
 
       <template #cell(expires_at)="{ value }">
         <!-- ex: in 30 days -->
-        <VaPopover
-          v-if="value"
-          :message="`Expires at: ${datetime.absolute(value)}`"
-        >
-          <span>{{ maybePluralize(datetime.daysFromNow(value), "day") }}</span>
-        </VaPopover>
+        <ExpiresIn :expiresAt="value" />
       </template>
 
       <!-- actions -->
@@ -54,10 +43,9 @@
 </template>
 
 <script setup>
+import apiKeyService from "@/services/api_keys";
 import * as datetime from "@/services/datetime";
 import toast from "@/services/toast";
-import apiKeyService from "@/services/api_keys";
-import { maybePluralize } from "@/services/utils";
 
 // const props = defineProps({})
 const keys = ref([]);

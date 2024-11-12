@@ -10,11 +10,15 @@ class ApiKeyService {
   }
 
   create({ username, ...data }) {
-    return api.post(`/api_key/${username}`, data);
+    return api.post(`/api_keys/${username}`, data);
   }
 
-  revoke(key) {
-    return api.delete(`/api_key/${key}`);
+  revoke({ username, key }) {
+    return api.delete(`/api_keys/${username}/${key}`);
+  }
+
+  delete(key) {
+    return api.delete(`/api_keys/${key}`);
   }
 
   isExpired(key) {

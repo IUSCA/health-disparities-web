@@ -164,7 +164,8 @@ model user {
   project_datasets_assigned project_dataset[]
   project_contacts_assigned project_contact[]
   initiated_workflows       workflow[]          @relation("initiated_workflows")
-  api_keys                  api_key[]
+  api_keys                  api_key[]           @relation("api_key_user")
+  revoked_api_keys          api_key[]           @relation("api_key_revoker")
 }
 
 model user_password {
@@ -941,20 +942,22 @@ view demographic_extended {
 }
 
 model api_key {
-  id           Int             @id @default(autoincrement())
-  name         String
-  description  String?
-  user_id      Int
-  key          String          @unique
-  secret       Bytes           @db.ByteA
-  created_at   DateTime        @default(now()) @db.Timestamp(6)
-  expires_at   DateTime
-  revoked      Boolean         @default(false)
-  revoked_at   DateTime?
-  ip_whitelist String[]
-  user         user            @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  audit_logs   api_audit_log[]
-  scopes       api_key_scope[]
+  id               Int             @id @default(autoincrement())
+  name             String
+  description      String?
+  user_id          Int
+  key              String          @unique
+  secret           Bytes           @db.ByteA
+  created_at       DateTime        @default(now()) @db.Timestamp(6)
+  expires_at       DateTime
+  revoked          Boolean         @default(false)
+  revoked_at       DateTime?
+  revoker_username String?
+  ip_whitelist     String[]
+  user             user            @relation(fields: [user_id], references: [id], onDelete: Cascade, name: "api_key_user")
+  audit_logs       api_audit_log[]
+  scopes           api_key_scope[]
+  revoker          user?           @relation(fields: [revoker_username], references: [username], name: "api_key_revoker")
 }
 
 model scope {
