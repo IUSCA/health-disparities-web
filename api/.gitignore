@@ -31,6 +31,7 @@ keys/jwks.json
 
 #swagger auto generate file
 swagger_output.json
+swagger_public.json
 
 # generated reports
 reports

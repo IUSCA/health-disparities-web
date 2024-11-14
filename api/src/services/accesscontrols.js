@@ -107,7 +107,7 @@ const grantsObject = {
       'update:any': ['*'],
       'delete:any': ['*'],
     },
-    cohort: {
+    cohorts: {
       'create:any': ['*'],
       'read:any': ['*'],
       'update:any': ['*'],
@@ -150,7 +150,7 @@ const grantsObject = {
     source: {
       'read:any': ['*'],
     },
-    cohort: {
+    cohorts: {
       'create:any': ['*'],
       'read:any': ['*'],
       'update:own': ['*'],
@@ -230,7 +230,7 @@ const grantsObject = {
       'read:any': ['*'],
       'update:any': ['*'],
     },
-    cohort: {
+    cohorts: {
       'create:any': ['*'],
       'read:any': ['*'],
       'update:any': ['*'],

@@ -6,6 +6,7 @@ const requestLogger = require('morgan');
 const compression = require('compression');
 const swaggerUi = require('swagger-ui-express');
 const config = require('config');
+const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const {
@@ -20,6 +21,9 @@ const { apiKeyAuditLogger } = require('./middleware/loggers');
 
 // Register application
 const app = express();
+
+// Enable CORS for all origins
+app.use(cors());
 
 // remove fingerprinting header
 app.disable('x-powered-by');
@@ -43,14 +47,23 @@ app.use(cookieParser());
 // compress all responses
 app.use(compression());
 
+// serve swagger docs
+// only serve complete api docs in development
+// always serve public api docs
 if (!['production', 'test'].includes(config.get('mode'))) {
   // mount swagger ui
   try {
-    const swaggerFile = JSON.parse(fs.readFileSync('./swagger_output.json'));
-    app.use('/doc', swaggerUi.serve, swaggerUi.setup(swaggerFile));
+    const swaggerDevFile = JSON.parse(fs.readFileSync('./swagger_output.json'));
+    app.use('/doc/dev', swaggerUi.serveFiles(swaggerDevFile), swaggerUi.setup(swaggerDevFile));
   } catch (e) {
-    console.error('Unable to load "./swagger_output.json"', e);
+    console.warn('Unable to load "./swagger_output.json". Run "npm run swagger" to generate the file.');
   }
+}
+try {
+  const swaggerPublicFile = JSON.parse(fs.readFileSync('./swagger_public.json'));
+  app.use('/doc', swaggerUi.serveFiles(swaggerPublicFile), swaggerUi.setup(swaggerPublicFile));
+} catch (e) {
+  console.warn('Unable to load "./swagger_public.json". Run "npm run swagger" to generate the file.');
 }
 
 // mount router

@@ -4,7 +4,12 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/health', (req, res) => { res.send('OK'); });
+router.get('/health', (req, res) => {
+  // #swagger.tags = ['general', 'public']
+  // #swagger.description = 'Health check endpoint.'
+  // #swagger.operationId = 'health'
+  res.send('OK');
+});
 router.use('/auth', require('./auth/index'));
 router.use('/reports', require('./reports'));
 router.use('/about', require('./about'));

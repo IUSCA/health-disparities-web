@@ -158,5 +158,8 @@
     "max_valid_days": 90,
     "encryption_key": "",
     "max_per_user": 5
+  },
+  "contact": {
+    "app_admin": "bioloop-ops-l@list.iu.edu"
   }
 }

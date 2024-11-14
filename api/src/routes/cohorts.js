@@ -12,7 +12,7 @@ const { accessControl } = require('../middleware/auth');
 const cohortService = require('../services/cohorts');
 const cohortModel = require('../services/cohorts/model');
 
-const isPermittedTo = accessControl('cohort');
+const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
 
 async function getCohortById(id) {
@@ -51,7 +51,7 @@ router.get(
   '/',
   isPermittedTo('read'),
   validate([
-    query('is_mine').optional().toBoolean(),
+    query('is_mine').default(false).toBoolean(),
     query('is_published').optional().toBoolean(),
     query('is_locked').optional().toBoolean(),
     query('type').optional().isIn([
@@ -64,8 +64,29 @@ router.get(
     query('offset').default(0).isInt({ min: 0 }).toInt(),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['cohorts']
+    // #swagger.operationId = 'searchCohorts'
+    // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Search cohorts'
+    // #swagger.description = 'Search cohorts based on query parameters'
+    // #swagger.parameters['search_term'] = { description: 'Filter cohorts by name or description containing search term' }
+    // #swagger.parameters['is_mine'] = { description: 'Show only the user\'s cohorts', type: 'boolean' }
+    // #swagger.parameters['is_published'] = { description: 'Show only published cohorts', type: 'boolean' }
+    // #swagger.parameters['is_locked'] = { description: 'Show only locked cohorts', type: 'boolean' }
+    // #swagger.parameters['type'] = { description: 'Show only cohorts of a certain type', enum: ['phenotype', 'genotype', 'combination'] }
+    // #swagger.parameters['sort_by'] = { description: 'Sort by a field', enum: ['name', 'size', 'created_at', 'updated_at'], default: 'created_at' }
+    // #swagger.parameters['sort_order'] = { description: 'Sort order', enum: ['asc', 'desc'], default: 'desc' }
+    // #swagger.parameters['limit'] = { description: 'Limit the number of results', type: 'integer', default: 10 }
+    // #swagger.parameters['offset'] = { description: 'Offset the results', type: 'integer', default: 0 }
+    /* #swagger.responses[200] = {
+        description: 'List of cohorts',
+        schema: {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Cohort"
+          }
+        }
+      }
+    */
 
     const data = _.pick(
       ['search_term', 'is_published', 'is_locked', 'is_protected', 'is_mine', 'type'],
@@ -108,8 +129,19 @@ router.get(
     param('id').isUUID(),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['cohorts']
+    // #swagger.operationId = 'getCohortById'
+    // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Get a cohort by id'
+    // #swagger.description = 'Get a cohort by its id'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
+    /* #swagger.responses[200] = {
+        description: 'Cohort',
+        schema: {
+          "$ref": "#/definitions/Cohort"
+        }
+      }
+    */
+
     const cohort = await getCohortById(req.params.id);
     if (!cohort) {
       return res.sendStatus(404);
@@ -130,8 +162,23 @@ router.post(
     body('metadata').optional().isObject(),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['cohorts']
+    // #swagger.operationId = 'createCohort'
+    // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Create a cohort'
+    // #swagger.description = 'Create a cohort based on the query'
+    // #swagger.parameters['name'] = { description: 'The cohort name', required: true }
+    // #swagger.parameters['query'] = { description: 'The cohort query', required: true, schema: { type: 'object' } }
+    // #swagger.parameters['is_published'] = { description: 'Indicates if the cohort is published', type: 'boolean' }
+    // #swagger.parameters['is_locked'] = { description: 'Indicates if the cohort is locked', type: 'boolean' }
+    // #swagger.parameters['is_protected'] = { description: 'Indicates if the cohort is protected', type: 'boolean' }
+    // #swagger.parameters['metadata'] = { description: 'The cohort metadata', schema: {} }
+    /* #swagger.responses[200] = {
+        description: 'Cohort',
+        schema: {
+          "$ref": "#/definitions/Cohort"
+        }
+      }
+    */
 
     const cohort_data = _.flow([
       _.pick(['name', 'query', 'is_published', 'is_locked', 'is_protected', 'description', 'metadata']),
@@ -198,8 +245,24 @@ router.patch(
     body('metadata').optional().isObject(),
   ]),
   asyncHandler(async (req, res) => {
-  // #swagger.tags = ['cohorts']
-  // #swagger.summary = 'Update a cohort'
+    // #swagger.operationId = 'updateCohort'
+    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.summary = 'Update a cohort'
+    // #swagger.description = 'Update a cohort based on the query'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
+    // #swagger.parameters['name'] = { description: 'The cohort name', type: 'string' }
+    // #swagger.parameters['query'] = { description: 'The cohort query', schema: { type: 'object' } }
+    // #swagger.parameters['is_published'] = { description: 'Indicates if the cohort is published', type: 'boolean' }
+    // #swagger.parameters['is_locked'] = { description: 'Indicates if the cohort is locked', type: 'boolean' }
+    // #swagger.parameters['is_protected'] = { description: 'Indicates if the cohort is protected', type: 'boolean' }
+    // #swagger.parameters['metadata'] = { description: 'The cohort metadata', schema: {} }
+    /* #swagger.responses[200] = {
+        description: 'Cohort',
+        schema: {
+          "$ref": "#/definitions/Cohort"
+        }
+      }
+    */
 
     // user role can modify cohort if they are the author
     const { id } = req.params;
@@ -273,8 +336,23 @@ router.get(
   '/:id/is-deletable',
   isPermittedTo('delete'),
   asyncHandler(async (req, res) => {
-  // #swagger.tags = ['cohorts']
-  // #swagger.summary = 'Check if a cohort is deletable'
+    // #swagger.operationId = 'isCohortDeletable'
+    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.summary = 'Check if a cohort is deletable'
+    // #swagger.description = 'Check if a cohort is deletable based on certain conditions'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
+    /* #swagger.responses[200] = {
+        description: 'indicates whether the cohort is deletable',
+        schema: {
+          type: 'object',
+          properties: {
+            is_deletable: { type: 'boolean' },
+            reason: { type: 'string' },
+            dependent_cohorts: { type: 'array', items: { "$ref": "#/definitions/Cohort" } }
+          }
+        }
+      }
+    */
 
     const { id } = req.params;
     const cohort = await prisma.cohort.findFirstOrThrow({
@@ -316,8 +394,22 @@ router.delete(
   ]),
   // eslint-disable-next-line no-unused-vars
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['cohorts']
+    // #swagger.operationId = 'deleteCohort'
+    // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Delete a cohort'
+    // #swagger.description = 'Delete a cohort based on its id'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
+    // #swagger.parameters['delete_dependents'] = { description: 'Delete dependent cohorts', type: 'boolean', default: false }
+    /* #swagger.responses[200] = {
+        description: 'Number of cohorts deleted',
+        schema: {
+          type: 'object',
+          properties: {
+            count: { type: 'integer' }
+          }
+        }
+      }
+    */
 
     // cannot delete a cohort if they are not the author
     // cannot delete a published cohort
@@ -364,20 +456,22 @@ router.delete(
   }),
 );
 
-router.post(
-  '/export/:id',
-  isPermittedTo('read'),
-  validate([
-    param('id').isUUID(),
-  ]),
-  // eslint-disable-next-line no-unused-vars
-  asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['cohorts']
-    // #swagger.summary = 'Export a cohort'
+// router.post(
+//   '/export/:id',
+//   isPermittedTo('read'),
+//   validate([
+//     param('id').isUUID(),
+//   ]),
+//   // eslint-disable-next-line no-unused-vars
+//   asyncHandler(async (req, res, next) => {
+//     // #swagger.operationId = 'exportCohort'
+//     // #swagger.tags = ['cohorts', 'public']
+//     // #swagger.summary = 'Export a cohort'
+//     // #swagger.description = 'Export a cohort based on its id'
 
-    createError(501, 'Not implemented');
-  }),
-);
+//     createError(501, 'Not implemented');
+//   }),
+// );
 
 router.post(
   '/search-participants',
@@ -390,11 +484,26 @@ router.post(
     query('search_id').optional().isUUID(),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['cohorts']
+    // #swagger.operationId = 'searchParticipants'
+    // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Search participants based on a query'
     /* #swagger.description = 'creates a temporary cohort based on the query and
           returns the participant count'
     */
+    // #swagger.parameters['query'] = { description: 'The cohort query', required: true, schema: { type: 'object' } }
+    // #swagger.parameters['search_id'] = { description: 'The search id', format: 'uuid' }
+    /* #swagger.responses[200] = {
+        description: 'Number of participants found',
+        schema: {
+          type: 'object',
+          properties: {
+            count: { type: 'integer' },
+            search_id: { type: 'string', format: 'uuid' }
+          }
+        }
+      }
+    */
+
     const start_time = performance.now();
 
     const searchQuery = await cohortService.searchParticipantsQueryAsync({
