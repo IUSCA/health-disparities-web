@@ -70,53 +70,6 @@ const doc = {
       },
     },
     '@schemas': {
-      BadRequestError: {
-        type: 'object',
-        properties: {
-          errors: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                type: {
-                  type: 'string',
-                  description: 'The error type',
-                },
-                msg: {
-                  type: 'string',
-                  description: 'The error message',
-                },
-                path: {
-                  type: 'string',
-                  description: 'The path to field with error',
-                },
-                location: {
-                  type: 'string',
-                  description: 'The location of the field with error',
-                },
-              },
-            },
-          },
-        },
-        example: {
-          errors: [{
-            type: 'field', msg: 'Invalid query', path: 'query', location: 'body',
-          }],
-        },
-      },
-      Error: {
-        type: 'object',
-        properties: {
-          message: {
-            type: 'string',
-            description: 'The error message',
-            example: 'Resource not found',
-          },
-        },
-        example: {
-          message: 'Resource not found',
-        },
-      },
       Cohort: {
         type: 'object',
         properties: {

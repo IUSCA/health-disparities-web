@@ -3,6 +3,21 @@
 /* eslint-disable no-console */
 const fs = require('fs');
 
+const errorResponses = {
+  400: {
+    description: 'Missing request parameters or invalid values',
+  },
+  401: {
+    description: 'Authentication required',
+  },
+  403: {
+    description: 'Access denied because of insufficient role or scope',
+  },
+  500: {
+    description: 'An unexpected error occurred',
+  },
+};
+
 // Paths for the input Swagger file and the output file for public routes
 const inputSwaggerPath = './swagger_output.json';
 const outputSwaggerPath = './swagger_public.json';
@@ -28,11 +43,18 @@ function filterPublicRoutes(swaggerData) {
           {
             "name": "authorization",
             "in": "header",
-            "type": "string"
           },
         */
         operation.parameters = operation.parameters
           ?.filter((param) => !(param.name === 'authorization' && param.in === 'header'));
+
+        // add each default response to the operation if not already present
+        for (const code in errorResponses) {
+          if (!operation.responses[code]) {
+            operation.responses[code] = errorResponses[code];
+          }
+        }
+
         filteredMethods[method] = operation;
       }
     }
