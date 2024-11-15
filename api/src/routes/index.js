@@ -4,6 +4,33 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
+/*
+  #swagger.responses[400] = {
+    description: 'Bad request'
+    schema: { $ref: '#/definitions/BadRequestError' }
+  }
+
+  #swagger.responses[401] = {
+    description: 'Authentication information is missing or invalid'
+    schema: { $ref: '#/definitions/Error' }
+  }
+
+  #swagger.responses[403] = {
+    description: 'Access denied'
+    schema: { $ref: '#/definitions/Error' }
+  }
+
+  #swagger.responses[404] = {
+    description: 'Resource not found'
+    schema: { $ref: '#/definitions/Error' }
+  }
+
+  #swagger.responses[500] = {
+    description: 'Internal server error'
+    schema: { $ref: '#/definitions/Error' }
+  }
+*/
+
 router.get('/health', (req, res) => {
   // #swagger.tags = ['general', 'public']
   // #swagger.description = 'Health check endpoint.'

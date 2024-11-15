@@ -87,6 +87,11 @@ router.get(
         }
       }
     */
+    /* #swagger.security = [{
+        "basicAuth": [
+            "read:cohorts"
+        ]
+    }] */
 
     const data = _.pick(
       ['search_term', 'is_published', 'is_locked', 'is_protected', 'is_mine', 'type'],
@@ -487,11 +492,9 @@ router.post(
     // #swagger.operationId = 'searchParticipants'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Search participants based on a query'
-    /* #swagger.description = 'creates a temporary cohort based on the query and
-          returns the participant count'
-    */
-    // #swagger.parameters['query'] = { description: 'The cohort query', required: true }
-    // #swagger.parameters['search_id'] = { description: 'The search id', format: 'uuid' }
+    // #swagger.description = 'creates a temporary cohort based on the query and returns the participant count'
+    // #swagger.parameters['search_id'] = { description: 'The id of temporary cohort created from a search', format: 'uuid' }
+    // #swagger.parameters['query'] = { description: 'The cohort query', required: true, in: 'body' }
     /* #swagger.responses[200] = {
         description: 'Number of participants found',
         schema: {
@@ -505,11 +508,12 @@ router.post(
     */
 
     const start_time = performance.now();
+    const _query = req.body.query;
 
     const searchQuery = await cohortService.searchParticipantsQueryAsync({
-      schema: req.body.query.schema,
+      schema: _query.schema,
       body: {
-        ...req.body.query.body,
+        ..._query.body,
         protocol_id: 1, // todo
         username: req.user.username,
       },
@@ -527,7 +531,7 @@ router.post(
     const end_time = performance.now();
     const execution_time = end_time - start_time;
     logQuery({
-      queryJson: req.body.query,
+      queryJson: _query,
       sqlQuery: searchQuery,
       execution_time,
       author_username: req.user.username,

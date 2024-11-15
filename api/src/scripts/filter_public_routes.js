@@ -22,6 +22,17 @@ function filterPublicRoutes(swaggerData) {
       if (operation.tags && operation.tags.includes('public')) {
         // remove the "public" tag from the operation
         operation.tags = operation.tags.filter((tag) => tag !== 'public');
+
+        /*
+          Remove this parameter from the operation if it exists:
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+        */
+        operation.parameters = operation.parameters
+          ?.filter((param) => !(param.name === 'authorization' && param.in === 'header' && param.type === 'string'));
         filteredMethods[method] = operation;
       }
     }

@@ -30,6 +30,10 @@ const doc = {
     basicAuth: {
       type: 'basic',
       description: 'HTTP Basic Authentication',
+      scopes: {
+        'read:cohorts': 'Grants read access to cohorts',
+        'write:cohorts': 'Grants write access to cohorts',
+      },
     },
   },
   security: [
@@ -47,21 +51,71 @@ const doc = {
       description: 'General operations',
     },
   ],
-  responses: {
-    UnauthorizedError: {
-      description: 'Authentication information is missing or invalid',
-    },
-    ForbiddenError: {
-      description: 'Access denied',
-    },
-    NotFoundError: {
-      description: 'Resource not found',
-    },
-    InternalServerError: {
-      description: 'Internal server error',
-    },
-  },
+  // responses: {
+  //   UnauthorizedError: {
+  //     description: 'Authentication information is missing or invalid',
+  //   },
+  //   ForbiddenError: {
+  //     description: 'Access denied',
+  //   },
+  //   NotFoundError: {
+  //     description: 'Resource not found',
+  //     schema: {
+  //       $ref: '#/definitions/Error',
+  //     },
+  //   },
+  //   InternalServerError: {
+  //     description: 'Internal server error',
+  //   },
+  // },
   definitions: {
+    BadRequestError: {
+      type: 'object',
+      properties: {
+        errors: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              type: {
+                type: 'string',
+                description: 'The error type',
+              },
+              msg: {
+                type: 'string',
+                description: 'The error message',
+              },
+              path: {
+                type: 'string',
+                description: 'The path to field with error',
+              },
+              location: {
+                type: 'string',
+                description: 'The location of the field with error',
+              },
+            },
+          },
+        },
+      },
+      example: {
+        errors: [{
+          type: 'field', msg: 'Invalid query', path: 'query', location: 'body',
+        }],
+      },
+    },
+    Error: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description: 'The error message',
+          example: 'Resource not found',
+        },
+      },
+      example: {
+        message: 'Resource not found',
+      },
+    },
     Cohort: {
       type: 'object',
       properties: {
@@ -144,6 +198,23 @@ const doc = {
           description: 'The author email',
           example: 'user1@example.com',
         },
+      },
+      example: {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Cohort 1',
+        query: {},
+        created_at: '2021-01-01T00:00:00Z',
+        description: 'This is a cohort description',
+        metadata: {},
+        updated_at: '2021-01-01T00:00:00Z',
+        author_username: 'user1',
+        is_locked: false,
+        is_protected: false,
+        is_published: false,
+        size: 0,
+        author_id: 1,
+        author_name: 'User 1',
+        author_email: 'user1@example.com',
       },
     },
   },
