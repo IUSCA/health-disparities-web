@@ -129,6 +129,16 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
 
+
+  api-client:
+    build:
+      context: ./api/clients/bash
+      dockerfile: Dockerfile
+    env_file:
+      - ./api/clients/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
+    
       
 volumes:
   ui_modules:

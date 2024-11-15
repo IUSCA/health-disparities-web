@@ -46,7 +46,8 @@ admins.json
 operators.json
 users.json
 
-clients
+out/
 
 # generated client code
-out/
+clients/*
+!clients/.env.example
