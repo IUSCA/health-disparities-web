@@ -65,6 +65,28 @@ const doc = {
               },
               required: ['name', 'query'],
             },
+            example: {
+              name: 'Female 31+',
+              description: 'female participants 31 years of age or older',
+              query: {
+                schema:
+                { name: 'phenotype', namespace: 'edu.iu.biobank', version: '1.0.0' },
+                body: {
+                  filters:
+                  {
+                    operator: 'AND',
+                    children: [
+                      { field: 'demographic.gender', operator: 'in', value: ['F'] },
+                      { field: 'demographic.age', operator: 'gt', value: '30' },
+                    ],
+                  },
+                  snapshot_id: 1,
+                },
+              },
+              is_published: false,
+              is_locked: false,
+              is_protected: false,
+            },
           },
         },
       },

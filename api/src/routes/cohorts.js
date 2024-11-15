@@ -514,7 +514,19 @@ router.post(
                     $ref: '#/components/schemas/CohortQuery'
                   }
                 },
+              },
+              examples: {
+                "phenotype": {
+                  value: {"query":{"schema":{"name":"phenotype","namespace":"edu.iu.biobank","version":"1.0.0"},"body":{"filters":{"operator":"AND","children":[{"field":"demographic.gender","operator":"in","value":["F"]},{"field":"demographic.age","operator":"gt","value":"30"}]},"snapshot_id":1}}},
+                },
+                "genotype": {
+                  value: {"query":{"schema":{"name":"genotype","namespace":"edu.iu.biobank","version":"1.0.0"},"body":{"filters":{"operator":"AND","children":[]},"ranges":[{"text":"GAB4","type":"gene","value":{"name":"GAB4"}}],"zygosities":["HET","HOMALT"],"snapshot_id":1,"source_id":3}}},
+                },
+                "combination": {
+                  value: {"query":{"schema":{"name":"combination","namespace":"edu.iu.biobank","version":"1.0.0"},"body":{"cohort_ids":["038ab88f-752b-4ad1-ac1c-56a72a2ff28a","d7f3a892-5ca4-42c6-8709-c4a0921ddfa7"],"operators":["union"]}}}
+                },
               }
+
             }
           }
         }
