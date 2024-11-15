@@ -32,7 +32,7 @@ function filterPublicRoutes(swaggerData) {
           },
         */
         operation.parameters = operation.parameters
-          ?.filter((param) => !(param.name === 'authorization' && param.in === 'header' && param.type === 'string'));
+          ?.filter((param) => !(param.name === 'authorization' && param.in === 'header'));
         filteredMethods[method] = operation;
       }
     }

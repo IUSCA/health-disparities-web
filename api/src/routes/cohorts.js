@@ -67,31 +67,30 @@ router.get(
     // #swagger.operationId = 'searchCohorts'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Search cohorts'
-    // #swagger.description = 'Search cohorts based on query parameters'
+    // #swagger.description = 'Search cohorts based on query parameters. Requires read:cohorts scope.'
     // #swagger.parameters['search_term'] = { description: 'Filter cohorts by name or description containing search term' }
     // #swagger.parameters['is_mine'] = { description: 'Show only the user\'s cohorts', type: 'boolean' }
     // #swagger.parameters['is_published'] = { description: 'Show only published cohorts', type: 'boolean' }
     // #swagger.parameters['is_locked'] = { description: 'Show only locked cohorts', type: 'boolean' }
-    // #swagger.parameters['type'] = { description: 'Show only cohorts of a certain type', enum: ['phenotype', 'genotype', 'combination'] }
-    // #swagger.parameters['sort_by'] = { description: 'Sort by a field', enum: ['name', 'size', 'created_at', 'updated_at'], default: 'created_at' }
-    // #swagger.parameters['sort_order'] = { description: 'Sort order', enum: ['asc', 'desc'], default: 'desc' }
-    // #swagger.parameters['limit'] = { description: 'Limit the number of results', type: 'integer', default: 10 }
-    // #swagger.parameters['offset'] = { description: 'Offset the results', type: 'integer', default: 0 }
+    // #swagger.parameters['type'] = { description: 'Show only cohorts of a certain type', schema: { @enum: ['phenotype', 'genotype', 'combination'] } }
+    // #swagger.parameters['sort_by'] = { description: 'Sort by a field', schema: { @enum: ['name', 'size', 'created_at', 'updated_at'], default: 'created_at' }  }
+    // #swagger.parameters['sort_order'] = { description: 'Sort order', schema: { @enum: ['asc', 'desc'], default: 'desc' } }
+    // #swagger.parameters['limit'] = { description: 'Limit the number of results', type: 'integer' }
+    // #swagger.parameters['offset'] = { description: 'Offset the results', type: 'integer' }
     /* #swagger.responses[200] = {
         description: 'List of cohorts',
-        schema: {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Cohort"
+        content: {
+          'application/json': {
+            schema: {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Cohort"
+              }
+            }
           }
         }
       }
     */
-    /* #swagger.security = [{
-        "basicAuth": [
-            "read:cohorts"
-        ]
-    }] */
 
     const data = _.pick(
       ['search_term', 'is_published', 'is_locked', 'is_protected', 'is_mine', 'type'],
@@ -138,11 +137,15 @@ router.get(
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Get a cohort by id'
     // #swagger.description = 'Get a cohort by its id'
-    // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
     /* #swagger.responses[200] = {
         description: 'Cohort',
-        schema: {
-          "$ref": "#/definitions/Cohort"
+        content: {
+          'application/json': {
+            schema: {
+              "$ref": "#/components/schemas/Cohort"
+            }
+          }
         }
       }
     */
@@ -170,17 +173,16 @@ router.post(
     // #swagger.operationId = 'createCohort'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Create a cohort'
-    // #swagger.description = 'Create a cohort based on the query'
-    // #swagger.parameters['name'] = { description: 'The cohort name', required: true }
-    // #swagger.parameters['query'] = { description: 'The cohort query', required: true }
-    // #swagger.parameters['is_published'] = { description: 'Indicates if the cohort is published', type: 'boolean' }
-    // #swagger.parameters['is_locked'] = { description: 'Indicates if the cohort is locked', type: 'boolean' }
-    // #swagger.parameters['is_protected'] = { description: 'Indicates if the cohort is protected', type: 'boolean' }
-    // #swagger.parameters['metadata'] = { description: 'The cohort metadata' }
+    // #swagger.description = 'Requires create:cohorts scope'
+    // #swagger.requestBody = { $ref: '#/components/requestBodies/Cohort' }
     /* #swagger.responses[200] = {
         description: 'Cohort',
-        schema: {
-          "$ref": "#/definitions/Cohort"
+        content: {
+          'application/json': {
+            schema: {
+              "$ref": "#/components/schemas/Cohort"
+            }
+          }
         }
       }
     */
@@ -253,18 +255,17 @@ router.patch(
     // #swagger.operationId = 'updateCohort'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Update a cohort'
-    // #swagger.description = 'Update a cohort based on the query'
-    // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
-    // #swagger.parameters['name'] = { description: 'The cohort name', type: 'string' }
-    // #swagger.parameters['query'] = { description: 'The cohort query' }
-    // #swagger.parameters['is_published'] = { description: 'Indicates if the cohort is published', type: 'boolean' }
-    // #swagger.parameters['is_locked'] = { description: 'Indicates if the cohort is locked', type: 'boolean' }
-    // #swagger.parameters['is_protected'] = { description: 'Indicates if the cohort is protected', type: 'boolean' }
-    // #swagger.parameters['metadata'] = { description: 'The cohort metadata' }
+    // #swagger.description = 'Requires update:cohorts scope'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
+    // #swagger.requestBody = { $ref: '#/components/requestBodies/Cohort' }
     /* #swagger.responses[200] = {
         description: 'Cohort',
-        schema: {
-          "$ref": "#/definitions/Cohort"
+        content: {
+          'application/json': {
+            schema: {
+              "$ref": "#/components/schemas/Cohort"
+            }
+          }
         }
       }
     */
@@ -344,16 +345,20 @@ router.get(
     // #swagger.operationId = 'isCohortDeletable'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Check if a cohort is deletable'
-    // #swagger.description = 'Check if a cohort is deletable based on certain conditions'
-    // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
+    // #swagger.description = 'Requires delete:cohorts scope'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
     /* #swagger.responses[200] = {
         description: 'indicates whether the cohort is deletable',
-        schema: {
-          type: 'object',
-          properties: {
-            is_deletable: { type: 'boolean' },
-            reason: { type: 'string' },
-            dependent_cohorts: { type: 'array', items: { "$ref": "#/definitions/Cohort" } }
+        content: {
+          "application/json": {
+            schema: {
+              type: 'object',
+              properties: {
+                is_deletable: { type: 'boolean' },
+                reason: { type: 'string' },
+                dependent_cohorts: { type: 'array', items: { $ref: '#/components/schemas/Cohort' } },
+              },
+            }
           }
         }
       }
@@ -402,15 +407,19 @@ router.delete(
     // #swagger.operationId = 'deleteCohort'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Delete a cohort'
-    // #swagger.description = 'Delete a cohort based on its id'
-    // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
-    // #swagger.parameters['delete_dependents'] = { description: 'Delete dependent cohorts', type: 'boolean', default: false }
+    // #swagger.description = 'Requires delete:cohorts scope'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
+    // #swagger.parameters['delete_dependents'] = { description: 'Delete dependent cohorts', type: 'boolean' }
     /* #swagger.responses[200] = {
         description: 'Number of cohorts deleted',
-        schema: {
-          type: 'object',
-          properties: {
-            count: { type: 'integer' }
+        content: {
+          "application/json": {
+            schema: {
+              type: 'object',
+              properties: {
+                count: { type: 'integer' }
+              }
+            }
           }
         }
       }
@@ -492,16 +501,35 @@ router.post(
     // #swagger.operationId = 'searchParticipants'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Search participants based on a query'
-    // #swagger.description = 'creates a temporary cohort based on the query and returns the participant count'
-    // #swagger.parameters['search_id'] = { description: 'The id of temporary cohort created from a search', format: 'uuid' }
-    // #swagger.parameters['query'] = { description: 'The cohort query', required: true, in: 'body' }
+    // #swagger.description = 'Creates a temporary cohort based on the query and returns the participant count. Requires read:cohorts scope.'
+    // #swagger.parameters['search_id'] = { description: 'The id of temporary cohort created from a search' }
+    /*  #swagger.requestBody = {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: 'object',
+                properties: {
+                  query: {
+                    $ref: '#/components/schemas/CohortQuery'
+                  }
+                },
+              }
+            }
+          }
+        }
+    */
     /* #swagger.responses[200] = {
         description: 'Number of participants found',
-        schema: {
-          type: 'object',
-          properties: {
-            count: { type: 'integer' },
-            search_id: { type: 'string', format: 'uuid' }
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                count: { type: 'integer' },
+                search_id: { type: 'string' }
+              }
+            }
           }
         }
       }

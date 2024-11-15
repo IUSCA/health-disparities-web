@@ -100,4 +100,5 @@ module.exports = {
   validate,
   sanitize,
   toJSON,
+  querySchema: schema,
 };
