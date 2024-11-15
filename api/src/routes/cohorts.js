@@ -167,11 +167,11 @@ router.post(
     // #swagger.summary = 'Create a cohort'
     // #swagger.description = 'Create a cohort based on the query'
     // #swagger.parameters['name'] = { description: 'The cohort name', required: true }
-    // #swagger.parameters['query'] = { description: 'The cohort query', required: true, schema: { type: 'object' } }
+    // #swagger.parameters['query'] = { description: 'The cohort query', required: true }
     // #swagger.parameters['is_published'] = { description: 'Indicates if the cohort is published', type: 'boolean' }
     // #swagger.parameters['is_locked'] = { description: 'Indicates if the cohort is locked', type: 'boolean' }
     // #swagger.parameters['is_protected'] = { description: 'Indicates if the cohort is protected', type: 'boolean' }
-    // #swagger.parameters['metadata'] = { description: 'The cohort metadata', schema: {} }
+    // #swagger.parameters['metadata'] = { description: 'The cohort metadata' }
     /* #swagger.responses[200] = {
         description: 'Cohort',
         schema: {
@@ -251,11 +251,11 @@ router.patch(
     // #swagger.description = 'Update a cohort based on the query'
     // #swagger.parameters['id'] = { description: 'The cohort id', required: true, format: 'uuid' }
     // #swagger.parameters['name'] = { description: 'The cohort name', type: 'string' }
-    // #swagger.parameters['query'] = { description: 'The cohort query', schema: { type: 'object' } }
+    // #swagger.parameters['query'] = { description: 'The cohort query' }
     // #swagger.parameters['is_published'] = { description: 'Indicates if the cohort is published', type: 'boolean' }
     // #swagger.parameters['is_locked'] = { description: 'Indicates if the cohort is locked', type: 'boolean' }
     // #swagger.parameters['is_protected'] = { description: 'Indicates if the cohort is protected', type: 'boolean' }
-    // #swagger.parameters['metadata'] = { description: 'The cohort metadata', schema: {} }
+    // #swagger.parameters['metadata'] = { description: 'The cohort metadata' }
     /* #swagger.responses[200] = {
         description: 'Cohort',
         schema: {
@@ -490,7 +490,7 @@ router.post(
     /* #swagger.description = 'creates a temporary cohort based on the query and
           returns the participant count'
     */
-    // #swagger.parameters['query'] = { description: 'The cohort query', required: true, schema: { type: 'object' } }
+    // #swagger.parameters['query'] = { description: 'The cohort query', required: true }
     // #swagger.parameters['search_id'] = { description: 'The search id', format: 'uuid' }
     /* #swagger.responses[200] = {
         description: 'Number of participants found',

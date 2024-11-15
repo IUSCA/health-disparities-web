@@ -47,3 +47,6 @@ operators.json
 users.json
 
 clients
+
+# generated client code
+out/

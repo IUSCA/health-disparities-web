@@ -1,0 +1,5 @@
+{
+  "basicAuthEnvironmentVariable": "BASIC_AUTH",
+  "hostEnvironmentVariable": "HOST",
+  "scriptName": "biobank-client"
+}
