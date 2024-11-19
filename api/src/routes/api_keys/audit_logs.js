@@ -21,6 +21,8 @@ router.get(
   '/',
   isPermittedTo('read'),
   validate([
+    query('sort_by').default('accessed_at').isIn(['accessed_at', 'response_time', 'status_code', 'http_method']),
+    query('sort_order').default('desc').isIn(['asc', 'desc']),
     query('limit').default(50).isInt({ min: 1, max: 100 }).toInt(),
     query('offset').default(0).isInt({ min: 0 }).toInt(),
     query('status_code').isInt().toInt().optional(),
@@ -86,6 +88,7 @@ router.get(
       include: { api_key: true, scope: true },
       take: req.query.limit,
       skip: req.query.offset,
+      orderBy: { [req.query.sort_by]: req.query.sort_order },
     };
 
     const [audit_logs, count] = await prisma.$transaction([

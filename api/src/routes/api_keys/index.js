@@ -27,6 +27,7 @@ function addLastUsedAt(apiKey) {
   };
 }
 
+// get all API keys
 router.get(
   '/',
   isPermittedTo('read'),
@@ -54,6 +55,10 @@ router.get(
 
     if (req.query.user_id != null) {
       where.user = { username: req.query.username };
+    }
+
+    if (req.query.key != null) {
+      where.key = req.query.key;
     }
 
     const dataQuery = {
@@ -98,6 +103,7 @@ router.get(
   }),
 );
 
+// get all API keys for a user
 router.get(
   '/:username',
   isPermittedTo('read', { checkOwnerShip: true }),
@@ -160,6 +166,7 @@ router.get(
   }),
 );
 
+// create a new API key
 router.post(
   '/:username',
   isPermittedTo('create', { checkOwnerShip: true }),

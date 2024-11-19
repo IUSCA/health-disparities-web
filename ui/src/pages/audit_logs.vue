@@ -1,8 +1,34 @@
 <template>
   <div>
-    <VaDataTable :items="logs" :columns="columns" :loading="data_loading">
+    <VaDataTable
+      :items="logs"
+      :columns="columns"
+      :loading="data_loading"
+      v-model:sort-by="params.sort_by"
+      v-model:sorting-order="params.sort_order"
+      disable-client-side-sorting
+      class="api-audit-table text-sm"
+    >
+      <template #cell(endpoint)="{ value }">
+        <VaPopover class="w-full" :hover-over-timeout="500">
+          <template #body>
+            <p class="max-w-sm">
+              {{ value }}
+            </p>
+          </template>
+          <p class="truncate">{{ value }}</p>
+        </VaPopover>
+      </template>
+
       <template #cell(api_key)="{ source }">
-        <span>{{ source ? source.key : "" }}</span>
+        <VaPopover class="w-full" :hover-over-timeout="500" v-if="source">
+          <template #body>
+            <div class="max-w-sm">
+              <TokenSmall :_key="source.key" />
+            </div>
+          </template>
+          <span>{{ source.key }}</span>
+        </VaPopover>
       </template>
 
       <template #cell(accessed_at)="{ value }">
@@ -27,9 +53,9 @@
 </template>
 
 <script setup>
-import * as datetime from "@/services/datetime";
-import apiKeyService from "@/services/api_keys";
 import useQueryPersistence from "@/composables/useQueryPersistence";
+import apiKeyService from "@/services/api_keys";
+import * as datetime from "@/services/datetime";
 /*
 {
     "id": 1,
@@ -62,6 +88,8 @@ function defaultParams() {
   return {
     page: 1,
     itemsPerPage: 25,
+    sort_by: "accessed_at",
+    sort_order: "desc",
   };
 }
 
@@ -78,36 +106,41 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 const columns = [
   {
+    key: "endpoint",
+    label: "Endpoint",
+    width: "400px",
+  },
+  {
     key: "api_key",
     label: "API Key",
   },
   {
     key: "http_method",
     label: "Method",
-  },
-  {
-    key: "endpoint",
-    label: "Endpoint",
+    sortable: true,
   },
   {
     key: "status_code",
     label: "Status",
+    sortable: true,
   },
   {
     key: "accessed_at",
     label: "Accessed At",
+    sortable: true,
   },
   // {
   //   key: "ip_address",
   //   label: "IP Address",
   // },
-  {
-    key: "scope",
-    label: "Scope",
-  },
+  // {
+  //   key: "scope",
+  //   label: "Scope",
+  // },
   {
     key: "response_time",
     label: "Response Time (ms)",
+    sortable: true,
   },
 ];
 
@@ -117,6 +150,8 @@ const fetchLogs = useThrottleFn(() => {
     .getAuditLogs({
       limit: params.value.itemsPerPage,
       offset: (params.value.page - 1) * params.value.itemsPerPage,
+      sort_by: params.value.sort_by,
+      sort_order: params.value.sort_order,
     })
     .then((res) => {
       logs.value = res.data?.data || [];
@@ -132,9 +167,17 @@ const fetchLogs = useThrottleFn(() => {
 
 watch(() => params.value.page, fetchLogs);
 watch(
-  () => params.value.itemsPerPage,
+  () => [
+    params.value.itemsPerPage,
+    params.value.sort_by,
+    params.value.sort_order,
+  ],
   () => {
     params.value.page = 1;
+    fetchLogs();
+  },
+  {
+    deep: true,
   },
 );
 onMounted(fetchLogs);
@@ -146,3 +189,9 @@ meta:
   requiresRoles: ["admin"]
   nav: [{ label: "API Audit Logs" }]
 </route>
+
+<style scoped>
+.api-audit-table {
+  --va-data-table-cell-padding: 3px;
+}
+</style>

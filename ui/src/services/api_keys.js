@@ -1,7 +1,17 @@
 import dayjs from "dayjs";
 import api from "./api";
+import { memoize } from "./utils";
 
 class ApiKeyService {
+  getKey = memoize(async (key) => {
+    const res = await api.get("/api_keys", { params: { key } });
+    const keys = res.data.data;
+    if (keys.length === 0) {
+      return null;
+    }
+    return keys[0];
+  });
+
   getAll({ username = null } = {}) {
     if (username) {
       return api.get(`/api_keys/${username}`);
