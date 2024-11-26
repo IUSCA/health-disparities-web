@@ -497,7 +497,7 @@ function handleFileUpload(files) {
   return parseBEDFile(files[0])
     .then((regions) =>
       regions
-        .slice(0, config.genotype.max_regions_bed_file) // limit to max regions
+        .slice(0, config.cohort.max_regions_bed_file) // limit to max regions
         .forEach(addSearchParam),
     )
     .catch((err) => {
