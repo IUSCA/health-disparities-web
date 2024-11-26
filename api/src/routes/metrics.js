@@ -30,6 +30,7 @@ router.get(
     query('measurement').notEmpty().escape(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Metrics']
     const measurement = decodeURI(he.decode(req.query.measurement));
 
     const metrics = await prisma.$queryRaw`

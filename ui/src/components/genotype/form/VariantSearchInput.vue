@@ -6,7 +6,7 @@
     clearable
     inner-label
     @clear="emit('clear')"
-    class="flex-none w-[370px]"
+    class="flex-1 min-w-[370px]"
   >
     <template #prependInner>
       <Icon icon="material-symbols:search" class="text-xl" />

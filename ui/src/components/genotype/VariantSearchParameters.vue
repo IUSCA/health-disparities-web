@@ -1,6 +1,8 @@
 <template>
-  <div class="flex flex-wrap items-center gap-2 w-full text-sm">
-    <div class="flex-none" v-if="props.searchParams.length > 1">
+  <div
+    class="flex flex-wrap items-center gap-1 w-full text-sm max-h-[100px] overflow-y-scroll"
+  >
+    <div class="flex-none mr-2" v-if="props.searchParams.length > 1">
       <VaPopover>
         <template #body>
           <p class="max-w-sm">
@@ -8,13 +10,14 @@
             variants that match any of the selected search parameters.
           </p>
         </template>
-        <VaChip icon="info" size="small">
-          <span> Inclusive Search </span>
+        <VaChip size="small">
+          <i-mdi-information-circle class="ml-[-2px] mr-1 mt-[-4px] text-sm" />
+          <p class="mt-[-4px]">Inclusive Search</p>
         </VaChip>
       </VaPopover>
     </div>
 
-    <div v-else>
+    <div class="mr-2" v-else>
       <VaChip v-if="props.searchParams.length > 0" size="small">
         <span> Search </span>
       </VaChip>
@@ -28,6 +31,7 @@
       outline
       size="small"
       @update:modelValue="emit('remove', param)"
+      @click="emit('selectText', makeText(param))"
     >
       <span class="font-semibold pr-1 capitalize"> {{ param.type }}: </span>
       <span> {{ makeText(param) }} </span>
@@ -42,7 +46,7 @@ const props = defineProps({
     required: true,
   },
 });
-const emit = defineEmits(["remove"]);
+const emit = defineEmits(["remove", "selectText"]);
 
 function makeText(param) {
   if (param.text) return param.text;

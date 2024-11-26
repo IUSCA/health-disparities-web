@@ -237,6 +237,28 @@ function groupByAndAggregate(
   return ret;
 }
 
+/**
+ * Reads the contents of a text file and returns a promise that resolves with the file's contents.
+ *
+ * @param {File} file - The file to be read. A File object.
+ * @returns {Promise<string>} A promise that resolves with the contents of the file as a string.
+ */
+function readTextFile(file) {
+  const reader = new FileReader();
+
+  reader.readAsText(file);
+
+  return new Promise((resolve, reject) => {
+    reader.onload = (event) => {
+      const contents = event.target.result;
+      resolve(contents);
+    };
+    reader.onerror = (e) => {
+      reject(e.target.error);
+    };
+  });
+}
+
 export {
   arrayEquals,
   capitalize,
@@ -254,7 +276,9 @@ export {
   lxor,
   mapValues,
   maybePluralize,
+  readTextFile,
   setIntersection,
   union,
-  validateEmail,
+  validateEmail
 };
+

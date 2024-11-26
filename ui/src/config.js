@@ -83,6 +83,7 @@ const exports = {
       },
     },
     genome_build: "hg38",
+    max_regions_bed_file: 10000,
     genai: {
       defaults: {
         enableTitleGeneration: true,

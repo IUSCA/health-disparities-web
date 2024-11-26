@@ -20,6 +20,7 @@ const DOMPurify = createDOMPurify(window);
 router.get(
   '/latest',
   asyncHandler(async (req, res) => {
+    // #swagger.tags = ['About']
     const ret = await prisma.about.findMany({
       orderBy: {
         created_at: 'desc',
@@ -36,6 +37,7 @@ router.post(
   authenticate,
   isPermittedTo('update'),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['About']
     const ret = await prisma.about.create({
       data: {
         html: DOMPurify.sanitize(req.body.html),
@@ -54,6 +56,7 @@ router.put(
     param('id').isInt().toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['About']
     const ret = await prisma.about.update({
       where: {
         id: req.params.id,

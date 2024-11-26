@@ -37,8 +37,8 @@ router.get(
       .toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
-  // #swagger.tags = ['participants']
-  // #swagger.summary = 'Get participants of a cohort.'
+    // #swagger.tags = ['participants']
+    // #swagger.summary = 'Get participants of a cohort.'
     const cohort = await prisma.cohort.findFirstOrThrow({
       where: {
         id: req.query.cohort_id,
@@ -116,6 +116,7 @@ router.get(
     query('bins').default(10).isInt({ min: 1, max: 100 }),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['participants']
     // only works for age field
     const { bins, cohort_id } = req.query;
     const sql = visualization.ageHistogramSQL(cohort_id, bins);
@@ -134,6 +135,7 @@ router.get(
     query('bins').default(10).isInt({ min: 1, max: 100 }),
   ]),
   asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['participants']
     // only works for age field
     const { field, bins, cohort_id } = req.query;
     const _rows = await visualization.dateHistogram(cohort_id, field, bins);

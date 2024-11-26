@@ -5,6 +5,7 @@
       <VariantSearchForm
         :search-params="cohort.query.ranges"
         :example_searches="EXAMPLE_SEARCHES"
+        :replacement-param="replacementParam"
         @add="addSearchParam"
         class="flex-grow"
       />
@@ -28,8 +29,11 @@
 
     <VariantSearchParameters
       :search-params="cohort.query.ranges"
-      @remove="removeSearchParam"
       class="mt-3"
+      @remove="removeSearchParam"
+      @selectText="
+        (text) => (replacementParam = `${new Date().getTime()}|${text}`)
+      "
     />
 
     <div v-if="cohort.query.ranges.length > 0">
@@ -70,6 +74,7 @@ const cohort = defineModel("cohort", {
   type: GenotypeCohort,
   required: true,
 });
+const replacementParam = ref(null);
 
 provide(
   injectionKeys.ranges,

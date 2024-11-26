@@ -18,7 +18,7 @@ router.get(
     query('snapshot_id').isInt().toInt().optional(),
   ]),
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['genotype_files']
+    // #swagger.tags = ['Genotype Files']
     const rows = await prisma.genotype_file.findMany({
       where: {
         snapshot_id: req.params.snapshot_id,
@@ -41,7 +41,7 @@ router.put(
     body('chr').isInt().toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['genotype_files']
+    // #swagger.tags = ['Genotype Files']
     const data = _.flow([
       _.pick(['name', 'path', 'md5', 'size', 'snapshot_id', 'source_id', 'chr', 'metadata', 'description']),
       _.omitBy(_.isNil),

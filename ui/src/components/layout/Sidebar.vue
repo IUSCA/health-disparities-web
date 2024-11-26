@@ -128,11 +128,6 @@ const user_items = ref([
   //   path: "/categories/data",
   // },
   {
-    icon: "material-symbols:person",
-    title: "Participants",
-    path: "/participants",
-  },
-  {
     icon: "mdi-table-search",
     title: "Data Browser",
     path: "/data_browser",
@@ -147,6 +142,11 @@ const user_items = ref([
     icon: "mdi:chart-sankey-variant", //"mdi:puzzle",
     title: "Variant Xplorer",
     path: "/variantXplorer",
+  },
+  {
+    icon: "material-symbols:person",
+    title: "Participants",
+    path: "/participants",
   },
 ]);
 
