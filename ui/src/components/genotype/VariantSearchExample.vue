@@ -1,7 +1,7 @@
 <template>
   <!-- search examples -->
-  <div>
-    <p>
+  <ul class="list-inside list-disc">
+    <li>
       <span class="font-bold"> Gene </span> :
       <button
         :class="props.linkClass"
@@ -10,8 +10,8 @@
       >
         {{ props.exampleSearches["gene"] }}
       </button>
-    </p>
-    <p>
+    </li>
+    <li>
       <span class="font-bold"> Variant </span>:
       <button
         :class="props.linkClass"
@@ -20,8 +20,8 @@
       >
         {{ props.exampleSearches["variant"] }}
       </button>
-    </p>
-    <p>
+    </li>
+    <li>
       <span class="font-bold"> Genomic Region </span>:
       <button
         :class="props.linkClass"
@@ -30,8 +30,8 @@
       >
         {{ props.exampleSearches["genomic_region"] }}
       </button>
-    </p>
-  </div>
+    </li>
+  </ul>
 </template>
 
 <script setup>

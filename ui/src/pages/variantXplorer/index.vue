@@ -15,6 +15,7 @@
               :example_searches="EXAMPLE_SEARCHES"
               class="flex-grow"
               @add="addSearchParam"
+              :replacement-param="replacementParam"
             />
 
             <VaButton
@@ -32,10 +33,14 @@
           </div>
 
           <!-- Selected variant search parameters -->
+          <!-- adding epoch to replacementParam value to make each change/event unique -->
           <VariantSearchParameters
             class="mt-3"
             :search-params="cohort.query.ranges"
             @remove="removeSearchParam"
+            @selectText="
+              (text) => (replacementParam = `${new Date().getTime()}|${text}`)
+            "
           />
 
           <!-- Zygosity selectot and participant count + save as cohort button -->
@@ -169,8 +174,11 @@
             :color="colors.primary"
           />
         </div>
-        <div v-else class="flex-none text-lg">
-          <p>
+        <div
+          v-else
+          class="flex-none tracking-wide max-w-3xl border border-solid border-gray-400 p-4 rounded-lg shadow-lg]"
+        >
+          <p class="mb-1">
             Enter a query in the search bar or get started with an example
             query:
           </p>
@@ -178,6 +186,54 @@
             :example-searches="EXAMPLE_SEARCHES"
             @search="(val) => addSearchParam(parseQuery(val))"
           />
+
+          <div class="mt-5">
+            <p class="">
+              You can also enter a comma-separated list of values, including any
+              combination of genes, variants, or genomic regions.
+            </p>
+            <p class="mt-2">Examples:</p>
+            <ul class="list-inside list-disc">
+              <li>
+                <button
+                  class="va-link underline"
+                  @click="
+                    () =>
+                      [
+                        parseQuery(EXAMPLE_SEARCHES.gene),
+                        parseQuery(EXAMPLE_SEARCHES.variant),
+                        parseQuery(EXAMPLE_SEARCHES.genomic_region),
+                      ].forEach(addSearchParam)
+                  "
+                >
+                  {{ Object.values(EXAMPLE_SEARCHES).join(",&nbsp;&nbsp;") }}
+                </button>
+              </li>
+
+              <li>
+                <button
+                  class="va-link underline"
+                  @click="
+                    () =>
+                      EXAMPLE_GENES_LIST.map(parseQuery).forEach(addSearchParam)
+                  "
+                >
+                  {{ EXAMPLE_GENES_LIST.join(",&nbsp;&nbsp;") }}
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div class="mt-7">
+            <p>Search genomic regions in a BED file</p>
+            <VaFileUpload
+              dropzone
+              file-types="text/plain, .bed"
+              type="single"
+              hideFileList
+              @file-added="handleFileUpload"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -190,10 +246,11 @@
 <script setup>
 import { GenotypeCohort } from "@/components/cohorts/models";
 import {
+  EXAMPLE_GENES_LIST,
   EXAMPLE_SEARCHES,
   injectionKeys,
 } from "@/components/genotype/constants";
-import { parseQuery } from "@/components/genotype/lib";
+import { parseBEDFile, parseQuery } from "@/components/genotype/lib";
 import config from "@/config";
 import cohortService from "@/services/cohorts";
 import genotypeService from "@/services/genotypes";
@@ -218,11 +275,12 @@ const columnLegendModal = ref(null);
 const saveCohortModal = ref(null);
 
 const loading = ref(false);
-const resultsView = ref(false);
+const resultsView = ref(false); // show results view only when search is done
 const variant_count = ref(0);
 const total_count = ref(0);
 const cohort = ref(new GenotypeCohort());
 const isInitializing = ref(false);
+const replacementParam = ref(null);
 
 const variants = ref([]);
 
@@ -316,6 +374,10 @@ watch(
     }
     searchParticipants(); // throttled
     searchVariants(); // throttled
+    if (cohort.value.query.ranges.length === 0) {
+      // reset results view if no search ranges are present
+      resultsView.value = false;
+    }
   },
   {
     deep: true,
@@ -429,6 +491,20 @@ onMounted(() => {
     loadCohortFromUrl();
   }
 });
+
+function handleFileUpload(files) {
+  // single file upload so only one file will be present
+  return parseBEDFile(files[0])
+    .then((regions) =>
+      regions
+        .slice(0, config.genotype.max_regions_bed_file) // limit to max regions
+        .forEach(addSearchParam),
+    )
+    .catch((err) => {
+      console.error(err);
+      toast.error("Failed to parse BED file");
+    });
+}
 </script>
 
 <route lang="yaml">
