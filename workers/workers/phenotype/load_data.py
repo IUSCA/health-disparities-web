@@ -24,6 +24,7 @@ def refresh_mat_views():
     with conn.cursor() as cursor:
         cursor.execute('REFRESH MATERIALIZED VIEW dx_unique_name')
         cursor.execute('REFRESH MATERIALIZED VIEW ehr_participant_counts_by_name')
+        cursor.execute('REFRESH MATERIALIZED VIEW bmi_calculations')
         conn.commit()
 
 
@@ -111,7 +112,7 @@ class PhenotypeDataLoader(ABC):
         4. load valid rows into db
         5. register phenotype_file in db
         """
-        df = pd.read_csv(self.csv_file)
+        df = pd.read_csv(self.csv_file, dtype='str', encoding_errors='replace')
         df2 = self.transform(df.copy(), self.ib_id_map)
         valid_idx = self.filter(df2)
         valid_df, invalid_df = df2[valid_idx], df[~valid_idx]
@@ -171,19 +172,17 @@ class CovidVax(PhenotypeDataLoader):
 
 class Demographics(PhenotypeDataLoader):
     table_name = 'demographic'
-    columns = ['gender', 'race', 'ethnicity', 'max_enc_date', 'chs_flag', 'dob', 'enroll_date', 'participant_id']
+    columns = ['gender', 'race', 'ethnicity', 'max_enc_date', 'dob', 'enroll_date', 'participant_id']
 
     def transform(self, df, ib_id_map):
         df['max_enc_date'] = df['DEID_MAX_ENC_DATE'].map(parse_date)
         df['participant_id'] = df['IB_ID'].map(ib_id_map)
         df['dob'] = df['DEID_DOB'].map(parse_date)
         df['enroll_date'] = df['DEID_ENROLL_DATE'].map(parse_date)
-        df['CHS_FLAG'] = np.floor(pd.to_numeric(df['CHS_FLAG'], errors='coerce')).astype('Int64')
         df.rename(columns={
             'GENDER': 'gender',
             'RACE': 'race',
             'ETHNICITY': 'ethnicity',
-            'CHS_FLAG': 'chs_flag'
         }, inplace=True)
         return df[self.columns]
 
@@ -222,26 +221,40 @@ class Hospital(PhenotypeDataLoader):
 
 class Lab(PhenotypeDataLoader):
     table_name = 'lab'
-    columns = ['name', 'date', 'category', 'result', 'unit', 'participant_id']
-    non_null_columns = ['name', 'date', 'category', 'participant_id']
+    columns = ['loinc_code', 'loinc_name', 'name', 'date', 'result_type', 'result_num', 'result_coded', 'unit',
+               'participant_id']
+    non_null_columns = ['loinc_code', 'loinc_name', 'name', 'date', 'result_type', 'participant_id']
 
     def transform(self, df, ib_id_map):
-        df['date'] = df['DEID_LABDATE'].map(parse_date)
+        df['date'] = df['DEID_LAB_DATE'].map(parse_date)
         df['participant_id'] = df['IB_ID'].map(ib_id_map)
-        df['result'] = np.floor(pd.to_numeric(df['NUMERIC_RESULT'], errors='coerce')).astype('Int64')
+        df['result_num'] = np.floor(pd.to_numeric(df['RESULT_NUM'], errors='coerce')).astype('Int64')
         df.rename(columns={
+            'LOINC_NUM': 'loinc_code',
+            'LOINC_NAME': 'loinc_name',
             'LAB_NAME': 'name',
-            'CATEGORY': 'category',
-            'UNIT': 'unit'
+            'LAB_RESULT_TYPE': 'result_type',
+            'UNITS': 'unit',
+            'RESULT_CODED': 'result_coded',
         }, inplace=True)
+
         return df[self.columns]
+
+    def filter(self, df):
+        # call the parent filter method
+        valid_idx = super().filter(df)
+
+        # filter out rows with both result_num and result_coded as null
+        invalid_idx = df['result_num'].isna() & df['result_coded'].isna()
+
+        return valid_idx & ~invalid_idx
 
 
 class Medication(PhenotypeDataLoader):
     table_name = 'medication'
     columns = ['name', 'category', 'start_date', 'dispense_qty', 'dispense_qty_unit', 'nbr_refills', 'strength_dose',
                'strength_dose_unit', 'participant_id']
-    non_null_columns = ['name', 'category', 'start_date', 'participant_id']
+    non_null_columns = ['name', 'start_date', 'participant_id']
 
     def transform(self, df, ib_id_map):
         df['start_date'] = df['DEID_START_DATE'].map(parse_date)
@@ -258,6 +271,80 @@ class Medication(PhenotypeDataLoader):
         return df[self.columns]
 
 
+class Weight(PhenotypeDataLoader):
+    table_name = 'measurement'
+    columns = ['event_name', 'event_date', 'result', 'unit', 'participant_id']
+    non_null_columns = ['event_name', 'event_date', 'result', 'participant_id']
+
+    def transform(self, df, ib_id_map):
+        df['event_date'] = df['DEID_EVENT_DATE'].map(parse_date)
+        df['participant_id'] = df['IB_ID'].map(ib_id_map)
+        df['result'] = pd.to_numeric(df['RESULT'], errors='coerce').astype('Float64')
+        df.rename(columns={
+            'EVENT_NAME': 'event_name',
+            'RESULT_UNIT': 'unit'
+        }, inplace=True)
+        df['unit'] = 'Kilogram'
+        df['event_name'] = 'Weight'
+        return df[self.columns]
+
+
+class Height(PhenotypeDataLoader):
+    table_name = 'measurement'
+    columns = ['event_name', 'event_date', 'result', 'unit', 'participant_id']
+    non_null_columns = ['event_name', 'event_date', 'result', 'participant_id']
+
+    def transform(self, df, ib_id_map):
+        df['event_date'] = df['DEID_EVENT_DATE'].map(parse_date)
+        df['participant_id'] = df['IB_ID'].map(ib_id_map)
+        df['result'] = pd.to_numeric(df['RESULT'], errors='coerce').astype('Float64')
+        df.rename(columns={
+            'EVENT_NAME': 'event_name',
+            'RESULT_UNIT': 'unit'
+        }, inplace=True)
+        df['unit'] = 'Centimeter'
+        df['event_name'] = 'Height'
+        return df[self.columns]
+
+
+class DrugScreen(PhenotypeDataLoader):
+    table_name = 'drug_screen'
+    columns = ['name', 'date', 'result', 'result_raw', 'participant_id']
+    non_null_columns = ['date', 'name', 'result', 'result_raw', 'participant_id']
+
+    def transform(self, df, ib_id_map):
+        df['date'] = df['DEID_SCREEN_DATE'].map(parse_date)
+        df['participant_id'] = df['IB_ID'].map(ib_id_map)
+        df.rename(columns={
+            'SCREEN_NAME': 'name',
+            'SCREEN_RESULT': 'result',
+            'SCREEN_RESULT_RAW': 'result_raw'
+        }, inplace=True)
+        return df[self.columns]
+
+
+class Vaccination(PhenotypeDataLoader):
+    table_name = 'vaccination'
+    columns = ['name', 'name_alt', 'date', 'dose_number', 'series_doses', 'description_1', 'description_2',
+               'participant_id']
+    non_null_columns = ['name', 'date', 'participant_id']
+
+    def transform(self, df, ib_id_map):
+        df['date'] = df['IMUNNO_DATE'].map(parse_date)
+        df['participant_id'] = df['IB_ID'].map(ib_id_map)
+        df['SERIES_DOSES'] = np.floor(pd.to_numeric(df['SERIES_DOSES'], errors='coerce')).astype('Int64')
+        df['DOSE_NUMBER'] = np.floor(pd.to_numeric(df['DOSE_NUMBER'], errors='coerce')).astype('Int64')
+        df.rename(columns={
+            'DOSE_NUMBER': 'dose_number',
+            'VAX_NAME': 'name',
+            'SERIES_DOSES': 'series_doses',
+            'VAX_NAME_ALT': 'name_alt',
+            'VAX_TEXT': 'description_1',
+            'VACCINE_TEXT': 'description_2'
+        }, inplace=True)
+        return df[self.columns]
+
+
 # Create a dictionary that maps stems to loader classes
 loaders = {
     'covid_test': CovidTest,
@@ -266,7 +353,11 @@ loaders = {
     'dx': Dx,
     'hosp': Hospital,
     'lab': Lab,
-    'meds': Medication
+    'meds': Medication,
+    'wt': Weight,
+    'ht': Height,
+    'drug_scn': DrugScreen,
+    'ALL_vax': Vaccination,
 }
 
 

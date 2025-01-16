@@ -13,12 +13,12 @@ def get_participants_from_csv(csv_file):
    
     Return a dataframe of ib_id and study_id columns and a dataframe of invalid rows.
     """
-    df = pd.read_csv(csv_file)
+    df = pd.read_csv(csv_file, dtype=str, encoding_errors='replace')
     ib_id_col = next(col for col in df.columns if col in ['IB_ID', 'IB_ID_LONG'])
     study_id_col = next(col for col in df.columns if col in ['STUDY_ID', 'STUDYID'])
 
     valid_idx = df[ib_id_col].notna() & (df[ib_id_col] != '') & df[study_id_col].notna() & (df[study_id_col] != '')
-    valid_df, invalid_df = df[valid_idx], df[~valid_idx]
+    valid_df, invalid_df = df[valid_idx].copy(), df[~valid_idx]
 
     valid_df[ib_id_col] = valid_df[ib_id_col].str.upper()
     participant_df = df[valid_idx].groupby(ib_id_col)[study_id_col].last().reset_index().set_index(ib_id_col)
@@ -99,7 +99,7 @@ def fetch_all():
     """
     with conn.cursor() as cursor:
         cursor.execute('select id, ib_id from participant')
-        return {row[1]: row[0] for row in cursor}
+        return {row[1]: str(row[0]) for row in cursor}
 
 
 def main(data_dir, enroll_snapshot_id, out_csv, import_into_db=False):

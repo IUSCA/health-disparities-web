@@ -1,7 +1,7 @@
 export const filters = [
   {
     label: "Demographics",
-    key: "demographic",
+    key: "demographic_extended",
     icon: "mdi-human-male-female",
     filters: [
       {
@@ -40,6 +40,24 @@ export const filters = [
         label: "Enrollment Date",
         info: null,
       },
+      {
+        key: "bmi",
+        type: "number",
+        label: "BMI",
+        info: null,
+      },
+      {
+        key: "weight",
+        type: "number",
+        label: "Weight",
+        info: null,
+      },
+      {
+        key: "height",
+        type: "number",
+        label: "Height",
+        info: null,
+      },
     ],
   },
   {
@@ -57,12 +75,6 @@ export const filters = [
         key: "date",
         type: "date",
         label: "Date",
-        info: null,
-      },
-      {
-        key: "category",
-        type: "select",
-        label: "Category",
         info: null,
       },
       {
@@ -260,6 +272,62 @@ export const filters = [
         key: "is_booster",
         type: "select",
         label: "Is Booster",
+        info: null,
+      },
+    ],
+  },
+  {
+    label: "Drug Screenings",
+    key: "drug_screen",
+    icon: "mdi-medical-bag",
+    filters: [
+      {
+        key: "name",
+        type: "select",
+        label: "Name",
+        info: null,
+      },
+      {
+        key: "date",
+        type: "date",
+        label: "Date",
+        info: null,
+      },
+      {
+        key: "result",
+        type: "select",
+        label: "Result",
+        info: null,
+      },
+    ],
+  },
+  {
+    label: "Vaccinations",
+    key: "vaccination",
+    icon: "mdi-needle",
+    filters: [
+      {
+        key: "name",
+        type: "select",
+        label: "Name",
+        info: null,
+      },
+      {
+        key: "date",
+        type: "date",
+        label: "Date",
+        info: null,
+      },
+      {
+        key: "dose_number",
+        type: "number",
+        label: "Dose Number",
+        info: null,
+      },
+      {
+        key: "series_doses",
+        type: "number",
+        label: "Series Doses",
         info: null,
       },
     ],

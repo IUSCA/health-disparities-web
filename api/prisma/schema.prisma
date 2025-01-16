@@ -163,7 +163,7 @@ model user {
   project_users_assigned    project_user[]      @relation("project_user_assignor")
   project_datasets_assigned project_dataset[]
   project_contacts_assigned project_contact[]
-  initiated_workflows       workflow[]       @relation("initiated_workflows")
+  initiated_workflows       workflow[]          @relation("initiated_workflows")
 }
 
 model user_password {
@@ -220,11 +220,11 @@ model user_role {
 }
 
 model workflow {
-  id         String   @id
-  dataset_id Int?
-  dataset    dataset? @relation(fields: [dataset_id], references: [id], onDelete: Cascade)
+  id           String   @id
+  dataset_id   Int?
+  dataset      dataset? @relation(fields: [dataset_id], references: [id], onDelete: Cascade)
   initiator_id Int?
-  initiator    user? @relation("initiated_workflows", fields: [initiator_id], references: [id], onDelete: SetNull)
+  initiator    user?    @relation("initiated_workflows", fields: [initiator_id], references: [id], onDelete: SetNull)
 }
 
 model metric {
@@ -309,6 +309,9 @@ model participant {
   datasets              dataset[]
   protocols             participant_protocol[]
   genotype_smaples      genotype_sample[]
+  measurements          measurement[]
+  drug_screens          drug_screen[]
+  vaccinations          vaccination[]
 
   @@unique([ib_id])
   @@unique([genotype_idx])
@@ -326,7 +329,6 @@ model demographic {
   race           String
   ethnicity      String?
   max_enc_date   DateTime
-  chs_flag       Int
   dob            DateTime
   enroll_date    DateTime?
   participant_id Int
@@ -338,17 +340,21 @@ model demographic {
 
 model lab {
   id             Int         @id @default(autoincrement())
+  loinc_code     String
+  loinc_name     String
   name           String
   date           DateTime
-  category       String      @db.VarChar(100)
-  result         Decimal?
+  result_type    String
+  result_num     Decimal?
+  result_coded   String?
   unit           String?     @db.VarChar(100)
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
   // any given study_id and ib_id pair may have multiple labs associated
   // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 
-  @@index([participant_id])
+  // index slows down queries
+  // @@index([participant_id])
 }
 
 model covid_test {
@@ -414,7 +420,7 @@ model hospital {
 model medication {
   id                 Int         @id @default(autoincrement())
   name               String
-  category           String
+  category           String?
   start_date         DateTime
   dispense_qty       Decimal?
   dispense_qty_unit  String?
@@ -424,13 +430,48 @@ model medication {
   participant_id     Int
   participant        participant @relation(fields: [participant_id], references: [id])
 
+  // index slows down queries
+  // @@index([participant_id])
+}
+
+model measurement {
+  id             Int         @id @default(autoincrement())
+  event_date     DateTime
+  event_name     String
+  result         String
+  unit           String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  @@index([participant_id, event_name])
+}
+
+model drug_screen {
+  id             Int         @id @default(autoincrement())
+  name           String
+  date           DateTime
+  result         String
+  result_raw     String
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
   @@index([participant_id])
 }
 
-model results_by {
-  id     Int    @id @default(autoincrement())
-  name   String
-  fields Json
+model vaccination {
+  id            Int      @id @default(autoincrement())
+  name          String
+  name_alt      String?
+  date          DateTime
+  dose_number   Int?
+  series_doses  Int?
+  description_1 String?
+  description_2 String?
+
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  @@index([participant_id])
 }
 
 model cohort {
@@ -866,4 +907,18 @@ model concept_synonym {
   @@id([concept_id, concept_synonym_name, language_concept_id])
   // @@index([concept_synonym_name(ops: raw("gin_trgm_ops"))], type: Gin)
   @@index([concept_id])
+}
+
+view demographic_extended {
+  id             Int         @id @default(autoincrement())
+  gender         String
+  race           String
+  ethnicity      String?
+  max_enc_date   DateTime
+  dob            DateTime
+  enroll_date    DateTime?
+  participant_id Int
+  weight         Decimal?
+  height         Decimal?
+  bmi            Decimal?
 }
