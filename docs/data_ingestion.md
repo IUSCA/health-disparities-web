@@ -223,8 +223,49 @@ python -m workers.variants.ingest_refseq --data_path  /N/project/biobank/annotat
 ```
 
 ### OMOP
+Export data from OMOP
 ```sql
-COPY concept FROM '/opt/sca/scripts/concept_icd10_snomed.csv' DELIMITER ',' CSV HEADER;
-COPY concept_relationship FROM '/opt/sca/scripts/concept_relationship_icd10_snomed.csv' DELIMITER ',' CSV HEADER;
-COPY concept_synonym FROM '/opt/sca/scripts/concept_synonym_snomed_english.csv' DELIMITER ',' CSV HEADER;
+-- concept: get all icd codes and snomed which are not invalid: 95524 + 540590
+select * from concept c where c.vocabulary_id = 'ICD10CM' and c.invalid_reason is null
+union
+select *
+from concept c
+where c.vocabulary_id ='SNOMED' and c.invalid_reason is null and c.standard_concept = 'S';
+```
+
+```sql
+-- concept_relation: get all relations related to ICD10CM codes + relations between ICD10CM and snomed: 282897 + 129729
+select cr.* from concept_relationship cr 
+join concept c1 on cr.concept_id_1 = c1.concept_id 
+join concept c2 on cr.concept_id_2 = c2.concept_id 
+where c1.vocabulary_id = 'ICD10CM' and c2.vocabulary_id = 'ICD10CM' and c1.invalid_reason is null and c2.invalid_reason is null and cr.relationship_id  = 'Is a'
+union
+select cr.* from concept_relationship cr 
+join concept c1 on cr.concept_id_1 = c1.concept_id 
+join concept c2 on cr.concept_id_2 = c2.concept_id 
+where cr.relationship_id in ('Maps to', 'Maps to value') and
+	c1.vocabulary_id = 'ICD10CM' and 
+	c2.vocabulary_id = 'SNOMED' and 
+	c1.invalid_reason is null and 
+	c2.invalid_reason is null and 
+	c2.standard_concept = 'S';
+```
+
+```sql
+-- concept_synonym: get all english language synonyms for snomed ids from 1st query: 758244
+select cs.* from concept_synonym cs
+join concept c on c.concept_id = cs.concept_id 
+where cs.language_concept_id = 4180186 -- english
+and c.vocabulary_id ='SNOMED' and c.invalid_reason is null and c.standard_concept = 'S'
+union
+select cs.* from concept_synonym cs
+join concept c on c.concept_id = cs.concept_id 
+where cs.language_concept_id = 4180186 -- english
+and c.vocabulary_id ='ICD10CM' and c.invalid_reason is null
+```
+
+Import above data
+
+```bash
+python -m workers.phenotype.load_omop_data '/path/to/ICD10CM-SNOMED'
 ```
