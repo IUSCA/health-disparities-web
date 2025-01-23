@@ -15,6 +15,8 @@ REFRESH MATERIALIZED view dx_unique_name;
 REFRESH MATERIALIZED view ehr_participant_counts_by_name;
 ```
 
+Update UI cache key is `ui/src/config.js` at `phenotype_data.cachecache_busting_id`, so that the UI will fetch the latest data.
+
 ## Regeneron Data Ingestion
 
 ### Mapping samples to paritcipants
