@@ -1,5 +1,7 @@
+import config from "@/config";
 import api from "./api";
-const cache_busting_id = "41e81fe";
+
+const cache_busting_id = config.phenotype_data.cache_busting_id;
 
 class PhenotypesService {
   unique(category, field) {

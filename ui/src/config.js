@@ -96,6 +96,9 @@ const exports = {
   enabledFeatures: {
     genomeBrowser: false,
   },
+  phenotype_data: {
+    cache_busting_id: "41e81ff",
+  },
 };
 
 export default exports;
