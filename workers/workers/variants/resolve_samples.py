@@ -218,7 +218,7 @@ def resolve_sample_ids(sample_ids,
     """
     :param sample_ids: list of sample ids from the vcf file
     :param ib_id_map: map of ib_id to participant_id
-    :param gt_sample_map: map of sample to participant_id
+    :param gt_sample_map: map of sample to participant_id previously resolved from genotype_sample table
     :param user_provided: map of sample to ib_id
 
     :return: sample_pid_map, unmatched, new_participants
@@ -244,14 +244,14 @@ def resolve_sample_ids(sample_ids,
             pid = ib_id_map.get(s_user, None)
 
         # check if the sample after transformation is one of the ib ids in the participant table
-        s_alt = None
-        if pid is None:
-            parts = s_canon.split('_')
-            if 2 <= len(parts) <= 3:
-                s_alt = parts[1]
-
-            if s_alt is not None and s_alt in ib_id_map:
-                pid = ib_id_map[s_alt]
+        # s_alt = None
+        # if pid is None:
+        #     parts = s_canon.split('_')
+        #     if 2 <= len(parts) <= 3:
+        #         s_alt = parts[1]
+        #
+        #     if s_alt is not None and s_alt in ib_id_map:
+        #         pid = ib_id_map[s_alt]
 
         if pid is not None:
             # pid is found
@@ -261,7 +261,7 @@ def resolve_sample_ids(sample_ids,
             new_participants[s] = s_user
         else:
             # pid is not found and user has not provided an ib_id
-            unmatched[s] = s_alt or s_canon
+            unmatched[s] = s_canon  # or s_alt
 
     return sample_pid_map, unmatched, new_participants
 

@@ -294,7 +294,6 @@ model participant {
   id                    Int                    @id @default(autoincrement())
   ib_id                 String
   study_id              Int?
-  genotype_idx          Int?
   enroll_snapshot_id    Int
   enroll_snapshot       snapshot               @relation(name: "enrolls", fields: [enroll_snapshot_id], references: [id])
   disenroll_snapshot_id Int?
@@ -312,9 +311,20 @@ model participant {
   measurements          measurement[]
   drug_screens          drug_screen[]
   vaccinations          vaccination[]
+  participant_genotype  participant_genotype[]
 
   @@unique([ib_id])
-  @@unique([genotype_idx])
+}
+
+model participant_genotype {
+  id             Int         @id @default(autoincrement())
+  participant_id Int
+  source_id      Int
+  genotype_idx   Int
+  source         source      @relation(fields: [source_id], references: [id])
+  participant    participant @relation(fields: [participant_id], references: [id])
+
+  @@unique([participant_id, source_id, genotype_idx])
 }
 
 model stats {
@@ -562,14 +572,15 @@ enum access_type {
 
 /// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
 model variant {
-  chr       Int     @db.SmallInt
-  position  BigInt
-  ref       String
-  alt       String
-  source_id Int
-  source    source  @relation(fields: [source_id], references: [id])
-  phase     Boolean
-  genotype  Int[]   @db.SmallInt
+  chr        Int     @db.SmallInt
+  position   BigInt
+  ref        String
+  alt        String
+  source_id  Int
+  source     source  @relation(fields: [source_id], references: [id])
+  phase      Boolean
+  is_imputed Boolean
+  genotype   Int[]   @db.SmallInt
 
   @@id([chr, position, ref, alt, source_id])
 }
@@ -615,16 +626,17 @@ model gene {
 }
 
 model source {
-  id           Int            @id @default(autoincrement())
-  name         String
-  build        String
-  description  String?
-  created_at   DateTime       @default(now()) @db.Timestamp(6)
-  published    Boolean        @default(false)
-  author_id    Int?
-  author       user?          @relation(fields: [author_id], references: [id])
-  variant      variant[]
-  genotype_set genotype_set[]
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  build                String
+  description          String?
+  created_at           DateTime               @default(now()) @db.Timestamp(6)
+  published            Boolean                @default(false)
+  author_id            Int?
+  author               user?                  @relation(fields: [author_id], references: [id])
+  variant              variant[]
+  genotype_set         genotype_set[]
+  participant_genotype participant_genotype[]
 }
 
 model snapshot {
@@ -748,6 +760,7 @@ model genotype_stats {
   snapshot_id   Int
   protocol_id   Int
   phase         Boolean
+  is_imputed    Boolean
   missing       Int
   c0            Int
   c1            Int
@@ -773,6 +786,7 @@ model genotype_stats_snapshot_1 {
   snapshot_id   Int
   protocol_id   Int
   phase         Boolean
+  is_imputed    Boolean
   missing       Int
   c0            Int
   c1            Int
@@ -822,6 +836,7 @@ view gt_stats_annotations {
   snapshot_id   Int
   protocol_id   Int
   phase         Boolean
+  is_imputed    Boolean
   missing       Int
   c0            Int
   c1            Int
@@ -910,7 +925,7 @@ model concept_synonym {
 }
 
 view demographic_extended {
-  id             Int         @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   gender         String
   race           String
   ethnicity      String?

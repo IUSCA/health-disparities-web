@@ -65,39 +65,6 @@ def encode_genotype(genotype: tuple[int, int, bool]) -> int | None:
         return 2
     if a == 1 and b == 1:
         return 3
-    
-
-def encode_genotype_vectorized(genotypes: np.ndarray) -> np.ndarray:
-    """
-    Vectorized version of encoding genotypes.
-
-    :param genotypes: A 2D NumPy array of shape (n_samples, 3)
-                      where each row is (a, b, phased).
-    :return: A 1D NumPy array of encoded genotypes.
-    """
-    a = genotypes[:, 0]
-    b = genotypes[:, 1]
-
-    # Initialize an output array with the same shape as the number of rows
-    output = np.full(a.shape, fill_value=np.nan, dtype=genotypes.dtype)
-
-    # Conditions for the encoding
-    mask_phased = (a == -1) | (b == -1)
-    output[mask_phased] = -1
-
-    mask_00 = (a == 0) & (b == 0)
-    output[mask_00] = 0
-
-    mask_01 = (a == 0) & (b == 1)
-    output[mask_01] = 1
-
-    mask_10 = (a == 1) & (b == 0)
-    output[mask_10] = 2
-
-    mask_11 = (a == 1) & (b == 1)
-    output[mask_11] = 3
-
-    return output
 
 
 def encode_genotype_vectorized(genotypes: np.ndarray) -> np.ndarray:
@@ -146,7 +113,7 @@ def infer_phase(vcf_file_path: str) -> bool:
 
 
 class VCFIngestor:
-    def __init__(self, vcf_file_path: str, source_id: int, batch_size: int = 100, celery_task=None):
+    def __init__(self, vcf_file_path: str, source_id: int, batch_size: int = 100, celery_task=None, phase=None):
         """
         Variants and genotype data is append-only.
 
@@ -191,7 +158,10 @@ class VCFIngestor:
             # list of participant ids
             # VCF is expected to have samples as participant ids - reheader step
             self.samples = [int(s) for s in self.vcf.samples]
-            self.phase: bool = infer_phase(self.vcf_file_path)
+            if phase is None:
+                self.phase: bool = infer_phase(self.vcf_file_path)
+            else:
+                self.phase = phase
         except Exception as e:
             message = f'Unable to open vcf at {vcf_file_path}'
             print(message, e)

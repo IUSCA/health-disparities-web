@@ -17,7 +17,7 @@ def fetch_all(cursor):
     """
     Returns a dict of ib_id -> participant_id
     """
-    cursor.execute('select id, ib_id from participant')
+    cursor.execute('select id, upper(ib_id) from participant')
     return {row[1]: row[0] for row in cursor}
 
 
