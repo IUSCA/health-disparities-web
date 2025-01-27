@@ -57,10 +57,13 @@ def decode_chromosome(chrom: int) -> str:
 
 
 def encode_chromosome(chrom: str) -> int:
+    chrom = chrom.strip().upper()
+    if chrom.startswith('CHR'):
+        chrom = chrom[3:]
     try:
-        if chrom.upper() in ['X', 'XX']:
+        if chrom in ['X', 'XX']:
             return 23
-        if chrom.upper() in ['Y', 'YY']:
+        if chrom in ['Y', 'YY']:
             return 24
         if chrom.isnumeric():
             if 1 <= int(chrom) <= 22:
@@ -69,3 +72,19 @@ def encode_chromosome(chrom: str) -> int:
         print('error in encoding chromosome', e)
         raise IngestionFailed(f'Unable to encode chromosome value {chrom}')
     raise IngestionFailed(f'Unable to encode chromosome value {chrom}')
+
+
+def encode_value(value):
+    """Encode values to be PostgreSQL-compatible."""
+    if value is None:
+        # Convert None to 'NULL'
+        return 'NULL'
+    elif isinstance(value, bool):
+        # Convert booleans to lowercase strings 'true' or 'false'
+        return 'true' if value else 'false'
+    elif isinstance(value, list):
+        # Convert lists to PostgreSQL array format
+        return '{' + ','.join(map(str, value)) + '}'
+    else:
+        # Return value as-is for other types
+        return value

@@ -14,9 +14,9 @@ requests = "^2.32.3"
 urllib3 = "<2"           # because of ssl conflicts
 glom = "^23.5.0"
 cyvcf2 = "^0.31.00"      # macos has issues: ImportError: dlopen(...): symbol not found in flat namespace '_bcf_float_missing' - Fixed by "poetry remove cyvcf2; pip install --no-binary :all: cyvcf2"
-tqdm = "^4.66.5"
-pytest = "^8.0.0"
-pandas = "^2.2.2"
+tqdm = "^4.67.1"
+pytest = "^8.3.4"
+pandas = "^2.2.3"
 fire = "^0.7.0"
 python-slugify = "^8.0.4"
 pyvcf3 = "^1.0.3"
@@ -26,7 +26,7 @@ psycopg2 = "^2.9.10"
 psycopg2-binary = "^2.9.10"
 
 [tool.poetry.group.dev.dependencies]
-jupyterlab = "^4.2.5"
+jupyterlab = "^4.3.4"
 diagrams = "^0.23.3"
 
 [build-system]

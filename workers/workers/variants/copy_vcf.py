@@ -25,7 +25,7 @@ def copy_vcf(celery_task, dummy, csv_path=None, **kwargs):
 
 def main(csv_path, no_celery=False):
     """
-    sequentially run COPY VARIANT for all .csv files in data_dir
+    sequentially run COPY VARIANT for a given .csv file
 
     @param csv_path: path to .csv file
     @param no_celery: run without celery

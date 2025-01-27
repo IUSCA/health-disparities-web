@@ -581,6 +581,7 @@ model variant {
   phase      Boolean
   is_imputed Boolean
   genotype   Int[]   @db.SmallInt
+  dosage     Int[]   @db.SmallInt
 
   @@id([chr, position, ref, alt, source_id])
 }

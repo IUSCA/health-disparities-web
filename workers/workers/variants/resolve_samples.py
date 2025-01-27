@@ -72,16 +72,6 @@ def create_genotype_set(data_dir: Path, snapshot_id, source_id, name):
     return row['id']
 
 
-# def create_genotype_file(vcf_file_path, genotype_set_id):
-#     chr_str = infer_chromosome(vcf_file_path)
-#     chr = encode_chromosome(chr_str)
-#     d = get_file_metadata(vcf_file_path)
-#     d['set_id'] = genotype_set_id
-#     d['chr'] = chr
-#     row = api.create_genotype_file(d)
-#     return row['id']
-
-
 def create_sample_mappings(sample_pid_map, set_id):
     data = []
     for [sample, participant_id] in sample_pid_map.items():
@@ -93,7 +83,13 @@ def create_sample_mappings(sample_pid_map, set_id):
     api.create_sample_mappings(data)
 
 
-def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, output_dir: str = None, set_name=None):
+def main(data_dir: str,
+         snapshot_id: int,
+         source_id: int,
+         mapping: str = None,
+         output_dir: str = None,
+         set_name=None,
+         use_custom_transform=False):
     """
     A program to resolve samples in VCF to participants
 
@@ -154,7 +150,8 @@ def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, o
         samples,
         ib_id_map,
         sample_map,
-        user_sample_map
+        user_sample_map,
+        custom_transform=custom_sample_id_transform if use_custom_transform else None
     )
     print(textwrap.dedent(f'''\
         resolved:           {len(sample_pid_map)}
@@ -212,19 +209,35 @@ def main(data_dir: str, snapshot_id: int, source_id: int, mapping: str = None, o
     print(f'created mapping file {tab_mapping_file_path}')
 
 
+def custom_sample_id_transform(sample_id: str) -> str:
+    """
+    Transform sample id to ib_id for regeneron samples. Split by '_' and return the second part.
+    To be used with regeneron samples.
+
+    @param sample_id:
+    @return:
+    """
+    parts = sample_id.split('_')
+    if 2 <= len(parts) <= 3:
+        return parts[1]
+
+
 def resolve_sample_ids(sample_ids,
                        ib_id_map,
-                       gt_sample_map, user_provided) -> tuple[dict[str, int], dict[str, str], dict[str, str]]:
+                       gt_sample_map,
+                       user_provided,
+                       custom_transform=None) -> tuple[dict[str, int], dict[str, str], dict[str, str]]:
     """
     :param sample_ids: list of sample ids from the vcf file
     :param ib_id_map: map of ib_id to participant_id
     :param gt_sample_map: map of sample to participant_id previously resolved from genotype_sample table
     :param user_provided: map of sample to ib_id
+    :param custom_transform: function to transform sample id to ib_id
 
     :return: sample_pid_map, unmatched, new_participants
 
     sample_pid_map: map of sample to participant_id
-    unmatched: map of sample to ib_id (unmatched)
+    unmatched: map of sample to a recommended ib_id
     new_participants: map of sample to ib_ids that are not in the participant table
     """
     unmatched: dict[str, str] = {}
@@ -234,6 +247,7 @@ def resolve_sample_ids(sample_ids,
     for s in sample_ids:
         s_canon = s.upper()
         s_user = user_provided.get(s, None)
+        s_transformed = None
 
         # check if the sample (uppercase) is one of the ib ids in the participant table
         # check if the sample (no transformation) is one of the samples in the genotype_sample table
@@ -244,14 +258,10 @@ def resolve_sample_ids(sample_ids,
             pid = ib_id_map.get(s_user, None)
 
         # check if the sample after transformation is one of the ib ids in the participant table
-        # s_alt = None
-        # if pid is None:
-        #     parts = s_canon.split('_')
-        #     if 2 <= len(parts) <= 3:
-        #         s_alt = parts[1]
-        #
-        #     if s_alt is not None and s_alt in ib_id_map:
-        #         pid = ib_id_map[s_alt]
+        if custom_transform is not None and pid is None:
+            s_transformed = custom_transform(s)
+            if s_transformed is not None:
+                pid = ib_id_map.get(s_transformed, None)
 
         if pid is not None:
             # pid is found
@@ -261,7 +271,10 @@ def resolve_sample_ids(sample_ids,
             new_participants[s] = s_user
         else:
             # pid is not found and user has not provided an ib_id
-            unmatched[s] = s_canon  # or s_alt
+            if s_transformed is not None:
+                unmatched[s] = s_transformed
+            else:
+                unmatched[s] = s_canon
 
     return sample_pid_map, unmatched, new_participants
 
