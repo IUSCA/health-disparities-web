@@ -367,7 +367,7 @@ class VCFIngestor:
         with open(csv_file_path, 'w', newline='') as csvfile:
             csvWriter = csv.DictWriter(csvfile, fieldnames=column_names)
             csvWriter.writeheader()
-            for batch in itertools.islice(batched(self.vcf, self.batch_size), 2):
+            for batch in batched(self.vcf, self.batch_size):
                 batch_start_time = time.perf_counter()
                 rows = []
                 for var in batch:
@@ -438,7 +438,7 @@ def ingest_vcf(celery_task, dummy, **kwargs):
 
 # used to either launch a workflow to run task 'ingest_vcf' on every vcf
 # or directly run code to ingest data from command line based on no_celery falg
-def ingest_data(data_dir, source_id, batch_size=2000, no_celery=False, is_fresh=False, phase=None, is_imputed=False):
+def ingest_data(data_dir, source_id, batch_size=1000, no_celery=False, is_fresh=False, phase=None, is_imputed=False):
     """
     Ingests the data in VCFs in data_dir.
 
@@ -461,10 +461,9 @@ def ingest_data(data_dir, source_id, batch_size=2000, no_celery=False, is_fresh=
     assert len(vcf_paths) > 0, f'No .vcf.gz files in {data_dir}'
 
     if not no_celery:
-        steps = []
         for vcf_path in vcf_paths:
-            steps.append({
-                'name': vcf_path.name,
+            steps = [{
+                'name': 'ingest_vcf',
                 'task': 'ingest_vcf',
                 'queue': f'{config["app_id"]}.q',
                 'kwargs': {
@@ -475,16 +474,16 @@ def ingest_data(data_dir, source_id, batch_size=2000, no_celery=False, is_fresh=
                     'phase': phase,
                     'is_imputed': is_imputed
                 },
-            }, )
+            }]
 
-        wf_body = {
-            'name': 'Ingest VCFs',
-            'app_id': config['app_id'],
-            'steps': steps
-        }
+            wf_body = {
+                'name': f'Ingest VCF - {vcf_path.name}',
+                'app_id': config['app_id'],
+                'steps': steps
+            }
 
-        int_wf = Workflow(celery_app=app, **wf_body)
-        int_wf.start(None)
+            int_wf = Workflow(celery_app=app, **wf_body)
+            int_wf.start(None)
     else:
         for vcf_path in vcf_paths:
             ingest_vcf(None, None, vcf_file_path=str(vcf_path), source_id=source_id, batch_size=batch_size,

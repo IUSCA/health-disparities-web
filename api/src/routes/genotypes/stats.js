@@ -23,7 +23,12 @@ router.get(
     }
     // expensive query
     const row = await prisma.$queryRaw`select count(*) as count from variant`;
-    const row2 = await prisma.$queryRaw`select count(*) as count from participant where genotype_idx is not null`;
+    const row2 = await prisma.$queryRaw`
+      select count(*) as count 
+      from participant p
+      join participant_genotype pg on pg.participant_id = p.id
+      where pg.genotype_idx is not null
+    `;
     v = {
       total: parseInt(row[0].count, 10),
       participants: parseInt(row2[0].count, 10),

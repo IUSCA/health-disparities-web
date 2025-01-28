@@ -42,7 +42,7 @@ function insert_query(snapshot_id, protocol_id, chr = null, source_id = null) {
     is never null.
   */
   // eslint-disable-next-line max-len
-  const select = Prisma.raw(`select chr, position, ref, alt, source_id, ${snapshot_id}, ${protocol_id}, phase, missing, c0, c1, c2, c3, allele_num, allele_count, allele_freq from stats_data`);
+  const select = Prisma.raw(`select chr, position, ref, alt, source_id, ${snapshot_id}, ${protocol_id}, phase, is_imputed, missing, c0, c1, c2, c3, allele_num, allele_count, allele_freq from stats_data`);
 
   const filters = ([
     chr != null ? Prisma.sql`v.chr = ${chr}` : null,
@@ -53,16 +53,17 @@ function insert_query(snapshot_id, protocol_id, chr = null, source_id = null) {
   return Prisma.sql`with
     indexes as (
       select
-          distinct p.genotype_idx as id
+          distinct pg.genotype_idx as id
       from participant p 
       join participant_protocol pp on pp.participant_id = p.id
       join participants_per_snapshot pps on pps.id = pp.participant_id
+      join participant_genotype pg on pg.participant_id = p.id
       where
         pp.protocol_id = ${protocol_id} and 
-        pps.snapshot_id = ${snapshot_id}
+        pps.snapshot_id = ${snapshot_id} -- and  pg.source_id = 3
     ),
     stats_data as (
-      select v.chr, v."position", v."ref", v.alt, v.source_id, v.phase,
+      select v.chr, v."position", v."ref", v.alt, v.source_id, v.phase, v.is_imputed,
             ac.missing as missing,
             ac.c0 as c0,
             ac.c1 as c1,

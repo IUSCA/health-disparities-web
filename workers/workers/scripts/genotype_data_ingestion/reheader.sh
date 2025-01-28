@@ -60,8 +60,8 @@ for file in $1/*.{vcf,vcf.gz}; do
     echo "Processing: $file -> $output_file"
     bcftools reheader -s $SAMPLE_MAPPING -o $output_file $file
 
-    # Index the vcf file
+    # Index the vcf file in a separate thread
     echo "indexing $filename"
-    tabix -p vcf $output_file
+    tabix -p vcf $output_file &
   fi
 done
