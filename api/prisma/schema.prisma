@@ -806,6 +806,20 @@ view gt_stats_annotations {
   position      BigInt
   ref           String
   alt           String
+  source_id     Int
+  snapshot_id   Int
+  protocol_id   Int
+  phase         Boolean
+  missing       Int
+  c0            Int
+  c1            Int
+  c2            Int
+  c3            Int
+  allele_number Int
+  allele_count  Int
+  allele_freq   Float
+  is_imputed    Boolean
+
   func          String?
   genes         String[]
   exonic_func   String?
@@ -832,21 +846,7 @@ view gt_stats_annotations {
   revel_max     Float?
   polyphen_max  Float?
   sift_max      Float?
-
-  source_id     Int
-  snapshot_id   Int
-  protocol_id   Int
-  phase         Boolean
-  is_imputed    Boolean
-  missing       Int
-  c0            Int
-  c1            Int
-  c2            Int
-  c3            Int
-  allele_number Int
-  allele_count  Int
-  allele_freq   Float
-
+  
   @@id([chr, position, ref, alt])
 }
 
