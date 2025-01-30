@@ -42,7 +42,7 @@ function insert_query(snapshot_id, protocol_id, chr = null, source_id = null) {
     is never null.
   */
   // eslint-disable-next-line max-len
-  const select = Prisma.raw(`select chr, position, ref, alt, source_id, ${snapshot_id}, ${protocol_id}, phase, is_imputed, missing, c0, c1, c2, c3, allele_num, allele_count, allele_freq from stats_data`);
+  const select = Prisma.raw(`select chr, position, ref, alt, source_id, ${snapshot_id}, ${protocol_id}, phase, missing, c0, c1, c2, c3, allele_num, allele_count, allele_freq, is_imputed  from stats_data`);
 
   const filters = ([
     chr != null ? Prisma.sql`v.chr = ${chr}` : null,

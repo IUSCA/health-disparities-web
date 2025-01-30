@@ -58,8 +58,8 @@ task_track_started = True
 
 # The worker processing the task will be killed and replaced with a new one when this is exceeded.
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-time-limit
-ONE_DAY = 24 * 60 * 60
-task_time_limit = ONE_DAY
+TWO_DAYS = 2 * 24 * 60 * 60
+task_time_limit = TWO_DAYS
 
 # The SoftTimeLimitExceeded exception will be raised when this is exceeded.
 # The task can catch this to clean up before the hard time limit.
