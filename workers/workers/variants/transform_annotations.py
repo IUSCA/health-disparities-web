@@ -307,7 +307,7 @@ def transform_annotations(celery_task, chromosome,
 
     output_dir_path = Path(output_dir or '.').resolve()
     output_dir_path.mkdir(parents=True, exist_ok=True)
-    csv_file_path = output_dir_path / Path(f'annotations_chr{chromosome}.csv').resolve()
+    csv_file_path = (output_dir_path / Path(f'annotations_chr{chromosome}.csv')).resolve()
     column_names = Annotation.__annotations__.keys()
 
     loader = Loader(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, batch_size)
@@ -341,7 +341,7 @@ def launch_wfs(gnomad_root_dir, gene_root_dir, clinvar_vcf_path, output_dir, bat
     vcf_paths = list(gnomad_root_dir.glob('*.vcf.bgz'))
     assert len(vcf_paths) > 0, f'No .vcf.bgz files in {gnomad_root_dir}'
 
-    for chromosome in range(1,24):
+    for chromosome in range(1,4):
         steps = [{
             'name': 'transform_annotations',
             'task': 'transform_annotations',
