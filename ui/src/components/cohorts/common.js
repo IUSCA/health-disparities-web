@@ -164,6 +164,15 @@ export const operators = [
       },
     ],
   },
+  {
+    identifier: "boolean",
+    options: [
+      {
+        key: "eq",
+        label: "equals",
+      },
+    ],
+  },
 ];
 
 export function filterId(category, name) {

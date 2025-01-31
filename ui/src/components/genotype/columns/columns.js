@@ -1,4 +1,12 @@
 const COLUMNS = {
+  is_imputed: {
+    label: "Is Imputed",
+    thTitle: "Is Imputed",
+    category: "Core",
+    _show: true,
+    numeric: false,
+    type: "boolean",
+  },
   chr: {
     label: "Variant ID",
     thTitle: "chromosome-position-ref-alt",
