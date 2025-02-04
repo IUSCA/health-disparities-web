@@ -28,7 +28,7 @@ def get_participants_from_csv(csv_file):
     return participant_df, invalid_df
 
 
-def create_participants_csv(data_dir, enroll_snapshot_id, out_file='participants.csv'):
+def create_participants_csv(data_dir, enroll_snapshot_id, out_file='participants.csv', glob='*.csv'):
     """
     Create a csv file with ib_id, study_id, and enroll_snapshot_id columns to be imported into the participant table.
     Read phenotypes csv files from data_dir and extract unique ib_id and associated study_id columns.
@@ -36,7 +36,7 @@ def create_participants_csv(data_dir, enroll_snapshot_id, out_file='participants
     """
     ib_id_map = fetch_all()
     pids = {}
-    for csv_file in data_dir.glob('*.csv'):
+    for csv_file in data_dir.glob(glob):
         print(f'processing {csv_file}')
         key = csv_file.stem
         participant_df, invalid_df = get_participants_from_csv(csv_file)

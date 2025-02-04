@@ -65,7 +65,7 @@ task_time_limit = TWO_DAYS
 # The task can catch this to clean up before the hard time limit.
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-soft-time-limit
 TEN_MINUTES = 10 * 60
-task_soft_time_limit = ONE_DAY - TEN_MINUTES
+task_soft_time_limit = TWO_DAYS - TEN_MINUTES
 
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-routes
 # task_routes = {
