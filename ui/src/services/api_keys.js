@@ -39,6 +39,10 @@ class ApiKeyService {
     return api.get("/api_keys/scopes");
   }
 
+  createScope(data) {
+    return api.post("/api_keys/scopes", data);
+  }
+
   getAuditLogs(params = {}) {
     return api.get("/api_keys/audit_logs", { params });
   }
