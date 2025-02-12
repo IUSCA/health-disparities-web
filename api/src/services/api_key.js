@@ -33,29 +33,42 @@ function sanitizeApiKey(apiKey) {
 /**
  * Checks the validity of an API key and its associated secret.
  *
- * This function verifies the provided API key and secret against the database.
- * It ensures that the key is valid, not expired, not revoekd, and that the secret matches
- * the encrypted secret stored in the database. Additionally, it checks that
- * the associated user is not deleted.
+ * API Key Validity:
+ *    Ensures the key matches.
+ *    Checks if the key is not expired.
+ *    Ensures the key is not revoked.
+ *    Encrypts and compares the secret.
+ *    Ensures the associated user record exists.
+ *    Ensures the associated user is active (is_deleted = false).
+ *    Ensures the IP address is in a whitelisted subnet if any exist.
  *
  * @param {Object} params - The parameters for the function.
  * @param {string} params.key - The API key to be checked.
  * @param {string} params.secret - The secret associated with the API key.
+ * @param {string} params.ip_address - The IP address of the request.
  * @returns {Promise<Object|null>} - Returns the API key object with associated user and scopes if valid, otherwise null.
  */
-async function checkApiKey({ key, secret }) {
+async function checkApiKey({ key, secret, ip_address }) {
   const encryptionKey = config.get('api_keys.encryption_key');
   return prisma.$transaction(async (_prisma) => {
     const result = await _prisma.$queryRaw`
       SELECT ak.id
       FROM api_key ak
       JOIN "user" u ON ak.user_id = u.id
+      LEFT JOIN subnet s ON s.api_key_id = ak.id
       WHERE 
         ak.key = ${key} AND
         ak.expires_at > NOW() AND
         ak.revoked = false AND
-        pgp_sym_decrypt(ak.secret, ${encryptionKey})::TEXT = ${secret} AND
-        u.is_deleted = false
+        ak.secret = pgp_sym_encrypt(${secret}, ${encryptionKey}) AND
+        u.is_deleted = false AND
+        (
+          -- Allow if no whitelisted subnets exist or
+          -- commnet out the following line to invalidate the API key if no whitelisted subnets exist
+          NOT EXISTS (SELECT 1 FROM subnet WHERE api_key_id = ak.id) OR
+          -- if the IP address is in a whitelisted subnet
+          ${ip_address}::INET <<= s.subnet
+        )
     `;
     if (result.length === 0) {
       return null;
@@ -83,10 +96,12 @@ async function checkApiKey({ key, secret }) {
  * @returns {Promise<Object>} The created API key object with the decrypted secret.
  */
 async function createApiKey({
-  username, name, scopes, expires_at, description,
+  username, name, scopes, expires_at, description, whitelist_subnets = [],
 }) {
+  // create a random key
   const _key = crypto.randomBytes(16).toString('hex'); // Generates a 32-character string
 
+  // create a random secret
   const decrypted_secret = crypto.randomBytes(32).toString('hex'); // Generates a 64-character string
 
   const encryptionKey = config.get('api_keys.encryption_key');
@@ -114,6 +129,15 @@ async function createApiKey({
       FROM scope 
       WHERE name = ANY(${scopes})
     `;
+
+    // create the subnets
+    if (whitelist_subnets.length > 0) {
+      await _prisma.$executeRaw`
+        INSERT INTO SUBNET (api_key_id, subnet)
+        SELECT ${key_id}, sn::inet
+        FROM UNNEST(${whitelist_subnets}) sn
+      `;
+    }
 
     let apiKey = await _prisma.api_key.findUnique({
       where: {

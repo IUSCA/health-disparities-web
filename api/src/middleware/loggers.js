@@ -23,6 +23,11 @@ async function flushAuditLogs() {
   }
 }
 
+/**
+ * Middleware to log API requests with an API key
+ * Buffer logs and flush them to the database every 5 seconds or when the buffer reaches 20 logs
+ * This helps reduce the number of database writes and improve performance
+ */
 const apiKeyAuditLogger = morgan(
   ':method :url :scope :status :api_key_id :response-time[0]',
   {

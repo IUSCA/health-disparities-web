@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const _ = require('lodash/fp');
+const net = require('net');
 const { performance } = require('perf_hooks');
+
+const _ = require('lodash/fp');
 
 function renameKey(oldKey, newKey) {
   return (obj) => {
@@ -274,6 +276,18 @@ function normalizeWhiteSpace(str) {
   return str.replace(/\s+/g, ' ').trim();
 }
 
+async function isValidIPOrSubnet(input) {
+  // cidr-regex is an ES module and cannot be imported using require
+  const { default: cidrRegex } = await import('cidr-regex');
+  if (net.isIP(input) !== 0) {
+    return true;
+  }
+  if (cidrRegex().test(input)) {
+    return true;
+  }
+  return false;
+}
+
 module.exports = {
   renameKey,
   setDifference,
@@ -288,4 +302,5 @@ module.exports = {
   readUsersFromJSON,
   measurePerformanceAsync,
   normalizeWhiteSpace,
+  isValidIPOrSubnet,
 };

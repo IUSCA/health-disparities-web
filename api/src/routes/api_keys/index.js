@@ -1,5 +1,5 @@
 const express = require('express');
-const { query, body } = require('express-validator');
+const { query, body, param } = require('express-validator');
 const createError = require('http-errors');
 const { PrismaClient } = require('@prisma/client');
 const config = require('config');
@@ -8,7 +8,7 @@ const config = require('config');
 const { validate } = require('../../middleware/validators');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { accessControl } = require('../../middleware/auth');
-const { setDifference } = require('../../utils');
+const { setDifference, isValidIPOrSubnet } = require('../../utils');
 const apiKeyService = require('../../services/api_key');
 
 const prisma = new PrismaClient();
@@ -74,6 +74,11 @@ router.get(
           take: 1,
           orderBy: {
             accessed_at: 'desc',
+          },
+        },
+        whitelist_subnets: {
+          select: {
+            subnet: true,
           },
         },
       },
@@ -174,9 +179,22 @@ router.post(
     body('scopes').isArray().isLength({ min: 1 }),
     body('name').isString().trim().isLength({ min: 1 }),
     body('validity_days').isInt({ min: 0, max: config.get('api_keys.max_valid_days') }).toInt(),
+    body('whitelisted_subnets').default([]).isArray(),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['Users']
+
+    // validate that all whitelisted subnets are valid
+    const subnets = req.body.whitelisted_subnets;
+    const sn_results = await Promise.all(
+      subnets.map(async (subnet) => [await isValidIPOrSubnet(subnet), subnet]),
+    );
+    // throw error if any of the subnets is invalid, with offending subnet in the error message
+    sn_results.forEach(([result, subnet]) => {
+      if (!result) {
+        return next(createError(400, `Invalid subnet: ${subnet}`));
+      }
+    });
 
     const expires_at = new Date();
     expires_at.setDate(expires_at.getDate() + req.body.validity_days);
@@ -224,6 +242,7 @@ router.post(
       description: req.body.description,
       scopes: req.body.scopes,
       expires_at,
+      whitelisted_subnets: subnets,
     });
 
     res.json(apiKey);
@@ -282,6 +301,60 @@ router.delete(
       },
     });
 
+    res.status(204).send();
+  }),
+);
+
+// associate subnet with an API key
+router.put(
+  '/:key/subnets/:subnet',
+  isPermittedTo('create'), // TODO: only admin should be able to do this
+  validate([
+    param('subnet').custom(isValidIPOrSubnet),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    const api_key = await prisma.api_key.findUniqueOrThrow({
+      where: {
+        key: req.params.key,
+      },
+    });
+    await prisma.subnet.upsert({
+      where: {
+        subnet_api_key_id: {
+          api_key_id: api_key.id,
+          subnet: req.params.subnet,
+        },
+      },
+      create: {
+        api_key_id: api_key.id,
+        subnet: req.params.subnet,
+      },
+      update: {
+        api_key_id: api_key.id,
+        subnet: req.params.subnet,
+      },
+    });
+    res.status(201).send();
+  }),
+);
+
+router.delete(
+  '/:key/subnets/:subnet',
+  isPermittedTo('delete'), // TODO: only admin should be able to do this
+  asyncHandler(async (req, res, next) => {
+    const api_key = await prisma.api_key.findUniqueOrThrow({
+      where: {
+        key: req.params.key,
+      },
+    });
+    await prisma.subnet.delete({
+      where: {
+        subnet_api_key_id: {
+          api_key_id: api_key.id,
+          subnet: req.params.subnet,
+        },
+      },
+    });
     res.status(204).send();
   }),
 );

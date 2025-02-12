@@ -43,7 +43,7 @@
             >
               Personal access keys function like ordinary username and password.
               They can be used over HTTPS to authenticate to the API using Basic
-              Authentication using key and secret.
+              Authentication.
             </div>
           </div>
         </div>

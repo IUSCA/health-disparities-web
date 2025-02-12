@@ -39,6 +39,7 @@
     "accesscontrol": "^2.2.1",
     "ajv": "^8.12.0",
     "axios": "^1.5.0",
+    "cidr-regex": "^4.1.1",
     "compression": "^1.7.4",
     "config": "^3.3.9",
     "cookie-parser": "^1.4.6",
