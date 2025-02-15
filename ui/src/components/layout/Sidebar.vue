@@ -11,6 +11,9 @@
       :key="i"
       :to="item.path"
       :active="isActive(item.path)"
+      :class="{
+        'custom-sidebar-item--active': isActive(item.path),
+      }"
     >
       <va-sidebar-item-content>
         <Icon :icon="item.icon" class="text-2xl" />
@@ -30,6 +33,9 @@
         :key="i"
         :to="item.path"
         :active="isActive(item.path)"
+        :class="{
+          'custom-sidebar-item--active': isActive(item.path),
+        }"
       >
         <va-sidebar-item-content>
           <Icon :icon="item.icon" class="text-2xl" />
@@ -50,6 +56,9 @@
         :key="i"
         :to="item.path"
         :active="isActive(item.path)"
+        :class="{
+          'custom-sidebar-item--active': isActive(item.path),
+        }"
       >
         <va-sidebar-item-content>
           <Icon :icon="item.icon" class="text-2xl" />
@@ -81,6 +90,9 @@
       :key="i"
       :to="item.path"
       :active="isActive(item.path)"
+      :class="{
+        'custom-sidebar-item--active': isActive(item.path),
+      }"
     >
       <va-sidebar-item-content>
         <Icon :icon="item.icon" class="text-2xl" />
@@ -231,6 +243,11 @@ const operator_items = ref([
   //   title: 'Data Cleanup',
   //   path: '/clean',
   // },
+  {
+    icon: "mdi-approval",
+    title: "Access Requests",
+    path: "/cohort_access_requests",
+  },
 ]);
 
 const bottom_items = ref([
@@ -275,6 +292,17 @@ const admin_items = ref([
       ]
     : []),
 ]);
+
+function scrollActiveItemIntoView() {
+  document.querySelector(".custom-sidebar-item--active")?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+}
+
+onMounted(() => {
+  scrollActiveItemIntoView();
+});
 </script>
 
 <style>
