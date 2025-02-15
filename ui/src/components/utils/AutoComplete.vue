@@ -6,12 +6,24 @@
         <va-input
           outline
           clearable
-          type="text"
+          :label="props.label"
           :placeholder="props.placeholder"
           v-model="text"
           class="w-full autocomplete-input"
           @click="openResults"
-        />
+        >
+          <template #prependInner>
+            <i-mdi:magnify />
+          </template>
+
+          <template #appendInner>
+            <i-mdi:undo-variant
+              class="cursor-pointer"
+              @click.stop="handleClose"
+              v-if="props.showClose"
+            />
+          </template>
+        </va-input>
       </va-form>
 
       <ul
@@ -50,7 +62,17 @@
 <script setup>
 import { OnClickOutside } from "@vueuse/components";
 
+document.addEventListener("DOMContentLoaded", function () {
+  const input = document.querySelector(".va-input__content__input");
+  input.setAttribute("autocomplete", "off");
+  //input.value = ""; // Clears any autofilled value
+});
+
 const props = defineProps({
+  label: {
+    type: String,
+    default: null,
+  },
   placeholder: {
     type: String,
     default: "Type here",
@@ -71,12 +93,20 @@ const props = defineProps({
     type: String,
     default: "name",
   },
+  defaultVisible: {
+    type: Boolean,
+    default: false,
+  },
+  showClose: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const emit = defineEmits(["select"]);
+const emit = defineEmits(["select", "close"]);
 
 const text = ref("");
-const visible = ref(false);
+const visible = ref(props.defaultVisible);
 
 // when clicked outside, hide the results ul
 // when clicked on input show the results ul
@@ -108,6 +138,12 @@ function handleSelect(item) {
   text.value = "";
   closeResults();
   emit("select", item);
+}
+
+function handleClose() {
+  text.value = "";
+  closeResults();
+  emit("close");
 }
 </script>
 

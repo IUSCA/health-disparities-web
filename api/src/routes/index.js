@@ -62,5 +62,6 @@ router.use('/protocols', require('./protocols'));
 router.use('/gen-ai', require('./gen_ai'));
 router.use('/icd10', require('./icd10'));
 router.use('/api_keys', require('./api_keys'));
+router.use('/cohort_access_requests', require('./cohort_access_requests'));
 
 module.exports = router;

@@ -119,6 +119,12 @@ const grantsObject = {
     genai: {
       'create:any': ['*'],
     },
+    cohort_access_requests: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
   },
 
   // user role permissions
@@ -247,6 +253,12 @@ const grantsObject = {
     },
     genai: {
       'create:any': ['*'],
+    },
+    cohort_access_requests: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
     },
   },
 };

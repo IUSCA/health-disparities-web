@@ -8,12 +8,20 @@
     @close="hide"
     size="large"
   >
-    <CohortSearch @select="handleSelect" />
+    <CohortSearch
+      @select="handleSelect"
+      :default-is-published="props.defaultIsPublished"
+    />
   </va-modal>
 </template>
 
 <script setup>
-// const props = defineProps({});
+const props = defineProps({
+  defaultIsPublished: {
+    type: Boolean,
+    default: null,
+  },
+});
 
 // parent component can invoke these methods through the template ref
 defineExpose({
