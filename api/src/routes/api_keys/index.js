@@ -61,6 +61,25 @@ router.get(
       where.key = req.query.key;
     }
 
+    if (req.query.search) {
+      where.OR = [
+        {
+          key: {
+            contains: req.query.search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          user: {
+            username: {
+              contains: req.query.search,
+              mode: 'insensitive',
+            },
+          },
+        },
+      ];
+    }
+
     const dataQuery = {
       where,
       include: {

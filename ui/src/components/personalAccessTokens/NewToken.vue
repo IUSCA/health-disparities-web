@@ -14,6 +14,19 @@
       placeholder="What's this token for?"
     />
 
+    <!-- user select -->
+    <VaFormField
+      v-model="owner"
+      :rules="[(v) => !!v || 'Field is required']"
+      v-if="!props.forSelf"
+    >
+      <UserSelectInput
+        v-model="owner"
+        label="Owner"
+        placeholder="Click here to select a user to own this token"
+      />
+    </VaFormField>
+
     <!-- Expiration (number of days) -->
     <div class="flex items-end">
       <VaSelect
@@ -31,7 +44,7 @@
 
     <!-- scopes -->
     <div>
-      <p class="font-semibold">Select scopes</p>
+      <p class="font-semibold">Select Scopes</p>
       <span class="va-text-secondary">
         Scopes define the access for personal tokens.
       </span>
@@ -53,7 +66,7 @@
     </div>
 
     <!-- button -->
-    <div class="flex gap-3">
+    <div class="flex gap-3 mt-5">
       <VaButton preset="secondary" @click="emit('cancel')">Cancel</VaButton>
       <div class="ml-auto">
         <VaButton @click="generateToken" :disabled="loading || !isValid">
@@ -71,7 +84,13 @@ import { useAuthStore } from "@/stores/auth";
 import dayjs from "dayjs";
 import { useForm } from "vuestic-ui";
 
-// const props = defineProps({});
+const props = defineProps({
+  forSelf: {
+    type: Boolean,
+    default: true,
+  },
+});
+
 const auth = useAuthStore();
 const { isValid, validate } = useForm("formRef");
 const emit = defineEmits(["created", "cancel"]);
@@ -84,6 +103,7 @@ const selectedScopes = ref({});
 const name = ref("");
 const description = ref("");
 const validity_days = ref(validity_days_options[0]);
+const owner = ref();
 
 const expiration_date = computed(() => {
   const today = dayjs();
@@ -111,7 +131,7 @@ onMounted(() => {
   apiKeyService
     .getAllScopes()
     .then((res) => {
-      scopes.value = res.data;
+      scopes.value = res.data.data;
     })
     .finally(() => {
       loading.value = false;
@@ -124,7 +144,7 @@ function generateToken() {
 
     apiKeyService
       .create({
-        username: auth.user.username,
+        username: owner.value?.username || auth.user.username,
         name: name.value,
         description: description.value,
         validity_days: validity_days.value,

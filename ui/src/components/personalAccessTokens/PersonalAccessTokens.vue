@@ -8,16 +8,16 @@
         />
         <div v-else-if="fetched">
           <div class="flex justify-between items-center mb-5">
-            <div class="text-xl font-semibold">Personal Access Tokens</div>
+            <div class="text-xl font-semibold">Personal Access Keys</div>
             <VaButton
               preset="primary"
               border-color="primary"
               @click="handleGenerate"
             >
-              Generate new token
+              Generate new key
             </VaButton>
           </div>
-          <!-- tokens -->
+          <!-- keys -->
           <div class="flex flex-col gap-3">
             <Token
               v-for="key in keys"

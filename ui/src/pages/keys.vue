@@ -1,6 +1,56 @@
 <template>
   <div>
-    <VaDataTable :items="keys" :columns="columns" :loading="data_loading">
+    <!-- search bar and filter -->
+    <div class="flex mb-3 gap-3">
+      <!-- search bar -->
+      <div class="flex-1">
+        <va-input
+          :model-value="params.inclusive_query"
+          class="w-full"
+          placeholder="Search using key or username"
+          outline
+          clearable
+          @update:model-value="debouncedQueryUpdate"
+        >
+          <template #prependInner>
+            <Icon icon="material-symbols:search" class="text-xl" />
+          </template>
+        </va-input>
+      </div>
+
+      <!-- Create request button -->
+      <va-button
+        @click="newTokenModal.show()"
+        color="success"
+        class="flex-none"
+      >
+        <i-mdi-plus class="mr-1" />
+        <span> Generate New Key </span>
+      </va-button>
+    </div>
+
+    <VaDataTable
+      :items="keys"
+      :columns="columns"
+      :loading="data_loading"
+      v-model:sort-by="params.sort_by"
+      v-model:sorting-order="params.sort_order"
+      disable-client-side-sorting
+    >
+      <!-- key -->
+      <template #cell(key)="{ source }">
+        <div class="flex items-center">
+          <span class="mr-2"> {{ source }} </span>
+          <router-link
+            :to="`/audit_logs?key=${source}`"
+            class="text-xs text-gray-500 hover:text-gray-700 flex hover:underline"
+          >
+            <i-mdi-file-chart-outline class="mr-0.5" />
+            <span> Logs </span>
+          </router-link>
+        </div>
+      </template>
+
       <template #cell(user)="{ source }">
         <span> {{ source.username }} </span>
       </template>
@@ -39,17 +89,54 @@
         </va-button>
       </template>
     </VaDataTable>
+
+    <!-- pagination -->
+    <Pagination
+      class="mt-4 px-1 lg:px-3"
+      v-model:page="params.page"
+      v-model:page_size="params.page_size"
+      :total_results="total_results"
+      :curr_items="keys.length"
+      :page_size_options="PAGE_SIZE_OPTIONS"
+    />
   </div>
+
+  <NewTokenModal ref="newTokenModal" @update="fetchKeys" />
 </template>
 
 <script setup>
+import useQueryPersistence from "@/composables/useQueryPersistence";
+import config from "@/config";
 import apiKeyService from "@/services/api_keys";
 import * as datetime from "@/services/datetime";
 import toast from "@/services/toast";
+import { useModal } from "vuestic-ui";
 
 // const props = defineProps({})
+
+const { confirm } = useModal();
+
+function defaultParams() {
+  return {
+    inclusive_query: "",
+    sort_by: "created_at",
+    sort_order: "desc",
+    page: 1,
+    page_size: 25,
+  };
+}
+
 const keys = ref([]);
 const data_loading = ref(false);
+const params = ref(defaultParams());
+const total_results = ref(0);
+
+useQueryPersistence({
+  refObject: params,
+  defaultValueFn: defaultParams,
+  key: "q",
+  history_push: true,
+});
 
 const columns = [
   {
@@ -65,6 +152,7 @@ const columns = [
   {
     key: "created_at",
     label: "Created",
+    sortable: true,
   },
   {
     key: "last_used_at",
@@ -73,6 +161,7 @@ const columns = [
   {
     key: "expires_at",
     label: "Expires in",
+    sortable: true,
   },
   {
     key: "actions",
@@ -81,13 +170,24 @@ const columns = [
     thAlign: "right",
   },
 ];
+const newTokenModal = ref(null);
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 function fetchKeys() {
   data_loading.value = true;
   apiKeyService
-    .getAll()
+    .getAll({
+      params: {
+        search: params.value.inclusive_query,
+        sort_by: params.value.sort_by,
+        sort_order: params.value.sort_order,
+        offset: (params.value.page - 1) * params.value.page_size,
+        limit: params.value.page_size,
+      },
+    })
     .then((res) => {
-      keys.value = res.data.data;
+      keys.value = res.data?.data || [];
+      total_results.value = res.data?.metadata?.total || 0;
     })
     .catch((err) => {
       console.error(err);
@@ -101,17 +201,28 @@ function fetchKeys() {
 onMounted(fetchKeys);
 
 function handleRevoke(row) {
-  console.log("delete", row);
-  apiKeyService
-    .revoke(row.user.username)
-    .then(() => {
-      toast.success("API key revoked");
-      fetchKeys();
-    })
-    .catch((err) => {
-      console.error(err);
-      toast.error("Failed to revoke API key");
-    });
+  confirm({
+    message: `Are you sure you want to revoke the API key for ${row.user.username}?`,
+    okText: "Revoke",
+  }).then((ok) => {
+    if (!ok) {
+      return;
+    }
+    data_loading.value = true;
+    apiKeyService
+      .revoke(row.user.username)
+      .then(() => {
+        toast.success("API key revoked");
+        fetchKeys();
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to revoke API key");
+      })
+      .finally(() => {
+        data_loading.value = false;
+      });
+  });
 }
 
 function getStatus(row) {
@@ -123,6 +234,28 @@ function getStatus(row) {
   }
   return "Active";
 }
+
+const debouncedQueryUpdate = useDebounceFn((val) => {
+  params.value.inclusive_query = val;
+}, config.debounce_ms);
+
+watch(
+  () => [
+    params.value.inclusive_query,
+    params.value.page_size,
+    params.value.sort_by,
+    params.value.sort_order,
+  ],
+  () => {
+    if (params.value.page !== 1) params.value.page = 1;
+    fetchKeys();
+  },
+  {
+    deep: true,
+  },
+);
+
+watch(() => params.value.page, fetchKeys);
 </script>
 
 <route lang="yaml">

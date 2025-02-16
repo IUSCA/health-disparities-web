@@ -12,11 +12,11 @@ class ApiKeyService {
     return keys[0];
   });
 
-  getAll({ username = null } = {}) {
+  getAll({ username = null, params = {} } = {}) {
     if (username) {
-      return api.get(`/api_keys/${username}`);
+      return api.get(`/api_keys/${username}`, { params });
     }
-    return api.get(`/api_keys`);
+    return api.get(`/api_keys`, { params });
   }
 
   create({ username, ...data }) {
