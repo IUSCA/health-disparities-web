@@ -42,7 +42,7 @@
         <div class="flex items-center">
           <span class="mr-2"> {{ source }} </span>
           <router-link
-            :to="`/audit_logs?key=${source}`"
+            :to="`/audit_logs?api_key=${source}`"
             class="text-xs text-gray-500 hover:text-gray-700 flex hover:underline"
           >
             <i-mdi-file-chart-outline class="mr-0.5" />

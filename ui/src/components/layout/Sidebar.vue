@@ -295,7 +295,7 @@ const admin_items = ref([
 
 function scrollActiveItemIntoView() {
   document.querySelector(".custom-sidebar-item--active")?.scrollIntoView({
-    behavior: "smooth",
+    behavior: "auto",
     block: "center",
   });
 }

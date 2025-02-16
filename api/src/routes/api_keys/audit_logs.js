@@ -21,7 +21,9 @@ router.get(
   '/',
   isPermittedTo('read'),
   validate([
-    query('sort_by').default('accessed_at').isIn(['accessed_at', 'response_time', 'status_code', 'http_method']),
+    query('sort_by').default('accessed_at').isIn(
+      ['accessed_at', 'response_time', 'status_code', 'http_method', 'ip_address'],
+    ),
     query('sort_order').default('desc').isIn(['asc', 'desc']),
     query('limit').default(50).isInt({ min: 1, max: 100 }).toInt(),
     query('offset').default(0).isInt({ min: 0 }).toInt(),
@@ -81,6 +83,30 @@ router.get(
         gte: req.query.response_time_start,
         lte: req.query.response_time_end,
       };
+    }
+
+    if (req.query.search) {
+      where.OR = [
+        {
+          endpoint: {
+            contains: req.query.search,
+            mode: 'insensitive', // case-insensitive search
+          },
+        },
+        {
+          api_key: {
+            key: {
+              contains: req.query.search,
+              mode: 'insensitive', // case-insensitive search
+            },
+          },
+        },
+        {
+          ip_address: {
+            equals: req.query.search,
+          },
+        },
+      ];
     }
 
     const dataQuery = {

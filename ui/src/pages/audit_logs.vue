@@ -1,4 +1,28 @@
 <template>
+  <!-- search bar and filter -->
+  <div class="flex mb-3 gap-3">
+    <!-- search bar -->
+    <div class="flex-1">
+      <va-input
+        :model-value="params.inclusive_query"
+        class="w-full"
+        placeholder="Filter logs using API key, endpoint or IP address"
+        outline
+        clearable
+        @update:model-value="debouncedQueryUpdate"
+      >
+        <template #prependInner>
+          <Icon icon="material-symbols:search" class="text-xl" />
+        </template>
+      </va-input>
+    </div>
+
+    <!-- Create request button -->
+    <va-button @click="createModal.show()" color="success" class="flex-none">
+      <i-mdi-plus class="mr-1" />
+      <span> Create Request </span>
+    </va-button>
+  </div>
   <div>
     <VaDataTable
       :items="logs"
@@ -54,6 +78,7 @@
 
 <script setup>
 import useQueryPersistence from "@/composables/useQueryPersistence";
+import config from "@/config";
 import apiKeyService from "@/services/api_keys";
 import * as datetime from "@/services/datetime";
 /*
@@ -84,8 +109,12 @@ import * as datetime from "@/services/datetime";
     "scope": null
 }
 */
+
+const route = useRoute();
+
 function defaultParams() {
   return {
+    inclusive_query: "",
     page: 1,
     itemsPerPage: 25,
     sort_by: "accessed_at",
@@ -100,6 +129,8 @@ const params = ref(defaultParams());
 useQueryPersistence({
   refObject: params,
   defaultValueFn: defaultParams,
+  key: "q",
+  history_push: true,
 });
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
@@ -129,10 +160,10 @@ const columns = [
     label: "Accessed At",
     sortable: true,
   },
-  // {
-  //   key: "ip_address",
-  //   label: "IP Address",
-  // },
+  {
+    key: "ip_address",
+    label: "IP Address",
+  },
   // {
   //   key: "scope",
   //   label: "Scope",
@@ -148,6 +179,7 @@ const fetchLogs = useThrottleFn(() => {
   data_loading.value = true;
   apiKeyService
     .getAuditLogs({
+      search: params.value.inclusive_query,
       limit: params.value.itemsPerPage,
       offset: (params.value.page - 1) * params.value.itemsPerPage,
       sort_by: params.value.sort_by,
@@ -173,14 +205,29 @@ watch(
     params.value.sort_order,
   ],
   () => {
-    params.value.page = 1;
+    if (params.value.page !== 1) {
+      params.value.page = 1;
+    }
     fetchLogs();
   },
   {
     deep: true,
   },
 );
-onMounted(fetchLogs);
+onMounted(() => {
+  // if api_key is in route query params, filter logs by apiKey. Set inclusive_query to apiKey
+  // console.log("route", route.query);
+  if (route.query.api_key) {
+    const val = route.query.api_key;
+    //   // delete route.query.api_key;
+    params.value.inclusive_query = val;
+  }
+  fetchLogs();
+});
+
+const debouncedQueryUpdate = useDebounceFn((val) => {
+  params.value.inclusive_query = val;
+}, config.debounce_ms);
 </script>
 
 <route lang="yaml">
