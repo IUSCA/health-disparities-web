@@ -2,12 +2,6 @@
   <VaInnerLoading :loading="loading">
     <VaForm ref="formRef" class="flex flex-col gap-3 max-w-xl">
       <VaInput
-        v-model="data.name"
-        label="Name"
-        readonly
-        placeholder="Auto-generated from resource and action"
-      />
-      <VaInput
         v-model="data.action"
         label="Action"
         placeholder="Enter an action. e.g. 'read', 'write', 'manage'"
@@ -19,6 +13,12 @@
         placeholder="Enter a resource. e.g. 'participants', 'cohorts'"
         :rules="[(v) => !!v || 'Resource is required']"
       />
+      <VaInput
+        v-model="data.name"
+        label="Name (Auto-generated)"
+        readonly
+        placeholder="Auto-generated from resource and action"
+      />
       <VaTextarea
         v-model="data.description"
         label="Description"
@@ -28,13 +28,14 @@
     </VaForm>
 
     <!-- Actions: Save, Cancel -->
-    <div>
-      <div class="flex justify-end gap-3">
-        <VaButton preset="secondary" @click="emit('cancel')">Cancel</VaButton>
-        <VaButton @click="handleSave" :disabled="!isValid" color="success">
-          Save
-        </VaButton>
-      </div>
+    <div class="flex justify-end gap-3 mt-5">
+      <VaButton preset="primary" @click="reset" class="mr-auto" icon="refresh">
+        Reset
+      </VaButton>
+      <VaButton preset="secondary" @click="emit('cancel')">Cancel</VaButton>
+      <VaButton @click="handleSave" :disabled="!isValid" color="success">
+        Create Scope
+      </VaButton>
     </div>
   </VaInnerLoading>
 </template>
@@ -83,4 +84,12 @@ const handleSave = async () => {
       loading.value = false;
     });
 };
+
+function reset() {
+  data.value = {
+    action: "",
+    resource: "",
+    description: "",
+  };
+}
 </script>

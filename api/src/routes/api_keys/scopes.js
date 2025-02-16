@@ -1,5 +1,5 @@
 const express = require('express');
-const { param, body } = require('express-validator');
+const { param, body, query } = require('express-validator');
 // const createError = require('http-errors');
 const { PrismaClient } = require('@prisma/client');
 // const config = require('config');
@@ -41,15 +41,43 @@ router.post(
 router.get(
   '/',
   isPermittedTo('read'),
+  validate([
+    query('limit').default(50).isInt({ min: 1 }).toInt(),
+    query('offset').default(0).isInt({ min: 0 }).toInt(),
+  ]),
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['API Keys']
-    const scopes = await prisma.scope.findMany({
-      orderBy: [
-        { resource: 'asc' },
-        { action: 'asc' },
-      ],
+    const where = {};
+    if (req.query.search) {
+      where.OR = [
+        { name: { contains: req.query.search, mode: 'insensitive' } },
+        { description: { contains: req.query.search, mode: 'insensitive' } },
+        { resource: { contains: req.query.search, mode: 'insensitive' } },
+        { action: { contains: req.query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [scopes, total] = await prisma.$transaction([
+      prisma.scope.findMany({
+        where,
+        orderBy: [
+          { resource: 'asc' },
+          { action: 'asc' },
+        ],
+        skip: req.query.offset,
+        take: req.query.limit,
+      }),
+      prisma.scope.count({ where }),
+    ]);
+
+    res.json({
+      data: scopes,
+      metadata: {
+        total,
+        limit: req.query.limit,
+        offset: req.query.offset,
+      },
     });
-    res.json(scopes);
   }),
 );
 

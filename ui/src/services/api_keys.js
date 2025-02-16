@@ -35,12 +35,18 @@ class ApiKeyService {
     return dayjs(key.expires_at).isBefore(dayjs());
   }
 
-  getAllScopes() {
-    return api.get("/api_keys/scopes");
+  getAllScopes(params = {}) {
+    return api.get("/api_keys/scopes", {
+      params,
+    });
   }
 
   createScope(data) {
     return api.post("/api_keys/scopes", data);
+  }
+
+  deleteScope(id) {
+    return api.delete(`/api_keys/scopes/${id}`);
   }
 
   getAuditLogs(params = {}) {
