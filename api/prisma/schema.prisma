@@ -40,6 +40,8 @@ model dataset {
   bundle           bundle?
 
   @@unique([name, type, is_deleted])
+  @@index([participant_id])
+  @@index([is_deleted])
 }
 
 model dataset_hierarchy {
