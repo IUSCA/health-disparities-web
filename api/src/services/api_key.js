@@ -21,12 +21,13 @@ const API_KEY_INCLUDES = {
 
 function sanitizeApiKey(apiKey) {
   // delete the secret from the response
-  // transform scopes
+  // transform scopes, whitelisted_subnets to arrays of strings
   // eslint-disable-next-line no-unused-vars
   const { secret, ...rest } = apiKey;
   return {
     ...rest,
     ...(apiKey.scopes ? { scopes: apiKey.scopes.map((obj) => obj?.scope?.name) } : {}),
+    ...(apiKey.whitelisted_subnets ? { whitelisted_subnets: apiKey.whitelisted_subnets.map((obj) => obj.subnet) } : {}),
   };
 }
 
@@ -96,8 +97,11 @@ async function checkApiKey({ key, secret, ip_address }) {
  * @returns {Promise<Object>} The created API key object with the decrypted secret.
  */
 async function createApiKey({
-  username, name, scopes, expires_at, description, whitelist_subnets = [],
+  username, name, scopes, expires_at, description, whitelisted_subnets = [],
 }) {
+  // console.log('Creating API key for user:', JSON.stringify({
+  //   username, name, scopes, expires_at, description, whitelisted_subnets,
+  // }, null, 2));
   // create a random key
   const _key = crypto.randomBytes(16).toString('hex'); // Generates a 32-character string
 
@@ -131,11 +135,11 @@ async function createApiKey({
     `;
 
     // create the subnets
-    if (whitelist_subnets.length > 0) {
+    if (whitelisted_subnets.length > 0) {
       await _prisma.$executeRaw`
         INSERT INTO SUBNET (api_key_id, subnet)
         SELECT ${key_id}, sn::inet
-        FROM UNNEST(${whitelist_subnets}) sn
+        FROM UNNEST(${whitelisted_subnets}) sn
       `;
     }
 

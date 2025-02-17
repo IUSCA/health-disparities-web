@@ -51,14 +51,37 @@
         </div>
       </div>
 
+      <!-- User -->
+      <div class="flex items-center mb-2" v-if="!props.forSelf">
+        <p class="text-sm font-medium mr-1 min-w-12">User:</p>
+        <p class="text-sm va text-secondary" v-if="props.token.user">
+          {{ props.token.user.name }} ( {{ props.token.user.username }} )
+        </p>
+      </div>
+
       <!-- Token Scopes -->
-      <div class="flex">
+      <div class="flex mb-2">
         <p class="text-sm font-medium mr-1 min-w-12">Scopes:</p>
         <ul class="text-sm va-text-secondary flex flex-wrap gap-2">
           <li v-for="scope in props.token.scopes" :key="scope">
             {{ scope }}
           </li>
         </ul>
+      </div>
+
+      <!-- Whitelisted subnets -->
+      <div class="flex flex-wrap gap-2 items-center" v-if="!props.forSelf">
+        <p class="text-sm font-medium mr-1 min-w-12">Whitelisted Subnets:</p>
+        <VaChip
+          v-for="ip in props.token.whitelisted_subnets"
+          :key="ip"
+          size="small"
+        >
+          <span class="font-mono text-xs"> {{ ip }} </span>
+        </VaChip>
+        <p v-if="(props.token?.whitelisted_subnets || []).length === 0">
+          <span class="text-sm va-text-secondary"> None </span>
+        </p>
       </div>
     </div>
 
@@ -85,6 +108,10 @@ const props = defineProps({
   showDelete: {
     type: Boolean,
     default: true,
+  },
+  forSelf: {
+    type: Boolean,
+    default: false,
   },
 });
 

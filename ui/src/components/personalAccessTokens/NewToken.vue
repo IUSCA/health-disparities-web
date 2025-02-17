@@ -44,12 +44,12 @@
 
     <!-- scopes -->
     <div>
-      <p class="font-semibold">Select Scopes</p>
-      <span class="va-text-secondary">
+      <p class="font-bold text-xs va-text-primary">SCOPES</p>
+      <span class="text-sm va-text-secondary">
         Scopes define the access for personal tokens.
       </span>
 
-      <div class="flex flex-col gap-1 mt-3">
+      <div class="flex flex-col gap-1 mt-1">
         <div v-for="scope in scopes" :key="scope.id" class="grid grid-cols-12">
           <div class="col-span-4">
             <VaCheckbox
@@ -64,6 +64,13 @@
         </div>
       </div>
     </div>
+
+    <!-- input to add one or more IP addresses or subnets for whitelisting -->
+    <IPListForm
+      v-model="ipList"
+      label="Whitelist IPs and Subnets"
+      v-if="!props.forSelf"
+    />
 
     <!-- button -->
     <div class="flex gap-3 mt-5">
@@ -87,7 +94,7 @@ import { useForm } from "vuestic-ui";
 const props = defineProps({
   forSelf: {
     type: Boolean,
-    default: true,
+    default: false,
   },
 });
 
@@ -104,6 +111,7 @@ const name = ref("");
 const description = ref("");
 const validity_days = ref(validity_days_options[0]);
 const owner = ref();
+const ipList = ref([]);
 
 const expiration_date = computed(() => {
   const today = dayjs();
@@ -149,6 +157,7 @@ function generateToken() {
         description: description.value,
         validity_days: validity_days.value,
         scopes: selectedScopeNames.value,
+        whitelisted_subnets: ipList.value,
       })
       .then((res) => {
         emit("created", res.data);

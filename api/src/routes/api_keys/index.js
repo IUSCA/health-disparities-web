@@ -95,7 +95,7 @@ router.get(
             accessed_at: 'desc',
           },
         },
-        whitelist_subnets: {
+        whitelisted_subnets: {
           select: {
             subnet: true,
           },
@@ -208,7 +208,7 @@ router.post(
     const sn_results = await Promise.all(
       subnets.map(async (subnet) => [await isValidIPOrSubnet(subnet), subnet]),
     );
-    // throw error if any of the subnets is invalid, with offending subnet in the error message
+    // throw error if any of the subnets are invalid, with offending subnet in the error message
     sn_results.forEach(([result, subnet]) => {
       if (!result) {
         return next(createError(400, `Invalid subnet: ${subnet}`));

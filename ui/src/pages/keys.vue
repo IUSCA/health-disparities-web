@@ -38,9 +38,17 @@
       disable-client-side-sorting
     >
       <!-- key -->
-      <template #cell(key)="{ source }">
+      <template #cell(key)="{ rowData, source }">
         <div class="flex items-center">
-          <span class="mr-2"> {{ source }} </span>
+          <span
+            class="mr-2 va-link"
+            @click="detailsModal.show(rowData)"
+            @keydown.enter="detailsModal.show(rowData)"
+            role="button"
+            tabindex="0"
+          >
+            {{ source }}
+          </span>
           <router-link
             :to="`/audit_logs?api_key=${source}`"
             class="text-xs text-gray-500 hover:text-gray-700 flex hover:underline"
@@ -77,6 +85,7 @@
       <!-- actions -->
       <template #cell(actions)="{ rowData }">
         <div class="flex gap-2">
+          <!-- revoke -->
           <va-button
             size="small"
             preset="primary"
@@ -117,6 +126,7 @@
   </div>
 
   <NewTokenModal ref="newTokenModal" @update="fetchKeys" />
+  <TokenDetailsModal ref="detailsModal" />
 </template>
 
 <script setup>
@@ -145,6 +155,7 @@ const keys = ref([]);
 const data_loading = ref(false);
 const params = ref(defaultParams());
 const total_results = ref(0);
+const detailsModal = ref(false);
 
 useQueryPersistence({
   refObject: params,

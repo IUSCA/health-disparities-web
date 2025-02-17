@@ -24,6 +24,7 @@
               v-for="key in keys"
               :key="key.id"
               :token="key"
+              for-self
               @revoke="handleRevoke"
             />
           </div>
