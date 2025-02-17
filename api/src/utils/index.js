@@ -4,6 +4,7 @@ const net = require('net');
 const { performance } = require('perf_hooks');
 
 const _ = require('lodash/fp');
+const Table = require('cli-table3'); // CLI table formatting
 
 function renameKey(oldKey, newKey) {
   return (obj) => {
@@ -288,6 +289,49 @@ async function isValidIPOrSubnet(input) {
   return false;
 }
 
+function toTable(data, columns) {
+  const PADDING = 2;
+  const MAX_COL_WIDTH = 80;
+  const MIN_COL_WIDTH = 10;
+
+  const colWidths = columns.map((col) => Math.min(
+    MAX_COL_WIDTH,
+    Math.max(
+      MIN_COL_WIDTH,
+      col.length, // Column header length
+      ...data.map((row) => String(row[col]).length), // Max length of values
+    ) + PADDING,
+  ));
+
+  const table = new Table({
+    head: columns,
+    colWidths,
+  });
+
+  data.forEach((row) => {
+    table.push(columns.map((col) => row[col]));
+  });
+
+  return table.toString();
+}
+
+function toPaginationInfo({ total, offset, limit }) {
+  // Add pagination info below the table
+  const paginationInfo = new Table({
+    colWidths: [40],
+    style: { 'padding-left': 2, head: [], border: [] },
+  });
+
+  const currPage = Math.floor(offset / limit) + 1;
+  const totalPages = Math.ceil(total / limit);
+
+  paginationInfo.push([
+    `Page ${currPage} of ${totalPages} | Total Records: ${total}`,
+  ]);
+
+  return paginationInfo.toString();
+}
+
 module.exports = {
   renameKey,
   setDifference,
@@ -303,4 +347,6 @@ module.exports = {
   measurePerformanceAsync,
   normalizeWhiteSpace,
   isValidIPOrSubnet,
+  toTable,
+  toPaginationInfo,
 };

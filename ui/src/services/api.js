@@ -15,6 +15,8 @@ axiosInstance.interceptors.request.use(
     if (_token) {
       config.headers.Authorization = `Bearer ${_token}`;
     }
+    // for all requests, set the Accept header to application/json
+    config.headers.Accept = "application/json";
     return config;
   },
   (error) => {

@@ -14,6 +14,7 @@ const { accessControl } = require('../middleware/auth');
 const cohortService = require('../services/cohorts');
 const cohortModel = require('../services/cohorts/model');
 const datasetService = require('../services/dataset');
+const { toTable, toPaginationInfo } = require('../utils');
 
 const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
@@ -142,6 +143,14 @@ router.get(
 
     const rows = await prisma.$queryRaw(sql);
     const cohorts = rows.map(toJSON);
+
+    const accept = req.get('accept') || '';
+    if (accept.includes('text/plain') && !accept.includes('application/json')) {
+      // Return CLI-friendly table format
+      const columns = ['id', 'name', 'size', 'description', 'author_username'];
+      const tableStr = toTable(cohorts, columns);
+      return res.type('text/plain').send(tableStr);
+    }
     res.json(cohorts);
   }),
 );
@@ -662,7 +671,7 @@ router.get(
       offset: req.query.offset,
     });
     const files = await prisma.$queryRaw(sql);
-    const total_count = files?.[0]?.total_count || 0;
+    const total_count = Number(files?.[0]?.total_count || 0);
 
     const mapper = _.flow([
       _.omit(['total_count']), // remove total_count from each file
@@ -672,7 +681,20 @@ router.get(
       }),
     ]);
 
-    res.json({
+    const accept = req.get('accept') || '';
+    if (accept.includes('text/plain') && !accept.includes('application/json')) {
+      // Return CLI-friendly table format
+      const columns = ['id', 'name', 'size', 'participant_id'];
+      const tableStr = toTable(files.map(mapper), columns);
+      const paginationStr = toPaginationInfo({
+        total: total_count,
+        limit: req.query.limit,
+        offset: req.query.offset,
+      });
+      return res.type('text/plain').send(`${tableStr}\n${paginationStr}`);
+    }
+
+    return res.json({
       data: files.map(mapper),
       metadata: {
         total: total_count,
