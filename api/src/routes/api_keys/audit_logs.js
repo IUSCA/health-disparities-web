@@ -101,11 +101,6 @@ router.get(
             },
           },
         },
-        {
-          ip_address: {
-            equals: req.query.search,
-          },
-        },
       ];
     }
 

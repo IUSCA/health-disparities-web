@@ -157,9 +157,17 @@
     "enabled": true,
     "max_valid_days": 90,
     "encryption_key": "",
-    "max_per_user": 5
+    "max_per_user": 5,
+    "upstream_server_protection": {
+      "enabled": true,
+      "header_name": "X-Server-Type",
+      "allowed_values": [
+        "API"
+      ]
+    }
   },
   "contact": {
     "app_admin": "bioloop-ops-l@list.iu.edu"
-  }
+  },
+  "app_url": "http://localhost:3030"
 }

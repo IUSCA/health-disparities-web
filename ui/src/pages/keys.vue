@@ -76,17 +76,32 @@
 
       <!-- actions -->
       <template #cell(actions)="{ rowData }">
-        <va-button
-          size="small"
-          preset="primary"
-          color="danger"
-          @click="handleRevoke(rowData)"
-        >
-          <div class="flex gap-1 items-center">
-            <i-mdi-block-helper class="text-xs" />
-            <span>Revoke</span>
-          </div>
-        </va-button>
+        <div class="flex gap-2">
+          <va-button
+            size="small"
+            preset="primary"
+            color="danger"
+            @click="handleRevoke(rowData)"
+          >
+            <div class="flex gap-1 items-center">
+              <i-mdi-block-helper class="text-xs" />
+              <span>Revoke</span>
+            </div>
+          </va-button>
+
+          <!-- delete -->
+          <va-button
+            size="small"
+            preset="primary"
+            color="danger"
+            @click="handleDelete(rowData)"
+          >
+            <div class="flex gap-1 items-center">
+              <i-mdi-delete class="text-xs" />
+              <span>Delete</span>
+            </div>
+          </va-button>
+        </div>
       </template>
     </VaDataTable>
 
@@ -165,9 +180,9 @@ const columns = [
   },
   {
     key: "actions",
-    width: "85px",
+    width: "160px",
     tdAlign: "right",
-    thAlign: "right",
+    thAlign: "center",
   },
 ];
 const newTokenModal = ref(null);
@@ -210,7 +225,7 @@ function handleRevoke(row) {
     }
     data_loading.value = true;
     apiKeyService
-      .revoke(row.user.username)
+      .revoke({ username: row.user.username, key: row.key })
       .then(() => {
         toast.success("API key revoked");
         fetchKeys();
@@ -218,6 +233,31 @@ function handleRevoke(row) {
       .catch((err) => {
         console.error(err);
         toast.error("Failed to revoke API key");
+      })
+      .finally(() => {
+        data_loading.value = false;
+      });
+  });
+}
+
+function handleDelete(row) {
+  confirm({
+    message: `Are you sure you want to delete the API key ${row.key}? This action cannot be undone. Associated audit logs will be deleted.`,
+    okText: "Delete",
+  }).then((ok) => {
+    if (!ok) {
+      return;
+    }
+    data_loading.value = true;
+    apiKeyService
+      .delete(row.key)
+      .then(() => {
+        toast.success("API key deleted");
+        fetchKeys();
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to delete API key");
       })
       .finally(() => {
         data_loading.value = false;

@@ -100,6 +100,11 @@ const exports = {
   phenotype_data: {
     cache_busting_id: "41e81ff",
   },
+  apiKeys: {
+    generation: {
+      enabledInProfile: false,
+    },
+  },
 };
 
 export default exports;

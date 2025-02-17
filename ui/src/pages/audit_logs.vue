@@ -6,7 +6,7 @@
       <va-input
         :model-value="params.inclusive_query"
         class="w-full"
-        placeholder="Filter logs using API key, endpoint or IP address"
+        placeholder="keyword that matches any part of API key or endpoint"
         outline
         clearable
         @update:model-value="debouncedQueryUpdate"
@@ -200,6 +200,7 @@ const fetchLogs = useThrottleFn(() => {
 watch(() => params.value.page, fetchLogs);
 watch(
   () => [
+    params.value.inclusive_query,
     params.value.itemsPerPage,
     params.value.sort_by,
     params.value.sort_order,
@@ -214,6 +215,7 @@ watch(
     deep: true,
   },
 );
+
 onMounted(() => {
   // if api_key is in route query params, filter logs by apiKey. Set inclusive_query to apiKey
   // console.log("route", route.query);

@@ -81,16 +81,16 @@ services:
   #     - 127.0.0.1:7700:7700
   #   expose:
   #     - 7700
-  # nginx:
-  #   image: nginx:1.25
-  #   ports:
-  #       - 8000:8000
-  #   volumes:
-  #       - ./nginx/src:/usr/share/nginx/html
-  #       - ./nginx/conf:/etc/nginx/conf.d
-  #       - ./data:/opt/sca/data
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
+  nginx:
+    image: nginx:1.27
+    ports:
+        - 8000:8000
+    volumes:
+        - ./nginx/src:/usr/share/nginx/html # Mount the static files
+        - ./nginx/conf:/etc/nginx/conf.d # Mount the configuration files
+        - ./data:/opt/sca/data # Mount the data directory
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
 
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter
@@ -128,7 +128,6 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-
 
   api-client:
     build:

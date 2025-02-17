@@ -9,6 +9,7 @@ let isFlushing = false;
 
 morgan.token('api_key_id', (req) => req.api_key?.id || '-');
 morgan.token('scope', (req) => req.scope || '-');
+morgan.token('api_key_ip', (req) => req.get('X-Real-IP') || '-');
 
 async function flushAuditLogs() {
   if (isFlushing || auditLogBuffer.length === 0) return;
@@ -29,7 +30,7 @@ async function flushAuditLogs() {
  * This helps reduce the number of database writes and improve performance
  */
 const apiKeyAuditLogger = morgan(
-  ':method :url :scope :status :api_key_id :response-time[0]',
+  ':method :url :scope :status :api_key_id :api_key_ip :response-time[0]',
   {
     // eslint-disable-next-line no-unused-vars
     skip: (req, res) => !req.api_key, // Only log requests with an API key
@@ -38,7 +39,7 @@ const apiKeyAuditLogger = morgan(
         // Parse log message
         // console.log('message:', message);
 
-        const [method, url, scope, status, api_key_id, response_time] = message.trim().split(' ');
+        const [method, url, scope, status, api_key_id, api_key_ip, response_time] = message.trim().split(' ');
 
         if (api_key_id && api_key_id !== '-' && !Number.isNaN(parseInt(api_key_id, 10))) {
           try {
@@ -52,6 +53,7 @@ const apiKeyAuditLogger = morgan(
               status_code: Number.isNaN(status_code) ? null : status_code,
               response_time: Number.isNaN(response_time_ms) ? null : response_time_ms,
               scope: scope === '-' ? null : scope,
+              ip_address: api_key_ip === '-' ? null : api_key_ip,
             });
 
             // Flush immediately if batch size is reached

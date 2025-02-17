@@ -1,9 +1,11 @@
+const assert = require('assert');
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { param, body, query } = require('express-validator');
 const createError = require('http-errors');
 const _ = require('lodash/fp');
 const { performance } = require('perf_hooks');
+const config = require('config');
 
 const prisma = new PrismaClient();
 const asyncHandler = require('../middleware/asyncHandler');
@@ -11,6 +13,7 @@ const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
 const cohortService = require('../services/cohorts');
 const cohortModel = require('../services/cohorts/model');
+const datasetService = require('../services/dataset');
 
 const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
@@ -51,7 +54,7 @@ router.get(
   '/',
   isPermittedTo('read'),
   validate([
-    query('is_mine').default(false).toBoolean(),
+    query('is_mine').optional().toBoolean(),
     query('is_published').optional().toBoolean(),
     query('is_locked').optional().toBoolean(),
     query('type').optional().isIn([
@@ -97,23 +100,40 @@ router.get(
     )(req.query);
 
     //  user can only see their own cohorts or published cohorts
-    //  if is_mine is true, then only show the user's cohorts
-    //  if is_mine is false, is_published must not be false, otherwise empty array is returned
+    // The superset of all cohorts that a user can see is: cohort's owned by them union publsished cohorts
+    // select * from cohort c where c.author_username = $1 or c.is_published = true
+
+    // is_mine: true, is_published: null -    where (c.author_username = $1 or c.is_published = true) and (c.author_username = $1)                              - all user's cohorts whether published or not
+    // is_mine: false, is_published: null -   where (c.author_username = $1 or c.is_published = true) and (c.author_username != $1)                             - all published cohorts not owned by the user
+    // is_mine: null, is_published: null -    where (c.author_username = $1 or c.is_published = true)                                                           - all cohorts that are either owned by the user or published
+    // is_mine: true, is_published: false -   where (c.author_username = $1 or c.is_published = true) and c.author_username = $1    and c.is_published = false  - all user's cohorts that are not published
+    // is_mine: false, is_published: false -  where (c.author_username = $1 or c.is_published = true) and c.author_username != $1   and c.is_published = false  - empty
+    // is_mine: null, is_published: false -   where (c.author_username = $1 or c.is_published = true)                               and c.is_published = false  - all user's cohorts that are not published
+    // is_mine: true, is_published: true -    where (c.author_username = $1 or c.is_published = true) and c.author_username = $1    and c.is_published = true   - all published cohorts owned by the user
+    // is_mine: false, is_published: true -   where (c.author_username = $1 or c.is_published = true) and c.author_username != $1   and c.is_published = true   - all published cohorts not owned by the user
+    // is_mine: null, is_published: true -    where (c.author_username = $1 or c.is_published = true)                               and c.is_published = true   - all published cohorts
+
+    // equivalences
+    // is_mine: false, is_published: null -    is_mine: false, is_published: true
+    // is_mine: null, is_published: false -    is_mine: true, is_published: false
 
     if (data.is_mine) {
       data.author_username = req.user.username;
-    } else {
+    } else if (data.is_mine === false) {
+      // early termination
       if (data.is_published === false) {
         res.json([]);
         return;
       }
       data.not_author_username = req.user.username;
-      data.is_published = true;
+    } else {
+      // is_mine is null
+      data.author_username = null;
     }
 
     data.is_temp = false;
 
-    const sql = cohortService.searchCohortsQuery(data, {
+    const sql = cohortService.searchCohortsQuery(req.user.username, data, {
       sort_by: req.query.sort_by,
       sort_order: req.query.sort_order,
       limit: req.query.limit,
@@ -171,7 +191,7 @@ router.post(
   ]),
   asyncHandler(async (req, res) => {
     // #swagger.operationId = 'createCohort'
-    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Create a cohort'
     // #swagger.description = 'Requires create:cohorts scope'
     // #swagger.requestBody = { $ref: '#/components/requestBodies/Cohort' }
@@ -253,7 +273,7 @@ router.patch(
   ]),
   asyncHandler(async (req, res) => {
     // #swagger.operationId = 'updateCohort'
-    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Update a cohort'
     // #swagger.description = 'Requires update:cohorts scope'
     // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
@@ -343,7 +363,7 @@ router.get(
   isPermittedTo('delete'),
   asyncHandler(async (req, res) => {
     // #swagger.operationId = 'isCohortDeletable'
-    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Check if a cohort is deletable'
     // #swagger.description = 'Requires delete:cohorts scope'
     // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
@@ -405,7 +425,7 @@ router.delete(
   // eslint-disable-next-line no-unused-vars
   asyncHandler(async (req, res, next) => {
     // #swagger.operationId = 'deleteCohort'
-    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Delete a cohort'
     // #swagger.description = 'Requires delete:cohorts scope'
     // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
@@ -499,7 +519,7 @@ router.post(
   ]),
   asyncHandler(async (req, res) => {
     // #swagger.operationId = 'searchParticipants'
-    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.tags = ['cohorts']
     // #swagger.summary = 'Search participants based on a query'
     // #swagger.description = 'Creates a temporary cohort based on the query and returns the participant count. Requires read:cohorts scope.'
     // #swagger.parameters['search_id'] = { description: 'The id of temporary cohort created from a search' }
@@ -578,4 +598,186 @@ router.post(
     });
   }),
 );
+
+router.get(
+  '/:id/files',
+  isPermittedTo('read'),
+  validate([
+    param('id').isUUID(),
+    query('sort_by').default('id').isIn(['id', 'name', 'size']),
+    query('sort_order').default('asc').isIn(['asc', 'desc']),
+    query('limit').default(100).isInt({ min: 1, max: 1000 }).toInt(),
+    query('offset').default(0).isInt({ min: 0 }).toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.operationId = 'getCohortFiles'
+    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.summary = 'Get a cohort files'
+    // #swagger.description = 'Requires read:cohorts scope'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
+    // #swagger.parameters['sort_by'] = { description: 'Sort by a field', schema: { @enum: ['name', 'size', 'id'], default: 'id' }  }
+    // #swagger.parameters['sort_order'] = { description: 'Sort order', schema: { @enum: ['asc', 'desc'], default: 'asc' } }
+    // #swagger.parameters['limit'] = { description: 'Limit the number of results', type: 'integer' }
+    // #swagger.parameters['offset'] = { description: 'Offset the results', type: 'integer' }
+    /* #swagger.responses[200] = {
+        description: 'The cohort files',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'number' },
+                  name: { type: 'string' },
+                  md5: { type: 'string' },
+                  size: { type: 'number' },
+                  participant_id: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    */
+
+    // check if user has permission to access the cohort
+    const access_request = await prisma.cohort_access_request.findFirst({
+      where: {
+        requester_id: req.user.id,
+        cohort_id: req.params.id,
+        status: 'APPROVED',
+      },
+    });
+
+    if (!access_request) {
+      return next(createError(403, "You do not have permission to access this cohort's data.")); // Forbidden
+    }
+
+    const sql = cohortService.getCohortFilesQuery({
+      id: req.params.id,
+      sort_by: req.query.sort_by,
+      sort_order: req.query.sort_order,
+      limit: req.query.limit,
+      offset: req.query.offset,
+    });
+    const files = await prisma.$queryRaw(sql);
+    const total_count = files?.[0]?.total_count || 0;
+
+    const mapper = _.flow([
+      _.omit(['total_count']), // remove total_count from each file
+      (f) => ({ // add download url
+        ...f,
+        url: `${config.get('app_url')}/cohorts/files/download/${f.id}`,
+      }),
+    ]);
+
+    res.json({
+      data: files.map(mapper),
+      metadata: {
+        total: total_count,
+        limit: req.query.limit,
+        offset: req.query.offset,
+      },
+    });
+  }),
+);
+
+router.get(
+  '/files/download/:file_id',
+  validate([
+    param('file_id').isInt().toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+  // #swagger.operationId = 'downloadCohortFile'
+  // #swagger.tags = ['cohorts', 'public']
+  // #swagger.summary = 'Download a cohort file'
+  // #swagger.description = 'Requires read:cohorts scope'
+  // #swagger.parameters['file_id'] = { description: 'The cohort file id', required: true }
+  /* #swagger.responses[200] = {
+        description: 'Download file',
+        content: {
+          'application/octet-stream': {
+            schema: {
+              type: 'string',
+              format: 'binary',
+            },
+          },
+        },
+        "headers": {
+          "Content-Disposition": {
+            "schema": {
+              "type": "string"
+            },
+            "example": "attachment; filename=\"2012-06-22.vcf\""
+          }
+        }
+      },
+    */
+
+    // check if the requester has access to the file
+    // file -> dataset -> participant -> zero or more cohorts -> cohort_access_request -> requester
+    // if the requester is granted access to any cohort, they can download the file
+    // otherwise, return 403
+
+    // To download a file, get its dataset
+    // If the dataset is staged, send an internal redirect to the file server with staged path
+    // otherwise, try to initiate the staging workflow and return http code 202, with a message to the user to check back later
+
+    const sql = cohortService.getFileInfoQuery({ user_id: req.user.id, file_id: req.params.file_id });
+    // console.log(sql.sql, sql.values);
+    const files = await prisma.$queryRaw(sql);
+    if (!files || files.length === 0) {
+      return next(createError(403, 'You do not have permission to access this file.')); // Forbidden
+    }
+
+    const file = files[0];
+    // console.log(JSON.stringify(file, null, 2));
+
+    const dataset = await datasetService.get_dataset({
+      id: file.dataset_id,
+      workflows: true,
+    });
+
+    if (dataset.is_staged && dataset.metadata.stage_alias) {
+      // send an internal redirect to the reverse proxy server with staged path
+      const staged_file_path = `${dataset.metadata.stage_alias}/${file.path}`;
+      // console.log('staged_file_path:', staged_file_path);
+      res.set('X-Accel-Redirect', `/data/${staged_file_path}`);
+
+      // make browser download response instead of attempting to render it
+      res.set('Content-Type', 'application/octet-stream');
+      // set content-disposition to attachment and set the filename to the original file name
+      // use -J -O flags while using curl to download with the correct filename
+      res.set('Content-Disposition', `attachment; filename="${file.name}"`);
+
+      // makes nginx not cache the response file
+      // otherwise the response cuts off at 1GB as the max buffer size is reached
+      // and the file download fails
+      // https://stackoverflow.com/a/64282626
+      res.set('X-Accel-Buffering', 'no');
+      res.send('');
+    } else {
+      // try to initiate the staging workflow and return http code 202, with a message to the user to check back later
+      const wf_name = 'stage';
+      try {
+        await datasetService.create_workflow(dataset, wf_name, req.user.id);
+      } catch (e) {
+        // catch assertion error thrown when there is a pending / running workflow
+        if (e instanceof assert.AssertionError) {
+          // do nothing
+        } else {
+          // re-throw the error
+          console.error(e);
+          throw e;
+        }
+      }
+
+      res.status(202).json({
+        message: 'The file is currently being staged. Please check back later to download the file.',
+      });
+    }
+  }),
+);
+
 module.exports = router;

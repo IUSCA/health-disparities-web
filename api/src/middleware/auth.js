@@ -9,6 +9,11 @@ const { setIntersection } = require('../utils');
 const ac = require('../services/accesscontrols');
 const asyncHandler = require('./asyncHandler');
 
+const UPSTREAM_SERVER_HEADER = config.get('api_keys.upstream_server_protection.header_name');
+const UPSTREAM_SERVER_VALUES = config
+  .get('api_keys.upstream_server_protection.allowed_values')
+  .map((s) => s.toLowerCase());
+
 const authenticate = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization || '';
   if (!authHeader) return next(createError.Unauthorized('Authentication failed. Authorization header not found.'));
@@ -22,13 +27,35 @@ const authenticate = asyncHandler(async (req, res, next) => {
     return next();
   }
   if (config.get('api_keys.enabled') && authHeader.startsWith('Basic ')) {
+    // console.log(JSON.stringify(req.headers, null, 2));
+    // api key authentication
+    if (config.get('api_keys.upstream_server_protection.enabled')) {
+      // the incoming request must come from the designated upstream server (reverse proxy)
+      const serverName = req.get(UPSTREAM_SERVER_HEADER);
+      if (!serverName) {
+        console.warn(
+          `Missing header ${UPSTREAM_SERVER_HEADER} in request. This is required for API key authentication.`,
+        );
+        return next(createError.Unauthorized());
+      }
+
+      if (!UPSTREAM_SERVER_VALUES.includes(serverName.toLowerCase())) {
+        console.warn(
+          `Invalid value for header ${UPSTREAM_SERVER_HEADER} in request. This is required for API key authentication.`,
+        );
+        return next(createError.Unauthorized());
+      }
+    }
+
     const base64Credentials = authHeader.split(' ')[1];
     const credentials = Buffer.from(base64Credentials || '', 'base64').toString('ascii');
     const [key, secret] = credentials.split(':');
     if (!key || !secret) return next(createError.Unauthorized('Authentication failed. Invalid credentials format.'));
 
     try {
-      const apiKey = await apiKeyService.checkApiKey({ key, secret });
+      const ip_address = req.get('X-Real-IP') || ''; // see nginx config
+      // console.log(JSON.stringify({ key, secret, ip_address }, null, 2));
+      const apiKey = await apiKeyService.checkApiKey({ key, secret, ip_address });
       if (apiKey) {
         const { user, ...restOfApiKey } = apiKey;
         const user_profile = authService.get_user_profile(userService.transformUser(user));

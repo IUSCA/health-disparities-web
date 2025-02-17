@@ -18,7 +18,7 @@
       </div>
 
       <!-- Button to generate new token -->
-      <div class="mt-5">
+      <div class="mt-5" v-if="config.apiKeys.generation.enabledInProfile">
         <VaButton
           class="ml-3"
           preset="primary"
@@ -33,6 +33,8 @@
 </template>
 
 <script setup>
+import config from "@/config";
+
 // const props = defineProps({});
 const emit = defineEmits(["generateToken"]);
 </script>

@@ -60,14 +60,14 @@ async function checkApiKey({ key, secret, ip_address }) {
         ak.key = ${key} AND
         ak.expires_at > NOW() AND
         ak.revoked = false AND
-        ak.secret = pgp_sym_encrypt(${secret}, ${encryptionKey}) AND
+        pgp_sym_decrypt(ak.secret, ${encryptionKey}) = ${secret} AND
         u.is_deleted = false AND
         (
           -- Allow if no whitelisted subnets exist or
-          -- commnet out the following line to invalidate the API key if no whitelisted subnets exist
+          -- comment out the following line to invalidate the API key if no whitelisted subnets exist
           NOT EXISTS (SELECT 1 FROM subnet WHERE api_key_id = ak.id) OR
           -- if the IP address is in a whitelisted subnet
-          ${ip_address}::INET <<= s.subnet
+          (${ip_address} IS NULL OR ${ip_address} = '' OR ${ip_address}::INET <<= s.subnet)
         )
     `;
     if (result.length === 0) {
@@ -261,15 +261,16 @@ async function createAuditLogs(logs) {
   // resolve scope to an id in each log
   const unique_scopes = new Set(logs.map((log) => log.scope).filter((scope) => scope !== null));
   const scope_map = await resolveScopes(unique_scopes);
+  const data = logs.map((log) => {
+    const { scope, ...rest } = log;
+    return {
+      ...rest,
+      scope_id: scope_map[scope] || null,
+    };
+  });
 
   return prisma.api_audit_log.createMany({
-    data: logs.map((log) => {
-      const { scope, ...rest } = log;
-      return {
-        ...rest,
-        scope_id: scope_map[scope] || null,
-      };
-    }),
+    data,
   });
 }
 

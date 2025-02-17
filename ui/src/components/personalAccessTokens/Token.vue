@@ -68,9 +68,9 @@
         preset="secondary"
         color="danger"
         border-color="danger"
-        @click="handleDelete"
+        @click="handleRevoke"
       >
-        Delete
+        Revoke
       </VaButton>
     </div>
   </div>
@@ -88,7 +88,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["delete"]);
+const emit = defineEmits(["revoke"]);
 
 /**
  * token = {
@@ -105,7 +105,7 @@ const emit = defineEmits(["delete"]);
 
 // const loading = ref(false);
 
-function handleDelete() {
-  emit("delete", props.token.key);
+function handleRevoke() {
+  emit("revoke", props.token.key);
 }
 </script>
