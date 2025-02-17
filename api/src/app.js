@@ -62,6 +62,10 @@ if (!['production', 'test'].includes(config.get('mode'))) {
 try {
   const swaggerPublicFile = JSON.parse(fs.readFileSync('./swagger_public.json'));
   app.use('/doc', swaggerUi.serveFiles(swaggerPublicFile), swaggerUi.setup(swaggerPublicFile));
+  // endpoint to download the swagger spec
+  app.get('/spec.json', (req, res) => {
+    res.download('./swagger_public.json', 'bionank-api-spec.json');
+  });
 } catch (e) {
   console.warn('Unable to load "./swagger_public.json". Run "npm run swagger" to generate the file.');
 }

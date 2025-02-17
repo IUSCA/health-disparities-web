@@ -621,7 +621,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     // #swagger.operationId = 'getCohortFiles'
     // #swagger.tags = ['cohorts', 'public']
-    // #swagger.summary = 'Get a cohort files'
+    // #swagger.summary = 'List data files for a cohort'
     // #swagger.description = 'Requires read:cohorts scope'
     // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
     // #swagger.parameters['sort_by'] = { description: 'Sort by a field', schema: { @enum: ['name', 'size', 'id'], default: 'id' }  }
@@ -677,7 +677,7 @@ router.get(
       _.omit(['total_count']), // remove total_count from each file
       (f) => ({ // add download url
         ...f,
-        url: `${config.get('app_url')}/cohorts/files/download/${f.id}`,
+        url: `${config.get('api_url')}/cohorts/files/download/${f.id}`,
       }),
     ]);
 
@@ -711,31 +711,42 @@ router.get(
     param('file_id').isInt().toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
-  // #swagger.operationId = 'downloadCohortFile'
-  // #swagger.tags = ['cohorts', 'public']
-  // #swagger.summary = 'Download a cohort file'
-  // #swagger.description = 'Requires read:cohorts scope'
-  // #swagger.parameters['file_id'] = { description: 'The cohort file id', required: true }
-  /* #swagger.responses[200] = {
-        description: 'Download file',
-        content: {
-          'application/octet-stream': {
-            schema: {
-              type: 'string',
-              format: 'binary',
+    // #swagger.operationId = 'downloadCohortFile'
+    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.summary = 'Download a cohort file'
+    /* #swagger.description =
+        Requires read:cohorts scope.
+        <br/><br/>
+        To download the file and save it with the original name, use the following command:
+        <pre>curl -J -O -u {key}:{secret} -X GET "{base_url}/cohorts/files/download/{file_id}"</pre>
+      */
+    // #swagger.parameters['file_id'] = { description: 'The cohort file id', required: true }
+    /* #swagger.responses[200] = {
+          description: 'Download file',
+          content: {
+            'application/octet-stream': {
+              schema: {
+                type: 'string',
+                format: 'binary',
+              },
             },
           },
         },
-        "headers": {
-          "Content-Disposition": {
-            "schema": {
-              "type": "string"
+      */
+    /* #swagger.responses[202] = {
+      description: 'File is being staged',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
             },
-            "example": "attachment; filename=\"2012-06-22.vcf\""
-          }
-        }
+          },
+        },
       },
-    */
+    }
+  */
 
     // check if the requester has access to the file
     // file -> dataset -> participant -> zero or more cohorts -> cohort_access_request -> requester

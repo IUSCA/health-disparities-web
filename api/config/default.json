@@ -169,5 +169,5 @@
   "contact": {
     "app_admin": "bioloop-ops-l@list.iu.edu"
   },
-  "app_url": "http://localhost:3030"
+  "api_url": "http://localhost:8000"
 }
