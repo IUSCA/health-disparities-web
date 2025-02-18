@@ -148,6 +148,7 @@ async function createApiKey({
         id: key_id,
       },
       include: {
+        user: true,
         scopes: {
           include: {
             scope: true,

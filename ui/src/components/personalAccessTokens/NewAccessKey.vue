@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import apiKeyService from "@/services/api_keys";
+import accessKeyService from "@/services/access_keys";
 import toast from "@/services/toast";
 import { useAuthStore } from "@/stores/auth";
 import dayjs from "dayjs";
@@ -135,7 +135,7 @@ const selectedScopeNames = computed(() => {
 
 onMounted(() => {
   loading.value = true;
-  apiKeyService
+  accessKeyService
     .getAllScopes()
     .then((res) => {
       scopes.value = res.data.data;
@@ -149,7 +149,7 @@ function generateAccessKey() {
   if (validate()) {
     loading.value = true;
 
-    apiKeyService
+    accessKeyService
       .create({
         username: owner.value?.username || auth.user.username,
         name: name.value,

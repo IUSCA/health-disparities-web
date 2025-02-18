@@ -12,7 +12,7 @@
         :show-delete="false"
         :for-self="props.forSelf"
       />
-      <div class="flex justify-end">
+      <div class="flex justify-end mt-3">
         <VaButton preset="secondary" @click="hide">Close</VaButton>
       </div>
     </div>

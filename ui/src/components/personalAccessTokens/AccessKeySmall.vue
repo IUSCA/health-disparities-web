@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import apiKeyService from "@/services/api_keys";
+import accessKeyService from "@/services/access_keys";
 import * as datetime from "@/services/datetime";
 
 const props = defineProps({
@@ -26,7 +26,7 @@ const apiKey = ref(null);
 
 onMounted(() => {
   loading.value = true;
-  apiKeyService
+  accessKeyService
     .getKey(props._key)
     .then((k) => {
       apiKey.value = k;

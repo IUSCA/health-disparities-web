@@ -272,7 +272,7 @@ const bottom_items = ref([
 ]);
 
 const admin_items = ref([
-  ...(config.enabledFeatures?.apiKeys
+  ...(config.enabledFeatures?.accessKeys
     ? [
         {
           icon: "mdi-key",

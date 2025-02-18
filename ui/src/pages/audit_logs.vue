@@ -79,7 +79,7 @@
 <script setup>
 import useQueryPersistence from "@/composables/useQueryPersistence";
 import config from "@/config";
-import apiKeyService from "@/services/api_keys";
+import accessKeyService from "@/services/access_keys";
 import * as datetime from "@/services/datetime";
 /*
 {
@@ -177,7 +177,7 @@ const columns = [
 
 const fetchLogs = useThrottleFn(() => {
   data_loading.value = true;
-  apiKeyService
+  accessKeyService
     .getAuditLogs({
       search: params.value.inclusive_query,
       limit: params.value.itemsPerPage,

@@ -2,9 +2,9 @@ import dayjs from "dayjs";
 import api from "./api";
 import { memoize } from "./utils";
 
-class ApiKeyService {
+class accessKeyService {
   getKey = memoize(async (key) => {
-    const res = await api.get("/api_keys", { params: { key } });
+    const res = await api.get("/access_keys", { params: { key } });
     const keys = res.data.data;
     if (keys.length === 0) {
       return null;
@@ -14,21 +14,21 @@ class ApiKeyService {
 
   getAll({ username = null, params = {} } = {}) {
     if (username) {
-      return api.get(`/api_keys/${username}`, { params });
+      return api.get(`/access_keys/${username}`, { params });
     }
-    return api.get(`/api_keys`, { params });
+    return api.get(`/access_keys`, { params });
   }
 
   create({ username, ...data }) {
-    return api.post(`/api_keys/${username}`, data);
+    return api.post(`/access_keys/${username}`, data);
   }
 
   revoke({ username, key }) {
-    return api.delete(`/api_keys/${username}/${key}`);
+    return api.delete(`/access_keys/${username}/${key}`);
   }
 
   delete(key) {
-    return api.delete(`/api_keys/${key}`);
+    return api.delete(`/access_keys/${key}`);
   }
 
   isExpired(key) {
@@ -36,22 +36,22 @@ class ApiKeyService {
   }
 
   getAllScopes(params = {}) {
-    return api.get("/api_keys/scopes", {
+    return api.get("/access_keys/scopes", {
       params,
     });
   }
 
   createScope(data) {
-    return api.post("/api_keys/scopes", data);
+    return api.post("/access_keys/scopes", data);
   }
 
   deleteScope(id) {
-    return api.delete(`/api_keys/scopes/${id}`);
+    return api.delete(`/access_keys/scopes/${id}`);
   }
 
   getAuditLogs(params = {}) {
-    return api.get("/api_keys/audit_logs", { params });
+    return api.get("/access_keys/audit_logs", { params });
   }
 }
 
-export default new ApiKeyService();
+export default new accessKeyService();

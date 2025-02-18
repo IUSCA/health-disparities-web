@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import apiKeyService from "@/services/api_keys";
+import accessKeyService from "@/services/access_keys";
 import * as datetime from "@/services/datetime";
 import { maybePluralize } from "@/services/utils";
 
@@ -39,7 +39,7 @@ const expiresInStr = computed(() => {
     }
   }
   // if expired, show `Expired`
-  if (apiKeyService.isExpired({ expires_at: props.expiresAt })) {
+  if (accessKeyService.isExpired({ expires_at: props.expiresAt })) {
     return "Expired";
   }
   // if expires today, show `Expires in {} hours`

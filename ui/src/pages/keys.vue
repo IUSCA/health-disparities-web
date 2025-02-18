@@ -132,7 +132,7 @@
 <script setup>
 import useQueryPersistence from "@/composables/useQueryPersistence";
 import config from "@/config";
-import apiKeyService from "@/services/api_keys";
+import accessKeyService from "@/services/access_keys";
 import * as datetime from "@/services/datetime";
 import toast from "@/services/toast";
 import { useModal } from "vuestic-ui";
@@ -201,7 +201,7 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 function fetchKeys() {
   data_loading.value = true;
-  apiKeyService
+  accessKeyService
     .getAll({
       params: {
         search: params.value.inclusive_query,
@@ -235,7 +235,7 @@ function handleRevoke(row) {
       return;
     }
     data_loading.value = true;
-    apiKeyService
+    accessKeyService
       .revoke({ username: row.user.username, key: row.key })
       .then(() => {
         toast.success("Access key revoked");
@@ -260,7 +260,7 @@ function handleDelete(row) {
       return;
     }
     data_loading.value = true;
-    apiKeyService
+    accessKeyService
       .delete(row.key)
       .then(() => {
         toast.success("Access key deleted");
@@ -280,7 +280,7 @@ function getStatus(row) {
   if (row.revoked) {
     return "Revoked";
   }
-  if (apiKeyService.isExpired(row)) {
+  if (accessKeyService.isExpired(row)) {
     return "Expired";
   }
   return "Active";

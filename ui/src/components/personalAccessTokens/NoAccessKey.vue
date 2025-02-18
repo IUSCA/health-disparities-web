@@ -16,7 +16,7 @@
       </div>
 
       <!-- Button to generate new access key -->
-      <div class="mt-5" v-if="config.apiKeys.generation.enabledInProfile">
+      <div class="mt-5" v-if="config.accessKeys.generation.enabledInProfile">
         <VaButton
           class="ml-3"
           preset="primary"

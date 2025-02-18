@@ -70,7 +70,7 @@
 
 <script setup>
 import config from "@/config";
-import apiKeyService from "@/services/api_keys";
+import accessKeyService from "@/services/access_keys";
 import toast from "@/services/toast";
 import { useModal } from "vuestic-ui";
 
@@ -90,7 +90,7 @@ const params = ref(defaultParams());
 const total_results = ref(0);
 
 /*
-{ "id": 1, "name": "read:scopes", "resource": "scopes", "action": "read", "description": "GET /api_keys/scopes" }
+{ "id": 1, "name": "read:scopes", "resource": "scopes", "action": "read", "description": "GET scopes" }
 */
 
 const columns = [
@@ -121,7 +121,7 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 function fetchScopes() {
   loading.value = true;
-  apiKeyService
+  accessKeyService
     .getAllScopes({
       search: params.value.inclusive_query,
       offset: (params.value.page - 1) * params.value.page_size,
@@ -166,7 +166,7 @@ function deleteScope(id) {
       return;
     }
     loading.value = true;
-    apiKeyService
+    accessKeyService
       .deleteScope(id)
       .then(() => {
         toast.success("Scope deleted successfully");

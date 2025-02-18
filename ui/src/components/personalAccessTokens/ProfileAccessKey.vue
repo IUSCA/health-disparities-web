@@ -13,7 +13,7 @@
               preset="primary"
               border-color="primary"
               @click="handleGenerate"
-              v-if="config.apiKeys.generation.enabledInProfile"
+              v-if="config.accessKeys.generation.enabledInProfile"
             >
               Generate new key
             </VaButton>
@@ -58,7 +58,7 @@
 
 <script setup>
 import config from "@/config";
-import apiKeyService from "@/services/api_keys";
+import accessKeyService from "@/services/access_keys";
 import toast from "@/services/toast";
 import { useAuthStore } from "@/stores/auth";
 import { useModal } from "vuestic-ui";
@@ -74,7 +74,7 @@ const newAccessKeyModal = ref(null);
 
 function fetchKeys() {
   loading.value = true;
-  apiKeyService
+  accessKeyService
     .getAll({
       username: auth.user.username,
     })
@@ -104,7 +104,7 @@ function handleRevoke(key) {
       return;
     }
     loading.value = true;
-    apiKeyService
+    accessKeyService
       .revoke({ username: auth.user.username, key })
       .then(() => {
         toast.success("Key revoked successfully");

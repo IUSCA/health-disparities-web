@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import apiKeyService from "@/services/api_keys";
+import accessKeyService from "@/services/access_keys";
 import { useForm } from "vuestic-ui";
 
 const emit = defineEmits(["created"]);
@@ -72,7 +72,7 @@ const handleSave = async () => {
     return;
   }
   loading.value = true;
-  apiKeyService
+  accessKeyService
     .createScope(data.value)
     .then((res) => {
       emit("created", res.data);
