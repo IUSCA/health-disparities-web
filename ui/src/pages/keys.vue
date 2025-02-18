@@ -20,7 +20,7 @@
 
       <!-- Create request button -->
       <va-button
-        @click="newTokenModal.show()"
+        @click="newAccessKeyModal.show()"
         color="success"
         class="flex-none"
       >
@@ -125,8 +125,8 @@
     />
   </div>
 
-  <NewTokenModal ref="newTokenModal" @update="fetchKeys" />
-  <TokenDetailsModal ref="detailsModal" />
+  <NewAccessKeyModal ref="newAccessKeyModal" @update="fetchKeys" />
+  <AccessKeyDetailsModal ref="detailsModal" />
 </template>
 
 <script setup>
@@ -196,7 +196,7 @@ const columns = [
     thAlign: "center",
   },
 ];
-const newTokenModal = ref(null);
+const newAccessKeyModal = ref(null);
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 function fetchKeys() {
@@ -217,7 +217,7 @@ function fetchKeys() {
     })
     .catch((err) => {
       console.error(err);
-      toast.error("Failed to fetch API keys");
+      toast.error("Failed to fetch access keys");
     })
     .finally(() => {
       data_loading.value = false;
@@ -228,7 +228,7 @@ onMounted(fetchKeys);
 
 function handleRevoke(row) {
   confirm({
-    message: `Are you sure you want to revoke the API key for ${row.user.username}?`,
+    message: `Are you sure you want to revoke the access key for ${row.user.username}?`,
     okText: "Revoke",
   }).then((ok) => {
     if (!ok) {
@@ -238,12 +238,12 @@ function handleRevoke(row) {
     apiKeyService
       .revoke({ username: row.user.username, key: row.key })
       .then(() => {
-        toast.success("API key revoked");
+        toast.success("Access key revoked");
         fetchKeys();
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Failed to revoke API key");
+        toast.error("Failed to revoke access key");
       })
       .finally(() => {
         data_loading.value = false;
@@ -253,7 +253,7 @@ function handleRevoke(row) {
 
 function handleDelete(row) {
   confirm({
-    message: `Are you sure you want to delete the API key ${row.key}? This action cannot be undone. Associated audit logs will be deleted.`,
+    message: `Are you sure you want to delete the access key ${row.key}? This action cannot be undone. Associated audit logs will be deleted.`,
     okText: "Delete",
   }).then((ok) => {
     if (!ok) {
@@ -263,12 +263,12 @@ function handleDelete(row) {
     apiKeyService
       .delete(row.key)
       .then(() => {
-        toast.success("API key deleted");
+        toast.success("Access key deleted");
         fetchKeys();
       })
       .catch((err) => {
         console.error(err);
-        toast.error("Failed to delete API key");
+        toast.error("Failed to delete access key");
       })
       .finally(() => {
         data_loading.value = false;
@@ -311,7 +311,7 @@ watch(() => params.value.page, fetchKeys);
 
 <route lang="yaml">
 meta:
-  title: API Keys
+  title: Access Keys
   requiresRoles: ["admin"]
-  nav: [{ label: "API Keys" }]
+  nav: [{ label: "Access Keys" }]
 </route>

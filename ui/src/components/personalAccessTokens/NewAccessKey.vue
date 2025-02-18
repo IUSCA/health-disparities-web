@@ -1,17 +1,16 @@
 <template>
-  <!-- <div class="text-2xl font-semibold mb-7">New personal access token</div> -->
   <VaForm ref="formRef" class="flex flex-col gap-5 max-w-2xl">
     <VaInput
       label="Name"
       v-model="name"
-      placeholder="Give your token a name"
+      placeholder="Give your access key a name"
       required-mark
-      :rules="[(value) => (value && value.length > 0) || 'Name is required']"
+      :rules="[(value) => (value && value.length > 0) || 'Field is required']"
     />
     <VaTextarea
       label="Description"
       v-model="description"
-      placeholder="What's this token for?"
+      placeholder="What's this access key for?"
     />
 
     <!-- user select -->
@@ -23,7 +22,7 @@
       <UserSelectInput
         v-model="owner"
         label="Owner"
-        placeholder="Click here to select a user to own this token"
+        placeholder="Click here to select a user to own this access key"
       />
     </VaFormField>
 
@@ -38,7 +37,7 @@
         class="w-1/5"
       />
       <p class="va-text-secondary pb-2 ml-5">
-        The token will expire on {{ expiration_date }}
+        The access key will expire on {{ expiration_date }}
       </p>
     </div>
 
@@ -46,7 +45,7 @@
     <div>
       <p class="font-bold text-xs va-text-primary">SCOPES</p>
       <span class="text-sm va-text-secondary">
-        Scopes define the access for personal tokens.
+        Scopes determine the permissions granted to the access key.
       </span>
 
       <div class="flex flex-col gap-1 mt-1">
@@ -76,8 +75,8 @@
     <div class="flex gap-3 mt-5">
       <VaButton preset="secondary" @click="emit('cancel')">Cancel</VaButton>
       <div class="ml-auto">
-        <VaButton @click="generateToken" :disabled="loading || !isValid">
-          Generate Token
+        <VaButton @click="generateAccessKey" :disabled="loading || !isValid">
+          Generate Access Key
         </VaButton>
       </div>
     </div>
@@ -146,7 +145,7 @@ onMounted(() => {
     });
 });
 
-function generateToken() {
+function generateAccessKey() {
   if (validate()) {
     loading.value = true;
 
@@ -161,11 +160,13 @@ function generateToken() {
       })
       .then((res) => {
         emit("created", res.data);
-        toast.success("Token generated successfully");
+        toast.success("Access Key generated successfully");
       })
       .catch((err) => {
         console.log(err);
-        toast.error(`Failed to generate token : ${err.response.data.message}`);
+        toast.error(
+          `Failed to generate access key : ${err.response.data.message}`,
+        );
       })
       .finally(() => {
         loading.value = false;

@@ -1,14 +1,14 @@
 <template>
   <VaModal v-model="visible" :title="title" hide-default-actions no-dismiss>
-    <NewToken
+    <NewAccessKey
       @created="handleCreated"
       @cancel="hide"
-      v-if="!generatedToken"
+      v-if="!generatedAccessKey"
       :for-self="props.forSelf"
     />
     <div v-else>
-      <Token
-        :token="generatedToken"
+      <AccessKey
+        :access-key="generatedAccessKey"
         :show-delete="false"
         :for-self="props.forSelf"
       />
@@ -35,26 +35,26 @@ defineExpose({
 });
 
 const visible = ref(false);
-const generatedToken = ref(null);
+const generatedAccessKey = ref(null);
 const title = computed(() => {
-  if (generatedToken.value) {
-    return "API Token Generated";
+  if (generatedAccessKey.value) {
+    return "Access Key Generated";
   }
-  return "Generate new API token";
+  return "Generate new Access Key";
 });
 
 function hide() {
   visible.value = false;
-  generatedToken.value = null;
+  generatedAccessKey.value = null;
   emit("update");
 }
 
 function show() {
-  generatedToken.value = null;
+  generatedAccessKey.value = null;
   visible.value = true;
 }
 
-function handleCreated(token) {
-  generatedToken.value = token;
+function handleCreated(accessKey) {
+  generatedAccessKey.value = accessKey;
 }
 </script>

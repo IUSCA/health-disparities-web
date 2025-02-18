@@ -7,25 +7,23 @@
       </div>
 
       <!-- heading -->
-      <div class="text-2xl font-semibold mt-3">
-        No personal access token created
-      </div>
+      <div class="text-2xl font-semibold mt-3">No access keys created</div>
 
       <!-- description -->
       <div class="mt-2 va-text-secondary font-medium">
-        Need an API token for scripts or testing? Generate a personal access
-        token for quick access to the Biobank API.
+        Need to access the API for scripts or data downloads? Create an Access
+        Key for seamless integration with the Biobank API.
       </div>
 
-      <!-- Button to generate new token -->
+      <!-- Button to generate new access key -->
       <div class="mt-5" v-if="config.apiKeys.generation.enabledInProfile">
         <VaButton
           class="ml-3"
           preset="primary"
           border-color="primary"
-          @click="emit('generate-token')"
+          @click="emit('generate-access-key')"
         >
-          <span> Generate new token </span>
+          <span> Generate new access key </span>
         </VaButton>
       </div>
     </div>
@@ -36,5 +34,5 @@
 import config from "@/config";
 
 // const props = defineProps({});
-const emit = defineEmits(["generateToken"]);
+const emit = defineEmits(["generate-access-key"]);
 </script>

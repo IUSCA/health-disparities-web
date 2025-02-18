@@ -276,7 +276,7 @@ const admin_items = ref([
     ? [
         {
           icon: "mdi-key",
-          title: "API Keys",
+          title: "Access Keys",
           path: "/keys",
         },
         {

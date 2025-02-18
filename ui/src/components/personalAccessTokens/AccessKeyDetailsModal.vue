@@ -1,7 +1,7 @@
 <template>
   <VaModal v-model="visible" close-button hide-default-actions>
     <div class="mt-3">
-      <Token :token="apiKey" :show-delete="false" />
+      <AccessKey :access-key="apiKey" :show-delete="false" />
     </div>
   </VaModal>
 </template>

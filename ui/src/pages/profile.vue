@@ -35,7 +35,7 @@
       </va-card-content>
     </va-card>
 
-    <PersonalAccessTokens />
+    <ProfileAccessKey />
 
     <!-- Color theme switcher -->
     <va-card class="mt-5">

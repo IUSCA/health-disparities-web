@@ -2,9 +2,9 @@
   <VaCard class="mt-5">
     <VaCardContent>
       <VaInnerLoading :loading="loading">
-        <NoToken
+        <NoAccessKey
           v-if="fetched && keys.length === 0"
-          @generate-token="handleGenerate"
+          @generate-access-key="handleGenerate"
         />
         <div v-else-if="fetched">
           <div class="flex justify-between items-center mb-5">
@@ -20,10 +20,10 @@
           </div>
           <!-- keys -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Token
+            <AccessKey
               v-for="key in keys"
               :key="key.id"
-              :token="key"
+              :access-key="key"
               for-self
               @revoke="handleRevoke"
             />
@@ -53,7 +53,7 @@
     </VaCardContent>
   </VaCard>
 
-  <NewTokenModal ref="newTokenModal" @update="fetchKeys" />
+  <NewAccessKeyModal ref="newAccessKeyModal" @update="fetchKeys" />
 </template>
 
 <script setup>
@@ -70,7 +70,7 @@ const { confirm } = useModal();
 const loading = ref(false);
 const keys = ref([]);
 const fetched = ref(false);
-const newTokenModal = ref(null);
+const newAccessKeyModal = ref(null);
 
 function fetchKeys() {
   loading.value = true;
@@ -84,7 +84,7 @@ function fetchKeys() {
     })
     .catch((error) => {
       console.error(error);
-      toast.error("Failed to fetch API keys");
+      toast.error("Failed to fetch access keys");
     })
     .finally(() => {
       loading.value = false;
@@ -122,6 +122,6 @@ function handleRevoke(key) {
 
 function handleGenerate() {
   console.log("generate");
-  newTokenModal.value.show();
+  newAccessKeyModal.value.show();
 }
 </script>

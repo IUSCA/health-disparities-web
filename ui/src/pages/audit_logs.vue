@@ -6,7 +6,7 @@
       <va-input
         :model-value="params.inclusive_query"
         class="w-full"
-        placeholder="keyword that matches any part of API key or endpoint"
+        placeholder="keyword that matches any part of access key or endpoint"
         outline
         clearable
         @update:model-value="debouncedQueryUpdate"
@@ -48,7 +48,7 @@
         <VaPopover class="w-full" :hover-over-timeout="500" v-if="source">
           <template #body>
             <div class="max-w-sm">
-              <TokenSmall :_key="source.key" />
+              <AccessKeySmall :_key="source.key" />
             </div>
           </template>
           <span>{{ source.key }}</span>
@@ -143,7 +143,7 @@ const columns = [
   },
   {
     key: "api_key",
-    label: "API Key",
+    label: "Access Key",
   },
   {
     key: "http_method",
