@@ -1,14 +1,14 @@
 <template>
   <VaInnerLoading :loading="loading">
-    <div v-if="apiKey">
-      <p><strong>Key:</strong> {{ apiKey.key }}</p>
+    <div v-if="accessKey">
+      <p><strong>Key:</strong> {{ accessKey.key }}</p>
       <p>
         <strong>Created At:</strong>
-        {{ datetime.absolute(apiKey.created_at) }}
+        {{ datetime.absolute(accessKey.created_at) }}
       </p>
       <p>
         <strong>Expires At:</strong>
-        {{ datetime.absolute(apiKey.expires_at) }}
+        {{ datetime.absolute(accessKey.expires_at) }}
       </p>
     </div>
   </VaInnerLoading>
@@ -22,14 +22,14 @@ const props = defineProps({
   _key: String,
 });
 const loading = ref(false);
-const apiKey = ref(null);
+const accessKey = ref(null);
 
 onMounted(() => {
   loading.value = true;
   accessKeyService
     .getKey(props._key)
     .then((k) => {
-      apiKey.value = k;
+      accessKey.value = k;
     })
     .finally(() => {
       loading.value = false;

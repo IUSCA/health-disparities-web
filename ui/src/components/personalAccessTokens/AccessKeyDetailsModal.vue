@@ -1,7 +1,7 @@
 <template>
   <VaModal v-model="visible" close-button hide-default-actions>
     <div class="mt-3">
-      <AccessKey :access-key="apiKey" :show-delete="false" />
+      <AccessKey :access-key="accessKey" :show-delete="false" />
     </div>
   </VaModal>
 </template>
@@ -16,15 +16,15 @@ defineExpose({
 });
 
 const visible = ref(false);
-const apiKey = ref(null);
+const accessKey = ref(null);
 
 function hide() {
   visible.value = false;
-  apiKey.value = null;
+  accessKey.value = null;
 }
 
 function show(data) {
   visible.value = true;
-  apiKey.value = data;
+  accessKey.value = data;
 }
 </script>
