@@ -10,7 +10,7 @@ const config = require('config');
 const prisma = new PrismaClient();
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
-const { accessControl } = require('../middleware/auth');
+const { accessControl, allowOnlyAccessKeys } = require('../middleware/auth');
 const cohortService = require('../services/cohorts');
 const cohortModel = require('../services/cohorts/model');
 const datasetService = require('../services/dataset');
@@ -610,7 +610,8 @@ router.post(
 
 router.get(
   '/:id/files',
-  isPermittedTo('read'),
+  allowOnlyAccessKeys,
+  accessControl('cohort_data')('read'),
   validate([
     param('id').isUUID(),
     query('sort_by').default('id').isIn(['id', 'name', 'size']),
@@ -684,7 +685,7 @@ router.get(
     const accept = req.get('accept') || '';
     if (accept.includes('text/plain') && !accept.includes('application/json')) {
       // Return CLI-friendly table format
-      const columns = ['id', 'name', 'size', 'participant_id'];
+      const columns = ['id', 'name', 'md5', 'size', 'participant_id'];
       const tableStr = toTable(files.map(mapper), columns);
       const paginationStr = toPaginationInfo({
         total: total_count,
@@ -707,6 +708,8 @@ router.get(
 
 router.get(
   '/files/download/:file_id',
+  allowOnlyAccessKeys,
+  accessControl('cohort_data')('read'),
   validate([
     param('file_id').isInt().toInt(),
   ]),

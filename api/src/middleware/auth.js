@@ -215,9 +215,17 @@ const loginHandler = asyncHandler(async (req, res, next) => {
   return res.status(204).send();
 });
 
+function allowOnlyAccessKeys(req, res, next) {
+  if (!req.api_key) {
+    return next(createError(403, 'Only access keys are allowed'));
+  }
+  return next();
+}
+
 module.exports = {
   authenticate,
   accessControl,
   getPermission,
   loginHandler,
+  allowOnlyAccessKeys,
 };

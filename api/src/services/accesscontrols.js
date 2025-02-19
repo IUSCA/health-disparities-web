@@ -113,6 +113,9 @@ const grantsObject = {
       'update:any': ['*'],
       'delete:any': ['*'],
     },
+    cohort_data: {
+      'read:any': ['*'],
+    },
     participant: {
       'read:any': ['*'],
     },
@@ -161,6 +164,9 @@ const grantsObject = {
       'read:any': ['*'],
       'update:own': ['*'],
       'delete:own': ['*'],
+    },
+    cohort_data: {
+      'read:any': ['*'],
     },
     participant: {
       'read:any': ['*'],
@@ -241,6 +247,9 @@ const grantsObject = {
       'read:any': ['*'],
       'update:any': ['*'],
       'delete:any': ['*'],
+    },
+    cohort_data: {
+      'read:any': ['*'],
     },
     participant: {
       'read:any': ['*'],
