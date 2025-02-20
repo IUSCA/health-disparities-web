@@ -32,7 +32,7 @@ function issueJWT({ userProfile, forever = false, aud }) {
 
 const get_user_profile = _.pick(['username', 'email', 'name', 'roles', 'cas_id', 'id', 'protocol_ids']);
 
-async function onLogin({ user, updateLastLogin = true, method }) {
+async function onLogin({ user, method, updateLastLogin = true }) {
   if (updateLastLogin) { await userService.updateLastLogin({ id: user.id, method }); }
 
   const userProfile = get_user_profile(user);

@@ -24,7 +24,9 @@ function on_startup() {
 
 const server = app.listen(port, () => {
   logger.info(`Listening: http://${host}:${port}`);
-  on_startup();
+  if (['production'].includes(config.get('mode'))) {
+    on_startup();
+  }
 });
 
 const shutdown = () => {

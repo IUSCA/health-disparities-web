@@ -75,7 +75,15 @@ def encode_chromosome(chrom: str) -> int:
 
 
 def encode_value(value):
-    """Encode values to be PostgreSQL-compatible."""
+    """
+    Encode values to be PostgreSQL-compatible.
+    Useful for preparing CSV data for PostgreSQL COPY command.
+    This function handles None, booleans, and lists specifically.
+    - None is converted to 'NULL'
+    - booleans are converted to lowercase strings 'true' or 'false'
+    - lists are converted to PostgreSQL array format
+    - other types are returned as-is
+    """
     if value is None:
         # Convert None to 'NULL'
         return 'NULL'

@@ -6,7 +6,7 @@ const requestLogger = require('morgan');
 const compression = require('compression');
 const swaggerUi = require('swagger-ui-express');
 const config = require('config');
-const cors = require('cors');
+// const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const {
@@ -23,7 +23,7 @@ const { apiKeyAuditLogger } = require('./middleware/loggers');
 const app = express();
 
 // Enable CORS for all origins
-app.use(cors());
+// app.use(cors());
 
 // remove fingerprinting header
 app.disable('x-powered-by');
@@ -31,6 +31,7 @@ app.disable('x-powered-by');
 // request logger - https://github.com/expressjs/morgan
 app.use(requestLogger('dev'));
 
+// save every request made using API access key to the database
 app.use(apiKeyAuditLogger);
 
 // request parsing middleware
