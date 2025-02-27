@@ -289,12 +289,18 @@ async function isValidIPOrSubnet(input) {
   return false;
 }
 
-function toTable(data, columns) {
+function toTable(data, columns = null) {
   const PADDING = 2;
   const MAX_COL_WIDTH = 80;
   const MIN_COL_WIDTH = 10;
 
-  const colWidths = columns.map((col) => Math.min(
+  // infer columns from data if not provided
+  let colNames = columns;
+  if (!colNames) {
+    colNames = Object.keys(data[0]);
+  }
+
+  const colWidths = colNames.map((col) => Math.min(
     MAX_COL_WIDTH,
     Math.max(
       MIN_COL_WIDTH,
@@ -304,12 +310,12 @@ function toTable(data, columns) {
   ));
 
   const table = new Table({
-    head: columns,
+    head: colNames,
     colWidths,
   });
 
   data.forEach((row) => {
-    table.push(columns.map((col) => row[col]));
+    table.push(colNames.map((col) => row[col]));
   });
 
   return table.toString();

@@ -19,8 +19,8 @@ const { toTable, toPaginationInfo } = require('../utils');
 const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
 
-async function getCohortById(id) {
-  const sql = cohortService.getCohortByIdQuery(id);
+async function getCohortById(id, username) {
+  const sql = cohortService.getCohortByIdQuery(id, username);
   const cohorts = await prisma.$queryRaw(sql);
   return cohorts[0];
 }
@@ -100,7 +100,7 @@ router.get(
       ['search_term', 'is_published', 'is_locked', 'is_protected', 'is_mine', 'type'],
     )(req.query);
 
-    //  user can only see their own cohorts or published cohorts
+    // A user can only see their own cohorts or published cohorts
     // The superset of all cohorts that a user can see is: cohort's owned by them union publsished cohorts
     // select * from cohort c where c.author_username = $1 or c.is_published = true
 
@@ -179,7 +179,7 @@ router.get(
       }
     */
 
-    const cohort = await getCohortById(req.params.id);
+    const cohort = await getCohortById(req.params.id, req.user.username);
     if (!cohort) {
       return res.sendStatus(404);
     }
@@ -249,19 +249,10 @@ router.post(
       },
       select: {
         id: true,
-        name: true,
-        description: true,
-        created_at: true,
-        updated_at: true,
-        query: true,
-        is_published: true,
-        is_locked: true,
-        is_protected: true,
-        metadata: true,
       },
     });
 
-    const cohort = await getCohortById(createdCohort.id);
+    const cohort = await getCohortById(createdCohort.id, req.user.username);
     return res.json(toJSON(cohort));
   }),
 );
@@ -350,19 +341,10 @@ router.patch(
       data: cohort_data,
       select: {
         id: true,
-        name: true,
-        description: true,
-        created_at: true,
-        updated_at: true,
-        query: true,
-        is_published: true,
-        is_locked: true,
-        is_protected: true,
-        metadata: true,
       },
     });
 
-    const cohort = await getCohortById(id);
+    const cohort = await getCohortById(id, req.user.username);
     return res.json(cohort);
   }),
 );
@@ -609,6 +591,59 @@ router.post(
 );
 
 router.get(
+  '/:id/files/summary',
+  isPermittedTo('read'),
+  validate([
+    param('id').isUUID(),
+  ]),
+  asyncHandler(async (req, res) => {
+    // #swagger.operationId = 'getCohortFilesSummary'
+    // #swagger.tags = ['cohorts', 'public']
+    // #swagger.summary = 'Get a summary of files in a cohort'
+    // #swagger.description = 'Requires read:cohorts scope'
+    // #swagger.parameters['id'] = { description: 'The cohort id', required: true }
+    /* #swagger.responses[200] = {
+        description: 'Cohort file summary',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                counts: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      file_type: { type: 'string' },
+                      file_count: { type: 'integer' },
+                      total_size: { type: 'number' },
+                    }
+                  }
+                },
+              },
+            },
+          },
+        },
+      }
+    */
+
+    const cohort = await getCohortById(req.params.id, req.user.username);
+    if (!cohort) {
+      return res.sendStatus(404);
+    }
+
+    const sql = cohortService.getCohortFilesSummaryQuery(req.params.id);
+    const data = await prisma.$queryRaw(sql);
+    const accept = req.get('accept') || '';
+    if (accept.includes('text/plain') && !accept.includes('application/json')) {
+      const tableStr = toTable(data);
+      return res.type('text/plain').send(tableStr);
+    }
+    res.json(data);
+  }),
+);
+
+router.get(
   '/:id/files',
   allowOnlyAccessKeys,
   accessControl('cohort_data')('read'),
@@ -794,7 +829,8 @@ router.get(
       res.set('X-Accel-Buffering', 'no');
       res.send('');
     } else {
-      // try to initiate the staging workflow and return http code 202, with a message to the user to check back later
+      // try to initiate the staging workflow and return http code 202,
+      // with a message to the user to check back later
       const wf_name = 'stage';
       try {
         await datasetService.create_workflow(dataset, wf_name, req.user.id);
@@ -809,8 +845,10 @@ router.get(
         }
       }
 
+      res.set('Retry-After', 60); // tell the client to retry after 60 seconds
+      res.set('Cache-control', 'no-store');
       res.status(202).json({
-        message: 'The file is currently being staged. Please check back later to download the file.',
+        message: 'The file is currently being staged. Please check back later.',
       });
     }
   }),

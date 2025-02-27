@@ -27,7 +27,7 @@ select
 
 // To not return the participants array but the count of participants
 // Why? Because the participants array can be very large and we don't need it
-function getCohortByIdQuery(id) {
+function getCohortByIdQuery(id, username) {
   return Prisma.sql`
     ${cohort_select}
     from
@@ -35,6 +35,7 @@ function getCohortByIdQuery(id) {
       join "user" u on c.author_username = u.username
     where
       c.id = CAST(${id} AS UUID)
+      and (c.author_username = ${username} or c.is_published = true)
   `;
 }
 
@@ -242,6 +243,30 @@ function getFileInfoQuery({ user_id, file_id }) {
   `;
 }
 
+function getCohortFilesSummaryQuery({ id }) {
+  return Prisma.sql`
+    WITH cohort_participants AS (
+      SELECT unnest(participants) AS pid 
+      FROM cohort 
+      WHERE id = CAST(${id} AS UUID)
+    )
+    SELECT 
+        df.metadata->>'class' AS file_type, 
+        COUNT(*) as file_count,
+        sum(df.size) as total_size
+    FROM participant p
+    INNER JOIN cohort_participants cp ON cp.pid = p.id
+    INNER JOIN dataset d ON d.participant_id = p.id
+    INNER JOIN dataset_file df ON df.dataset_id = d.id
+    WHERE df.filetype = 'file' 
+      and d.is_deleted = false 
+      and d.archive_path is not null 
+      and df.metadata->>'class' is not null
+    GROUP BY file_type
+    order by file_count desc
+  `;
+}
+
 module.exports = {
   getCohortByIdQuery,
   searchCohortsQuery,
@@ -250,4 +275,5 @@ module.exports = {
   getDependentCohortsQuery,
   getCohortFilesQuery,
   getFileInfoQuery,
+  getCohortFilesSummaryQuery,
 };
