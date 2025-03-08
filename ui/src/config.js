@@ -109,6 +109,7 @@ const exports = {
     },
     downloads: true,
     uploads: { enabledForRoles: [] },
+    accessKeys: true,
   },
   notifications: {
     pollingInterval: 5000, // milliseconds
@@ -146,7 +147,6 @@ const exports = {
       COMPLETE: "COMPLETE",
       FAILED: "FAILED",
     },
-    accessKeys: true,
   },
   phenotype_data: {
     cache_busting_id: "41e81ff",
