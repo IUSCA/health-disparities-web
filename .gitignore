@@ -52,6 +52,7 @@ workers/__pycache__/*
 workers/venv/
 workers/venv/*
 workers/.env
+workers/core*
 
 docs/.vitepress/cache/*
 

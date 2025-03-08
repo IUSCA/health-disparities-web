@@ -1,17 +1,4 @@
 import "@fontsource/audiowide";
-import {
-  ArcElement,
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LineElement,
-  LinearScale,
-  PointElement,
-  TimeScale,
-  Title,
-  Tooltip,
-} from "chart.js";
 import { createPinia } from "pinia";
 import { createApp } from "vue";
 import { createVuestic } from "vuestic-ui";
@@ -32,6 +19,7 @@ import "./styles/main.css";
 // import "material-design-icons-iconfont/dist/material-design-icons.min.css";
 
 import router from "@/router";
+import Chat from "vue3-beautiful-chat";
 import App from "./App.vue";
 import vVisible from "./directives/v-visible";
 
@@ -39,21 +27,6 @@ import vVisible from "./directives/v-visible";
 // https://vuestic.dev/en/getting-started/tree-shaking#css-code-split
 // import "vuestic-ui/styles/essential.css";
 // import "vuestic-ui/styles/typography.css";
-
-import Chat from "vue3-beautiful-chat";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  TimeScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-);
 
 const app = createApp(App);
 

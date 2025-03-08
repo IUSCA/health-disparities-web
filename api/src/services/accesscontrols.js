@@ -102,6 +102,21 @@ const grantsObject = {
     genai: {
       'create:any': ['*'],
     },
+    notifications: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
+    fs: {
+      'read:any': ['*'],
+    },
+    upload: {
+      'create:any': ['*'],
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
   },
 
   // user role permissions
@@ -213,6 +228,17 @@ const grantsObject = {
       'delete:any': ['*'],
     },
     genai: {
+      'create:any': ['*'],
+    },
+    notifications: {
+      'read:any': ['*'],
+      'update:any': ['*'],
+      'delete:any': ['*'],
+    },
+    fs: {
+      'read:any': ['*'],
+    },
+    upload: {
       'create:any': ['*'],
     },
   },

@@ -50,6 +50,24 @@
       "client_id": "",
       "client_secret": "",
       "scope_prefix": "download_file:"
+    },
+    "upload": {
+      "scope_prefix": "upload_file:"
+    }
+  },
+  "upload": {
+    "path": "",
+    "types": {
+      "DATASET": "DATASET"
+    },
+    "status": {
+      "UPLOADING": "UPLOADING",
+      "UPLOAD_FAILED": "UPLOAD_FAILED",
+      "UPLOADED": "UPLOADED",
+      "PROCESSING": "PROCESSING",
+      "PROCESSING_FAILED": "PROCESSING_FAILED",
+      "COMPLETE": "COMPLETE",
+      "FAILED": "FAILED"
     }
   },
   "download_server": {
@@ -60,30 +78,30 @@
       "description": "An end-to-end workflow to inspect, archive, state and validate a dataset",
       "steps": [
         {
-            "name": "await stability",
-            "task": "await_stability"
+          "name": "await stability",
+          "task": "await_stability"
         },
         {
-            "name": "inspect",
-            "task": "inspect_dataset"
+          "name": "inspect",
+          "task": "inspect_dataset"
         },
         {
-            "name": "archive",
-            "task": "archive_dataset"
+          "name": "archive",
+          "task": "archive_dataset"
         },
         {
-            "name": "stage",
-            "task": "stage_dataset"
+          "name": "stage",
+          "task": "stage_dataset"
         },
         {
-            "name": "validate",
-            "task": "validate_dataset"
+          "name": "validate",
+          "task": "validate_dataset"
         },
         {
-            "name": "setup_download",
-            "task": "setup_dataset_download"
+          "name": "setup_download",
+          "task": "setup_dataset_download"
         }
-    ]
+      ]
     },
     "stage": {
       "steps": [
@@ -123,7 +141,24 @@
           "task": "delete_dataset"
         }
       ]
+    },
+    "process_dataset_upload": {
+      "steps": [
+        {
+          "name": "Process Dataset Upload",
+          "task": "process_dataset_upload"
+        }
+      ]
+    },
+    "cancel_dataset_upload": {
+      "steps": [
+        {
+          "name": "Cancel Dataset Upload",
+          "task": "cancel_dataset_upload"
+        }
+      ]
     }
+
   },
   "dataset_types" : ["RAW_DATA", "DATA_PRODUCT"],
   "system_user": {
@@ -152,5 +187,24 @@
         "username": ""
       }
     }
+  },
+  "filesystem_search_spaces": "",
+  "filesystem": {
+    "search_spaces": "",
+    "base_dir": {
+      "slateScratch": ""
+    },
+    "mount_dir": {
+      "slateScratch": ""
+    }
+  },
+  "restricted_ingestion_dirs": {
+    "slateScratch": ""
+  },
+  "enabled_features": {
+    "fs": {
+      "enabled_for_roles": [""]
+    },
+    "downloads": true
   }
 }

@@ -19,6 +19,10 @@ router.use('/users', require('./users'));
 router.use('/workflows', require('./workflows'));
 router.use('/projects', require('./projects'));
 router.use('/statistics', require('./statistics'));
+router.use('/notifications', require('./notifications'));
+router.use('/fs', require('./fs'));
+router.use('/uploads', require('./uploads'));
+router.use('/datasetUploads', require('./datasetUploads'));
 
 router.use('/cohorts', require('./cohorts'));
 router.use('/participants', require('./participants'));

@@ -9,6 +9,7 @@ module.exports = {
     "eslint:recommended", //https://github.com/eslint/eslint/blob/main/conf/eslint-recommended.js
     "@vue/eslint-config-prettier",
     "plugin:vuejs-accessibility/recommended",
+    "plugin:comment-length/recommended",
   ],
   parserOptions: {
     ecmaVersion: "latest",
@@ -32,6 +33,28 @@ module.exports = {
           every: ["id"],
         },
         allowChildren: false,
+      },
+    ],
+    "comment-length/limit-multi-line-comments": [
+      "warn",
+      {
+        mode: "overflow-only",
+        maxLength: 120,
+        logicalWrap: true,
+        ignoreUrls: true,
+        ignoreCommentsWithCode: true,
+        tabSize: 2,
+      },
+    ],
+    "comment-length/limit-single-line-comments": [
+      "warn",
+      {
+        mode: "overflow-only",
+        maxLength: 120,
+        logicalWrap: true,
+        ignoreUrls: true,
+        ignoreCommentsWithCode: true,
+        tabSize: 2,
       },
     ],
   },

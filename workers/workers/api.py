@@ -127,12 +127,13 @@ def dataset_setter(dataset: dict):
 
 
 def get_all_datasets(
-    dataset_type=None,
-    name=None,
-    days_since_last_staged=None,
-    deleted=False,
-    archived=None,
-    bundle=False):
+        dataset_type=None,
+        name=None,
+        days_since_last_staged=None,
+        deleted=False,
+        archived=None,
+        bundle=False,
+        include_states=False):
     with APIServerSession() as s:
         payload = {
             'type': dataset_type,
@@ -140,7 +141,8 @@ def get_all_datasets(
             'days_since_last_staged': days_since_last_staged,
             'deleted': deleted,
             'archived': archived,
-            'bundle': bundle
+            'bundle': bundle,
+            'include_states': include_states
         }
         r = s.get('datasets', params=payload)
         r.raise_for_status()
@@ -148,11 +150,17 @@ def get_all_datasets(
         return [dataset_getter(dataset) for dataset in datasets]
 
 
-def get_dataset(dataset_id: str, files: bool = False, bundle: bool = False):
+def get_dataset(dataset_id: str,
+                files: bool = False,
+                bundle: bool = False,
+                include_upload_log: bool = False,
+                workflows: bool = False):
     with APIServerSession() as s:
         payload = {
             'files': files,
-            'bundle': bundle
+            'bundle': bundle,
+            'workflows': workflows,
+            'include_upload_log': include_upload_log
         }
         r = s.get(f'datasets/{dataset_id}', params=payload)
 
@@ -280,6 +288,31 @@ def create_sample_mappings(samples: list[dict]):
         r = s.post('genotypes/samples', json=samples)
         r.raise_for_status()
         return r.json()
+
+
+def get_dataset_upload_logs():
+    with APIServerSession() as s:
+        r = s.get(f'datasetUploads')
+        r.raise_for_status()
+        return r.json()
+
+
+def update_dataset_upload_log(uploaded_dataset_id: int, log_data: dict):
+    with APIServerSession() as s:
+        r = s.patch(f'datasetUploads/{uploaded_dataset_id}', json=log_data)
+        r.raise_for_status()
+
+
+def delete_dataset_upload_log(uploaded_dataset_id: int):
+    with APIServerSession() as s:
+        r = s.delete(f'datasetUploads/{uploaded_dataset_id}')
+        r.raise_for_status()
+
+
+def create_notification(payload: dict):
+    with APIServerSession() as s:
+        r = s.post('notifications', json=payload)
+        r.raise_for_status()
 
 
 if __name__ == '__main__':
