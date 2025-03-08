@@ -99,6 +99,26 @@ export default defineConfig(({ command, mode }) => {
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, ""),
         },
+        "/grafana": {
+          target: env.VITE_GRAFANA_REDIRECT_URL,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/grafana/, ""),
+          // retrieve the grafana_token from cookie and set it as a header X-JWT-Assertion
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyReq, req) => {
+              const grafana_token = req?.headers?.cookie
+                ?.split("; ")
+                ?.find((row) => row.startsWith("grafana_token"))
+                ?.split("=")?.[1];
+              if (!grafana_token) {
+                return;
+              }
+              proxyReq.setHeader("X-JWT-Assertion", grafana_token);
+              proxyReq.setHeader("X-Forwarded-Proto", "https");
+            });
+          },
+        },
       },
     },
     // to disable minification - https://vitejs.dev/config/build-options.html#build-minify

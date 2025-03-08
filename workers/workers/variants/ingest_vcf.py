@@ -1,3 +1,4 @@
+import csv
 import itertools
 import time
 from pathlib import Path
@@ -15,8 +16,8 @@ from workers.exceptions import IngestionFailed
 from workers.utils import batched
 from workers.variants.database import conn
 from workers.variants.models import variant, participant
-from workers.variants.models.variant import Variant
-from workers.variants.utils import encode_chromosome
+from workers.variants.models.variant import Variant, copy_data
+from workers.variants.utils import encode_chromosome, encode_value
 
 logger = get_task_logger(__name__)
 
@@ -113,7 +114,13 @@ def infer_phase(vcf_file_path: str) -> bool:
 
 
 class VCFIngestor:
-    def __init__(self, vcf_file_path: str, source_id: int, batch_size: int = 100, celery_task=None, phase=None):
+    def __init__(self,
+                 vcf_file_path: str,
+                 source_id: int,
+                 batch_size: int,
+                 celery_task=None,
+                 phase=None,
+                 is_imputed=None, **kwargs):
         """
         Variants and genotype data is append-only.
 
@@ -144,20 +151,21 @@ class VCFIngestor:
 
         self.celery_task = celery_task
         self.source_id = source_id
-        self.batch_size = 2000
-        print('batch_size', self.batch_size)
-
+        self.batch_size = batch_size
         self.idx_arr = np.array([])  # list of genotype array indices for each participant
         self.max_idx = None
         self.new_idx_arr = np.array([])
         self.new_idx_start, self.new_idx_end = None, None
         self.new_idx_mask = None
 
+        self.is_imputed = is_imputed
+
         try:
             self.vcf = VCF(vcf_file_path)
             # list of participant ids
             # VCF is expected to have samples as participant ids - reheader step
             self.samples = [int(s) for s in self.vcf.samples]
+
             if phase is None:
                 self.phase: bool = infer_phase(self.vcf_file_path)
             else:
@@ -188,7 +196,7 @@ class VCFIngestor:
         Resolve genotype index for each participant in the VCF.
         """
         with conn.cursor() as cursor:
-            pid_idx: dict[int, int] = participant.fetch_all_gt_idx(cursor)
+            pid_idx: dict[int, int] = participant.fetch_all_gt_idx(cursor, self.source_id)
 
         # last used index from the current participants in the db
         _max_idx = max([idx for idx in pid_idx.values() if idx is not None], default=0)
@@ -197,9 +205,17 @@ class VCFIngestor:
         new_idx_gen = itertools.count(start=_max_idx + 1)
 
         # new_idx_mask - True if participant never had a genotype index before
-        self.new_idx_mask = np.array([pid_idx[pid] is None for pid in self.samples])
-        self.idx_arr = np.array([pid_idx[pid] or next(new_idx_gen) for pid in self.samples])
+        self.new_idx_mask = np.array([pid_idx.get(pid) is None for pid in self.samples])
+
+        # idx_arr - ndarray of genotype array indices for each participant
+        self.idx_arr = np.array([
+            pid_idx.get(pid) or next(new_idx_gen) for pid in self.samples
+        ])
+
+        # new_idx_arr - genotype array indices for new participants
         self.new_idx_arr = self.idx_arr[self.new_idx_mask]
+
+        # max and min indexes of new participants
         self.new_idx_start, self.new_idx_end = min(self.new_idx_arr, default=None), max(self.new_idx_arr, default=None)
         self.max_idx = max(self.idx_arr, default=None)
 
@@ -209,13 +225,14 @@ class VCFIngestor:
     def update_participants(self):
         with conn.cursor() as cursor:
             try:
-                updates = [
-                    {'id': pid, 'genotype_idx': idx}
+                data = [
+                    {'participant_id': pid, 'genotype_idx': idx, 'source_id': self.source_id}
                     for pid, idx, is_new in zip(self.samples, self.idx_arr.tolist(), self.new_idx_mask)
                     if is_new
                 ]
-                participant.update_many_idx(cursor, updates=updates)
-                conn.commit()
+                if data:
+                    participant.create_many_idx(cursor, data=data)
+                    conn.commit()
             except Exception as e:
                 conn.rollback()
                 raise e
@@ -273,6 +290,10 @@ class VCFIngestor:
         return genotype_arr.tolist()
 
     def ingest(self):
+        """
+        WARNING: Does not handle is_imputed, default phase, or dosage columns
+        @return:
+        """
         num_processed, num_updates, num_creates = 0, 0, 0
         print('ingestion start')
         batch_start_time = time.perf_counter()
@@ -335,33 +356,89 @@ class VCFIngestor:
             'num_creates': num_creates
         }
 
+    def transform(self):
+        """
+        Transform the VCF data into csv format suitable for ingestion.
+        """
+        num_processed = 0
+
+        csv_file_path = Path(self.vcf_file_path).with_suffix('.csv')
+        column_names = ['chr', 'pos', 'ref', 'alt', 'source_id', 'phase', 'genotype', 'is_imputed', 'dosage']
+        with open(csv_file_path, 'w', newline='') as csvfile:
+            csvWriter = csv.DictWriter(csvfile, fieldnames=column_names)
+            csvWriter.writeheader()
+            for batch in batched(self.vcf, self.batch_size):
+                batch_start_time = time.perf_counter()
+                rows = []
+                for var in batch:
+                    if self.is_imputed == 'infer':
+                        is_imputed = var.INFO.get('IMPUTED', None) == 'GLIMPSE'
+                    else:
+                        is_imputed = bool(self.is_imputed)
+
+                    genotype_vals = encode_genotype_vectorized(var.genotype.array())  # vectorized encoding
+                    genotype_arr = self.make_create_params(genotype_vals)
+
+                    # replace None with 'NULL' for postgres
+                    genotype_arr = ['NULL' if x is None else x for x in genotype_arr]
+
+                    dosage = []
+                    if 'DS' in var.FORMAT:
+                        ds = var.format('DS')
+                        dosage = (ds.reshape(-1) * 1000).astype(int).tolist()
+
+                    d = {
+                        'chr': encode_chromosome(var.CHROM),
+                        'pos': var.POS,
+                        'ref': var.REF,
+                        'alt': var.ALT[0],
+                        'source_id': self.source_id,
+                        'phase': self.phase,
+                        'is_imputed': is_imputed,
+                        'genotype': genotype_arr,
+                        'dosage': dosage
+                    }
+                    encoded_row = {key: encode_value(value) for key, value in d.items()}
+                    rows.append(encoded_row)
+                csvWriter.writerows(rows)
+                num_processed += len(batch)
+                # print(f'batch read time: {time.perf_counter() - batch_start_time:.3f} - num_processed: {num_processed}')
+                self.log_progress(num_processed)
+        return csv_file_path
+
 
 # used to register celery task
-def ingest_vcf(celery_task, dummy, vcf_file_path=None, source_id=None, batch_size=1000, **kwargs):
+def ingest_vcf(celery_task, dummy, **kwargs):
     """
     Ingest VCF data into the database.
 
     Args:
       celery_task (object): The Celery task object.
       dummy: Dummy positional argument.
-      vcf_file_path (str): Path to the VCF file.
-      source_id (int): ID of the data source.
-      batch_size (int, optional): Batch size for ingestion. Defaults to 100.
       **kwargs: Additional keyword arguments.
 
     Returns:
       tuple: A tuple containing the dummy argument and statistics of the ingestion process.
     """
-    vcfIngestor = VCFIngestor(vcf_file_path, source_id, batch_size, celery_task)
+    vcfIngestor = VCFIngestor(celery_task=celery_task, **kwargs)
     vcfIngestor.resolve_gt_idx()
     vcfIngestor.update_participants()
-    stats = vcfIngestor.ingest()
-    return dummy, stats
+    if not kwargs.get('is_fresh', False):
+        stats = vcfIngestor.ingest()
+        print(stats)
+    else:
+        csv_path = vcfIngestor.transform()
+        print('Transormed to', csv_path)
+        copy_data(csv_path)
+        print('Copied to database')
+        # delete csv file
+        csv_path.unlink()
+    return dummy,
 
 
 # used to either launch a workflow to run task 'ingest_vcf' on every vcf
 # or directly run code to ingest data from command line based on no_celery falg
-def ingest_data(data_dir, source_id, batch_size=100, no_celery=False):
+def ingest_data(data_dir, source_id, batch_size=1000, no_celery=False, is_fresh=False, phase=None, is_imputed=False):
     """
     Ingests the data in VCFs in data_dir.
 
@@ -372,6 +449,9 @@ def ingest_data(data_dir, source_id, batch_size=100, no_celery=False):
     @param source_id: the database id of the data source to associate with variants
     @param batch_size: size of the batch create or updates issued to database
     @param no_celery:
+    @param is_fresh: if True, transform VCFs to CSVs and copy to database which is faster than batch create
+    @param is_imputed: Always uses IMPUTED flag from VCF INFO field if available else uses the boolean flag passed here
+    @param phase: If None, infer phase from the first variant in the VCF
     @return: None
     """
     data_dir = Path(data_dir).resolve()
@@ -381,35 +461,33 @@ def ingest_data(data_dir, source_id, batch_size=100, no_celery=False):
     assert len(vcf_paths) > 0, f'No .vcf.gz files in {data_dir}'
 
     if not no_celery:
-        steps = []
         for vcf_path in vcf_paths:
-            steps.append({
-                'name': vcf_path.name,
+            steps = [{
+                'name': 'ingest_vcf',
                 'task': 'ingest_vcf',
                 'queue': f'{config["app_id"]}.q',
                 'kwargs': {
                     'vcf_file_path': str(vcf_path),
                     'source_id': source_id,
-                    'batch_size': batch_size
+                    'batch_size': batch_size,
+                    'is_fresh': is_fresh,
+                    'phase': phase,
+                    'is_imputed': is_imputed
                 },
-            }, )
+            }]
 
-        wf_body = {
-            'name': 'Ingest VCFs',
-            'app_id': config['app_id'],
-            'steps': steps
-        }
+            wf_body = {
+                'name': f'Ingest VCF - {vcf_path.name}',
+                'app_id': config['app_id'],
+                'steps': steps
+            }
 
-        int_wf = Workflow(celery_app=app, **wf_body)
-        int_wf.start(None)
+            int_wf = Workflow(celery_app=app, **wf_body)
+            int_wf.start(None)
     else:
         for vcf_path in vcf_paths:
-            print('Ingesting', vcf_path)
-            vcfIngestor = VCFIngestor(str(vcf_path), source_id, batch_size)
-            vcfIngestor.resolve_gt_idx()
-            vcfIngestor.update_participants()
-            stats = vcfIngestor.ingest()
-            print(stats)
+            ingest_vcf(None, None, vcf_file_path=str(vcf_path), source_id=source_id, batch_size=batch_size,
+                       is_fresh=is_fresh, phase=phase, is_imputed=is_imputed)
 
 
 if __name__ == '__main__':

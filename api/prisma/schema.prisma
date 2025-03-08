@@ -41,6 +41,8 @@ model dataset {
   dataset_upload_log dataset_upload_log?
 
   @@unique([name, type, is_deleted])
+  @@index([participant_id])
+  @@index([is_deleted])
 }
 
 model dataset_hierarchy {
@@ -168,20 +170,20 @@ model stage_request_log {
 }
 
 model user {
-  id                         Int                 @id @default(autoincrement())
-  username                   String              @unique @db.VarChar(100)
-  name                       String?             @db.VarChar(100)
-  email                      String              @unique @db.VarChar(100)
-  cas_id                     String?             @unique @db.VarChar(100)
+  id                         Int                     @id @default(autoincrement())
+  username                   String                  @unique @db.VarChar(100)
+  name                       String?                 @db.VarChar(100)
+  email                      String                  @unique @db.VarChar(100)
+  cas_id                     String?                 @unique @db.VarChar(100)
   notes                      String?
-  created_at                 DateTime            @default(now()) @db.Timestamp(6)
-  updated_at                 DateTime            @default(now()) @updatedAt @db.Timestamp(6)
-  is_deleted                 Boolean             @default(false)
+  created_at                 DateTime                @default(now()) @db.Timestamp(6)
+  updated_at                 DateTime                @default(now()) @updatedAt @db.Timestamp(6)
+  is_deleted                 Boolean                 @default(false)
   user_role                  user_role[]
   settings                   user_settings?
   contacts                   contact[]
   dataset_audit              dataset_audit[]
-  projects                   project_user[]      @relation("project_user_user")
+  projects                   project_user[]          @relation("project_user_user")
   password                   user_password?
   login                      user_login?
   accesses                   data_access_log[]
@@ -193,13 +195,17 @@ model user {
   authored_sources           source[]
   authored_cohorts           cohort[]
   query_analytics            query_analytics[]
-  project_users_assigned     project_user[]      @relation("project_user_assignor")
+  project_users_assigned     project_user[]          @relation("project_user_assignor")
   project_datasets_assigned  project_dataset[]
   project_contacts_assigned  project_contact[]
-  initiated_workflows        workflow[]          @relation("initiated_workflows")
+  initiated_workflows        workflow[]              @relation("initiated_workflows")
   acknowledged_notifications notification[]
   uploads                    upload_log[]
   user_notifications         user_notification[]
+  api_keys                   api_key[]               @relation("api_key_user")
+  revoked_api_keys           api_key[]               @relation("api_key_revoker")
+  cohort_access_requests     cohort_access_request[] @relation("cohort_access_requester")
+  cohort_access_reviews      cohort_access_request[] @relation("cohort_access_reviewer")
 }
 
 model user_password {
@@ -554,20 +560,21 @@ model vaccination {
 }
 
 model cohort {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  description     String?
-  query           Json
-  metadata        Json?
-  created_at      DateTime @default(now()) @db.Timestamp(6)
-  updated_at      DateTime @default(now()) @updatedAt @db.Timestamp(6)
-  is_published    Boolean  @default(false)
-  is_locked       Boolean  @default(false)
-  is_protected    Boolean  @default(false)
-  is_temp         Boolean  @default(false)
-  participants    Int[]
-  author_username String
-  author          user     @relation(fields: [author_username], references: [username])
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String
+  description           String?
+  query                 Json
+  metadata              Json?
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                @default(now()) @updatedAt @db.Timestamp(6)
+  is_published          Boolean                 @default(false)
+  is_locked             Boolean                 @default(false)
+  is_protected          Boolean                 @default(false)
+  is_temp               Boolean                 @default(false)
+  participants          Int[]
+  author_username       String
+  author                user                    @relation(fields: [author_username], references: [username])
+  cohort_access_request cohort_access_request[]
 }
 
 // model cohort_user {
@@ -650,6 +657,7 @@ model variant {
   phase      Boolean
   is_imputed Boolean
   genotype   Int[]   @db.SmallInt
+  dosage     Int[]   @db.SmallInt
 
   @@id([chr, position, ref, alt, source_id])
 }
@@ -870,10 +878,24 @@ model genotype_stats_snapshot_1 {
 }
 
 view gt_stats_annotations {
-  chr           Int      @db.SmallInt
+  chr           Int     @db.SmallInt
   position      BigInt
   ref           String
   alt           String
+  source_id     Int
+  snapshot_id   Int
+  protocol_id   Int
+  phase         Boolean
+  missing       Int
+  c0            Int
+  c1            Int
+  c2            Int
+  c3            Int
+  allele_number Int
+  allele_count  Int
+  allele_freq   Float
+  is_imputed    Boolean
+
   func          String?
   genes         String[]
   exonic_func   String?
@@ -900,20 +922,6 @@ view gt_stats_annotations {
   revel_max     Float?
   polyphen_max  Float?
   sift_max      Float?
-
-  source_id     Int
-  snapshot_id   Int
-  protocol_id   Int
-  phase         Boolean
-  is_imputed    Boolean
-  missing       Int
-  c0            Int
-  c1            Int
-  c2            Int
-  c3            Int
-  allele_number Int
-  allele_count  Int
-  allele_freq   Float
 
   @@id([chr, position, ref, alt])
 }
@@ -1002,9 +1010,98 @@ view demographic_extended {
   dob            DateTime
   enroll_date    DateTime?
   participant_id Int
+  age            Int
   weight         Decimal?
   height         Decimal?
   bmi            Decimal?
+}
+
+model api_key {
+  id                  Int             @id @default(autoincrement())
+  name                String
+  description         String?
+  user_id             Int
+  key                 String          @unique
+  secret              Bytes           @db.ByteA
+  created_at          DateTime        @default(now()) @db.Timestamp(6)
+  expires_at          DateTime
+  revoked             Boolean         @default(false)
+  revoked_at          DateTime?
+  revoker_username    String?
+  user                user            @relation(fields: [user_id], references: [id], onDelete: Cascade, name: "api_key_user")
+  audit_logs          api_audit_log[]
+  scopes              api_key_scope[]
+  revoker             user?           @relation(fields: [revoker_username], references: [username], name: "api_key_revoker")
+  whitelisted_subnets subnet[]
+}
+
+model subnet {
+  id         Int     @id @default(autoincrement())
+  subnet     String  @db.Inet
+  api_key_id Int
+  api_key    api_key @relation(fields: [api_key_id], references: [id], onDelete: Cascade)
+
+  @@unique([subnet, api_key_id])
+}
+
+model scope {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique // e.g. "read:datasets" {action}:{resource}
+  resource      String
+  action        String
+  description   String?
+  api_keys      api_key_scope[]
+  api_audit_log api_audit_log[]
+
+  @@unique([resource, action])
+}
+
+model api_key_scope {
+  api_key_id Int
+  scope_id   Int
+  api_key    api_key @relation(fields: [api_key_id], references: [id], onDelete: Cascade)
+  scope      scope   @relation(fields: [scope_id], references: [id], onDelete: Cascade)
+
+  @@id([api_key_id, scope_id])
+}
+
+model api_audit_log {
+  id            Int      @id @default(autoincrement())
+  api_key_id    Int
+  endpoint      String
+  accessed_at   DateTime @default(now()) @db.Timestamp(6)
+  http_method   String
+  ip_address    String?  @db.Inet
+  status_code   Int?
+  scope_id      Int?
+  response_time Int? // in milliseconds
+  request_body  String? // Optionally log the request body for debugging
+  response_body String? // Optionally log the response body for debugging
+
+  api_key api_key @relation(fields: [api_key_id], references: [id], onDelete: Cascade)
+  scope   scope?  @relation(fields: [scope_id], references: [id], onDelete: Cascade)
+
+  @@index([api_key_id])
+}
+
+model cohort_access_request {
+  id            Int           @id @default(autoincrement())
+  requester_id  Int // User who made the request
+  cohort_id     String        @db.Uuid
+  status        RequestStatus @default(PENDING) // PENDING, APPROVED, REJECTED
+  reviewer_id   Int? // Reviewer who made the decision
+  decision_date DateTime? // When the decision was made
+  notes         String?
+  created_at    DateTime      @default(now()) @db.Timestamp(6)
+  updated_at    DateTime      @default(now()) @updatedAt @db.Timestamp(6)
+
+  requester user   @relation(fields: [requester_id], references: [id], name: "cohort_access_requester")
+  cohort    cohort @relation(fields: [cohort_id], references: [id])
+  reviewer  user?  @relation(fields: [reviewer_id], references: [id], name: "cohort_access_reviewer")
+
+  @@index([cohort_id])
+  @@index([requester_id])
+  @@index([status])
 }
 
 enum NOTIFICATION_STATUS {
@@ -1027,4 +1124,10 @@ enum upload_type {
   // FILE
   // DIRECTORY
   DATASET
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

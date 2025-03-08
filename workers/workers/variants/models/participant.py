@@ -1,3 +1,6 @@
+from psycopg2 import extras
+
+
 def find_many(cursor, ib_ids: list[str]) -> dict[str, int]:
     if not ib_ids:
         return {}
@@ -21,20 +24,29 @@ def fetch_all(cursor):
     return {row[1]: row[0] for row in cursor}
 
 
-def fetch_all_gt_idx(cursor) -> dict[int, int]:
+def fetch_all_gt_idx(cursor, source_id) -> dict[int, int]:
     """
     Returns a dict of participant_id -> genotype_idx
     """
-    cursor.execute('select id, genotype_idx from participant')
+    query = """select p.id, pg.genotype_idx 
+        from participant p
+        join participant_genotype pg on pg.participant_id = p.id
+        where pg.source_id = %s;
+    """
+    cursor.execute(query, (source_id,))
     return {row[0]: row[1] for row in cursor}
 
 
-def update_many_idx(cursor, updates: list[dict[str, int]]):
+def create_many_idx(cursor, data: list[dict[str, int]]):
     """
-    Update genotype_idx for participants
+    create genotype_idx for participants
 
     @param cursor: cursor
-    @param updates: list of dict of participant_id -> genotype_idx ex: [{'id': pid, 'genotype_idx': idx}, ...]
+    @param data: list of dicts ex: [{'participant_id': pid, 'genotype_idx': idx, 'source_id': sid}, ...]
     """
-    update_query = 'UPDATE participant SET genotype_idx = %(genotype_idx)s WHERE id = %(id)s'
-    cursor.executemany(update_query, updates)
+    insert_query = """
+        INSERT INTO participant_genotype (participant_id, source_id, genotype_idx)
+        VALUES %s
+    """
+    ins_data = [(d['participant_id'], d['source_id'], d['genotype_idx']) for d in data]
+    extras.execute_values(cursor, insert_query, ins_data)

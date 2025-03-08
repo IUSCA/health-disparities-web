@@ -7,17 +7,23 @@
           :data-testid="props.dataTestId || 'autocomplete'"
           outline
           clearable
-          @clear="emit('clear')"
-          type="text"
+          :label="props.label"
           :placeholder="props.placeholder"
           v-model="text"
           class="w-full autocomplete-input"
           @click="openResults"
-          :disabled="props.disabled"
-          :label="props.label"
         >
-          <template #prependInner><slot name="prependInner"></slot></template>
-          <template #appendInner><slot name="appendInner"></slot></template>
+          <template #prependInner>
+            <i-mdi:magnify />
+          </template>
+
+          <template #appendInner>
+            <i-mdi:undo-variant
+              class="cursor-pointer"
+              @click.stop="handleClose"
+              v-if="props.showClose"
+            />
+          </template>
         </va-input>
       </va-form>
 
@@ -87,14 +93,16 @@
 <script setup>
 import { OnClickOutside } from "@vueuse/components";
 
+document.addEventListener("DOMContentLoaded", function () {
+  const input = document.querySelector(".va-input__content__input");
+  input.setAttribute("autocomplete", "off");
+  //input.value = ""; // Clears any autofilled value
+});
+
 const props = defineProps({
-  searchText: {
-    type: String,
-    default: "",
-  },
   label: {
     type: String,
-    default: "",
+    default: null,
   },
   placeholder: {
     type: String,
@@ -116,43 +124,20 @@ const props = defineProps({
     type: String,
     default: "name",
   },
-  async: {
+  defaultVisible: {
     type: Boolean,
     default: false,
   },
-  disabled: {
+  showClose: {
     type: Boolean,
     default: false,
-  },
-  error: {
-    type: Boolean,
-    default: false,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  dataTestId: {
-    type: String,
   },
 });
 
-const emit = defineEmits([
-  "select",
-  "clear",
-  "update:searchText",
-  "open",
-  "close",
-]);
+const emit = defineEmits(["select", "close"]);
 
-const text = computed({
-  get: () => props.searchText,
-  set: (value) => {
-    emit("update:searchText", value);
-  },
-});
-
-const visible = ref(false);
+const text = ref("");
+const visible = ref(props.defaultVisible);
 
 // when clicked outside, hide the results ul
 // when clicked on input show the results ul
@@ -186,6 +171,12 @@ function handleSelect(item) {
   text.value = "";
   closeResults();
   emit("select", item);
+}
+
+function handleClose() {
+  text.value = "";
+  closeResults();
+  emit("close");
 }
 </script>
 

@@ -206,5 +206,22 @@
       "enabled_for_roles": [""]
     },
     "downloads": true
-  }
+  },
+  "api_keys": {
+    "enabled": true,
+    "max_valid_days": 90,
+    "encryption_key": "",
+    "max_per_user": 5,
+    "upstream_server_protection": {
+      "enabled": true,
+      "header_name": "X-Server-Type",
+      "allowed_values": [
+        "API"
+      ]
+    }
+  },
+  "contact": {
+    "app_admin": "bioloop-ops-l@list.iu.edu"
+  },
+  "api_url": "http://localhost:8000"
 }

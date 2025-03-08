@@ -135,11 +135,11 @@ function participantsWithVariantsSQL({
           join unnest(v.genotype) WITH ordinality t(g, idx) on t.g in (${Prisma.join(zygosities, ',')})
       ),
       permissible_participants as (
-        select p.id, p.genotype_idx
+        select p.id, pg.genotype_idx
         from participant p 
         join participants_per_snapshot pps on pps.id = p.id and pps.snapshot_id = ${snapshot_id}
         join participants_per_user ppu on ppu.id = p.id and ppu.username = ${username}
-        where p.genotype_idx is not null  
+        join participant_genotype pg on pg.participant_id = p.id
       )
     select
     ${select_column}

@@ -12,6 +12,12 @@ function columnsByType(type) {
 
 export const variantFilters = [
   {
+    label: "Core",
+    key: "core",
+    icon: "mdi-information",
+    filters: columnsByType("Core"),
+  },
+  {
     label: "Allele Stats",
     key: "allele_stats",
     icon: "mdi-chart-bar-stacked",

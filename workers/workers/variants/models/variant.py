@@ -81,7 +81,7 @@ def copy_data(csv_file: str | Path):
     """
     with conn.cursor() as cursor:
         copy_query = """
-                    COPY VARIANT (chr, position, ref, alt, source_id, phase, genotype)
+                    COPY VARIANT (chr, position, ref, alt, source_id, phase, genotype, is_imputed, dosage)
                     FROM STDIN DELIMITER ',' CSV HEADER
                 """
         with open(csv_file, 'r') as f:

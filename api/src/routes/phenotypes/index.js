@@ -11,7 +11,7 @@ const {
 const { CATEGORIES } = require('../../services/cohorts/phenotype/fields');
 const { getCounts } = require('../../services/phenotypes');
 
-const isPermittedTo = accessControl('cohort');
+const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
 const prisma = new PrismaClient();
 

@@ -50,6 +50,14 @@ function fromNow(value, withoutSuffix) {
   return dayjs(value).fromNow(withoutSuffix);
 }
 
+function daysFromNow(value) {
+  /**
+   * daysFromNow("2023-06-14T01:18:40.501Z") -> 2
+   */
+  if (value == null) return null;
+  return dayjs(value).diff(dayjs(), "days");
+}
+
 function readableDuration(t, withSuffix) {
   /**
    * represent a duration (in milliseconds) in human readable format
@@ -104,4 +112,13 @@ function formatDuration(duration) {
   return ans;
 }
 
-export { absolute, date, formatDuration, fromNow, readableDuration, time };
+export {
+  absolute,
+  date,
+  daysFromNow,
+  formatDuration,
+  fromNow,
+  readableDuration,
+  time
+};
+

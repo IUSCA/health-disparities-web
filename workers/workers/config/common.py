@@ -68,7 +68,7 @@ config = {
             'source_dir': '/path/to/source/data_products',
             'rejects': ['.snapshots'],
         },
-        'recency_threshold_seconds': 5*60,
+        'recency_threshold_seconds': 5 * 60,
         'minimum_dataset_size': ONE_GIGABYTE,
         'wait_between_stability_checks_seconds': 60,
         'poll_interval_seconds': 10

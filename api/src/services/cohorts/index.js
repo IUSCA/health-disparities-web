@@ -1,3 +1,4 @@
+const assert = require('assert');
 const { Prisma } = require('@prisma/client');
 const config = require('config');
 const { PHENOTYPE, GENOTYPE, COMBINATION } = require('./model');
@@ -26,7 +27,7 @@ select
 
 // To not return the participants array but the count of participants
 // Why? Because the participants array can be very large and we don't need it
-function getCohortByIdQuery(id) {
+function getCohortByIdQuery(id, username) {
   return Prisma.sql`
     ${cohort_select}
     from
@@ -34,6 +35,7 @@ function getCohortByIdQuery(id) {
       join "user" u on c.author_username = u.username
     where
       c.id = CAST(${id} AS UUID)
+      and (c.author_username = ${username} or c.is_published = true)
   `;
 }
 
@@ -52,7 +54,7 @@ function getCohortByIdQuery(id) {
  * @param {boolean|null} options.is_temp - Indicates if the cohort is temporary.
  * @returns {} The prepared statement of SQL query for searching cohorts.
  */
-function searchCohortsQuery({
+function searchCohortsQuery(requester_username, {
   search_term = null,
   author_username = null,
   not_author_username = null,
@@ -93,6 +95,7 @@ function searchCohortsQuery({
       cohort c
     join "user" u on c.author_username = u.username
     where
+      (c.author_username = ${requester_username} or c.is_published = true) and
       ${where}
     order by ${orderBy} ${orderDirection} NULLS LAST
     limit ${limit}
@@ -187,10 +190,90 @@ function getDependentCohortsQuery(id, requester_username) {
   `;
 }
 
+function getCohortFilesQuery({
+  id, sort_by, sort_order, limit, offset,
+}) {
+  assert(['id', 'name', 'size'].includes(sort_by), 'sort_by must be one of: id, name, size');
+  const sort_by_col = Prisma.raw(sort_by);
+  return Prisma.sql`
+    WITH cohort_participants AS (
+      SELECT unnest(participants) AS pid 
+      FROM cohort
+      WHERE id = CAST(${id} AS UUID)
+    ),
+    results as (
+      SELECT
+        df.id,
+        df.name,
+        df.md5,
+        df.size,
+        p.ib_id as participant_id
+      FROM dataset_file df
+      JOIN dataset d ON df.dataset_id = d.id
+      JOIN participant p ON p.id = d.participant_id
+      WHERE df.filetype = 'file'
+        AND p.id IN (SELECT pid FROM cohort_participants)
+        AND d.is_deleted = false
+    )
+    SELECT
+      *,
+      COUNT(*) OVER () AS total_count
+    FROM results
+    ORDER BY ${sort_by_col} ${Prisma.raw(sort_order)} NULLS LAST
+    LIMIT ${limit}
+    OFFSET ${offset}
+  `;
+}
+
+function getFileInfoQuery({ user_id, file_id }) {
+  return Prisma.sql`
+    WITH approved_participants AS (
+      SELECT DISTINCT unnest(c.participants) AS pid
+      FROM cohort c
+      JOIN cohort_access_request car ON car.cohort_id = c.id 
+      WHERE car.status = 'APPROVED'
+      AND car.requester_id = ${user_id}
+    )
+    SELECT df.*
+    FROM dataset d
+    JOIN dataset_file df ON df.dataset_id = d.id
+    JOIN participant p ON d.participant_id = p.id
+    JOIN approved_participants ap ON p.id = ap.pid
+    WHERE df.id = ${file_id};
+  `;
+}
+
+function getCohortFilesSummaryQuery({ id }) {
+  return Prisma.sql`
+    WITH cohort_participants AS (
+      SELECT unnest(participants) AS pid 
+      FROM cohort 
+      WHERE id = CAST(${id} AS UUID)
+    )
+    SELECT 
+        df.metadata->>'class' AS file_type, 
+        COUNT(*) as file_count,
+        sum(df.size) as total_size
+    FROM participant p
+    INNER JOIN cohort_participants cp ON cp.pid = p.id
+    INNER JOIN dataset d ON d.participant_id = p.id
+    INNER JOIN dataset_file df ON df.dataset_id = d.id
+    WHERE df.filetype = 'file' 
+      and d.is_deleted = false 
+      and d.archive_path is not null 
+      and df.metadata->>'class' is not null
+    GROUP BY file_type
+    order by file_count desc
+  `;
+}
+
 module.exports = {
   getCohortByIdQuery,
   searchCohortsQuery,
   searchParticipantsQueryAsync,
   saveSearchResultsQuery,
   getDependentCohortsQuery,
+  getCohortFilesQuery,
+  getFileInfoQuery,
+  getCohortFilesSummaryQuery,
 };

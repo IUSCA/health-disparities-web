@@ -17,7 +17,12 @@
 <script setup>
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
-// const props = defineProps({});
+const props = defineProps({
+  defaultIsPublished: {
+    type: Boolean,
+    default: null,
+  },
+});
 
 const { cohorts } = storeToRefs(useCohortsStore());
 const cohort_ids = computed(() => cohorts.value.map((c) => c.id));
@@ -26,13 +31,14 @@ const emit = defineEmits(["select"]);
 
 const defaultParams = () => ({
   search_term: "",
-  is_published: "",
+  is_published: props.defaultIsPublished,
   is_locked: "",
   is_mine: true,
   type: "",
 });
 const params = ref(defaultParams());
 function reset() {
+  console.log("reset");
   params.value = defaultParams();
 }
 </script>

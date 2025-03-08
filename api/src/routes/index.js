@@ -4,7 +4,39 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/health', (req, res) => { res.send('OK'); });
+/*
+  #swagger.responses[400] = {
+    description: 'Bad request'
+    schema: { $ref: '#/components/schemas/BadRequestError' }
+  }
+
+  #swagger.responses[401] = {
+    description: 'Authentication information is missing or invalid'
+    schema: { $ref: '#/components/schemas/Error' }
+  }
+
+  #swagger.responses[403] = {
+    description: 'Access denied'
+    schema: { $ref: '#/components/schemas/Error' }
+  }
+
+  #swagger.responses[404] = {
+    description: 'Resource not found'
+    schema: { $ref: '#/components/schemas/Error' }
+  }
+
+  #swagger.responses[500] = {
+    description: 'Internal server error'
+    schema: { $ref: '#/components/schemas/Error' }
+  }
+*/
+
+router.get('/health', (req, res) => {
+  // #swagger.tags = ['general', 'public']
+  // #swagger.description = 'Health check endpoint.'
+  // #swagger.operationId = 'health'
+  res.send('OK');
+});
 router.use('/auth', require('./auth/index'));
 router.use('/reports', require('./reports'));
 router.use('/about', require('./about'));
@@ -33,5 +65,7 @@ router.use('/sources', require('./sources'));
 router.use('/protocols', require('./protocols'));
 router.use('/gen-ai', require('./gen_ai'));
 router.use('/icd10', require('./icd10'));
+router.use('/access_keys', require('./access_keys'));
+router.use('/cohort_access_requests', require('./cohort_access_requests'));
 
 module.exports = router;

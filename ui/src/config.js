@@ -146,9 +146,15 @@ const exports = {
       COMPLETE: "COMPLETE",
       FAILED: "FAILED",
     },
+    accessKeys: true,
   },
   phenotype_data: {
     cache_busting_id: "41e81ff",
+  },
+  accessKeys: {
+    generation: {
+      enabledInProfile: false,
+    },
   },
 };
 

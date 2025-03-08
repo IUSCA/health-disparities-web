@@ -110,6 +110,7 @@ import QBDate from "@/components/cohorts/queryBuilder/filterComponents/QBDate.vu
 import QBInput from "@/components/cohorts/queryBuilder/filterComponents/QBInput.vue";
 import AnnotationSelect from "@/components/genotype/queryBuilder/filterComponents/AnnotationSelect.vue";
 import { storeToRefs } from "pinia";
+import QBBooleanSelect from "@/components/cohorts/queryBuilder/filterComponents/QBBooleanSelect.vue";
 
 const standardQuery = defineModel("query");
 const props = defineProps({
@@ -168,6 +169,7 @@ const defultOperators = {
   text: "eq",
   date: "lte",
   asyncSelect: "in",
+  boolean: "eq",
 };
 
 const rules = flatten(variantFilters).map((field) => {
@@ -225,6 +227,8 @@ function getComponent(field) {
       return QBDate;
     case "select":
       return AnnotationSelect;
+    case "boolean":
+      return QBBooleanSelect;
     default:
       return QBInput;
   }

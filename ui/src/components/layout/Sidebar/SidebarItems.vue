@@ -67,6 +67,9 @@
         :key="item.title"
         :to="item.path"
         :active="props.isActive(item.path)"
+        :class="{
+          'custom-sidebar-item--active': isActive(item.path),
+        }"
       >
         <va-sidebar-item-content>
           <Icon :icon="item.icon" class="text-2xl" />
@@ -81,8 +84,8 @@
 </template>
 
 <script setup>
-import { useAuthStore } from "@/stores/auth";
 import { isFeatureEnabled } from "@/services/utils";
+import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps({
   items: { type: Array, required: true },

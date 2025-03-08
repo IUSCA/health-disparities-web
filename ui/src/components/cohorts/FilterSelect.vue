@@ -134,6 +134,8 @@ function getTypeIcon(type) {
       return "mdi-calendar";
     case "select":
       return "mdi-format-list-group";
+    case "boolean":
+      return "mdi:toggle-switch-off-outline";
     default:
       return "mdi-folder";
   }

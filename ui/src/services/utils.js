@@ -299,6 +299,58 @@ function isFeatureEnabled({ featureKey, hasRole = () => false } = {}) {
   }
 }
 
+class LRUCache {
+  constructor(limit = 10000) {
+    this.limit = limit; // Maximum capacity of the cache
+    this.cache = new Map();
+  }
+
+  has(key) {
+    return this.cache.has(key);
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) return null;
+    const value = this.cache.get(key);
+
+    // Move the accessed key to the end (most recently used)
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+
+  set(key, value) {
+    // console.log("Setting key", key);
+    if (this.cache.has(key)) {
+      // If the key exists, delete it so it can be added at the end
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.limit) {
+      // Evict the least recently used item (first item in the Map)
+      const lruKey = this.cache.keys().next().value;
+      this.cache.delete(lruKey);
+    }
+
+    // Insert the new key-value pair
+    this.cache.set(key, value);
+  }
+}
+
+function memoize(fn) {
+  const cache = new LRUCache();
+  return async function (...args) {
+    const key = JSON.stringify(args);
+    // console.log({ key, args, cache: cache.cache });
+    if (cache.has(key)) {
+      // console.log("Fetching from cache");
+      return cache.get(key);
+    }
+    // console.log("Calculating result");
+    const result = await fn(...args);
+    if (result != null) cache.set(key, result);
+    return result;
+  };
+}
+
 export {
   arrayEquals,
   capitalize,
@@ -314,9 +366,11 @@ export {
   initials,
   isFeatureEnabled,
   isLiveToken,
+  LRUCache,
   lxor,
   mapValues,
   maybePluralize,
+  memoize,
   readTextFile,
   setIntersection,
   union,

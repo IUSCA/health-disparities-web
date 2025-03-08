@@ -1,4 +1,3 @@
-version: "3"
 name: biobank
 services:
   ui:
@@ -65,6 +64,8 @@ services:
       - ./db/postgres/scripts:/docker-entrypoint-initdb.d
       - ./db/postgres/aux_scripts:/opt/sca/scripts
       - ./db/backups:/opt/sca/backups
+      - ./db/postgres/config/postgresql.conf:/etc/postgresql/postgresql.conf   # Mount the config file
+    command: -c 'config_file=/etc/postgresql/postgresql.conf'
     ports:
       - 127.0.0.1:5432:5432
     expose:
@@ -80,16 +81,64 @@ services:
   #     - 127.0.0.1:7700:7700
   #   expose:
   #     - 7700
-  # nginx:
-  #   image: nginx:1.25
-  #   ports:
-  #       - 8000:8000
-  #   volumes:
-  #       - ./nginx/src:/usr/share/nginx/html
-  #       - ./nginx/conf:/etc/nginx/conf.d
-  #       - ./data:/opt/sca/data
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
+  nginx:
+    image: nginx:1.27
+    ports:
+        - 8000:8000
+    volumes:
+        - ./nginx/src:/usr/share/nginx/html # Mount the static files
+        - ./nginx/conf:/etc/nginx/conf.d # Mount the configuration files
+        - ./data:/opt/sca/data # Mount the data directory
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://appuser:example@postgres:5432/app?sslmode=disable"
+    depends_on:
+      - postgres
+    # ports:
+      # - "9187:9187"
+    volumes:
+      - ./metrics/postgres_exporter/queries.yml:/etc/postgres_exporter/queries.yml
+    command:
+      - "--extend.query-path=/etc/postgres_exporter/queries.yml"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./metrics/prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./metrics/prometheus/data:/prometheus  # Mount the volume for Prometheus data
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    # ports:
+      # - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    volumes:
+      - ./metrics/grafana/data:/var/lib/grafana         # Mount for Grafana data (dashboards, plugins)
+      - ./metrics/grafana/config:/etc/grafana           # Mount for custom Grafana configuration
+      - ./api/keys/auth.pub:/etc/grafana/auth.pub
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+# docker compose run -it --rm api-client
+  api-client:
+    build:
+      context: ./api/clients/bash
+      dockerfile: Dockerfile
+    env_file:
+      - ./api/clients/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
+    
       
 volumes:
   ui_modules:

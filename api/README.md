@@ -425,3 +425,62 @@ Files:
 - `swagger_output.json` - generated routes, not included in the version control.
 
 Source: https://medium.com/swlh/automatic-api-documentation-in-node-js-using-swagger-dd1ab3c78284
+
+
+## API Usage and Access  
+
+This API provides controlled access for users with security measures, rate limits, and authentication mechanisms.  
+
+### **Access Control & Security**  
+
+- **Reverse Proxy Enforcement**: All requests must originate from a dedicated reverse proxy; direct access is denied. (see `apiapi_keys.upstream_server_protection` in ./config/default.json) 
+- **IP Whitelisting**:  
+  - Only allows connections from secure enclave subnets.  
+  - Per-key IP restrictions prevent unauthorized access, even with valid API keys.  
+
+### **Authentication & Authorization**  
+
+- **Basic Authentication**: Access is granted via a key and secret.  
+- **Multiple API Keys**: Users can generate multiple API keys. (see `api_keys.max_per_user` in ./config/default.json)
+- **Scope-based Access**: Endpoint access is controlled by scopes assigned to API keys.  
+- **Key Management**:  
+  - API keys are **revocable** and have **expiration** settings.  
+
+### **Rate Limits**  
+
+- Requests are limited to **20 requests per second** with a **burst capacity of 20** to prevent abuse. (see ../nginx/conf/app.conf)
+
+### **File Downloads & Logging**  
+
+- **Authentication Required**: Secure file downloads require valid authentication.  
+- **Audit Logs**: All requests are logged, including:  
+  - Client IP address  
+  - API key used  
+  - Accessed endpoint  
+  - Response status  
+  - Timestamp  
+
+### **API Documentation & Tooling**  
+
+- **Documentation**:  
+  - OpenAPI v3 specs available at `/api/doc/`  
+  - Linting with Spectral  
+  - Swagger UI for interactive exploration  
+- **Command Line Client**: A CLI tool is available for interacting with the API.  
+
+```bash
+# to generate the client at `./clients/bash`
+./generateClient.sh 
+
+# Update ./client/.env with you API key and secret
+vi ./clients/.env
+
+# to run the client in a docker container
+docker compose run -it --rm api-client
+```
+
+To download a file using the client:
+```bash
+# to download a file from the biobank and save it to the current directory add -J -O curl options
+biobank-client -J -O downloadCohortFile file_id=<file_id>
+```

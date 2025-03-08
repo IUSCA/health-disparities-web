@@ -1,3 +1,5 @@
+import config from "./config";
+
 const exports = {
   sidebar: {
     user_items: [
@@ -95,6 +97,11 @@ const exports = {
       //   title: 'Data Cleanup',
       //   path: '/clean',
       // },
+      {
+        icon: "mdi-approval",
+        title: "Access Requests",
+        path: "/cohort_access_requests",
+      },
     ],
     bottom_items: [
       {
@@ -116,7 +123,27 @@ const exports = {
         test_id: "sidebar-logout",
       },
     ],
-    admin_items: [],
+    admin_items: [
+      ...(config.enabledFeatures?.accessKeys
+        ? [
+            {
+              icon: "mdi-key",
+              title: "Access Keys",
+              path: "/keys",
+            },
+            {
+              icon: "mdi-security",
+              title: "Scopes",
+              path: "/scopes",
+            },
+            {
+              icon: "mdi-file-chart-outline",
+              title: "API Audit Logs",
+              path: "/audit_logs",
+            },
+          ]
+        : []),
+    ],
   },
   UPLOAD_STATES: {
     UNINITIATED: "Uninitiated",

@@ -56,6 +56,7 @@ function synonymsSql({ search_phrase }) {
    * 3. final result
    * 3.a. (When this function was developed,) concept table contained ICD10 and SNOMED concepts. concept_metadata table is a materialized view created only for ICD10 concepts.
    *      Results from grouped_t includes concepts from both ICD10 and SNOMED vocabularies. But we only need synonyms that are related to ICD10 concepts.
+   *      This is because the synonyms results returned here will be used as search queries against the concept_metadata table, which only contains ICD10 concepts.
    *
    *      This last stage includes a filter to eliminate grouped_t concept namess that might have an average score above zero but are not contextually relevant enough to the ICD10 concept names.
    *      A results from the previous stage is only included in the final result if there exists some ICD 10 concept whose name is similar to the concept name of the result. This similarity is calculated by the ts_rank_cd function.

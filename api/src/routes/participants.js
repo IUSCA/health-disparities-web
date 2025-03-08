@@ -8,7 +8,7 @@ const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
 const visualization = require('../services/cohorts/visualization');
 
-const isPermittedTo = accessControl('cohort');
+const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
 
 router.get(
