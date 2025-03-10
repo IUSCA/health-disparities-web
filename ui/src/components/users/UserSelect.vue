@@ -5,7 +5,7 @@
        Attempts to set different values for the name, autocomplete, 
        and type attributes on va-input in AutoComplete component were unsuccessful in preventing autofill. 
   -->
-  <AutoComplete
+  <AutoCompleteStatic
     v-model:search-text="searchText"
     :data="users"
     :filter-fn="filterFn"
@@ -15,7 +15,7 @@
       <span> {{ item.name }} </span>
       <span class="va-text-secondary pl-3 text-sm"> {{ item.email }} </span>
     </template>
-  </AutoComplete>
+  </AutoCompleteStatic>
 </template>
 
 <script setup>

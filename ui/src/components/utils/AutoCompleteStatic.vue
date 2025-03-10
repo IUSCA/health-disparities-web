@@ -1,63 +1,42 @@
 <!-- Adapted from and improved upon https://stevencotterill.com/articles/how-to-build-an-autocomplete-field-with-vue-3 -->
 <template>
-  <div class="relative" :data-testid="`${props.dataTestId}--container`">
+  <div class="relative">
     <OnClickOutside @trigger="closeResults">
       <va-form>
         <va-input
-          :data-testid="props.dataTestId || 'autocomplete'"
           outline
           clearable
-          @clear="emit('clear')"
-          type="text"
+          :label="props.label"
           :placeholder="props.placeholder"
           v-model="text"
           class="w-full autocomplete-input"
           @click="openResults"
-          :disabled="props.disabled"
-          :label="props.label"
         >
-          <template #prependInner><slot name="prependInner"></slot></template>
-          <template #appendInner><slot name="appendInner"></slot></template>
+          <template #prependInner>
+            <i-mdi:magnify />
+          </template>
+
+          <template #appendInner>
+            <i-mdi:undo-variant
+              class="cursor-pointer"
+              @click.stop="handleClose"
+              v-if="props.showClose"
+            />
+          </template>
         </va-input>
       </va-form>
 
       <ul
-        v-if="props.loading"
+        v-if="visible"
         class="absolute w-full bg-white dark:bg-gray-900 border border-solid border-slate-200 dark:border-slate-800 shadow-lg rounded rounded-t-none p-2 z-10 max-h-56 overflow-y-scroll overflow-x-hidden"
-        :data-testid="`${props.dataTestId}--search-results-ul__loading`"
-      >
-        <li
-          class="pb-2 text-sm border-solid border-b border-slate-200 dark:border-slate-800 text-right va-text-secondary"
-          :data-testid="`${props.dataTestId}--search-results-li__loading`"
-        >
-          <div class="flex">
-            <va-icon
-              class="mx-auto"
-              name="loop"
-              spin="clockwise"
-              color="primary"
-            />
-          </div>
-        </li>
-      </ul>
-
-      <ul
-        v-else-if="visible"
-        class="absolute w-full bg-white dark:bg-gray-900 border border-solid border-slate-200 dark:border-slate-800 shadow-lg rounded rounded-t-none p-2 z-10 max-h-56 overflow-y-scroll overflow-x-hidden"
-        :data-testid="`${props.dataTestId}--search-results-ul`"
       >
         <li
           class="pb-2 text-sm border-solid border-b border-slate-200 dark:border-slate-800 text-right va-text-secondary"
           v-if="search_results.length"
-          :data-testid="`${props.dataTestId}--search-results-count-li`"
         >
           Showing {{ search_results.length }} of {{ data.length }} results
         </li>
-        <li
-          v-for="(item, idx) in search_results"
-          :key="idx"
-          :data-testid="`${props.dataTestId}--search-result-li-${idx}`"
-        >
+        <li v-for="(item, idx) in search_results" :key="idx">
           <button
             class="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded w-full text-left"
             @click="handleSelect(item)"
@@ -67,11 +46,7 @@
             </slot>
           </button>
         </li>
-        <li
-          v-if="search_results.length == 0"
-          class="py-2 px-3"
-          :data-testid="`${props.dataTestId}--no-search-results-li`"
-        >
+        <li v-if="search_results.length == 0" class="py-2 px-3">
           <span
             class="flex gap-2 items-center justify-center va-text-secondary"
           >
@@ -87,14 +62,16 @@
 <script setup>
 import { OnClickOutside } from "@vueuse/components";
 
+document.addEventListener("DOMContentLoaded", function () {
+  const input = document.querySelector(".va-input__content__input");
+  input.setAttribute("autocomplete", "off");
+  //input.value = ""; // Clears any autofilled value
+});
+
 const props = defineProps({
-  searchText: {
-    type: String,
-    default: "",
-  },
   label: {
     type: String,
-    default: "",
+    default: null,
   },
   placeholder: {
     type: String,
@@ -116,50 +93,27 @@ const props = defineProps({
     type: String,
     default: "name",
   },
-  async: {
+  defaultVisible: {
     type: Boolean,
     default: false,
   },
-  disabled: {
+  showClose: {
     type: Boolean,
     default: false,
-  },
-  error: {
-    type: Boolean,
-    default: false,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  dataTestId: {
-    type: String,
   },
 });
 
-const emit = defineEmits([
-  "select",
-  "clear",
-  "update:searchText",
-  "open",
-  "close",
-]);
+const emit = defineEmits(["select", "close"]);
 
-const text = computed({
-  get: () => props.searchText,
-  set: (value) => {
-    emit("update:searchText", value);
-  },
-});
-
-const visible = ref(false);
+const text = ref("");
+const visible = ref(props.defaultVisible);
 
 // when clicked outside, hide the results ul
 // when clicked on input show the results ul
 // when clicked on a search result, clear text and hide the results ul
 
 const search_results = computed(() => {
-  if (text.value === "" || props.async) return props.data;
+  if (text.value === "") return props.data;
 
   const filterFn =
     props.filterFn instanceof Function
@@ -174,18 +128,22 @@ const search_results = computed(() => {
 
 function closeResults() {
   visible.value = false;
-  emit("close");
 }
 
 function openResults() {
   visible.value = true;
-  emit("open");
 }
 
 function handleSelect(item) {
   text.value = "";
   closeResults();
   emit("select", item);
+}
+
+function handleClose() {
+  text.value = "";
+  closeResults();
+  emit("close");
 }
 </script>
 

@@ -1,5 +1,5 @@
 <template>
-  <AutoComplete
+  <AutoCompleteStatic
     v-model:search-text="searchText"
     :data="projects"
     filter-by="name"
@@ -26,7 +26,7 @@
         </div>
       </div>
     </template>
-  </AutoComplete>
+  </AutoCompleteStatic>
 </template>
 
 <script setup>
