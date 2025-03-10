@@ -55,8 +55,8 @@ const exports = {
     SLATE_SCRATCH_FILES: "/N/scratch files",
   },
   auth_enabled: {
-    google: true,
-    cilogon: true,
+    google: false,
+    cilogon: false,
     microsoft: true,
   },
   dashboard: {
