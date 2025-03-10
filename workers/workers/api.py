@@ -3,10 +3,9 @@ from datetime import datetime
 from urllib.parse import urljoin
 
 import requests
+import workers.utils as utils
 from glom import glom, assign as glom_assign
 from requests.adapters import HTTPAdapter, Retry
-
-import workers.utils as utils
 from workers.config import config
 
 logger = logging.getLogger(__name__)
@@ -132,7 +131,8 @@ def get_all_datasets(
     days_since_last_staged=None,
     deleted=False,
     archived=None,
-    bundle=False):
+    bundle=False,
+    include_states=False):
     with APIServerSession() as s:
         payload = {
             'type': dataset_type,
