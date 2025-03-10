@@ -52,9 +52,13 @@ else
 fi
 
 if [ -z "$RELEASE" ]; then
+  # build API
   sudo docker compose -f "docker-compose-prod.yml" build api
-  sudo docker compose -f "docker-compose-prod.yml" up -d --force-recreate ui api
+  # will also start postgres, prometheus and postres-exporter if they are not running
+  sudo docker compose -f "docker-compose-prod.yml" up -d --force-recreate ui api grafana
 else
+  # build API
   sudo docker compose -f "docker-compose-rel.yml" build api
-  sudo docker compose -f "docker-compose-rel.yml" up -d --force-recreate ui api
+  # will also start postgres, prometheus and postres-exporter if they are not running
+  sudo docker compose -f "docker-compose-rel.yml" up -d --force-recreate ui api grafana
 fi

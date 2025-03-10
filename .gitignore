@@ -77,6 +77,3 @@ todo*.md
 
 .pm2
 data
-
-metrics/prometheus/data
-metrics/grafana/data
