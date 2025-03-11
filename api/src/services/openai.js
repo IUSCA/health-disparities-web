@@ -11,7 +11,7 @@ const db_schema = `model participant {
   id           Int           @id @default(autoincrement())
   ib_id        String
   study_id     Int
-  demographics demographic[]
+  demographics demographic_extended[]
   labs         lab[]
   covid_tests  covid_test[]
   covid_vaxes  covid_vax[]
@@ -21,16 +21,19 @@ const db_schema = `model participant {
   @@unique([ib_id, study_id])
 }
 
-model demographic {
+model demographic_extended {
   id           Int       @id @default(autoincrement())
-  gender       String
-  race         String
-  ethnicity    String?
-  max_enc_date DateTime
-  chs_flag     Int
-  age          Float
-  enroll_date  DateTime?
+  gender         String
+  race           String
+  ethnicity      String?
+  max_enc_date   DateTime
+  dob            DateTime
+  enroll_date    DateTime?
   participant_id Int
+  age            Int
+  weight         Decimal?
+  height         Decimal?
+  bmi            Decimal?
   participant    participant @relation(fields: [participant_id], references: [id])
 }
 
@@ -156,8 +159,8 @@ const example_text = 'female participants with diabetes who are 50 years of age 
 const example_json_query = {
   operator: 'AND',
   children: [
-    { field: 'demographic.gender', operator: 'in', value: ['F'] },
-    { field: 'demographic.age', operator: 'gte', value: '50' },
+    { field: 'demographic_extended.gender', operator: 'in', value: ['F'] },
+    { field: 'demographic_extended.age', operator: 'gte', value: '50' },
     { field: 'dx.name', operator: 'in', value: ['diabetes'] },
   ],
 };
@@ -172,6 +175,7 @@ async function generate_cohort(text) {
     messages: [
       {
         role: 'system',
+        // eslint-disable-next-line max-len
         content: `You convert text questions to a simplified JSON representation of SQL queries against a PostgresSQL database with the following data model:  ${db_schema}.  The JSON you output should conform to the following schema:  ${JSON.stringify(json_schema)}. Example text query: ${example_text}, output json query: ${JSON.stringify(example_json_query)}. Return only the json, do not include any other description`,
       },
       {
@@ -192,7 +196,8 @@ async function generate_cohort_name_description(query) {
       {
         role: 'system',
         content: `You generate title and description of cohorts given as json queries.
-        Name should be maximum of 3 words. keep description simple. use medical / scientific terms as the intended audience are researchers.
+        Name should be maximum of 3 words. keep description simple. use medical / scientific terms 
+        as the intended audience are researchers.
         Example json query: ${JSON.stringify(example_json_query)}, output: ${JSON.stringify(example_metadata)}. 
         Return only the json, do not include any other description`,
       },

@@ -21,7 +21,7 @@ router.post('/refresh_token', authenticate, asyncHandler(async (req, res, next) 
   // #swagger.tags = ['Auth']
   const user = await userService.findActiveUserBy('username', req.user.username);
   if (user) {
-    const resObj = await authService.onLogin({ user });
+    const resObj = await authService.onLogin({ user, updateLastLogin: false });
     if (user.roles.includes('admin')) {
       // set cookie
       res.cookie('grafana_token', authService.issueGrafanaToken(user), {
@@ -51,7 +51,7 @@ if (!['production', 'test'].includes(config.get('mode'))) {
       // #swagger.tags = ['Auth']
       if (req.body?.username === 'test_user') {
         const user = await userService.findActiveUserBy('username', 'test_user');
-        const resObj = await authService.onLogin({ user });
+        const resObj = await authService.onLogin({ user, updateLastLogin: false });
         if (user.roles.includes('admin')) {
           // set cookie
           res.cookie('grafana_token', authService.issueGrafanaToken(user), {
