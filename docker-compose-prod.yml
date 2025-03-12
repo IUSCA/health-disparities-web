@@ -52,19 +52,19 @@ services:
   #       ipv4_address: 172.19.0.3
 
 # sudo docker compose -f "docker-compose-prod.yml" run --rm pgbackup
-  # pgbackup:
-  #   image: postgres:14.5
-  #   environment:
-  #     - POSTGRES_DB=${POSTGRES_DB}
-  #     - POSTGRES_USER=${POSTGRES_USER}
-  #     - PGPASSWORD=${POSTGRES_PASSWORD}
-  #     - PROJ_NAME=${COMPOSE_PROJECT_NAME}
-  #   volumes:
-  #     - /opt/sca/postgres_backups:/backup
-  #   networks:
-  #     - network
-  #   command: >
-  #     bash -c "pg_dump -w -f /backup/$${PROJ_NAME}_postgres_backup.$$(date +%F).psql --username=$$POSTGRES_USER --host=postgres --dbname=$$POSTGRES_DB"
+  pgbackup:
+    image: postgres:14.5
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - PROJ_NAME=${COMPOSE_PROJECT_NAME}
+    volumes:
+      - /opt/sca/postgres_backups:/backup
+    networks:
+      - network
+    command: >
+      bash -c "pg_dump -w -f /backup/$${PROJ_NAME}_postgres_backup.$$(date +%F).psql --username=$$POSTGRES_USER --host=postgres --dbname=$$POSTGRES_DB -T demographic -T lab -T covid_test -T covid_vax -T dx -T hospital -T medication -T measurement -T drug_screen -T vaccination -T 'variant_*' -T 'annotation_*' -T gene -T 'genotype_stats_*' -T ncbiRefSeqCurated -T concept -T concept_relationship -T concept_synonym"
 
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter
