@@ -1,3 +1,5 @@
+/* eslint-disable comment-length/limit-multi-line-comments */
+/* eslint-disable comment-length/limit-single-line-comments */
 const assert = require('assert');
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
@@ -769,6 +771,14 @@ router.get(
               },
             },
           },
+          "headers": {
+            "Content-Disposition": {
+              "schema": {
+                "type": "string"
+              },
+              "description": "Indicates that the response should be treated as a file download"
+            }
+          }
         },
       */
     /* #swagger.responses[202] = {

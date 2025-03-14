@@ -133,7 +133,9 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
 
-# docker compose run -it --rm api-client
+# start a docker container to run the api client
+# this is a bash client to run queries against the api
+# docker compose run -it --rm --build api-client
   api-client:
     build:
       context: ./api/clients/bash
