@@ -80,5 +80,8 @@
   },
   "api_keys": {
     "encryption_key": "API_KEYS_ENCRYPTION_KEY"
+  },
+  "redcap": {
+    "api_token": "REDCAP_API_TOKEN"
   }
 }

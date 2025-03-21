@@ -1102,6 +1102,7 @@ model cohort_access_request {
   @@index([cohort_id])
   @@index([requester_id])
   @@index([status])
+  @@unique([requester_id, cohort_id])
 }
 
 enum NOTIFICATION_STATUS {

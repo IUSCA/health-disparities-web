@@ -132,6 +132,7 @@ function hide() {
   reason.value = null;
   dependentCohorts.value = [];
   deleteDependents.value = false;
+  loading.value = false;
 }
 
 function show(_cohort) {

@@ -231,5 +231,14 @@
   "contact": {
     "app_admin": "bioloop-ops-l@list.iu.edu"
   },
-  "api_url": "http://localhost:8000"
+  "api_url": "http://localhost:8000",
+  "redcap": {
+    "base_url": "https://redcap.uits.iu.edu/api",
+    "api_token": "",
+    "polling": {
+      "enabled": true,
+      "interval": 300,
+      "max_backoff": 1800
+    }
+  }
 }

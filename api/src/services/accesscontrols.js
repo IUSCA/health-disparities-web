@@ -193,6 +193,10 @@ const grantsObject = {
       'create:any': ['*'],
       'read:any': ['*'],
     },
+    cohort_access_requests: {
+      'create:own': ['*'],
+      'read:own': ['*'],
+    },
   },
 
   // operator role permissions

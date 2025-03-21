@@ -121,6 +121,33 @@ router.get(
   }),
 );
 
+router.get(
+  '/cohort/:cohort_id/requester/:username',
+  isPermittedTo('read', { checkOwnership: true }),
+  validate([
+    param('cohort_id').isUUID(),
+    param('username').isString(),
+  ]),
+  asyncHandler(async (req, res) => {
+    // #swagger.tags = ['Cohort Access Requests']
+    const request = await prisma.cohort_access_request.findFirst({
+      where: {
+        cohort_id: req.params.cohort_id,
+        requester_id: req.user.id,
+      },
+      include: {
+        requester: true,
+        cohort: {
+          select: cohort_columns,
+        },
+        reviewer: true,
+      },
+    });
+
+    res.json(request);
+  }),
+);
+
 // Create new access request
 router.post(
   '/',
@@ -245,6 +272,64 @@ router.patch(
     });
 
     res.json(request);
+  }),
+);
+
+router.put(
+  '/cohort/:cohort_id/requester/:username',
+  isPermittedTo('create', { checkOwnership: true }),
+  validate([
+    param('cohort_id').isUUID(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Cohort Access Requests']
+    // #swagger.description = 'Create a new access request for the
+    // cohort with the given ID and the requester with the given username if it does not exist'
+
+    // check if the cohort exists
+    // cohort should be published and not temporary
+    const { cohort_id } = req.params;
+    const cohort = await prisma.cohort.findFirst({
+      where: { id: cohort_id, is_published: true, is_temp: false },
+      select: {
+        id: true,
+      },
+    });
+    if (!cohort) {
+      return next(createError(404, 'Cohort does not exist or is not published'));
+    }
+
+    // check if access request already exists
+    const existingRequest = await prisma.cohort_access_request.findFirst({
+      where: {
+        cohort_id,
+        requester_id: req.user.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (existingRequest) {
+      return next(createError(409, 'Access request already exists'));
+    }
+
+    // create access request in PENDING status
+    const request = await prisma.cohort_access_request.create({
+      data: {
+        cohort_id,
+        requester_id: req.user.id,
+        status: 'PENDING',
+      },
+      include: {
+        requester: true,
+        cohort: {
+          select: cohort_columns,
+        },
+        reviewer: true,
+      },
+    });
+
+    res.status(201).json(request);
   }),
 );
 

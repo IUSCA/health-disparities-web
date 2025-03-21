@@ -1,4 +1,5 @@
 import config from "@/config";
+import axios from "axios";
 import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 import _ from "lodash";
@@ -299,16 +300,36 @@ function isFeatureEnabled({ featureKey, hasRole = () => false } = {}) {
   }
 }
 
+/**
+ * A class representing a Least Recently Used (LRU) Cache.
+ * This cache has a fixed limit on the number of items it can store.
+ * When the limit is reached, the least recently used item is evicted to make room for new items.
+ */
 class LRUCache {
+  /**
+   * Creates an instance of LRUCache.
+   * @param {number} [limit=10000] - The maximum number of items the cache can hold.
+   */
   constructor(limit = 10000) {
     this.limit = limit; // Maximum capacity of the cache
     this.cache = new Map();
   }
 
+  /**
+   * Checks if a key exists in the cache.
+   * @param {string} key - The key to check for existence.
+   * @returns {boolean} - Returns `true` if the key exists, otherwise `false`.
+   */
   has(key) {
     return this.cache.has(key);
   }
 
+  /**
+   * Retrieves the value associated with a key from the cache.
+   * If the key exists, it is marked as recently used.
+   * @param {string} key - The key to retrieve the value for.
+   * @returns {*} - The value associated with the key, or `null` if the key does not exist.
+   */
   get(key) {
     if (!this.cache.has(key)) return null;
     const value = this.cache.get(key);
@@ -319,6 +340,13 @@ class LRUCache {
     return value;
   }
 
+  /**
+   * Adds a key-value pair to the cache.
+   * If the key already exists, it updates the value and marks it as recently used.
+   * If the cache exceeds its limit, the least recently used item is evicted.
+   * @param {string} key - The key to add or update in the cache.
+   * @param {*} value - The value to associate with the key.
+   */
   set(key, value) {
     // console.log("Setting key", key);
     if (this.cache.has(key)) {
@@ -335,6 +363,13 @@ class LRUCache {
   }
 }
 
+/**
+ * Memoizes an asynchronous function, caching its results based on the arguments provided.
+ * Uses an LRU (Least Recently Used) cache to store results, ensuring efficient memory usage.
+ *
+ * @param {Function} fn - The asynchronous function to be memoized.
+ * @returns {Function} A memoized version of the input function that caches results.
+ */
 function memoize(fn) {
   const cache = new LRUCache();
   return async function (...args) {
@@ -351,6 +386,12 @@ function memoize(fn) {
   };
 }
 
+function isHTTPError(code) {
+  return (error) => axios.isAxiosError(error) && error.response.status === code;
+}
+
+const is404 = isHTTPError(404);
+
 export {
   arrayEquals,
   capitalize,
@@ -364,7 +405,9 @@ export {
   groupBy,
   groupByAndAggregate,
   initials,
+  is404,
   isFeatureEnabled,
+  isHTTPError,
   isLiveToken,
   LRUCache,
   lxor,
