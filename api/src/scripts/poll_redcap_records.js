@@ -8,8 +8,9 @@ const logger = require('../services/logger');
 
 const prisma = new PrismaClient();
 
-let interval = config.get('redcap.polling.interval') * 1000;
-const max_backoff = config.get('redcap.polling.max_backoff') * 1000;
+const INTERVAL_MS = config.get('redcap.polling.interval') * 1000;
+let interval = INTERVAL_MS;
+const MAX_BACKOFF_MS = config.get('redcap.polling.max_backoff') * 1000;
 
 // normal inrerval - 300
 // delay to 1st retry - 600
@@ -18,12 +19,19 @@ const max_backoff = config.get('redcap.polling.max_backoff') * 1000;
 
 async function transformRecord(record) {
   try {
-    const requester_email = record.user_id;
-    const cohort_id = record.cohort_identifier_complete;
-    const reviewer_email = record.who_apprv_catalog_access || record.who_revoked_catalog_access;
-    const decision_date = record.date_catalog_access_apprv || record.date_catalog_access_revoked;
-    const rejection_reason = record.why_catalog_access_revoked;
-    const decision = record.catalog_access_status;
+    const requester_email = record[config.get('redcap.form_keys.requester_email')];
+
+    const cohort_id = record[config.get('redcap.form_keys.cohort_id')];
+
+    const reviewer_email = record[config.get('redcap.form_keys.approver_email')]
+    || record[config.get('redcap.form_keys.revoker_email')];
+
+    const decision_date = record[config.get('redcap.form_keys.apporved_date')]
+    || record[config.get('redcap.form_keys.revoked_date')];
+
+    const rejection_reason = record[config.get('redcap.form_keys.rejection_reason')];
+
+    const decision = record[config.get('redcap.form_keys.decision')];
     let notes = '';
 
     let status;
@@ -140,12 +148,12 @@ async function handleRecords(records) {
 
     const results = await Promise.all(records.map(transformRecord));
     const transformedRecords = results.filter((record) => record != null);
-    logger.info(`Step 1: Transformed ${transformedRecords.length}/${records.length} records`);
+    logger.info(`Step 1: ${transformedRecords.length}/${records.length} valid records`);
 
     // filter out PENDING records
     const fulfilledRecords = transformedRecords.filter((record) => record.status !== 'PENDING');
     logger.info(
-      `Step 2: Filtered ${fulfilledRecords.length}/${transformedRecords.length} records that are not PENDING`,
+      `Step 2: ${fulfilledRecords.length}/${transformedRecords.length} records that are not PENDING`,
     );
 
     // group records by requester_id, cohort_id
@@ -157,20 +165,21 @@ async function handleRecords(records) {
       _.values,
     )(fulfilledRecords);
     logger.info(
-      `Step 3: Grouped ${groupedRecords.length}/${fulfilledRecords.length} records by requester_id, cohort_id`,
+      `Step 3: ${groupedRecords.length}/${fulfilledRecords.length} records after grouping by requester_id, cohort_id\
+to get the most recent record`,
     );
 
     const updatedRecords = await Promise.all(groupedRecords.map(updateCohortAccessRequest));
     const updatedRecordsCount = updatedRecords
       .filter((record) => record != null).length;
-    logger.info(`Step 4: Updated ${updatedRecordsCount}/${groupedRecords.length} cohort access requests`);
+    logger.info(`Step 4: ${updatedRecordsCount}/${groupedRecords.length} cohort access requests updated`);
   } catch (error) {
     logger.error(`Error handling records: ${error.message}`);
   }
 }
 
 // get the created date of oldest record in pending status
-async function getOldestPendingRecordDate() {
+async function getOldestPendingRequestDate() {
   const oldestRecord = await prisma.cohort_access_request.findFirst({
     where: {
       status: 'PENDING',
@@ -186,26 +195,42 @@ async function getOldestPendingRecordDate() {
   return oldestRecord ? oldestRecord.created_at : null;
 }
 
+async function do_work() {
+  const start_date = await getOldestPendingRequestDate();
+  if (start_date === null) {
+    logger.info('No pending records found');
+    return;
+  }
+  const records = await redcap.getRecords({
+    start_date,
+  });
+  await handleRecords(records);
+}
+
 const poll = async () => {
   try {
-    const start_date = await getOldestPendingRecordDate();
-    const records = await redcap.getRecords({
-      start_date,
-    });
-    interval = config.get('redcap.polling.interval') * 1000; // Reset interval on success
-
-    await handleRecords(records);
+    await do_work();
+    interval = INTERVAL_MS; // Reset interval on success
   } catch (error) {
-    logger.error(`Error polling REDCap API: ${error.message}`);
-    interval = Math.min(interval * 2, max_backoff); // Increase interval with backoff up to a max
+    logger.error(`Error polling: ${error.message}`);
+    interval = Math.min(interval * 2, MAX_BACKOFF_MS); // Increase interval with backoff up to a max
   } finally {
     setTimeout(poll, interval);
   }
 };
 
-poll();
+// poll();
 
 // redcap
 //   .getRecords()
 //   .then((res) => console.log(res))
 //   .catch((err) => console.error(err.message, err.response.data));
+
+module.exports = {
+  poll,
+  do_work,
+  handleRecords,
+  transformRecord,
+  updateCohortAccessRequest,
+  getOldestPendingRequestDate,
+};
