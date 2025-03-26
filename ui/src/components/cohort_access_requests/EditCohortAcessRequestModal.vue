@@ -1,7 +1,7 @@
 <template>
   <VaModal
     v-model="visible"
-    title="Create Cohort Access Request"
+    title="Edit Cohort Access Request"
     fixed-layout
     close-button
     hide-default-actions
@@ -12,41 +12,27 @@
       <VaForm class="flex flex-col gap-3 max-w-xl" ref="formRef">
         <!-- select cohort -->
         <VaInput
-          v-model="cohortName"
+          v-model="cohort.name"
           label="Cohort"
           readonly
-          placeholder="Click here to select a cohort"
-          @click="cohortSearchModal.show()"
-          class="cursor-pointer"
-          :rules="[(v) => !!v || 'Field is required']"
+          class="cursor-not-allowed"
         >
           <template #prependInner>
             <i-mdi-account-multiple />
           </template>
-
-          <template #appendInner>
-            <VaButton
-              @click.stop="cohort = null"
-              preset="plain"
-              color="danger"
-              v-if="cohort"
-            >
-              <i-mdi-close />
-            </VaButton>
-          </template>
         </VaInput>
 
         <!-- select requester -->
-        <VaFormField
-          v-model="requester"
-          :rules="[(v) => !!v || 'Field is required']"
+        <VaInput
+          v-model="requester.username"
+          label="Requester"
+          readonly
+          class="cursor-not-allowed"
         >
-          <UserSelectInput
-            v-model="requester"
-            label="Requester"
-            placeholder="Click here to select a requester"
-          />
-        </VaFormField>
+          <template #prependInner>
+            <i-mdi-account />
+          </template>
+        </VaInput>
 
         <!-- select reviewer -->
         <VaFormField
@@ -78,6 +64,7 @@
           v-model="decisionDate"
           label="Decision Date"
           placeholder="Click here to select a date"
+          clearable
         />
 
         <!-- notes: textarea -->
@@ -87,12 +74,7 @@
           placeholder="Enter notes for the request"
           :min-rows="3"
           :max-rows="5"
-        />
-
-        <CohortSearchModal
-          ref="cohortSearchModal"
-          @select="(c) => (cohort = c)"
-          :default-is-published="true"
+          :rules="[(v) => !!v || 'Field is required']"
         />
       </VaForm>
 
@@ -107,7 +89,7 @@
           Reset
         </VaButton>
         <VaButton @click="hide" preset="secondary">Cancel</VaButton>
-        <VaButton @click="submit" color="success"> Create Request </VaButton>
+        <VaButton @click="submit" color="success"> Edit Request </VaButton>
       </div>
     </VaInnerLoading>
   </VaModal>
@@ -118,7 +100,7 @@ import cohortAccessRequestService from "@/services/cohort_access_requests";
 import { useAuthStore } from "@/stores/auth";
 import { useForm } from "vuestic-ui/web-components";
 
-const emit = defineEmits(["created"]);
+const emit = defineEmits(["updated"]);
 
 // parent component can invoke these methods through the template ref
 defineExpose({
@@ -132,35 +114,54 @@ const { validate } = useForm("formRef");
 // const props = defineProps({});
 const cohort = ref(null);
 const requester = ref(null);
-const reviewer = ref(authStore.user);
+const reviewer = ref(null);
 const decisionDate = ref();
 const notes = ref(null);
 const status = ref("PENDING");
 
-const cohortSearchModal = ref(null);
 const visible = ref(false);
 const loading = ref(false);
+const originalRequest = ref(null);
 
 const statusOptions = ["PENDING", "APPROVED", "REJECTED"];
 
-const cohortName = computed(() => {
-  return cohort.value ? `${cohort.value.name} (${cohort.value.size})` : null;
-});
+// const cohortName = computed(() => {
+//   return cohort.value ? `${cohort.value.name} (${cohort.value.size})` : null;
+// });
+
+function setState() {
+  if (originalRequest.value) {
+    cohort.value = originalRequest.value.cohort;
+    requester.value = originalRequest.value.requester;
+    reviewer.value = originalRequest.value.reviewer || authStore.user;
+    decisionDate.value = originalRequest.value.decision_date
+      ? new Date(originalRequest.value.decision_date)
+      : null;
+    notes.value = originalRequest.value.notes;
+    status.value = originalRequest.value.status;
+  } else {
+    cohort.value = null;
+    requester.value = null;
+    reviewer.value = null;
+    decisionDate.value = null;
+    notes.value = null;
+    status.value = "PENDING";
+  }
+}
 
 function reset() {
-  cohort.value = null;
-  requester.value = null;
-  reviewer.value = authStore.user;
-  decisionDate.value = new Date();
-  notes.value = null;
-  status.value = "PENDING";
+  setState();
 }
 
 function hide() {
+  originalRequest.value = null;
+  setState();
   visible.value = false;
 }
 
-function show() {
+function show(request) {
+  originalRequest.value = request;
+  setState();
   visible.value = true;
 }
 
@@ -170,16 +171,14 @@ function submit() {
   }
   loading.value = true;
   cohortAccessRequestService
-    .create({
-      cohort_id: cohort.value.id,
-      requester_id: requester.value.id,
+    .update(originalRequest.value.id, {
       reviewer_id: reviewer.value.id,
       status: status.value,
       decision_date: decisionDate.value,
       notes: notes.value,
     })
     .then((res) => {
-      emit("created", res.data);
+      emit("updated", res.data);
       hide();
     })
     .catch((error) => {
@@ -189,4 +188,12 @@ function submit() {
       loading.value = false;
     });
 }
+
+watch(status, (newStatus) => {
+  if (newStatus === "REJECTED" || newStatus === "APPROVED") {
+    if (!decisionDate.value) {
+      decisionDate.value = new Date();
+    }
+  }
+});
 </script>

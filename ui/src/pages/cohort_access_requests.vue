@@ -25,6 +25,19 @@
       </va-button>
     </div>
 
+    <div>
+      <va-alert color="info" class="mb-3" dense border="left">
+        <template #icon>
+          <Icon icon="material-symbols:info" style="color: var(--va-info)" />
+        </template>
+        <span style="color: var(--va-info)">
+          Each cohort and requester combination must be unique. To create a new
+          request for this combination, the existing request must be deleted
+          first.
+        </span>
+      </va-alert>
+    </div>
+
     <!-- table -->
     <VaDataTable
       :loading="loading"
@@ -35,11 +48,11 @@
       disable-client-side-sorting
     >
       <template #cell(requester)="{ source }">
-        <span> {{ source.username }} </span>
+        <span> {{ source?.username }} </span>
       </template>
 
       <template #cell(reviewer)="{ source }">
-        <span> {{ source.username }} </span>
+        <span> {{ source?.username }} </span>
       </template>
 
       <template #cell(created_at)="{ source }">
@@ -59,14 +72,29 @@
       <!-- actions: delete -->
       <template #cell(actions)="{ rowData }">
         <div class="flex gap-2">
-          <va-button
-            color="danger"
-            size="small"
-            preset="primary"
-            @click="() => deleteRequest(rowData.id)"
-          >
-            <i-mdi-delete />
-          </va-button>
+          <!-- edit -->
+          <VaPopover message="Edit request" placement="top">
+            <VaButton
+              color="primary"
+              size="small"
+              preset="primary"
+              @click="editModal.show(rowData)"
+            >
+              <i-mdi-pencil />
+            </VaButton>
+          </VaPopover>
+
+          <!-- delete -->
+          <VaPopover message="Delete request" placement="top">
+            <VaButton
+              color="danger"
+              size="small"
+              preset="primary"
+              @click="() => deleteRequest(rowData.id)"
+            >
+              <i-mdi-delete />
+            </VaButton>
+          </VaPopover>
         </div>
       </template>
     </VaDataTable>
@@ -82,6 +110,7 @@
     />
   </div>
   <CreateCohortAcessRequestModal ref="createModal" @created="fetchAll" />
+  <EditCohortAcessRequestModal ref="editModal" @updated="fetchAll" />
 </template>
 
 <script setup>
@@ -152,6 +181,7 @@ const columns = [
 ];
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 const createModal = ref(null);
+const editModal = ref(null);
 
 function fetchAll() {
   loading.value = true;

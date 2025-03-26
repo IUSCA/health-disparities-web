@@ -230,34 +230,33 @@ router.patch(
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['Cohort Access Requests']
-    const {
-      status, notes, reviewer_id, decision_date,
-    } = req.body;
 
-    assert(status, 'Status cannot be null');
+    // if value is undefined, do not set it
+    // if value is null, set it to null
+
+    // status has to be one of the following: PENDING, APPROVED, REJECTED
+    // notes can be null, or string
+    // reviewer_id can be null, or int, if int, a user with this id has to exist
+    // decision_date can be null, or ISO8601 date
+    const updateData = _.flow([
+      _.pick(['status', 'notes', 'reviewer_id', 'decision_date']),
+      _.omitBy(_.isUndefined),
+    ])(req.body);
+
+    assert(updateData.status, 'Status cannot be null');
 
     // check if the reviewer exists
-    if (reviewer_id) {
+    if (updateData.reviewer_id) {
       const reviewer = await prisma.user.findUnique({
-        where: { id: reviewer_id },
-        include: {
+        where: { id: updateData.reviewer_id },
+        select: {
           id: true,
         },
       });
       if (!reviewer) {
-        return next(createError(404, 'Reviewer not found'));
+        return next(createError(400, 'Reviewer not found'));
       }
     }
-
-    const updateData = {
-      status,
-      reviewer_id,
-      decision_date,
-    };
-    // if notes is a string, set it
-    // if notes is null, set it to null
-    // if notes is undefined, do not set it
-    if (notes !== undefined) updateData.notes = notes;
 
     const request = await prisma.cohort_access_request.update({
       where: { id: req.params.id },
