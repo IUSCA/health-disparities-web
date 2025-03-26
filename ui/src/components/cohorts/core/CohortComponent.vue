@@ -93,6 +93,7 @@
       </div>
     </div>
   </VaInnerLoading>
+  <CohortDownloadModal ref="downloadModal" />
 </template>
 
 <script setup>
@@ -119,6 +120,7 @@ const cohortsStore = useCohortsStore();
 const { totalParticipants, enableTitleGeneration } = storeToRefs(cohortsStore);
 const loading = ref(false);
 const saveModal = ref(null);
+const downloadModal = ref(null);
 
 function resolveComponent(cohort) {
   if (cohort.schema.name === "phenotype") return PhenotypeCohortComponent;
@@ -182,7 +184,9 @@ watchDebounced(
 );
 
 /* ***** cohort actions - start ****** */
-function exportCohort() {}
+function exportCohort(cohort) {
+  downloadModal.value.show(cohort);
+}
 
 // clone the cohort, save it, and append it to the store
 function copyCohort() {

@@ -48,7 +48,7 @@
         </template>
 
         <template #cell(actions)="{ rowData }">
-          <div>
+          <div class="flex items-center justify-center gap-1">
             <!-- <va-button
               size="small"
               color="primary"
@@ -57,6 +57,19 @@
             >
               Copy
             </va-button> -->
+
+            <!-- Download data -->
+            <VaButton
+              size="small"
+              color="primary"
+              @click="onDownload(rowData)"
+              class="mr-1"
+              icon="download"
+              preset="primary"
+              :disabled="!rowData?.is_published"
+            >
+            </VaButton>
+
             <!-- cannot delete published cohort -->
             <!-- cannot delete currently selected cohorts -->
             <va-button
@@ -85,6 +98,7 @@
     </va-infinite-scroll>
   </div>
   <CohortDeleteModal ref="deleteModal" @update="onDeleteSuccess" />
+  <CohortDownloadModal ref="downloadModal" />
 </template>
 
 <script setup>
@@ -109,6 +123,7 @@ const emit = defineEmits(["select"]);
 const { colors } = useColors();
 
 const deleteModal = ref(null);
+const downloadModal = ref(null);
 
 // table parent div's width is 944px
 const columns = [
@@ -243,6 +258,10 @@ function onDeleteSuccess() {
     .finally(() => {
       data_loading.value = false;
     });
+}
+
+function onDownload(row) {
+  downloadModal.value.show(row);
 }
 </script>
 

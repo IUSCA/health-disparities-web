@@ -64,7 +64,10 @@
       </template>
 
       <template #cell(cohort)="{ source }">
-        <router-link :to="`/cohorts/builder?id=${source.id}`" class="va-link">
+        <router-link
+          :to="cohortService.getCohortURL({ id: source.id })"
+          class="va-link"
+        >
           {{ source.name }}
         </router-link>
       </template>
@@ -118,6 +121,7 @@
 import useQueryPersistence from "@/composables/useQueryPersistence";
 import config from "@/config";
 import cohortAccessRequests from "@/services/cohort_access_requests";
+import cohortService from "@/services/cohorts";
 import * as datetime from "@/services/datetime";
 import toast from "@/services/toast";
 import { useModal } from "vuestic-ui";

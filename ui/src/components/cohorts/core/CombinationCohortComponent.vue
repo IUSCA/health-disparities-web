@@ -59,7 +59,10 @@ function handleEdit() {
     okText: "Edit in a new tab",
   }).then((ok) => {
     ok &&
-      window.open(`/cohorts/builder?edit=true&id=${cohort.value.id}`, "_blank");
+      window.open(
+        cohortService.getCohortURL({ edit: true, id: cohort.value.id }),
+        "_blank",
+      );
   });
 }
 </script>

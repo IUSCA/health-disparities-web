@@ -392,6 +392,15 @@ function isHTTPError(code) {
 
 const is404 = isHTTPError(404);
 
+function getURL(path, params, relative = true) {
+  const base = relative ? "http://placeholder" : window.location.origin;
+  const url = new URL(path, base);
+  Object.keys(params).forEach((key) =>
+    url.searchParams.append(key, params[key]),
+  );
+  return relative ? url.pathname + url.search : url.href;
+}
+
 export {
   arrayEquals,
   capitalize,
@@ -402,6 +411,7 @@ export {
   downloadFile,
   filterByValues,
   formatBytes,
+  getURL,
   groupBy,
   groupByAndAggregate,
   initials,

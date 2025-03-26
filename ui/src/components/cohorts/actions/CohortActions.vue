@@ -35,7 +35,7 @@
       preset="primary"
       icon="download"
       size="small"
-      disabled
+      :disabled="!props.cohort.is_published"
       round
       class="min-w-[62px]"
     >

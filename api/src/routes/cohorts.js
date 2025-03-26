@@ -634,7 +634,8 @@ router.get(
       return res.sendStatus(404);
     }
 
-    const sql = cohortService.getCohortFilesSummaryQuery(req.params.id);
+    const sql = cohortService.getCohortFilesSummaryQuery({ id: req.params.id });
+    // console.log(sql.sql, sql.values);
     const data = await prisma.$queryRaw(sql);
     const accept = req.get('accept') || '';
     if (accept.includes('text/plain') && !accept.includes('application/json')) {

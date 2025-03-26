@@ -159,6 +159,10 @@ const exports = {
       enabledInProfile: false,
     },
   },
+  redcap: {
+    survey_id: "4LFHA9WC4N9RKXFA",
+    survey_base_url: "https://redcap.uits.iu.edu/surveys/",
+  },
 };
 
 export default exports;

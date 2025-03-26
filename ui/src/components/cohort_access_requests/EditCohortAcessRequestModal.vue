@@ -172,10 +172,10 @@ function submit() {
   loading.value = true;
   cohortAccessRequestService
     .update(originalRequest.value.id, {
-      reviewer_id: reviewer.value.id,
+      reviewer_id: reviewer.value.id || null,
       status: status.value,
-      decision_date: decisionDate.value,
-      notes: notes.value,
+      decision_date: decisionDate.value || null,
+      notes: notes.value || null,
     })
     .then((res) => {
       emit("updated", res.data);

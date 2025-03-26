@@ -1,3 +1,4 @@
+import { getURL } from "@/services/utils";
 import api from "./api";
 
 class CohortService {
@@ -63,6 +64,14 @@ class CohortService {
 
   isDeletable(id) {
     return api.get(`/cohorts/${id}/is-deletable`);
+  }
+
+  getFilesSummary(id) {
+    return api.get(`/cohorts/${id}/files/summary`);
+  }
+
+  getCohortURL(params, relative = true) {
+    return getURL("/cohorts/builder", params, relative);
   }
 }
 

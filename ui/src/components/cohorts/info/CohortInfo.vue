@@ -44,6 +44,16 @@
       </span>
       <span> participants </span>
     </div>
+
+    <!-- show ID when published -->
+    <div
+      class="va-text-secondary text-sm mt-1 flex items-center gap-1"
+      v-if="props.cohort.is_published && props.cohort.id"
+      :title="props.cohort.id"
+    >
+      <span>{{ props.cohort.id }}</span>
+      <CopyButton :text="props.cohort.id" preset="plain" size="small" />
+    </div>
   </div>
 </template>
 

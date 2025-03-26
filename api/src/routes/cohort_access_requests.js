@@ -225,8 +225,8 @@ router.patch(
     param('id').isInt().toInt(),
     body('status').optional().isIn(['PENDING', 'APPROVED', 'REJECTED']),
     body('notes').optional().isString(),
-    body('reviewer_id').optional().isInt().toInt(),
-    body('decision_date').optional().isISO8601(),
+    body('reviewer_id').optional({ nullable: true }).isInt().toInt(),
+    body('decision_date').optional({ nullable: true }).isISO8601(),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['Cohort Access Requests']
