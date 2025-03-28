@@ -93,6 +93,12 @@ router.get(
                 "$ref": "#/components/schemas/Cohort"
               }
             }
+          },
+          'text/plain': {
+            schema: {
+              type: 'string',
+              description: 'A text table of the cohorts',
+            }
           }
         }
       }
@@ -146,14 +152,14 @@ router.get(
     const rows = await prisma.$queryRaw(sql);
     const cohorts = rows.map(toJSON);
 
-    const accept = req.get('accept') || '';
-    if (accept.includes('text/plain') && !accept.includes('application/json')) {
-      // Return CLI-friendly table format
-      const columns = ['id', 'name', 'size', 'description', 'author_username'];
-      const tableStr = toTable(cohorts, columns);
-      return res.type('text/plain').send(tableStr);
-    }
-    res.json(cohorts);
+    res.format({
+      json: () => res.send(cohorts),
+      text: () => {
+        const columns = ['id', 'name', 'size', 'description', 'author_username'];
+        const tableStr = toTable(cohorts, columns);
+        res.send(tableStr);
+      },
+    });
   }),
 );
 
@@ -625,6 +631,12 @@ router.get(
               },
             },
           },
+          'text/plain': {
+            schema: {
+              type: 'string',
+              description: 'A text table of the cohort files summary',
+            }
+          }
         },
       }
     */
@@ -637,12 +649,13 @@ router.get(
     const sql = cohortService.getCohortFilesSummaryQuery({ id: req.params.id });
     // console.log(sql.sql, sql.values);
     const data = await prisma.$queryRaw(sql);
-    const accept = req.get('accept') || '';
-    if (accept.includes('text/plain') && !accept.includes('application/json')) {
-      const tableStr = toTable(data);
-      return res.type('text/plain').send(tableStr);
-    }
-    res.json(data);
+    res.format({
+      json: () => res.json(data),
+      text: () => {
+        const tableStr = toTable(data);
+        return res.send(tableStr);
+      },
+    });
   }),
 );
 
@@ -685,6 +698,12 @@ router.get(
               },
             },
           },
+          'text/plain': {
+            schema: {
+              type: 'string',
+              description: 'A text table of the cohort files',
+            }
+          }
         },
       },
     */
@@ -720,25 +739,26 @@ router.get(
       }),
     ]);
 
-    const accept = req.get('accept') || '';
-    if (accept.includes('text/plain') && !accept.includes('application/json')) {
-      // Return CLI-friendly table format
-      const columns = ['id', 'name', 'md5', 'size', 'participant_id'];
-      const tableStr = toTable(files.map(mapper), columns);
-      const paginationStr = toPaginationInfo({
-        total: total_count,
-        limit: req.query.limit,
-        offset: req.query.offset,
-      });
-      return res.type('text/plain').send(`${tableStr}\n${paginationStr}`);
-    }
-
-    return res.json({
-      data: files.map(mapper),
-      metadata: {
-        total: total_count,
-        limit: req.query.limit,
-        offset: req.query.offset,
+    res.format({
+      json: () => {
+        res.json({
+          data: files.map(mapper),
+          metadata: {
+            total: total_count,
+            limit: req.query.limit,
+            offset: req.query.offset,
+          },
+        });
+      },
+      text: () => {
+        const columns = ['id', 'name', 'md5', 'size', 'participant_id'];
+        const tableStr = toTable(files.map(mapper), columns);
+        const paginationStr = toPaginationInfo({
+          total: total_count,
+          limit: req.query.limit,
+          offset: req.query.offset,
+        });
+        res.send(`${tableStr}\n${paginationStr}`);
       },
     });
   }),
