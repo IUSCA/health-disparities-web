@@ -6,7 +6,7 @@ const requestLogger = require('morgan');
 const compression = require('compression');
 const swaggerUi = require('swagger-ui-express');
 const config = require('config');
-// const cors = require('cors');
+const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const {
@@ -23,7 +23,10 @@ const { apiKeyAuditLogger } = require('./middleware/loggers');
 const app = express();
 
 // Enable CORS for all origins
-// app.use(cors());
+app.use(cors({
+  origin: 'https://biobank.sca.iu.edu',
+  optionsSuccessStatus: 200,
+}));
 
 // remove fingerprinting header
 app.disable('x-powered-by');
