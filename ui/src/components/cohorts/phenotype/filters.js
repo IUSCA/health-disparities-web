@@ -332,4 +332,17 @@ export const filters = [
       },
     ],
   },
+  {
+    label: "Genotype Data",
+    key: "participant_genotype",
+    icon: "mdi-dna",
+    filters: [
+      {
+        key: "source_id",
+        type: "select",
+        label: "Source",
+        info: null,
+      },
+    ],
+  },
 ];

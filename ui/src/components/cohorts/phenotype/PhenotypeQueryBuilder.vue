@@ -109,6 +109,7 @@ import { storeToRefs } from "pinia";
 import { fromStandardQuery, standardizeQuery } from "../queryBuilder";
 import PhenotypeAsyncSelect from "./filterComponents/PhenotypeAsyncSelect.vue";
 import PhenotypeSelect from "./filterComponents/PhenotypeSelect.vue";
+import GenotypeSourceSelect from "./filterComponents/GenotypeSourceSelect.vue";
 
 const standardQuery = defineModel();
 const props = defineProps({
@@ -201,6 +202,9 @@ const config = {
 function getComponent(field) {
   if (["dx.code", "hospital.dx_code"].includes(field.id)) {
     return ICDSearch;
+  }
+  if (field.id === "participant_genotype.source_id") {
+    return GenotypeSourceSelect;
   }
   switch (field.type) {
     case "number":

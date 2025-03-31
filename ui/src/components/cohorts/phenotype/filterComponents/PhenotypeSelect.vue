@@ -6,9 +6,9 @@
     <VaSelect
       v-model="model"
       :options="options"
-      text-by="name"
-      value-by="name"
-      track-by="name"
+      :text-by="textBy"
+      :value-by="valueBy"
+      :track-by="trackBy"
       class="text-sm cohort-builder-select w-full"
       multiple
       :loading="loading"
@@ -21,8 +21,10 @@
       <template #option-content="{ option }">
         <span>
           <!-- fallback to "string" model when the possible options haven't been fetched -->
-          {{ option.name || option }}
-          <span class="select-option-count"> ({{ option.count }}) </span>
+          {{ option[textBy] || option }}
+          <span v-if="option?.count != null" class="select-option-count">
+            ({{ option.count }})
+          </span>
         </span>
       </template>
     </VaSelect>
@@ -39,6 +41,29 @@ const props = defineProps({
     type: String,
     default: ".",
   },
+  textBy: {
+    type: String,
+    default: "name",
+  },
+  valueBy: {
+    type: String,
+    default: "name",
+  },
+  trackBy: {
+    type: String,
+    default: "name",
+  },
+  fetchOptionsFn: {
+    type: Function,
+    default: (category, field) => {
+      return phenotypesService.unique(category, field).then((res) => {
+        return Object.entries(res.data).map(([name, count]) => ({
+          name,
+          count,
+        }));
+      });
+    },
+  },
 });
 const model = defineModel();
 
@@ -51,13 +76,10 @@ watch(
   () => {
     const [category, field] = props.identifier.split(props.separator);
     loading.value = true;
-    phenotypesService
-      .unique(category, field)
+    props
+      .fetchOptionsFn(category, field)
       .then((res) => {
-        options.value = Object.entries(res.data).map(([name, count]) => ({
-          name,
-          count,
-        }));
+        options.value = res;
       })
       .finally(() => {
         loading.value = false;
