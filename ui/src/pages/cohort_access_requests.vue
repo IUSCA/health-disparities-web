@@ -112,8 +112,8 @@
       :page_size_options="PAGE_SIZE_OPTIONS"
     />
   </div>
-  <CreateCohortAcessRequestModal ref="createModal" @created="fetchAll" />
-  <EditCohortAcessRequestModal ref="editModal" @updated="fetchAll" />
+  <CreateCohortAccessRequestModal ref="createModal" @created="fetchAll" />
+  <EditCohortAccessRequestModal ref="editModal" @updated="fetchAll" />
 </template>
 
 <script setup>
