@@ -26,7 +26,7 @@ async function transformRecord(record) {
     const reviewer_email = record[config.get('redcap.form_keys.approver_email')]
     || record[config.get('redcap.form_keys.revoker_email')];
 
-    const decision_date = record[config.get('redcap.form_keys.apporved_date')]
+    const decision_date = record[config.get('redcap.form_keys.approved_date')]
     || record[config.get('redcap.form_keys.revoked_date')];
 
     const rejection_reason = record[config.get('redcap.form_keys.rejection_reason')];
