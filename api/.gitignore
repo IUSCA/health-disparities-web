@@ -51,3 +51,4 @@ out/
 # generated client code
 clients/*
 !clients/.env.example
+!clients/.bashrc
