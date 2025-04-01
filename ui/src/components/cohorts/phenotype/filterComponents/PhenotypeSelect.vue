@@ -4,6 +4,7 @@
 <template>
   <div class="flex-grow">
     <VaSelect
+      :key="selectKey"
       v-model="model"
       :options="options"
       :text-by="textBy"
@@ -70,6 +71,7 @@ const model = defineModel();
 const options = ref([]);
 const loading = ref(false);
 const teleportOptions = ref(null);
+const selectKey = ref(0);
 
 watch(
   () => props.identifier,
@@ -87,6 +89,18 @@ watch(
   },
   { immediate: true },
 );
+
+// when the model is set before the options are fetched,
+// the select will show the model as the selected option's value
+// this is problematic when valueBy is not the same as textBy.
+// Re-render the select to show the selected option's text.
+watch(options, () => {
+  if (model.value != null || model.value?.length > 0) {
+    // model is set before options are fetched
+    // re-render the select to show the selected options
+    selectKey.value = new Date().getTime();
+  }
+});
 </script>
 
 <style scoped lang="scss">
