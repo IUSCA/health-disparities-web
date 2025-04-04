@@ -123,7 +123,7 @@ router.get(
 
 router.get(
   '/cohort/:cohort_id/requester/:username',
-  isPermittedTo('read', { checkOwnership: true }),
+  isPermittedTo('read', { checkOwnerShip: true }),
   validate([
     param('cohort_id').isUUID(),
     param('username').isString(),
@@ -133,7 +133,9 @@ router.get(
     const request = await prisma.cohort_access_request.findFirst({
       where: {
         cohort_id: req.params.cohort_id,
-        requester_id: req.user.id,
+        requester: {
+          username: req.params.username,
+        },
       },
       include: {
         requester: true,
