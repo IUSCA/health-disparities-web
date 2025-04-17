@@ -1,31 +1,40 @@
 /* eslint-disable no-console */
 const fsPromises = require('fs/promises');
+// const { setTimeout } = require('timers/promises');
+
 const { PrismaClient } = require('@prisma/client');
+const _ = require('lodash/fp');
+
 const datasetService = require('../services/dataset');
 
 const prisma = new PrismaClient();
+const BATCH_SIZE = 10;
 
 async function trigger_wf(name, dataset_type) {
-  const ds = await prisma.dataset.findFirst({
-    where: {
-      name,
-      type: dataset_type,
-      is_staged: false,
-    },
-  });
+  try {
+    const ds = await prisma.dataset.findFirst({
+      where: {
+        name,
+        type: dataset_type,
+        is_staged: false,
+      },
+    });
 
-  if (!ds) {
-    console.log(`skipped staging ${name}`);
-    return;
+    if (!ds) {
+      console.log(`skipped staging ${name}`);
+      return;
+    }
+
+    const dataset = await datasetService.get_dataset({
+      id: ds.id,
+      workflows: true,
+    });
+
+    const wf = await datasetService.create_workflow(dataset, 'stage_direct');
+    console.log(`Created workflow ${wf.id} for dataset ${ds.id}`);
+  } catch (e) {
+    console.error(`Error processing ${name}:`, e);
   }
-
-  const dataset = await datasetService.get_dataset({
-    id: ds.id,
-    workflows: true,
-  });
-
-  const wf = await datasetService.create_workflow(dataset, 'stage_direct');
-  console.log(`Created workflow ${wf.id} for dataset ${ds.id}`);
 }
 
 async function main() {
@@ -34,11 +43,14 @@ async function main() {
   const lines = txt.split('\n');
   // console.log(lines)
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const name of lines) {
-    // eslint-disable-next-line no-await-in-loop
-    await trigger_wf(name, 'DATA_PRODUCT');
-  }
+  let num_processed = 0;
+  _.chunk(BATCH_SIZE)(lines)
+    .forEach(async (batch) => {
+      await Promise.all(batch.map(async (name) => trigger_wf(name, 'DATA_PRODUCT')));
+      // await setTimeout(1000);
+      num_processed += batch.length;
+      console.log(`Processed: ${num_processed}`);
+    });
 }
 
 // async function test() {
