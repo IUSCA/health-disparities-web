@@ -35,7 +35,11 @@ async function trigger_wf(name, dataset_type) {
     const wf = await datasetService.create_workflow(dataset, 'stage_direct');
     console.log(`Created workflow ${wf.workflow_id} for dataset ${ds.name} (${ds.id})`);
   } catch (e) {
-    console.error(`Error processing ${name}:`, e);
+    if (e.name === 'AssertionError') {
+      console.error(`Assertion error processing ${name}: ${e.message}`);
+    } else {
+      console.error(`Error processing ${name}:`, e);
+    }
   }
 }
 
