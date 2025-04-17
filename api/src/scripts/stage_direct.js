@@ -38,7 +38,11 @@ async function trigger_wf(name, dataset_type) {
 }
 
 async function main() {
-  const txt_file_path = '/opt/sca/app/list_of_broadID_to_release_for_Sean_McCabe.txt';
+  const txt_file_path = process.argv[2];
+  if (!txt_file_path) {
+    console.error('Error: Please provide the path to the text file as a command line argument.');
+    process.exit(1);
+  }
   const txt = await fsPromises.readFile(txt_file_path, 'utf8');
   const lines = txt.split('\n');
   // console.log(lines)
