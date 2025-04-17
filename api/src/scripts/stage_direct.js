@@ -31,7 +31,7 @@ async function trigger_wf(name, dataset_type) {
     });
 
     const wf = await datasetService.create_workflow(dataset, 'stage_direct');
-    console.log(`Created workflow ${wf.id} for dataset ${ds.id}`);
+    console.log(`Created workflow ${wf.workflow_id} for dataset ${ds.name} (${ds.id})`);
   } catch (e) {
     console.error(`Error processing ${name}:`, e);
   }
@@ -44,13 +44,13 @@ async function main() {
     process.exit(1);
   }
   const txt = await fsPromises.readFile(txt_file_path, 'utf8');
-  const lines = txt.split('\n');
+  const lines = txt.split('\n').filter((line) => line.trim() !== '');
   // console.log(lines)
 
   let num_processed = 0;
   _.chunk(BATCH_SIZE)(lines)
     .forEach(async (batch) => {
-      await Promise.all(batch.map(async (name) => trigger_wf(name, 'DATA_PRODUCT')));
+      await Promise.all(batch.map((name) => trigger_wf(name, 'DATA_PRODUCT')));
       // await setTimeout(1000);
       num_processed += batch.length;
       console.log(`Processed: ${num_processed}`);
@@ -61,8 +61,8 @@ async function main() {
 //   return trigger_wf('SM-NACU2', 'DATA_PRODUCT');
 // }
 
-main().then((result) => {
-  console.log(result);
+main().then(() => {
+  // console.log(result);
   prisma.$disconnect();
 }).catch((e) => {
   console.error(e);
