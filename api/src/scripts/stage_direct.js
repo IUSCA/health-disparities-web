@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
 /* eslint-disable no-console */
 const fsPromises = require('fs/promises');
 // const { setTimeout } = require('timers/promises');
@@ -48,13 +50,13 @@ async function main() {
   // console.log(lines)
 
   let num_processed = 0;
-  _.chunk(BATCH_SIZE)(lines)
-    .forEach(async (batch) => {
-      await Promise.all(batch.map((name) => trigger_wf(name, 'DATA_PRODUCT')));
-      // await setTimeout(1000);
-      num_processed += batch.length;
-      console.log(`Processed: ${num_processed}`);
-    });
+  const batches = _.chunk(BATCH_SIZE)(lines);
+  for (const batch of batches) {
+    await Promise.all(batch.map((name) => trigger_wf(name, 'DATA_PRODUCT')));
+    // await setTimeout(1000);
+    num_processed += batch.length;
+    console.log(`Processed: ${num_processed}`);
+  }
 }
 
 // async function test() {
