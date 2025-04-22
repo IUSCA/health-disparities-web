@@ -23,7 +23,7 @@ function diffTopLevelProperties(before, after) {
   after = after || {};
   const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
   const diff = [];
-  for (const key of keys) {
+  for (const key of [...keys].sort()) {
     if (before[key] !== after[key]) {
       diff.push({ key, before: before[key], after: after[key] });
     }

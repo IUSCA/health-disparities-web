@@ -20,6 +20,7 @@ function _buildREDCapSurveyUrl({
   cohortSize,
   cohortDescription,
   cohortUrl,
+  request_id,
 }) {
   const url = new URL(config.redcap.survey_base_url);
 
@@ -40,10 +41,7 @@ URL: ${cohortUrl}
     email,
     cohort_identifier: cohortId,
     cohort_of_interest: cohortText,
-    // cohort_url: cohortUrl,
-    // cohort_name: cohortName,
-    // cohort_size: cohortSize,
-    // cohort_description: cohortDescription,
+    request_id,
   };
   Object.keys(queryParams).forEach((key) => {
     if (queryParams[key] != null) {
@@ -53,7 +51,7 @@ URL: ${cohortUrl}
   return url.toString();
 }
 
-function buildREDCapSurveyUrl({ user, cohort }) {
+function buildREDCapSurveyUrl({ user, cohort, request_id }) {
   // console.log({ user, cohort });
   const name_parts = user.name.split(" ");
   const firstName = name_parts[0];
@@ -70,6 +68,7 @@ function buildREDCapSurveyUrl({ user, cohort }) {
     cohortSize: cohort.size,
     cohortDescription: cohort.description,
     cohortUrl: cohortService.getCohortURL({ id: cohort.id }, false),
+    request_id,
   });
 }
 

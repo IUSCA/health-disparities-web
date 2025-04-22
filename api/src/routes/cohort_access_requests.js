@@ -1,4 +1,3 @@
-const assert = require('assert');
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { param, body, query } = require('express-validator');
@@ -9,23 +8,17 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
 
-const prisma = new PrismaClient();
+const accessRequestsService = require('../services/access_requests');
+const { fsmConfig } = require('../services/access_requests');
+// const userService = require('../services/user');
+const redcapPollService = require('../services/redcap_poll');
+const redcapService = require('../services/redcap');
+
+const prisma = new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
+});
 const isPermittedTo = accessControl('cohort_access_requests');
 const router = express.Router();
-
-const cohort_columns = {
-  id: true,
-  name: true,
-  // description: true,
-  // created_at: true,
-  // updated_at: true,
-  // query: true,
-  // metadata: true,
-  // is_published: true,
-  // is_locked: true,
-  // is_protected: true,
-  // author_username: true,
-};
 
 // Get all access requests
 router.get(
@@ -34,59 +27,31 @@ router.get(
   validate([
     query('cohort_id').optional().isUUID(),
     query('requester_id').optional().isInt().toInt(),
-    query('status').optional().isIn(['PENDING', 'APPROVED', 'REJECTED']),
+    query('status').optional().isIn(fsmConfig.states),
     query('limit').default(50).isInt({ min: 1 }).toInt(),
     query('offset').default(0).isInt({ min: 0 }).toInt(),
-    query('sortBy').default('created_at').isIn(['created_at', 'status', 'decision_date']),
-    query('sortOrder').default('asc').isIn(['asc', 'desc']),
+    query('sort_by').default('created_at').isIn(
+      ['created_at', 'cohort', 'requester', 'status',
+        'decision_date', 'updated_at', 'last_synced_at', 'expires_at'],
+    ),
+    query('sort_order').default('asc').isIn(['asc', 'desc']),
   ]),
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['Cohort Access Requests']
     const {
-      cohort_id, requester_id, status, offset, limit,
+      cohort_id, requester_id, status, search, offset, limit, sort_by, sort_order,
     } = req.query;
 
-    const where = {};
-    if (cohort_id) where.cohort_id = cohort_id;
-    if (requester_id) where.requester_id = requester_id;
-    if (status) where.status = status;
-
-    if (req.query.search) {
-      where.OR = [
-        { requester: { username: { contains: req.query.search, mode: 'insensitive' } } },
-        { cohort: { name: { contains: req.query.search, mode: 'insensitive' } } },
-      ];
-    }
-
-    let sortBy = {
-      [req.query.sortBy]: req.query.sortOrder,
-    };
-    const nullable_order_by_fields = ['decision_date'];
-    if (nullable_order_by_fields.includes(req.query.sortBy)) {
-      sortBy = {
-        [req.query.sortBy]: {
-          sort: req.query.sortOrder,
-          nulls: 'last',
-        },
-      };
-    }
-
-    const [requests, total] = await prisma.$transaction([
-      prisma.cohort_access_request.findMany({
-        where,
-        include: {
-          requester: true,
-          cohort: {
-            select: cohort_columns,
-          },
-          reviewer: true,
-        },
-        skip: offset,
-        take: limit,
-        orderBy: sortBy,
-      }),
-      prisma.cohort_access_request.count({ where }),
-    ]);
+    const { requests, total } = await accessRequestsService.findAll({
+      cohort_id,
+      requester_id,
+      status,
+      search,
+      offset,
+      limit,
+      sort_by,
+      sort_order,
+    });
 
     res.json({
       data: requests,
@@ -94,6 +59,7 @@ router.get(
         total,
         offset,
         limit,
+        states: fsmConfig.states,
       },
     });
   }),
@@ -106,47 +72,73 @@ router.get(
   validate([param('id').isInt().toInt()]),
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['Cohort Access Requests']
-    const request = await prisma.cohort_access_request.findUniqueOrThrow({
-      where: { id: req.params.id },
-      include: {
-        requester: true,
-        cohort: {
-          select: cohort_columns,
-        },
-        reviewer: true,
-      },
-    });
-
+    const request = await accessRequestsService.findOne({ id: req.params.id }, { audit_logs: true });
+    request.allowed_transitions = accessRequestsService.getFSM(request.status)
+      .getAllowedTransitions({ role: req.user.roles[0] });
     res.json(request);
   }),
 );
 
+// for self
 router.get(
-  '/cohort/:cohort_id/requester/:username',
+  '/requester/:username/:id',
   isPermittedTo('read', { checkOwnerShip: true }),
   validate([
-    param('cohort_id').isUUID(),
-    param('username').isString(),
+    param('id').isInt().toInt(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['Cohort Access Requests']
+    const request = await accessRequestsService.findOne({
+      id: req.params.id,
+    });
+    if (request.requester_id !== req.user.id) {
+      return next(createError(403, 'You are not allowed to access this request'));
+    }
+    res.json(req.permission.filter(request));
+  }),
+);
+
+// Get all access requests for a requester (self)
+router.get(
+  '/requester/:username',
+  isPermittedTo('read', { checkOwnerShip: true }),
+  validate([
+    query('cohort_id').optional().isUUID(),
+    query('status').optional().isIn(fsmConfig.states),
+    query('limit').default(50).isInt({ min: 1 }).toInt(),
+    query('offset').default(0).isInt({ min: 0 }).toInt(),
+    query('sort_by').default('created_at').isIn(
+      ['created_at', 'cohort', 'requester', 'status',
+        'decision_date', 'updated_at', 'last_synced_at', 'expires_at'],
+    ),
+    query('sort_order').default('asc').isIn(['asc', 'desc']),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['Cohort Access Requests']
-    const request = await prisma.cohort_access_request.findFirst({
-      where: {
-        cohort_id: req.params.cohort_id,
-        requester: {
-          username: req.params.username,
-        },
-      },
-      include: {
-        requester: true,
-        cohort: {
-          select: cohort_columns,
-        },
-        reviewer: true,
-      },
+  // #swagger.tags = ['Cohort Access Requests']
+    const {
+      cohort_id, status, search, offset, limit, sort_by, sort_order,
+    } = req.query;
+
+    const { requests, total } = await accessRequestsService.findAll({
+      cohort_id,
+      requester_username: req.params.username,
+      status,
+      search,
+      offset,
+      limit,
+      sort_by,
+      sort_order,
     });
 
-    res.json(request);
+    res.json({
+      data: req.permission.filter(requests),
+      metadata: {
+        total,
+        offset,
+        limit,
+        states: fsmConfig.states,
+      },
+    });
   }),
 );
 
@@ -158,13 +150,15 @@ router.post(
     body('cohort_id').isUUID(),
     body('requester_id').isInt().toInt(),
     body('reviewer_id').optional().isInt().toInt(),
-    body('status').optional().isIn(['PENDING', 'APPROVED', 'REJECTED']),
+    body('status').optional().isIn(fsmConfig.states), // TODO: admins are not allowed to set all statuses
     body('decision_date').optional().isISO8601(),
+    body('expires_at').optional().isISO8601(),
+    body('notes').isLength({ min: 1, max: 500 }),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['Cohort Access Requests']
     const data = _.flow([
-      _.pick(['cohort_id', 'requester_id', 'reviewer_id', 'status', 'notes', 'decision_date']),
+      _.pick(['cohort_id', 'requester_id', 'reviewer_id', 'status', 'notes', 'decision_date', 'expires_at']),
       _.omitBy(_.isNil),
     ])(req.body);
 
@@ -204,16 +198,10 @@ router.post(
       }
     }
 
-    const request = await prisma.cohort_access_request.create({
+    const request = await accessRequestsService.create(
       data,
-      include: {
-        requester: true,
-        cohort: {
-          select: cohort_columns,
-        },
-        reviewer: true,
-      },
-    });
+      { user: req.user, reason: req.body.reason, source: req.user.role },
+    );
 
     res.status(201).json(request);
   }),
@@ -229,6 +217,8 @@ router.patch(
     body('notes').optional().isString(),
     body('reviewer_id').optional({ nullable: true }).isInt().toInt(),
     body('decision_date').optional({ nullable: true }).isISO8601(),
+    body('expires_at').optional({ nullable: true }).isISO8601(),
+    body('version').isInt({ min: 1 }).toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['Cohort Access Requests']
@@ -236,16 +226,10 @@ router.patch(
     // if value is undefined, do not set it
     // if value is null, set it to null
 
-    // status has to be one of the following: PENDING, APPROVED, REJECTED
-    // notes can be null, or string
-    // reviewer_id can be null, or int, if int, a user with this id has to exist
-    // decision_date can be null, or ISO8601 date
     const updateData = _.flow([
-      _.pick(['status', 'notes', 'reviewer_id', 'decision_date']),
+      _.pick(['status', 'notes', 'reviewer_id', 'decision_date', 'expires_at']),
       _.omitBy(_.isUndefined),
     ])(req.body);
-
-    assert(updateData.status, 'Status cannot be null');
 
     // check if the reviewer exists
     if (updateData.reviewer_id) {
@@ -260,25 +244,41 @@ router.patch(
       }
     }
 
-    const request = await prisma.cohort_access_request.update({
-      where: { id: req.params.id },
-      data: updateData,
-      include: {
-        requester: true,
-        cohort: {
-          select: cohort_columns,
-        },
-        reviewer: true,
+    // check if transition is valid
+    if (updateData.status) {
+      const original = await prisma.cohort_access_request.findFirstOrThrow({
+        where: { id: req.params.id },
+        select: { id: true, status: true },
+      });
+      if (original.status !== updateData.status) {
+        const fsm = accessRequestsService.getFSM(original.status);
+        const canTransition = fsm.canTransition({ role: req.user.role, to: updateData.status });
+        if (!canTransition) {
+          return next(createError(400, `Invalid transition from ${original.status} to ${updateData.status}`));
+        }
+        if (!updateData.decision_date) {
+          // any status change should set the decision date
+          updateData.decision_date = new Date();
+        }
+      }
+    }
+
+    const request = await accessRequestsService.update(
+      { id: req.params.id },
+      updateData,
+      {
+        user: req.user, version: req.body.version, reason: req.body.reason, source: req.user.role,
       },
-    });
+    );
 
     res.json(request);
   }),
 );
 
+// Create access request for self
 router.put(
   '/cohort/:cohort_id/requester/:username',
-  isPermittedTo('create', { checkOwnership: true }),
+  isPermittedTo('create', { checkOwnerShip: true }),
   validate([
     param('cohort_id').isUUID(),
   ]),
@@ -300,52 +300,85 @@ router.put(
       return next(createError(404, 'Cohort does not exist or is not published'));
     }
 
-    // check if access request already exists
-    const existingRequest = await prisma.cohort_access_request.findFirst({
-      where: {
-        cohort_id,
-        requester_id: req.user.id,
-      },
+    // check if the requester exists
+    const requester = await prisma.user.findUnique({
+      where: { username: req.params.username },
       select: {
         id: true,
       },
     });
-    if (existingRequest) {
-      return next(createError(409, 'Access request already exists'));
+    if (!requester) {
+      return next(createError(404, 'Requester not found'));
     }
 
-    // create access request in PENDING status
-    const request = await prisma.cohort_access_request.create({
-      data: {
-        cohort_id,
-        requester_id: req.user.id,
-        status: 'PENDING',
-      },
-      include: {
-        requester: true,
-        cohort: {
-          select: cohort_columns,
-        },
-        reviewer: true,
-      },
-    });
+    // will throw unique constraint error if an active request already exists
+    // automatically handled by the middleware
+    const request = await accessRequestsService.create({
+      cohort_id,
+      requester_id: requester.id,
+    }, { user: req.user, source: req.user.role });
 
     res.status(201).json(request);
   }),
 );
 
 // Delete access request
-router.delete(
-  '/:id',
-  isPermittedTo('delete'),
+// router.delete(
+//   '/:id',
+//   isPermittedTo('delete'),
+//   validate([
+//     param('id').isInt().toInt(),
+//   ]),
+//   asyncHandler(async (req, res) => {
+//     // #swagger.tags = ['Cohort Access Requests']
+//     // cascading delete: deletes stages and audit logs
+//     await prisma.cohort_access_request.delete({
+//       where: { id: req.params.id },
+//     });
+
+//     res.status(204).send();
+//   }),
+// );
+
+router.post(
+  '/:request_id/survey/complete',
   validate([
-    param('id').isInt().toInt(),
+    param('request_id').isUUID(),
   ]),
   asyncHandler(async (req, res) => {
-    // #swagger.tags = ['Cohort Access Requests']
-    await prisma.cohort_access_request.delete({
-      where: { id: req.params.id },
+  // #swagger.tags = ['Cohort Access Requests']
+
+    const { request_id } = req.params;
+
+    // check if a request with the given request ID exists
+    // in the INITIATED state
+    const request = await prisma.cohort_access_request.findFirstOrThrow({
+      where: {
+        request_id,
+        status: 'INITIATED',
+      },
     });
+
+    try {
+      redcapPollService.logger.info(`callback: ${request_id} - survey completed callback received`);
+      // fetch records from redcap
+      // for the given request ID
+      // and created or updated after the request created_at date
+      const redcapRecords = await redcapService.getRecords({
+        filters: {
+          request_id,
+        },
+        start_date: request.created_at,
+      });
+      redcapPollService.logger.info(`callback: ${request_id} - Fetched ${redcapRecords.length} records from redcap`);
+      const errors = await redcapPollService.processRecords(redcapRecords);
+      // eslint-disable-next-line no-restricted-syntax
+      for (const error of errors) {
+        redcapPollService.logger.info(error); // will stringify and write to the log file
+      }
+    } catch (error) {
+      redcapPollService.logger.error(`callback: ${request_id} - Error handling records: ${error.message}`);
+    }
 
     res.status(204).send();
   }),

@@ -195,7 +195,7 @@ const grantsObject = {
     },
     cohort_access_requests: {
       'create:own': ['*'],
-      'read:own': ['*'],
+      'read:own': ['*', '!audit_logs', '!upstream_record_id'], // cannot read audit logs and upstream record id
     },
   },
 

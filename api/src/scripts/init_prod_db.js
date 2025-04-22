@@ -2,6 +2,7 @@
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { readUsersFromJSON } = require('../utils');
+const { access_request_stage_definitions } = require('../../prisma/seed_data/data');
 
 global.__basedir = path.join(__dirname, '..', '..');
 
@@ -99,6 +100,20 @@ async function main() {
   console.log(`created ${admins.length} adminstrators`);
   console.log(`created ${operators.length} operators`);
   console.log(`created ${users.length} users`);
+
+  // using for loop to create in sequence to make id same as order - nitpick
+  // create access request stage definitions
+  // eslint-disable-next-line no-restricted-syntax
+  for (const ard of access_request_stage_definitions) {
+    // eslint-disable-next-line no-await-in-loop
+    await prisma.access_request_stage_definition.upsert({
+      where: {
+        name: ard.name,
+      },
+      update: {},
+      create: ard,
+    });
+  }
 
   const tables = ['user', 'role'];
   await Promise.all(tables.map(update_seq));

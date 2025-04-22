@@ -1,5 +1,4 @@
 <template>
-  <p class="font-semibold mb-1">Cohort File Summary</p>
   <VaInnerLoading :loading="loading">
     <!-- <div v-if="summary.length === 0" class="text-sm">No files available.</div> -->
     <div class="max-w-md">
@@ -7,6 +6,7 @@
         :items="summary"
         :columns="columns"
         noDataHtml="No files available."
+        class="cohort-files-summary-table text-sm"
       >
         <template #cell(total_size)="{ source }">
           <span>{{ formatBytes(source) }}</span>
@@ -88,3 +88,9 @@ watch(
   },
 );
 </script>
+
+<style scoped>
+.cohort-files-summary-table {
+  --va-data-table-cell-padding: 3px;
+}
+</style>

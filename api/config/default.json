@@ -238,17 +238,40 @@
     "polling": {
       "enabled": true,
       "interval": 300,
-      "max_backoff": 1800
+      "max_backoff": 1800,
+      "batch_size": 100
     },
     "form_keys": {
-      "requester_email": "user_id",
+      "requester_email": "email",
       "cohort_id": "cohort_identifier",
+      "request_id": "request_identifier",
+      "decision": "final_approval_status",
+      "decision_date": "date_final_approval_status",
+      "ste_decision": "ste_final_approval_status",
+      "ste_decision_date": "date_ste_final_approval_status",
+      "ssc_decision": "ssc_final_approval_status",
+      "ssc_decision_date": "date_ssc_final_approval_status",
+      "daa_decision": "daa_reviewed",
+      "daa_decision_date": "daa_approval_date",
+
+
       "approver_email": "who_apprv_catalog_access",
       "revoker_email": "who_revoke_catalog_access",
       "approved_date": "date_catalog_access_apprv",
       "revoked_date": "date_catalog_access_revoked",
-      "rejection_reason": "why_catalog_access_revoked",
-      "decision": "catalog_access_status"
+      "rejection_reason": "why_catalog_access_revoked"
+    },
+    "stages": {
+      "ste": "STE",
+      "ssc": "SSC",
+      "daa": "DAA",
+      "final_review": "FINAL_REVIEW"
+    }
+  },
+  "access_requests": {
+    "expiration": {
+      "enabled": false,
+      "days": 365
     }
   }
 }

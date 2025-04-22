@@ -10,18 +10,22 @@ class CohortAccessRequests {
     });
   }
 
+  getAllForSelf(params) {
+    return api.get(`/cohort_access_requests/requester/${auth.user.username}`, {
+      params,
+    });
+  }
+
   getById(id) {
     return api.get(`/cohort_access_requests/${id}`);
   }
 
-  getByCohortAndRequester(cohort_id, username) {
-    return api.get(
-      `/cohort_access_requests/cohort/${cohort_id}/requester/${username}`,
-    );
+  getByIdAndRequester(id, username) {
+    return api.get(`/cohort_access_requests/requester/${username}/${id}`);
   }
 
-  getByCohortForSelf(cohort_id) {
-    return this.getByCohortAndRequester(cohort_id, auth.user.username);
+  getByIdForSelf(id) {
+    return this.getByIdAndRequester(id, auth.user.username);
   }
 
   create(data) {
@@ -41,6 +45,14 @@ class CohortAccessRequests {
 
   delete(id) {
     return api.delete(`/cohort_access_requests/${id}`);
+  }
+
+  isActive(request) {
+    return ["INITIATED", "PENDING"].includes(request?.status);
+  }
+
+  completeSurvey(request_id) {
+    return api.post(`/cohort_access_requests/${request_id}/survey/complete`);
   }
 }
 

@@ -365,6 +365,23 @@ const about_records = [
             + 'For questions or support, please contact the primary operator:</p>',
   },
 ];
+const access_request_stage_definitions = [{
+  id: 'STE',
+  name: 'Scientific Technical Expert Committee',
+  order: 1,
+}, {
+  id: 'SSC',
+  name: 'Scientific Steering Committee',
+  order: 2,
+}, {
+  id: 'DAA',
+  name: 'Data Access Agreement',
+  order: 3,
+}, {
+  id: 'FINAL_REVIEW',
+  name: 'Final Review',
+  order: 4,
+}];
 
 module.exports = {
   roles,
@@ -384,4 +401,5 @@ module.exports = {
   snapshots,
   sources,
   about_records,
+  access_request_stage_definitions,
 };

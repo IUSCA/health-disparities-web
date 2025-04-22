@@ -52,13 +52,13 @@
           <div class="p-2 h-full">
             <div class="grid grid-cols-12 gap-3 md:gap-5">
               <!-- comments -->
-              <div class="col-span-12 md:col-span-6">
+              <div class="col-span-12 md:col-span-4">
                 <p class="pt-1 pb-3 font-semibold">Comments</p>
                 <span>{{ log.comments }}</span>
               </div>
 
               <!-- changes -->
-              <div class="col-span-12 md:col-span-6">
+              <div class="col-span-12 md:col-span-8">
                 <p class="pt-1 pb-3 font-semibold">Changes</p>
                 <ObjDiff :before="log.old_data" :after="log.new_data" />
               </div>

@@ -10,29 +10,16 @@
       <!-- Marker + Vertical segment -->
       <div class="flex flex-col items-center h-full">
         <div class="relative flex items-center justify-center w-5 h-5">
-          <!-- Halo ring -->
-          <div
-            v-if="item.status === 'current'"
-            class="absolute inset-0 rounded-full bg-gray-200 dark:bg-gray-300"
-          ></div>
-
           <!-- Node -->
           <div
             :class="[
-              'w-4 h-4 rounded-full flex items-center justify-center z-10',
+              'rounded-full flex items-center justify-center',
               item.color || getColorClass(item.status),
               item.status === 'current'
-                ? 'border border-gray-200 dark:border-gray-300 border-solid'
-                : '',
+                ? 'border border-gray-200 dark:border-gray-300 border-solid w-5 h-5 '
+                : 'w-4 h-4',
             ]"
-          >
-            <!-- <component
-              v-if="item.icon"
-              :is="item.icon"
-              class="w-2.5 h-2.5 text-white"
-              aria-hidden="true"
-            /> -->
-          </div>
+          ></div>
         </div>
 
         <!-- Vertical segment below (except for last item) -->
