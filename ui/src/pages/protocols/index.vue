@@ -37,19 +37,29 @@
         :columns="columns"
         v-model:sort-by="sortBy"
         v-model:sorting-order="sortingOrder"
-        hoverable
         :loading="data_loading"
       >
+        <template #cell(name)="{ rowData }">
+          <RouterLink :to="`/protocols/${rowData.id}`">
+            <span class="va-link">
+              {{ rowData.name }}
+            </span>
+          </RouterLink>
+        </template>
+
         <template #cell(created_at)="{ value }">
           <span>{{ datetime.date(value) }}</span>
         </template>
 
         <template #cell(author)="{ source }">
-          <span>{{ source?.username }}</span>
+          <div class="flex items-center gap-1">
+            <UserAvatar :username="source?.username" :name="source?.name" />
+            <span class="">{{ source?.username }}</span>
+          </div>
         </template>
 
         <template #cell(actions)="{ rowData }">
-          <div class="flex gap-1">
+          <div class="flex gap-1 justify-end">
             <va-button
               preset="plain"
               icon="edit"
@@ -67,6 +77,9 @@
     </div>
   </div>
 
+  <!-- create modal -->
+  <CreateProtocolModal ref="createModal" @create="fetch_protocols" redirect />
+
   <!-- edit modal -->
   <EditProtocolModal
     ref="editModal"
@@ -78,7 +91,7 @@
   <DeleteProtocolModal
     ref="deleteModal"
     :protocol="selectedForDeletion"
-    @update="fetch_protocols"
+    @delete="fetch_protocols"
   />
 </template>
 
@@ -92,8 +105,8 @@ const debouncedFilterInput = refDebounced(filterInput, 200);
 const data_loading = ref(false);
 
 const columns = [
-  { key: "name", sortable: true },
-  { key: "description", sortable: true },
+  { key: "name", sortable: true, width: "300px" },
+  { key: "description", sortable: false, width: "400px", tdClass: "truncate" },
   { key: "author", sortable: true },
   { key: "created_at", sortable: true, width: "120px" },
   {
@@ -110,7 +123,7 @@ const columns = [
     thAlign: "center",
     tdAlign: "center",
   },
-  { key: "actions", width: "80px" },
+  { key: "actions", width: "100px", tdAlign: "right", thAlign: "right" },
 ];
 
 // initial sorting order
@@ -168,7 +181,10 @@ function openModalToEditProtocol(rowData) {
   editModal.value.show();
 }
 
-function openModalToCreateProtocol() {}
+const createModal = ref(null);
+function openModalToCreateProtocol() {
+  createModal.value.show();
+}
 
 // delete modal code
 // template ref binding

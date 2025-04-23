@@ -1,6 +1,6 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { param, body } = require('express-validator');
+const { param, body, query } = require('express-validator');
 const _ = require('lodash/fp');
 
 const { validate } = require('../middleware/validators');
@@ -47,7 +47,10 @@ router.get(
 router.get(
   '/:id',
   isPermittedTo('read'),
-  validate([param('id').isInt().toInt()]),
+  validate([
+    param('id').isInt().toInt(),
+    query('participants').default(false).isBoolean().toBoolean(),
+  ]),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['protocols']
     const protocol = await prisma.protocol.findFirstOrThrow({
@@ -60,14 +63,23 @@ router.get(
             user: true,
           },
         },
-        participants: {
+        participants: req.query.participants ? {
           include: {
             participant: true,
           },
-        },
+        } : true,
         author: true,
       },
     });
+    protocol.users = protocol.users.map(({ user, created_at }) => ({ ...user, assigned_at: created_at }));
+    if (req.query.participants) {
+      protocol.participants = protocol.participants.map(
+        ({ participant, created_at }) => ({ ...participant, assigned_at: created_at }),
+      );
+    } else {
+      protocol.num_participants = protocol.participants.length;
+      delete protocol.participants;
+    }
     res.json(protocol);
   }),
 );
@@ -102,7 +114,7 @@ router.post(
   }),
 );
 
-router.patch(
+router.put(
   '/:id',
   isPermittedTo('update'),
   validate([
@@ -175,6 +187,50 @@ router.delete(
       },
     });
     res.sendStatus(200);
+  }),
+);
+
+router.post(
+  '/:protocol_id/users/',
+  isPermittedTo('update'),
+  validate([
+    param('protocol_id').isInt().toInt(),
+    body('user_ids').isArray({ min: 1 }).custom(utils.isIntegerArray),
+  ]),
+  asyncHandler(async (req, res) => {
+    // #swagger.tags = ['protocols']
+    const { protocol_id } = req.params;
+    const { user_ids } = req.body;
+    await prisma.user_protocol.createMany({
+      data: user_ids.map((user_id) => ({
+        protocol_id,
+        user_id,
+      })),
+      skipDuplicates: true,
+    });
+    res.status(201).send();
+  }),
+);
+
+router.delete(
+  '/:protocol_id/users/:user_id',
+  isPermittedTo('delete'),
+  validate([
+    param('protocol_id').isInt().toInt(),
+    param('user_id').isInt().toInt(),
+  ]),
+  asyncHandler(async (req, res) => {
+  // #swagger.tags = ['protocols']
+    const { protocol_id, user_id } = req.params;
+    await prisma.user_protocol.delete({
+      where: {
+        user_id_protocol_id: {
+          protocol_id,
+          user_id,
+        },
+      },
+    });
+    res.status(204).send();
   }),
 );
 

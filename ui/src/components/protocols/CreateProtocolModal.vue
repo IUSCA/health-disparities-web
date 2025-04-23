@@ -1,10 +1,9 @@
 <template>
   <va-modal
     v-model="visible"
-    title="Edit Protocol"
+    title="Create a New Protocol"
     fixed-layout
     hide-default-actions
-    close-button
   >
     <va-inner-loading :loading="loading">
       <va-form class="flex flex-col flex-nowrap gap-3 max-w-2xl" ref="formRef">
@@ -28,7 +27,6 @@
         />
       </va-form>
     </va-inner-loading>
-
     <template #footer>
       <div class="flex w-full justify-start gap-5">
         <va-button
@@ -45,7 +43,6 @@
           preset="secondary"
           class="flex-none ml-auto"
           @click="hide"
-          color="secondary"
           :disabled="loading"
         >
           Cancel
@@ -53,13 +50,13 @@
 
         <va-button
           class="flex-none"
-          @click="handle"
+          @click="create"
           :disabled="!isValid"
+          icon="add"
           color="success"
-          icon="save"
           :loading="loading"
         >
-          Save
+          Create
         </va-button>
       </div>
     </template>
@@ -68,16 +65,16 @@
 
 <script setup>
 import protocolService from "@/services/protocols";
-import toast from "@/services/toast";
 import { useForm } from "vuestic-ui";
 
 const props = defineProps({
-  protocol: {
-    type: Object,
-    default: () => ({}),
+  redirect: {
+    type: Boolean,
+    default: false,
   },
 });
-const emit = defineEmits(["update"]);
+const emit = defineEmits(["create"]);
+const router = useRouter();
 
 // parent component can invoke these methods through the template ref
 defineExpose({
@@ -95,42 +92,37 @@ const data = ref({
   description: "",
 });
 
-watch(
-  [() => props.protocol],
-  () => {
-    if (props.protocol) {
-      const { name, description } = props.protocol;
-      data.value = { name, description };
-    }
-  },
-  { immediate: true },
-);
-
 function hide() {
   loading.value = false;
   visible.value = false;
+  data.value = {
+    name: "",
+    description: "",
+  };
 }
 
 function show() {
   visible.value = true;
 }
 
-function handle() {
+function create() {
   if (validate()) {
     loading.value = true;
 
     protocolService
-      .update(props.protocol.id, data.value)
-      .then(() => {
-        emit("update");
+      .create(data.value)
+      .then((res) => {
+        const protocol_id = res.data.id;
+        // navigate to the new protocol page
+        if (props.redirect) router.push(`/protocols/${protocol_id}`);
       })
       .catch((err) => {
         // todo show toast
         console.error("server error", err);
-        toast.error("Unable to edit protocol");
       })
       .finally(() => {
         loading.value = false;
+        emit("create");
         hide();
       });
   }
@@ -138,8 +130,8 @@ function handle() {
 
 function reset() {
   data.value = {
-    name: props.protocol.name,
-    description: props.protocol.description,
+    name: "",
+    description: "",
   };
 }
 </script>
