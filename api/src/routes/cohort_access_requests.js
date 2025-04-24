@@ -200,7 +200,7 @@ router.post(
 
     const request = await accessRequestsService.create(
       data,
-      { user: req.user, reason: req.body.reason, source: req.user.role },
+      { user: req.user, reason: req.body.reason, source: req.user.roles[0] },
     );
 
     res.status(201).json(request);
@@ -252,7 +252,7 @@ router.patch(
       });
       if (original.status !== updateData.status) {
         const fsm = accessRequestsService.getFSM(original.status);
-        const canTransition = fsm.canTransition({ role: req.user.role, to: updateData.status });
+        const canTransition = fsm.canTransition({ role: req.user.roles[0], to: updateData.status });
         if (!canTransition) {
           return next(createError(400, `Invalid transition from ${original.status} to ${updateData.status}`));
         }
@@ -267,7 +267,7 @@ router.patch(
       { id: req.params.id },
       updateData,
       {
-        user: req.user, version: req.body.version, reason: req.body.reason, source: req.user.role,
+        user: req.user, version: req.body.version, reason: req.body.reason, source: req.user.roles[0],
       },
     );
 
@@ -316,7 +316,7 @@ router.put(
     const request = await accessRequestsService.create({
       cohort_id,
       requester_id: requester.id,
-    }, { user: req.user, source: req.user.role });
+    }, { user: req.user, source: req.user.roles[0] });
 
     res.status(201).json(request);
   }),
