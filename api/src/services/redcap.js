@@ -343,7 +343,7 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
       upstream_record_id: upstreamRecord.record_id,
       expires_at,
       // reviewer_id: upstreamRecord.reviewer_id,
-      stages: updateCohortAccessRequest.stages,
+      stages: upstreamRecord.stages,
     }, {
       user: systemUser, reason: 'REDCap sync', version: request.version, source: 'redcap',
     });
