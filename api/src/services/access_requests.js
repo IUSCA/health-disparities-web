@@ -137,19 +137,21 @@ async function findAll({
 }
 
 async function findOne({
-  id, cohort_id, requester_id, requester_username,
+  id, cohort_id, requester_id, requester_username, request_id,
 }, include = {}) {
   const where = {};
   if (id) where.id = id;
   if (cohort_id) where.cohort_id = cohort_id;
   if (requester_id) where.requester_id = requester_id;
   if (requester_username) where.requester = { username: requester_username };
+  if (request_id) where.request_id = request_id;
 
   // need id
   // or cohort_id and requester_id
   // or cohort_id and requester_username
   if (!(
     where.id
+    || where.request_id
     || (where.cohort_id && where.requester_id)
     || (where.cohort_id && where.requester?.username))
   ) {
@@ -415,4 +417,5 @@ module.exports = {
   create,
   getFSM,
   fsmConfig,
+  mapStages,
 };
