@@ -13,15 +13,15 @@ module.exports = [{
   cron_restart: '0 * * * *', // minute 0 of every hour
   autorestart: false,
 },
-// {
-//   name: 'expire access requests',
-//   script: 'src/scripts/expire_access_requests.js',
-//   cron_restart: '0 * * * *', // minute 0 of every hour
-//   autorestart: false,
-// },
-// {
-//   name: 'poll_redcap',
-//   script: 'src/scripts/poll_redcap.js',
-//   max_restarts: 3,
-// },
+{
+  name: 'expire access requests',
+  script: 'src/scripts/expire_access_requests.js',
+  cron_restart: '0 * * * *', // minute 0 of every hour
+  autorestart: false,
+},
+{
+  name: 'poll_redcap',
+  script: 'src/scripts/poll_redcap.js',
+  max_restarts: 3,
+},
 ];
