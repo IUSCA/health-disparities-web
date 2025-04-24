@@ -244,7 +244,7 @@
     "form_keys": {
       "requester_email": "email",
       "cohort_id": "cohort_identifier",
-      "request_id": "request_identifier",
+      "request_id": "request_id",
       "decision": "final_approval_status",
       "decision_date": "date_final_approval_status",
       "ste_decision": "ste_final_approval_status",
