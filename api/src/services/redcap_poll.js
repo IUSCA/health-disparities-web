@@ -52,7 +52,7 @@ async function processRecords(records) {
       }));
 
     logger.info(`Step 1: ${transformedRecords.length}/${records.length} valid records`);
-    logger.info(transformedRecords);
+    // logger.info(transformedRecords);
 
     // filter out PENDING records
     // const validRecords = transformedRecords.filter((record) => record.status !== 'PENDING');
@@ -86,7 +86,7 @@ async function processRecords(records) {
       `Step 2: ${groupedRecords.length}/${transformedRecords.length} records after grouping by request_id\
  to get the most recent record`,
     );
-    logger.info(groupedRecords);
+    // logger.info(groupedRecords);
 
     // updateCohortAccessRequest always returns a fulfilled promise
     const updatedResults = await Promise.all(groupedRecords.map(redcap.updateCohortAccessRequest));

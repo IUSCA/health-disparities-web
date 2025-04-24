@@ -269,7 +269,7 @@ async function transformRecord(record) {
 async function updateCohortAccessRequest(upstreamRecord) {
   try {
     // find the INITIATED / PENDING record
-    const access_request = await prisma.cohort_access_request.findFirst({
+    const request = await prisma.cohort_access_request.findFirst({
       where: {
         status: {
           in: ['INITIATED', 'PENDING'],
@@ -280,16 +280,31 @@ async function updateCohortAccessRequest(upstreamRecord) {
       },
     });
 
-    if (!access_request) {
+    if (!request) {
       return [
         `Cohort access request not found: requester_id=${upstreamRecord.requester_id}, \
 cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id}`, null];
     }
 
-    if (access_request.status !== upstreamRecord.status) {
-      const fsm = accessRequestsService.getFSM(access_request.status);
+    // do not update when status did not change
+    // or any of the statuses in stages did not change
+    if (request.status === upstreamRecord.status) {
+      const statusMapper = (stages) => stages.reduce((acc, stage) => {
+        acc[stage.id] = stage.status;
+        return acc;
+      }, {});
+      const upstreamStatus = statusMapper(upstreamRecord.stages);
+      const requestStatus = statusMapper(request.stages);
+      if (_.isEqual(upstreamStatus, requestStatus)) {
+        return ['No status changes detected - update skipped', null];
+      }
+    }
+
+    // check if the status transition is valid only when main status is changed
+    if (request.status !== upstreamRecord.status) {
+      const fsm = accessRequestsService.getFSM(request.status);
       if (!fsm.canTransition({ to: upstreamRecord.status, role: 'redcap' })) {
-        return [`Invalid status transition: ${access_request.status} -> ${upstreamRecord.status}`, null];
+        return [`Invalid status transition: ${request.status} -> ${upstreamRecord.status}`, null];
       }
     }
     // else: both statuses should be PENDING
@@ -307,7 +322,7 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
 
     const systemUser = await userService.getSystemUser();
     const result = await accessRequestsService.update({
-      id: access_request.id,
+      id: request.id,
     }, {
       status: upstreamRecord.status,
       decision_date: upstreamRecord.decision_date,
@@ -317,7 +332,7 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
       // reviewer_id: upstreamRecord.reviewer_id,
       stages: updateCohortAccessRequest.stages,
     }, {
-      user: systemUser, reason: 'REDCap sync', version: access_request.version, source: 'redcap',
+      user: systemUser, reason: 'REDCap sync', version: request.version, source: 'redcap',
     });
     return [null, result];
   } catch (error) {

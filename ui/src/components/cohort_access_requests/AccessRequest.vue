@@ -64,7 +64,7 @@
 
       <!-- last synced at -->
       <div v-if="props.adminView">
-        <div class="va-text-secondary text-sm">Last Synced At</div>
+        <div class="va-text-secondary text-sm">Last Synced On</div>
         <div class="" v-if="props.request.last_synced_at">
           {{ datetime.date(props.request.last_synced_at) }}
         </div>
