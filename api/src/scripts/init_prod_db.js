@@ -108,7 +108,7 @@ async function main() {
     // eslint-disable-next-line no-await-in-loop
     await prisma.access_request_stage_definition.upsert({
       where: {
-        name: ard.name,
+        id: ard.id,
       },
       update: {},
       create: ard,
