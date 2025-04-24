@@ -286,10 +286,15 @@ async function updateCohortAccessRequest(upstreamRecord) {
 cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id}`, null];
     }
 
-    const fsm = accessRequestsService.getFSM(access_request.status);
-    if (!fsm.canTransition({ to: upstreamRecord.status, role: 'redcap' })) {
-      return [`Invalid status transition: ${access_request.status} -> ${upstreamRecord.status}`, null];
+    if (access_request.status !== upstreamRecord.status) {
+      const fsm = accessRequestsService.getFSM(access_request.status);
+      if (!fsm.canTransition({ to: upstreamRecord.status, role: 'redcap' })) {
+        return [`Invalid status transition: ${access_request.status} -> ${upstreamRecord.status}`, null];
+      }
     }
+    // else: both statuses should be PENDING
+    // redcap does not have INITIATED status
+    // and we are fetching only INITIATED and PENDING records
 
     // when the status is APPROVED, set the expires_at date
     // to the current date + config.get('access_requests.exipration.days') days

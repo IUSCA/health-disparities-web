@@ -32,6 +32,8 @@ const fsmConfig = {
   states: ['INITIATED', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELED', 'EXPIRED'],
   transitions: [
     { from: 'INITIATED', to: 'PENDING', roles: ['redcap'] },
+    { from: 'INITIATED', to: 'APPROVED', roles: ['redcap'] },
+    { from: 'INITIATED', to: 'REJECTED', roles: ['redcap'] },
     { from: 'PENDING', to: 'APPROVED', roles: ['redcap'] },
     { from: 'PENDING', to: 'REJECTED', roles: ['redcap'] },
     { from: 'PENDING', to: 'CANCELED', roles: ['operator', 'admin', 'user'] },

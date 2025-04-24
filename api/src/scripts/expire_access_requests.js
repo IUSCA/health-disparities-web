@@ -76,7 +76,7 @@ async function expireApprovedRequests() {
 async function main() {
   try {
     await expireApprovedRequests();
-    logger.info('Expired approved requests successfully');
+    logger.info('Run completed successfully.');
   } catch (error) {
     logger.error(`Error expiring approved requests: ${error.message}`);
   } finally {
