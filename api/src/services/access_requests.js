@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const { Prisma, PrismaClient } = require('@prisma/client');
 const _ = require('lodash/fp');
 const config = require('config');
 const ConflictError = require('./errors/ConflictError');
@@ -271,19 +271,27 @@ async function update(
   return prisma.$transaction(async (tx) => {
     // Update the main request if data has changed
     if (isDifferent) {
-      const updatedRequest = await tx.cohort_access_request.updateMany({
-        where: {
-          id: request.id,
-          version: context.version, // optimistic concurrency control
-        },
-        data: {
-          ...incoming,
-          version: { increment: 1 },
-        },
-      });
-
-      if (updatedRequest.count === 0) {
-        throw new ConflictError(CONFLICT_ERROR_MESSAGE);
+      let updatedRequest;
+      try {
+        updatedRequest = await tx.cohort_access_request.update({
+          where: {
+            id: request.id,
+            version: context.version, // optimistic concurrency control
+          },
+          data: {
+            ...incoming,
+            version: { increment: 1 },
+          },
+        });
+      } catch (e) {
+        // only reason for row not found is if version is not correct (concurrently modified)
+        // or if the row was deleted concurrently
+        if (e instanceof Prisma.PrismaClientKnownRequestError) {
+          if (e?.meta?.cause?.includes('not found') || e?.code === 'P2025' || e?.code === 'P2015') {
+            throw new ConflictError(CONFLICT_ERROR_MESSAGE);
+          }
+        }
+        throw e;
       }
 
       // create audit log
