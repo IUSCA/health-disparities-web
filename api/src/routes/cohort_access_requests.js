@@ -14,9 +14,7 @@ const { fsmConfig } = require('../services/access_requests');
 const redcapPollService = require('../services/redcap_poll');
 const redcapService = require('../services/redcap');
 
-const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-});
+const prisma = new PrismaClient();
 const isPermittedTo = accessControl('cohort_access_requests');
 const router = express.Router();
 

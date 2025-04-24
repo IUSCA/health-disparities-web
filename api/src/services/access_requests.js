@@ -4,9 +4,7 @@ const config = require('config');
 const ConflictError = require('./errors/ConflictError');
 const StateMachine = require('./stateMachine');
 
-const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-});
+const prisma = new PrismaClient();
 
 const cohort_columns = {
   id: true,
