@@ -11,9 +11,9 @@ const config = require('config');
 
 const { performSyncWork } = require('../services/redcap_poll');
 
-const INTERVAL_MS = config.get('redcap.polling.interval') * 1000;
+const INTERVAL_MS = config.get('redcap.polling.interval_seconds') * 1000;
 let interval = INTERVAL_MS;
-const MAX_BACKOFF_MS = config.get('redcap.polling.max_backoff') * 1000;
+const MAX_BACKOFF_MS = config.get('redcap.polling.max_backoff_seconds') * 1000;
 
 // normal inrerval - 300
 // delay to 1st retry - 600

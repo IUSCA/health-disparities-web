@@ -6,7 +6,7 @@ const _ = require('lodash/fp');
 const redcap = require('./redcap');
 
 const BATCH_SIZE = config.get('redcap.polling.batch_size');
-const INTERVAL_MS = config.get('redcap.polling.interval') * 1000;
+const INTERVAL_MS = config.get('redcap.polling.interval_seconds') * 1000;
 
 const transport = new winston.transports.DailyRotateFile({
   dirname: './logs',

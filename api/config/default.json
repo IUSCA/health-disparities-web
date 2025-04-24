@@ -237,8 +237,8 @@
     "api_token": "",
     "polling": {
       "enabled": true,
-      "interval": 300,
-      "max_backoff": 1800,
+      "interval_seconds": 300,
+      "max_backoff_seconds": 1800,
       "batch_size": 100
     },
     "form_keys": {
