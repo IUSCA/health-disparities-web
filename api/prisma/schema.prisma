@@ -1085,7 +1085,7 @@ model api_audit_log {
   @@index([api_key_id])
 }
 
-// Partial unique index on requester_id and cohort_id where status is PENDING or APPROVED
+// Partial unique index on requester_id and cohort_id where status is INITIATED, PENDING or APPROVED
 // This ensures that a user can only have one pending or approved access request for a specific cohort
 // CREATE UNIQUE INDEX active_request_unique
 // ON cohort_access_request(requester_id, cohort_id)
