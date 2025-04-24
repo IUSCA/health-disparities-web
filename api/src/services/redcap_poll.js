@@ -39,7 +39,9 @@ async function processRecords(records) {
 
     // transformRecord always returns a fulfilled promise
     const results = await Promise.all(records.map(redcap.transformRecord));
-    const transformedRecords = results.filter(([err, txRecord]) => err === null && txRecord != null);
+    const transformedRecords = results
+      .filter(([err, txRecord]) => err === null && txRecord != null)
+      .map(([, txRecord]) => txRecord);
 
     const errors = _.zip(records, results)
       // eslint-disable-next-line no-unused-vars
@@ -70,7 +72,6 @@ async function processRecords(records) {
       _.mapValues(_.flow(_.sortBy('last_updated_at'), _.last)),
       _.values,
     )(transformedRecords);
-    logger.info(groupedRecords);
 
     // add the errors for records that are excluded
     const groupedRecordIdsSet = new Set(groupedRecords.map((record) => record.record_id));
@@ -85,6 +86,7 @@ async function processRecords(records) {
       `Step 2: ${groupedRecords.length}/${transformedRecords.length} records after grouping by request_id\
  to get the most recent record`,
     );
+    logger.info(groupedRecords);
 
     // updateCohortAccessRequest always returns a fulfilled promise
     const updatedResults = await Promise.all(groupedRecords.map(redcap.updateCohortAccessRequest));
