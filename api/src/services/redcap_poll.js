@@ -50,6 +50,7 @@ async function processRecords(records) {
       }));
 
     logger.info(`Step 1: ${transformedRecords.length}/${records.length} valid records`);
+    logger.info(transformedRecords);
 
     // filter out PENDING records
     // const validRecords = transformedRecords.filter((record) => record.status !== 'PENDING');
@@ -69,6 +70,7 @@ async function processRecords(records) {
       _.mapValues(_.flow(_.sortBy('last_updated_at'), _.last)),
       _.values,
     )(transformedRecords);
+    logger.info(groupedRecords);
 
     // add the errors for records that are excluded
     const groupedRecordIdsSet = new Set(groupedRecords.map((record) => record.record_id));
