@@ -315,8 +315,10 @@ async function update(
       const updatedStages = await Promise.all(
         changed_stages.map((stage) => tx.access_request_stage.update({
           where: {
-            definition_id: stage.id,
-            access_request_id: request.id,
+            access_request_id_definition_id: {
+              access_request_id: request.id,
+              definition_id: stage.id,
+            },
           },
           data: {
             status: stage.status,
