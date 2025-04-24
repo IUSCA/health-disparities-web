@@ -23,6 +23,7 @@
         @click="createModal.show()"
         color="success"
         class="flex-none"
+        disabled
         v-if="auth.canOperate"
       >
         <div class="flex items-center gap-2"></div>

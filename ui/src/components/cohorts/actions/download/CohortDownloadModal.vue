@@ -246,7 +246,9 @@ function onOpenForm({ shouldCreateRequest = true } = {}) {
   loading.value = true;
   const promise = shouldCreateRequest
     ? requestService.createForSelf(cohort.value.id)
-    : Promise.resolve();
+    : Promise.resolve({
+        data: request.value,
+      });
 
   promise
     .then((res) => {
