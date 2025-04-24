@@ -641,33 +641,21 @@ router.get(
       }
     */
 
-    // const cohort = await getCohortById(req.params.id, req.user.username);
-    // if (!cohort) {
-    //   return res.sendStatus(404);
-    // }
+    const cohort = await getCohortById(req.params.id, req.user.username);
+    if (!cohort) {
+      return res.sendStatus(404);
+    }
 
-    // const sql = cohortService.getCohortFilesSummaryQuery({ id: req.params.id });
-    // // console.log(sql.sql, sql.values);
-    // const data = await prisma.$queryRaw(sql);
-    // res.format({
-    //   json: () => res.json(data),
-    //   text: () => {
-    //     const tableStr = toTable(data);
-    //     return res.send(tableStr);
-    //   },
-    // });
-    res.json([
-      {
-        file_type: 'cram',
-        file_count: '18077',
-        total_size: '34699637617023',
+    const sql = cohortService.getCohortFilesSummaryQuery({ id: req.params.id });
+    // console.log(sql.sql, sql.values);
+    const data = await prisma.$queryRaw(sql);
+    res.format({
+      json: () => res.json(data),
+      text: () => {
+        const tableStr = toTable(data);
+        return res.send(tableStr);
       },
-      {
-        file_type: 'gvcf',
-        file_count: '18077',
-        total_size: '1623334944590',
-      },
-    ]);
+    });
   }),
 );
 
