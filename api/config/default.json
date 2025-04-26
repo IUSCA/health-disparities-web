@@ -235,6 +235,7 @@
   "redcap": {
     "base_url": "https://redcap.uits.iu.edu/api",
     "api_token": "",
+    "timezone": "America/New_York",
     "polling": {
       "interval_seconds": 30,
       "max_backoff_seconds": 1800,

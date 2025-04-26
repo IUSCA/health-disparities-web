@@ -1,14 +1,37 @@
 const _ = require('lodash/fp');
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+const config = require('config');
 
-function parseDate(dateString) {
+const REDCAP_TIMEZONE = config.get('redcap.timezone');
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+/**
+ * Parses a date string and converts it from server's timezone to a UTC JavaScript Date object.
+ *
+ * @param {string} dateString - The date string to parse.
+ * @param {boolean} [ignore_errors=false] - Whether to suppress errors and return undefined if parsing fails.
+ * @returns {Date|undefined} The parsed Date object in UTC, or undefined if the input is invalid or errors are ignored.
+ * @throws {Error} Throws an error if parsing fails and `ignore_errors` is false.
+ */
+function parseDate(dateString, ignore_errors = false) {
   if (!dateString) {
-    return;
+    return undefined;
   }
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) {
-    return;
+
+  try {
+    const d = dayjs.tz(dateString, REDCAP_TIMEZONE);
+    if (d.isValid()) {
+      return d.utc().toDate();
+    }
+  } catch (error) {
+    if (!ignore_errors) {
+      throw error;
+    }
+    return undefined;
   }
-  return date;
 }
 
 function parseStatus(status) {

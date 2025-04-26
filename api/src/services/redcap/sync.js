@@ -95,6 +95,7 @@ async function processRecords(records, logger) {
 }
 
 async function performSyncWork(logger) {
+  // return value is a date object in UTC
   const oldestPendingRequestDate = await getOldestPendingRequestDate();
   logger.info(`Oldest pending request date: ${oldestPendingRequestDate}`);
   if (oldestPendingRequestDate === null) {
