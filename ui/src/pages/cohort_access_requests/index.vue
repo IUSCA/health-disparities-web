@@ -70,10 +70,6 @@
         <AccessRequestStatus :request="rowData" />
       </template>
 
-      <template #cell(reviewer)="{ source }">
-        <span> {{ source?.username }} </span>
-      </template>
-
       <template #cell(created_at)="{ source }">
         <span>{{ datetime.date(source) }}</span>
       </template>

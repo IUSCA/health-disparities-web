@@ -50,10 +50,6 @@ async function transformRecord(record) {
 
     const request_id = record[config.get('redcap.form_keys.request_id')] || '';
 
-    // const reviewer_email = record[config.get('redcap.form_keys.approver_email')]
-    // || record[config.get('redcap.form_keys.revoker_email')];
-    // const rejection_reason = record[config.get('redcap.form_keys.rejection_reason')];
-
     const decision_date = parseDate(record[config.get('redcap.form_keys.decision_date')]);
     const status = parseStatus(record[config.get('redcap.form_keys.decision')]);
 
@@ -92,17 +88,6 @@ async function transformRecord(record) {
       return [`Requester not found: ${requester_email}`, null];
     }
 
-    // const reviewer = await prisma.user.findUnique({
-    //   where: {
-    //     email: reviewer_email,
-    //     is_deleted: false,
-    //   },
-    // });
-    // if (!reviewer) {
-    //   logger.error(`Reviewer not found: ${reviewer_email}`);
-    //   notes += `\nReviewer: ${reviewer_email}\n`;
-    // }
-
     let cohort;
     if (cohort_id) {
       cohort = await prisma.cohort.findFirst({
@@ -126,7 +111,6 @@ async function transformRecord(record) {
       record_id: record.record_id,
       requester_id: requester.id,
       cohort_id,
-      // reviewer_id: reviewer?.id,
       decision_date,
       status,
       request_id,
@@ -238,7 +222,6 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
         last_synced_at: new Date(),
         upstream_record_id: upstreamRecord.record_id,
         expires_at,
-        // reviewer_id: upstreamRecord.reviewer_id,
         stages: upstreamRecord.stages,
       },
       context: {

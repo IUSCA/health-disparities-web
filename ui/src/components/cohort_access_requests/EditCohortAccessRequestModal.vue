@@ -34,19 +34,6 @@
           </template>
         </VaInput>
 
-        <!-- select reviewer -->
-        <VaFormField
-          v-model="reviewer"
-          :rules="[(v) => !!v || 'Field is required']"
-        >
-          <UserSelectInput
-            v-model="reviewer"
-            label="Reviewer"
-            placeholder="Click here to select a reviewer"
-            icon="mdi:account-tie-hat"
-          />
-        </VaFormField>
-
         <!-- select status (dropdown) -->
         <VaSelect
           v-model="status"
@@ -97,7 +84,6 @@
 
 <script setup>
 import cohortAccessRequestService from "@/services/cohort_access_requests";
-import { useAuthStore } from "@/stores/auth";
 import { useForm } from "vuestic-ui/web-components";
 
 const emit = defineEmits(["updated"]);
@@ -108,13 +94,11 @@ defineExpose({
   hide,
 });
 
-const authStore = useAuthStore();
 const { validate } = useForm("formRef");
 
 // const props = defineProps({});
 const cohort = ref(null);
 const requester = ref(null);
-const reviewer = ref(null);
 const decisionDate = ref();
 const notes = ref(null);
 const status = ref("PENDING");
@@ -133,7 +117,6 @@ function setState() {
   if (originalRequest.value) {
     cohort.value = originalRequest.value.cohort;
     requester.value = originalRequest.value.requester;
-    reviewer.value = originalRequest.value.reviewer || authStore.user;
     decisionDate.value = originalRequest.value.decision_date
       ? new Date(originalRequest.value.decision_date)
       : null;
@@ -142,7 +125,6 @@ function setState() {
   } else {
     cohort.value = null;
     requester.value = null;
-    reviewer.value = null;
     decisionDate.value = null;
     notes.value = null;
     status.value = "PENDING";
@@ -172,7 +154,6 @@ function submit() {
   loading.value = true;
   cohortAccessRequestService
     .update(originalRequest.value.id, {
-      reviewer_id: reviewer.value.id || null,
       status: status.value,
       decision_date: decisionDate.value || null,
       notes: notes.value || null,

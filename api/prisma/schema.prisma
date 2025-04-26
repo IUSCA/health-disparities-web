@@ -205,7 +205,6 @@ model user {
   api_keys                   api_key[]                  @relation("api_key_user")
   revoked_api_keys           api_key[]                  @relation("api_key_revoker")
   access_requests            cohort_access_request[]    @relation("access_requester")
-  access_reviews             cohort_access_request[]    @relation("cohort_access_reviewer")
   access_request_audit_logs  access_request_audit_log[]
 }
 
@@ -1095,7 +1094,6 @@ model cohort_access_request {
   requester_id       Int // User who made the request
   cohort_id          String        @db.Uuid
   status             RequestStatus @default(INITIATED)
-  reviewer_id        Int? // Reviewer who made the decision
   decision_date      DateTime? // When the last decision was made
   notes              String?
   created_at         DateTime      @default(now()) @db.Timestamp(6)
@@ -1108,7 +1106,6 @@ model cohort_access_request {
 
   requester  user                       @relation(fields: [requester_id], references: [id], name: "access_requester", onDelete: Cascade)
   cohort     cohort                     @relation(fields: [cohort_id], references: [id], onDelete: Cascade)
-  reviewer   user?                      @relation(fields: [reviewer_id], references: [id], name: "cohort_access_reviewer", onDelete: SetNull)
   stages     access_request_stage[]
   audit_logs access_request_audit_log[]
 }

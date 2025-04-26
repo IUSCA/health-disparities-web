@@ -14,7 +14,6 @@ const prisma = new PrismaClient();
  * @param {Object} params - The parameters for creating the access request.
  * @param {string} params.requester_id - The ID of the requester.
  * @param {string} params.cohort_id - The ID of the cohort.
- * @param {string} params.reviewer_id - The ID of the reviewer.
  * @param {string} params.status - The status of the access request.
  * @param {Date} params.decision_date - The decision date of the access request.
  * @param {Date} params.expires_at - The expiration date of the access request.
@@ -28,7 +27,7 @@ const prisma = new PrismaClient();
  * @returns {Promise<Object>} The created cohort access request record.
  */
 async function create({
-  requester_id, cohort_id, reviewer_id, status, decision_date, expires_at, notes,
+  requester_id, cohort_id, status, decision_date, expires_at, notes,
 }, context = {}) {
   // Validate context user
   const userId = context.user?.id;
@@ -37,7 +36,7 @@ async function create({
   }
 
   const data = _.omitBy(_.isUndefined)({
-    requester_id, cohort_id, reviewer_id, status, decision_date, expires_at, notes,
+    requester_id, cohort_id, status, decision_date, expires_at, notes,
   });
   const { user } = context;
 

@@ -13,7 +13,7 @@ function mapStages(stages) {
 }
 
 const toAuditEntry = _.omit([
-  'id', 'created_at', 'updated_at', 'stages', 'reviewer', 'cohort', 'requester', 'audit_logs',
+  'id', 'created_at', 'updated_at', 'stages', 'cohort', 'requester', 'audit_logs',
 ]);
 const toAuditStageEntry = _.pick(['status', 'decision_date', 'metadata']);
 

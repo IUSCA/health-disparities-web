@@ -147,7 +147,6 @@ router.post(
   validate([
     body('cohort_id').isUUID(),
     body('requester_id').isInt().toInt(),
-    body('reviewer_id').optional().isInt().toInt(),
     body('status').optional().isIn(fsm.config.states), // TODO: admins are not allowed to set all statuses
     body('decision_date').optional().isISO8601(),
     body('expires_at').optional().isISO8601(),
@@ -156,7 +155,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['Cohort Access Requests']
     const data = _.flow([
-      _.pick(['cohort_id', 'requester_id', 'reviewer_id', 'status', 'notes', 'decision_date', 'expires_at']),
+      _.pick(['cohort_id', 'requester_id', 'status', 'notes', 'decision_date', 'expires_at']),
       _.omitBy(_.isNil),
     ])(req.body);
 
@@ -183,19 +182,6 @@ router.post(
       return next(createError(404, 'Requester not found'));
     }
 
-    // check if the reviewer exists
-    if (data.reviewer_id) {
-      const reviewer = await prisma.user.findUnique({
-        where: { id: data.reviewer_id },
-        select: {
-          id: true,
-        },
-      });
-      if (!reviewer) {
-        return next(createError(404, 'Reviewer not found'));
-      }
-    }
-
     const request = await accessRequestsService.create(
       data,
       { user: req.user, reason: req.body.reason, source: req.user.roles[0] },
@@ -213,7 +199,6 @@ router.patch(
     param('id').isInt().toInt(),
     body('status').optional().isIn(['PENDING', 'APPROVED', 'REJECTED']),
     body('notes').optional().isString(),
-    body('reviewer_id').optional({ nullable: true }).isInt().toInt(),
     body('decision_date').optional({ nullable: true }).isISO8601(),
     body('expires_at').optional({ nullable: true }).isISO8601(),
     body('version').isInt({ min: 1 }).toInt(),
@@ -225,22 +210,9 @@ router.patch(
     // if value is null, set it to null
 
     const updateData = _.flow([
-      _.pick(['status', 'notes', 'reviewer_id', 'decision_date', 'expires_at']),
+      _.pick(['status', 'notes', 'decision_date', 'expires_at']),
       _.omitBy(_.isUndefined),
     ])(req.body);
-
-    // check if the reviewer exists
-    if (updateData.reviewer_id) {
-      const reviewer = await prisma.user.findUnique({
-        where: { id: updateData.reviewer_id },
-        select: {
-          id: true,
-        },
-      });
-      if (!reviewer) {
-        return next(createError(400, 'Reviewer not found'));
-      }
-    }
 
     // check if transition is valid
     if (updateData.status) {

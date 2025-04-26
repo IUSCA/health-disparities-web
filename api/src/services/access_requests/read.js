@@ -67,7 +67,6 @@ async function findAll({
         cohort: {
           select: cohort_columns,
         },
-        reviewer: true,
         stages: {
           include: {
             definition: true,
@@ -124,7 +123,6 @@ async function findOne({
       cohort: {
         select: cohort_columns,
       },
-      reviewer: true,
       stages: {
         include: {
           definition: true,

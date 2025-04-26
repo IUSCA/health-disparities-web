@@ -57,11 +57,6 @@
         </div>
       </div>
 
-      <!-- <div v-if="props.request.status !== 'PENDING' && props.request.reviewer">
-        <div class="va-text-secondary text-sm">Reviewed By</div>
-        <div class="">{{ props.request.reviewer.name }}</div>
-      </div> -->
-
       <!-- last synced at -->
       <div v-if="props.adminView">
         <div class="va-text-secondary text-sm">Last Synced On</div>
