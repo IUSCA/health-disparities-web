@@ -51,8 +51,8 @@ class CohortAccessRequests {
     return ["INITIATED", "PENDING"].includes(request?.status);
   }
 
-  completeSurvey(request_id) {
-    return api.post(`/cohort_access_requests/${request_id}/survey/complete`);
+  sync(request_id) {
+    return api.post(`/cohort_access_requests/${request_id}/actions/sync`);
   }
 }
 

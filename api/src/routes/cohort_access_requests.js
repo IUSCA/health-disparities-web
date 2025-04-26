@@ -315,12 +315,13 @@ router.put(
 // );
 
 router.post(
-  '/:request_id/sync',
+  '/:request_id/actions/sync',
   validate([
     param('request_id').isUUID(),
   ]),
   asyncHandler(async (req, res) => {
   // #swagger.tags = ['Cohort Access Requests']
+  // #swagger.description = 'Sync records from redcap for the given request ID - Idempotent'
 
     const { request_id } = req.params;
 
@@ -336,7 +337,7 @@ router.post(
     });
 
     try {
-      logger.info(`callback: ${request_id} - survey completed callback received`);
+      logger.info(`sync: ${request_id}`);
       // fetch records from redcap for the given request ID
       // and created or updated after the request created_at date
       const redcapRecords = await redcap.getRecords({
@@ -345,14 +346,14 @@ router.post(
         },
         start_date: request.created_at,
       });
-      logger.info(`callback: ${request_id} - Fetched ${redcapRecords.length} records from redcap`);
-      const errors = await redcap.processRecords(redcapRecords);
+      logger.info(`sync: ${request_id} - Fetched ${redcapRecords.length} records from redcap`);
+      const errors = await redcap.processRecords(redcapRecords, logger);
       // eslint-disable-next-line no-restricted-syntax
       for (const error of errors) {
         logger.error(JSON.stringify(error));
       }
     } catch (error) {
-      logger.error(`callback: ${request_id} - Error handling records: ${error.message}`);
+      logger.error(`sync: ${request_id} - Error handling records: ${error.message}`);
     }
 
     res.status(204).send();

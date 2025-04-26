@@ -24,7 +24,7 @@ onMounted(() => {
   console.log(requestID);
   if (requestID) {
     requestService
-      .completeSurvey(requestID)
+      .sync(requestID)
       .then((response) => {
         console.log("Survey completed successfully", response);
       })

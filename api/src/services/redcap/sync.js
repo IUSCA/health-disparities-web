@@ -3,12 +3,11 @@ const _ = require('lodash/fp');
 
 const { getOldestPendingRequestDate, updateCohortAccessRequest, transformRecord } = require('./data');
 const { getRecords } = require('./redcap');
-const logger = require('./logger');
 
 const BATCH_SIZE = config.get('redcap.polling.update_batch_size');
 const INTERVAL_MS = config.get('redcap.polling.interval_seconds') * 1000;
 
-async function processRecords(records) {
+async function processRecords(records, logger) {
   // 1. get all records from redcap that are created or updated after a certain date.
   // 2. transform the records to match the database schema and filter out invalid records.
   // 3. There can be multiple records with the same request_id.
@@ -95,7 +94,7 @@ async function processRecords(records) {
   }
 }
 
-async function performSyncWork() {
+async function performSyncWork(logger) {
   const oldestPendingRequestDate = await getOldestPendingRequestDate();
   logger.info(`Oldest pending request date: ${oldestPendingRequestDate}`);
   if (oldestPendingRequestDate === null) {
@@ -117,7 +116,7 @@ async function performSyncWork() {
     logger.info(`Processing batch of ${batch.length} records`);
     // processRecords always returns a fulfilled promise
     // eslint-disable-next-line no-await-in-loop
-    const errors = await processRecords(batch);
+    const errors = await processRecords(batch, logger);
     // eslint-disable-next-line no-restricted-syntax
     for (const error of errors) {
       logger.info(error); // will stringify and write to the log file
@@ -128,7 +127,6 @@ async function performSyncWork() {
 module.exports = {
   performSyncWork,
   processRecords,
-  logger,
 };
 
 // if (require.main === module) {
