@@ -9,7 +9,7 @@ require('dotenv-safe').config();
 
 const config = require('config');
 
-const { performSyncWork } = require('../services/redcap_poll');
+const { performSyncWork } = require('../services/redcap');
 
 const INTERVAL_MS = config.get('redcap.polling.interval_seconds') * 1000;
 let interval = INTERVAL_MS;

@@ -236,10 +236,10 @@
     "base_url": "https://redcap.uits.iu.edu/api",
     "api_token": "",
     "polling": {
-      "enabled": true,
-      "interval_seconds": 300,
+      "interval_seconds": 30,
       "max_backoff_seconds": 1800,
-      "batch_size": 100
+      "update_batch_size": 100,
+      "log_level": "info"
     },
     "form_keys": {
       "requester_email": "email",
@@ -248,9 +248,9 @@
       "decision": "final_approval_status",
       "decision_date": "date_final_approval_status",
       "ste_decision": "ste_final_approval_status",
-      "ste_decision_date": "date_ste_final_approval_status",
+      "ste_decision_date": "ste_date_final_status",
       "ssc_decision": "ssc_final_approval_status",
-      "ssc_decision_date": "date_ssc_final_approval_status",
+      "ssc_decision_date": "ssc_date_final_apprv_status",
       "daa_decision": "daa_reviewed",
       "daa_decision_date": "daa_approval_date",
 

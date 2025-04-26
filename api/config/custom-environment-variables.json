@@ -82,6 +82,9 @@
     "encryption_key": "API_KEYS_ENCRYPTION_KEY"
   },
   "redcap": {
-    "api_token": "REDCAP_API_TOKEN"
+    "api_token": "REDCAP_API_TOKEN",
+    "polling": {
+      "log_level": "REDCAP_POLLING_LOG_LEVEL"
+    }
   }
 }

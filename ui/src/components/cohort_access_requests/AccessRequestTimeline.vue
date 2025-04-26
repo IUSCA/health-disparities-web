@@ -44,12 +44,17 @@ const timelineItems = computed(() => {
     if (status === "APPROVED") {
       label = `${stage.name}`; // ✓
       description = stage.decision_date
-        ? `Approved ${datetime.fromNow(stage.decision_date)} (${datetime.date(stage.decision_date)})`
+        ? `Approved on ${datetime.date(stage.decision_date)}`
         : "Approved";
     } else if (status === "REJECTED") {
       label = `${stage.name}`; // ✗
       description = stage.decision_date
-        ? `Rejected ${datetime.fromNow(stage.decision_date)} (${datetime.date(stage.decision_date)})`
+        ? `Rejected on ${datetime.date(stage.decision_date)}`
+        : "Rejected";
+    } else if (status === "APPROVED_WITH_REVISIONS") {
+      label = `${stage.name}`; // ✗
+      description = stage.decision_date
+        ? `Approved with revisions on ${datetime.date(stage.decision_date)}`
         : "Rejected";
     } else {
       label = stage.name;

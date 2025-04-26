@@ -9,10 +9,10 @@ const { validate } = require('../middleware/validators');
 const { accessControl } = require('../middleware/auth');
 
 const accessRequestsService = require('../services/access_requests');
-const { fsmConfig } = require('../services/access_requests');
+const { fsm } = require('../services/access_requests');
 // const userService = require('../services/user');
-const redcapPollService = require('../services/redcap_poll');
-const redcapService = require('../services/redcap');
+const redcap = require('../services/redcap');
+const logger = require('../services/logger');
 
 const prisma = new PrismaClient();
 const isPermittedTo = accessControl('cohort_access_requests');
@@ -25,7 +25,7 @@ router.get(
   validate([
     query('cohort_id').optional().isUUID(),
     query('requester_id').optional().isInt().toInt(),
-    query('status').optional().isIn(fsmConfig.states),
+    query('status').optional().isIn(fsm.config.states),
     query('limit').default(50).isInt({ min: 1 }).toInt(),
     query('offset').default(0).isInt({ min: 0 }).toInt(),
     query('sort_by').default('created_at').isIn(
@@ -57,7 +57,7 @@ router.get(
         total,
         offset,
         limit,
-        states: fsmConfig.states,
+        states: fsm.config.states,
       },
     });
   }),
@@ -71,8 +71,8 @@ router.get(
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['Cohort Access Requests']
     const request = await accessRequestsService.findOne({ id: req.params.id }, { audit_logs: true });
-    request.allowed_transitions = accessRequestsService.getFSM(request.status)
-      .getAllowedTransitions({ role: req.user.roles[0] });
+    request.allowed_transitions = accessRequestsService.fsm.getFSM(request.status)
+      .getAllowedTransitions({ role: fsm.Roles.ADMIN });
     res.json(request);
   }),
 );
@@ -102,7 +102,7 @@ router.get(
   isPermittedTo('read', { checkOwnerShip: true }),
   validate([
     query('cohort_id').optional().isUUID(),
-    query('status').optional().isIn(fsmConfig.states),
+    query('status').optional().isIn(fsm.config.states),
     query('limit').default(50).isInt({ min: 1 }).toInt(),
     query('offset').default(0).isInt({ min: 0 }).toInt(),
     query('sort_by').default('created_at').isIn(
@@ -134,7 +134,7 @@ router.get(
         total,
         offset,
         limit,
-        states: fsmConfig.states,
+        states: fsm.config.states,
       },
     });
   }),
@@ -148,7 +148,7 @@ router.post(
     body('cohort_id').isUUID(),
     body('requester_id').isInt().toInt(),
     body('reviewer_id').optional().isInt().toInt(),
-    body('status').optional().isIn(fsmConfig.states), // TODO: admins are not allowed to set all statuses
+    body('status').optional().isIn(fsm.config.states), // TODO: admins are not allowed to set all statuses
     body('decision_date').optional().isISO8601(),
     body('expires_at').optional().isISO8601(),
     body('notes').isLength({ min: 1, max: 500 }),
@@ -249,8 +249,9 @@ router.patch(
         select: { id: true, status: true },
       });
       if (original.status !== updateData.status) {
-        const fsm = accessRequestsService.getFSM(original.status);
-        const canTransition = fsm.canTransition({ role: req.user.roles[0], to: updateData.status });
+        const canTransition = accessRequestsService.fsm
+          .getFSM(original.status)
+          .canTransition({ role: fsm.Roles.ADMIN, to: updateData.status });
         if (!canTransition) {
           return next(createError(400, `Invalid transition from ${original.status} to ${updateData.status}`));
         }
@@ -261,13 +262,16 @@ router.patch(
       }
     }
 
-    const request = await accessRequestsService.update(
-      { id: req.params.id },
-      updateData,
-      {
-        user: req.user, version: req.body.version, reason: req.body.reason, source: req.user.roles[0],
+    const request = await accessRequestsService.update({
+      identifiers: { id: req.params.id },
+      updates: updateData,
+      context: {
+        user: req.user,
+        version: req.body.version,
+        reason: req.body.reason,
+        source: fsm.Roles.ADMIN,
       },
-    );
+    });
 
     res.json(request);
   }),
@@ -314,7 +318,7 @@ router.put(
     const request = await accessRequestsService.create({
       cohort_id,
       requester_id: requester.id,
-    }, { user: req.user, source: req.user.roles[0] });
+    }, { user: req.user, source: 'user' });
 
     res.status(201).json(request);
   }),
@@ -339,7 +343,7 @@ router.put(
 // );
 
 router.post(
-  '/:request_id/survey/complete',
+  '/:request_id/sync',
   validate([
     param('request_id').isUUID(),
   ]),
@@ -349,33 +353,34 @@ router.post(
     const { request_id } = req.params;
 
     // check if a request with the given request ID exists
-    // in the INITIATED state
+    // in the INITIATED or PENDING state
     const request = await prisma.cohort_access_request.findFirstOrThrow({
       where: {
         request_id,
-        status: 'INITIATED',
+        status: {
+          in: ['INITIATED', 'PENDING'],
+        },
       },
     });
 
     try {
-      redcapPollService.logger.info(`callback: ${request_id} - survey completed callback received`);
-      // fetch records from redcap
-      // for the given request ID
+      logger.info(`callback: ${request_id} - survey completed callback received`);
+      // fetch records from redcap for the given request ID
       // and created or updated after the request created_at date
-      const redcapRecords = await redcapService.getRecords({
+      const redcapRecords = await redcap.getRecords({
         filters: {
           request_id,
         },
         start_date: request.created_at,
       });
-      redcapPollService.logger.info(`callback: ${request_id} - Fetched ${redcapRecords.length} records from redcap`);
-      const errors = await redcapPollService.processRecords(redcapRecords);
+      logger.info(`callback: ${request_id} - Fetched ${redcapRecords.length} records from redcap`);
+      const errors = await redcap.processRecords(redcapRecords);
       // eslint-disable-next-line no-restricted-syntax
       for (const error of errors) {
-        redcapPollService.logger.info(error); // will stringify and write to the log file
+        logger.error(JSON.stringify(error));
       }
     } catch (error) {
-      redcapPollService.logger.error(`callback: ${request_id} - Error handling records: ${error.message}`);
+      logger.error(`callback: ${request_id} - Error handling records: ${error.message}`);
     }
 
     res.status(204).send();

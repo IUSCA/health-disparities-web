@@ -7,11 +7,13 @@ const accessRequestsService = require('../services/access_requests');
 const userService = require('../services/user');
 
 const prisma = new PrismaClient();
+const { fsm } = accessRequestsService;
+
 const BATCH_SIZE = 10;
 
 async function expireApprovedRequests() {
   const systemUser = await userService.getSystemUser();
-  const requestIdsToExpire = await prisma.cohort_access_request.findMany({
+  const requestsToExpire = await prisma.cohort_access_request.findMany({
     where: {
       status: 'APPROVED',
       expires_at: {
@@ -20,36 +22,37 @@ async function expireApprovedRequests() {
     },
     select: {
       id: true,
+      version: true,
     },
   });
 
-  const totalRequests = requestIdsToExpire.length;
+  const totalRequests = requestsToExpire.length;
   let successfulCount = 0;
   let failedCount = 0;
 
   logger.info(`Found ${totalRequests} requests to expire.`);
 
-  const batches = _.chunk(BATCH_SIZE)(requestIdsToExpire);
+  const batches = _.chunk(BATCH_SIZE)(requestsToExpire);
 
   // eslint-disable-next-line no-restricted-syntax
   for (const batch of batches) {
     try {
       // eslint-disable-next-line no-await-in-loop
       const results = await Promise.allSettled(
-        batch.map(async ({ id }) => {
-          await accessRequestsService.update(
-            { id },
-            {
+        batch.map(async ({ id, version }) => {
+          await accessRequestsService.update({
+            identifiers: { id },
+            updates: {
               status: 'EXPIRED',
               decision_date: new Date(),
             },
-            {
+            context: {
               user: systemUser,
               reason: 'EXPIRED',
-              version: 0,
-              source: 'system',
+              version,
+              source: fsm.Roles.SYSTEM,
             },
-          );
+          });
         }),
       );
 

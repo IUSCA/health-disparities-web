@@ -1,29 +1,12 @@
 const config = require('config');
-const winston = require('winston');
-require('winston-daily-rotate-file');
 const _ = require('lodash/fp');
 
-const redcap = require('./redcap');
+const { getOldestPendingRequestDate, updateCohortAccessRequest, transformRecord } = require('./data');
+const { getRecords } = require('./redcap');
+const logger = require('./logger');
 
-const BATCH_SIZE = config.get('redcap.polling.batch_size');
+const BATCH_SIZE = config.get('redcap.polling.update_batch_size');
 const INTERVAL_MS = config.get('redcap.polling.interval_seconds') * 1000;
-
-const transport = new winston.transports.DailyRotateFile({
-  dirname: './logs',
-  filename: 'redcap-poll-errors-%DATE%.log',
-  datePattern: 'YYYY-MM-DD-HH',
-  zippedArchive: false,
-  maxFiles: '10',
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json(),
-  ),
-});
-
-const logger = winston.createLogger({
-  transports: [transport],
-});
 
 async function processRecords(records) {
   // 1. get all records from redcap that are created or updated after a certain date.
@@ -38,7 +21,7 @@ async function processRecords(records) {
     logger.info(`Processing ${records.length} records`);
 
     // transformRecord always returns a fulfilled promise
-    const results = await Promise.all(records.map(redcap.transformRecord));
+    const results = await Promise.all(records.map(transformRecord));
     const transformedRecords = results
       .filter(([err, txRecord]) => err === null && txRecord != null)
       .map(([, txRecord]) => txRecord);
@@ -89,7 +72,7 @@ async function processRecords(records) {
     // logger.info(groupedRecords);
 
     // updateCohortAccessRequest always returns a fulfilled promise
-    const updatedResults = await Promise.all(groupedRecords.map(redcap.updateCohortAccessRequest));
+    const updatedResults = await Promise.all(groupedRecords.map(updateCohortAccessRequest));
 
     const [success, failures] = _.flow(
       _.zip(groupedRecords),
@@ -113,7 +96,7 @@ async function processRecords(records) {
 }
 
 async function performSyncWork() {
-  const oldestPendingRequestDate = await redcap.getOldestPendingRequestDate();
+  const oldestPendingRequestDate = await getOldestPendingRequestDate();
   logger.info(`Oldest pending request date: ${oldestPendingRequestDate}`);
   if (oldestPendingRequestDate === null) {
     logger.info('No pending records found');
@@ -123,7 +106,7 @@ async function performSyncWork() {
   const startDate = new Date(oldestPendingRequestDate.getTime() - 2 * INTERVAL_MS);
   logger.info(`Start date: ${startDate} to get records from redcap`);
 
-  const records = await redcap.getRecords({
+  const records = await getRecords({
     start_date: startDate,
   });
   logger.info(`Fetched ${records.length} records from redcap`);

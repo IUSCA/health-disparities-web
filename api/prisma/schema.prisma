@@ -1106,9 +1106,9 @@ model cohort_access_request {
   upstream_record_id String? // ID of the record in the upstream system
   version            Int           @default(1) // Version to implement optimistic locking
 
-  requester  user                       @relation(fields: [requester_id], references: [id], name: "access_requester")
-  cohort     cohort                     @relation(fields: [cohort_id], references: [id])
-  reviewer   user?                      @relation(fields: [reviewer_id], references: [id], name: "cohort_access_reviewer")
+  requester  user                       @relation(fields: [requester_id], references: [id], name: "access_requester", onDelete: Cascade)
+  cohort     cohort                     @relation(fields: [cohort_id], references: [id], onDelete: Cascade)
+  reviewer   user?                      @relation(fields: [reviewer_id], references: [id], name: "cohort_access_reviewer", onDelete: SetNull)
   stages     access_request_stage[]
   audit_logs access_request_audit_log[]
 }

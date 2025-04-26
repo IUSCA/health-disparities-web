@@ -1,123 +1,16 @@
-const axios = require('axios');
 const config = require('config');
 const { PrismaClient } = require('@prisma/client');
 const _ = require('lodash/fp');
 const validator = require('validator');
 
-const accessRequestsService = require('./access_requests');
-const userService = require('./user');
+const accessRequestsService = require('../access_requests');
+const userService = require('../user');
+const {
+  parseDate, parseStatus, parseSTEStatus, getLastModifiedDate,
+} = require('./utils');
 
 const prisma = new PrismaClient();
-
-const client = axios.create({
-  baseURL: config.get('redcap.base_url'),
-});
-const API_TOKEN = config.get('redcap.api_token');
-
-function buildRedcapFilterLogic(filters) {
-  const _filters = _.omitBy(_.isUndefined, filters);
-  if (_.isEmpty(_filters)) {
-    return '';
-  }
-  const conditions = Object.entries(_filters).map(([key, value]) => `[${key}]="${value}"`);
-  return conditions.join(' && ');
-}
-
-/**
- * Get records from REDCap
- * @param {Object} options
- * @param {Array} options.select - Fields to select
- * @param {Date} options.start_date - Return only records that have been created or modified *after* a given date/time in Redcap server timezone
- * @param {Date} options.end_date - Return only records that have been created or modified *before* a given date/time in Redcap server timezone
- * @returns {Promise} - A promise that resolves with the records
- */
-function getRecords({
-  filters = {},
-  select = [],
-  start_date = null,
-  end_date = null,
-} = {}) {
-  const data = {
-    token: API_TOKEN,
-    content: 'record',
-    action: 'export',
-    format: 'json',
-    type: 'flat',
-    csvDelimiter: '',
-    rawOrLabel: 'raw',
-    rawOrLabelHeaders: 'raw',
-    exportCheckboxLabel: 'true',
-    exportSurveyFields: 'true',
-    exportDataAccessGroups: 'true',
-    returnFormat: 'json',
-    filterLogic: buildRedcapFilterLogic(filters),
-  };
-
-  if (select.length) {
-    // 'approve_catalog_access_complete, catalog_access_status,
-    // catalog_access_revoked, terra_user_id, who_apprv_catalog_access, who_revoked_catalog_access,
-    // why_catalog_access_revoked'
-    data.fields = select.join(',');
-  }
-
-  if (start_date) {
-    // convert to YYYY-MM-DD HH:MM:SS
-    // eslint-disable-next-line prefer-destructuring
-    data.dateRangeBegin = start_date.toISOString().split('T')[0];
-  }
-
-  if (end_date) {
-    // convert to YYYY-MM-DD HH:MM:SS
-    // eslint-disable-next-line prefer-destructuring
-    data.dateRangeEnd = end_date.toISOString().split('T')[0];
-  }
-
-  const params = new URLSearchParams();
-  Object.keys(data).forEach((key) => {
-    params.append(key, data[key]);
-  });
-  // console.log(params.toString());
-  return client.post('/', params).then((response) => response.data);
-}
-
-function parseDate(dateString) {
-  if (!dateString) {
-    return;
-  }
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) {
-    return;
-  }
-  return date;
-}
-
-function parseStatus(status) {
-  if (status === '1') {
-    return 'APPROVED';
-  } if (status === '0') {
-    return 'REJECTED';
-  }
-  return 'PENDING';
-}
-
-function parseSTEStatus(status) {
-  if (status === '1') {
-    return 'APPROVED';
-  } if (status === '0') {
-    return 'REJECTED';
-  } if (status === '2') {
-    return 'APPROVED_WITH_REVISIONS';
-  }
-  return 'PENDING';
-}
-
-const getLastModifiedDate = _.flow([
-  _.pickBy((value, key) => key.endsWith('_timestamp')),
-  _.values,
-  _.map((value) => new Date(value)),
-  _.filter((date) => !Number.isNaN(date.getTime())),
-  _.max,
-]);
+const { fsm } = accessRequestsService;
 
 // get the created date of oldest record in pending status
 async function getOldestPendingRequestDate() {
@@ -315,8 +208,9 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
 
     // check if the status transition is valid only when main status is changed
     if (request.status !== upstreamRecord.status) {
-      const fsm = accessRequestsService.getFSM(request.status);
-      if (!fsm.canTransition({ to: upstreamRecord.status, role: 'redcap' })) {
+      const canTransition = fsm.getFSM(request.status)
+        .canTransition({ to: upstreamRecord.status, role: fsm.Roles.REDCAP });
+      if (!canTransition) {
         return [`Invalid status transition: ${request.status} -> ${upstreamRecord.status}`, null];
       }
     }
@@ -335,17 +229,24 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
 
     const systemUser = await userService.getSystemUser();
     const result = await accessRequestsService.update({
-      id: request.id,
-    }, {
-      status: upstreamRecord.status,
-      decision_date: upstreamRecord.decision_date,
-      last_synced_at: new Date(),
-      upstream_record_id: upstreamRecord.record_id,
-      expires_at,
-      // reviewer_id: upstreamRecord.reviewer_id,
-      stages: upstreamRecord.stages,
-    }, {
-      user: systemUser, reason: 'REDCap sync', version: request.version, source: 'redcap',
+      identifiers: {
+        id: request.id,
+      },
+      updates: {
+        status: upstreamRecord.status,
+        decision_date: upstreamRecord.decision_date,
+        last_synced_at: new Date(),
+        upstream_record_id: upstreamRecord.record_id,
+        expires_at,
+        // reviewer_id: upstreamRecord.reviewer_id,
+        stages: upstreamRecord.stages,
+      },
+      context: {
+        user: systemUser,
+        reason: 'REDCap sync',
+        version: request.version,
+        source: fsm.Roles.REDCAP,
+      },
     });
     return [null, result];
   } catch (error) {
@@ -354,7 +255,6 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
 }
 
 module.exports = {
-  getRecords,
   getOldestPendingRequestDate,
   transformRecord,
   updateCohortAccessRequest,
