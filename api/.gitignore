@@ -52,3 +52,5 @@ out/
 clients/*
 !clients/.env.example
 !clients/.bashrc
+
+/notebooks

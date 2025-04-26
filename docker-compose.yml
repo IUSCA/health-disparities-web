@@ -15,6 +15,8 @@ services:
       - -c
       - |
         npm install && exec /opt/sca/app/node_modules/.bin/vite --host
+    profiles:
+      - dev
 
   api:
     image: node:21
@@ -44,6 +46,8 @@ services:
         npm install \
         && npx prisma generate client \
         && exec /opt/sca/app/node_modules/.bin/nodemon --signal SIGTERM src/index.js
+    profiles:
+      - dev
 
 
     extra_hosts:
@@ -70,6 +74,7 @@ services:
       - 127.0.0.1:5432:5432
     expose:
       - 5432
+    
 
   # meilisearch:
   #   image: getmeili/meilisearch:v1.2
@@ -95,7 +100,9 @@ services:
         - ./ui/.cert:/etc/nginx/certs:ro       # Mount for SSL certificates
     extra_hosts:
       - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
-
+    profiles:
+      - api-client
+  
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter
     environment:
@@ -108,6 +115,8 @@ services:
       - ./metrics/postgres_exporter/queries.yml:/etc/postgres_exporter/queries.yml
     command:
       - "--extend.query-path=/etc/postgres_exporter/queries.yml"
+    profiles:
+      - metrics
 
   prometheus:
     image: prom/prometheus
@@ -118,6 +127,8 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
     # ports:
       # - "9090:9090"
+    profiles:
+      - metrics
 
   grafana:
     image: grafana/grafana
@@ -132,6 +143,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    profiles:
+      - metrics
 
 # start a docker container to run the api client
 # this is a bash client to run queries against the api
@@ -144,7 +157,21 @@ services:
       - ./api/clients/.env
     extra_hosts:
       - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
+    profiles:
+      - api-client
     
+  jupyter_ijs:
+    image: darkbluestudios/jupyter-ijavascript-utils:latest
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./api/notebooks:/home/jovyan/work/notebooks
+      - ./api/node_modules:/home/jovyan/work/node_modules
+      - ./api/package.json:/home/jovyan/work/package.json:ro
+    # stdin_open: true
+    # tty: true
+    profiles:
+      - repl
       
 volumes:
   ui_modules:
