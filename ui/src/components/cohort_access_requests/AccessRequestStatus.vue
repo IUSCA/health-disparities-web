@@ -21,6 +21,7 @@
 </template>
 
 <script setup>
+import { getIcon } from "@/components/cohort_access_requests/icons";
 import requestService from "@/services/cohort_access_requests";
 import * as datetime from "@/services/datetime";
 
@@ -46,16 +47,5 @@ function getIconColor(status) {
     EXPIRED: "text-purple-500 dark:text-purple-400",
   };
   return colors[status] || "text-gray-500 dark:text-gray-400";
-}
-function getIcon(status) {
-  const icons = {
-    INITIATED: "mdi-hourglass-empty",
-    PENDING: "mdi-hourglass",
-    APPROVED: "mdi-check-circle",
-    REJECTED: "mdi-close-circle",
-    CANCELED: "mdi-cancel",
-    EXPIRED: "mdi-clock-alert",
-  };
-  return icons[status] || "mdi-help-circle";
 }
 </script>

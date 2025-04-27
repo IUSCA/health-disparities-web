@@ -82,7 +82,7 @@
             <AccessRequestTimeline :request="request" />
           </VaCollapse>
 
-          <div class="mb-12"></div>
+          <!-- <div class="mb-12"></div> -->
         </div>
 
         <!-- request approved -->
@@ -184,12 +184,7 @@ const loading = ref(false);
 const cohort = ref(null);
 const request = ref(null);
 
-// collapse: show files summary when there is no request or request is not active
-// collapse element is entirely hidden when request is in initiated state
-const summaryCollapseValue = computed({
-  get: () => !request.value || !requestService.isActive(request.value),
-  set: (value) => value,
-});
+const summaryCollapseValue = ref(false);
 
 // collapse: show request progress when request is in pending state
 const progressCollapseValue = computed({

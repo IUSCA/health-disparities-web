@@ -73,13 +73,16 @@ async function processRecords(records, logger) {
     // updateCohortAccessRequest always returns a fulfilled promise
     const updatedResults = await Promise.all(groupedRecords.map(updateCohortAccessRequest));
 
-    const [success, failures] = _.flow(
-      _.zip(groupedRecords),
+    // const [success, failures] = _.flow(
+    //   _.zip(groupedRecords),
+    //   // eslint-disable-next-line no-unused-vars
+    //   _.partition(([record, [error, result]]) => result != null),
+    // )(updatedResults);
+    const failures = _.zip(groupedRecords, updatedResults)
       // eslint-disable-next-line no-unused-vars
-      _.partition(([record, [error, result]]) => result != null),
-    )(updatedResults);
+      .filter(([record, [error]]) => error != null);
 
-    const updatedRecordsCount = success.length;
+    const updatedRecordsCount = updatedResults.filter(([, result]) => result != null).length;
     errors.push(...failures.map(([record, [error]]) => ({
       record,
       error,
@@ -88,7 +91,7 @@ async function processRecords(records, logger) {
     logger.info(`Step 3: ${updatedRecordsCount}/${groupedRecords.length} cohort access requests updated`);
 
     // console.log('Errors:', errors.map((obj) => obj.error));
-    return errors;
+    return [errors, updatedRecordsCount];
   } catch (error) {
     logger.error(`Error handling records: ${error.message}`);
   }
@@ -102,6 +105,7 @@ async function performSyncWork(logger) {
     logger.info('No pending records found');
     return;
   }
+
   // get the date 2 sync cycles before the oldest pending request date
   const startDate = new Date(oldestPendingRequestDate.getTime() - 2 * INTERVAL_MS);
   logger.info(`Start date: ${startDate} to get records from redcap`);
@@ -117,7 +121,7 @@ async function performSyncWork(logger) {
     logger.info(`Processing batch of ${batch.length} records`);
     // processRecords always returns a fulfilled promise
     // eslint-disable-next-line no-await-in-loop
-    const errors = await processRecords(batch, logger);
+    const [errors] = await processRecords(batch, logger);
     // eslint-disable-next-line no-restricted-syntax
     for (const error of errors) {
       logger.info(error); // will stringify and write to the log file

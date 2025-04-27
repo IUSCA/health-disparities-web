@@ -70,7 +70,7 @@
 
       <!-- upstream record id -->
       <div v-if="props.adminView">
-        <div class="va-text-secondary text-sm">Upstream Record ID</div>
+        <div class="va-text-secondary text-sm">REDCap Record ID</div>
         <div class="">
           {{ props.request.upstream_record_id || "Not yet synced" }}
         </div>
@@ -85,7 +85,7 @@
       >
         <div class="va-text-secondary text-sm">Expires At</div>
         <div class="" v-if="props.request.expires_at">
-          {{ datetime.date(props.request.expires_at) }}
+          {{ datetime.displayDateTime(props.request.expires_at) }}
         </div>
         <div v-else>
           <span class=""> Never </span>
@@ -96,12 +96,11 @@
     <!-- notes; may be long text; show neatly -->
     <div class="mb-4" v-if="props.adminView || props.request.notes">
       <div class="va-text-secondary text-sm">Notes</div>
-      <div class="text-sm max-h-24 overflow-y-auto">
+      <div class="max-h-24 overflow-y-auto">
         <span v-if="!props.request.notes || props.request.notes.length === 0">
           No notes provided.
         </span>
         <span v-else> {{ props.request.notes }} </span>
-        {{ props.request.notes }}
       </div>
     </div>
   </div>

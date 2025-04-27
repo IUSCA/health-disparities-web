@@ -6,10 +6,10 @@ const _ = require('lodash/fp');
 
 const asyncHandler = require('../middleware/asyncHandler');
 const { validate } = require('../middleware/validators');
-const { accessControl } = require('../middleware/auth');
+const { accessControl, getPermission } = require('../middleware/auth');
 
 const accessRequestsService = require('../services/access_requests');
-const { fsm } = require('../services/access_requests');
+
 // const userService = require('../services/user');
 const redcap = require('../services/redcap');
 const logger = require('../services/logger');
@@ -17,6 +17,13 @@ const logger = require('../services/logger');
 const prisma = new PrismaClient();
 const isPermittedTo = accessControl('cohort_access_requests');
 const router = express.Router();
+const { fsm } = accessRequestsService;
+
+function getFSMRole(userRoles) {
+  return (userRoles.includes('admin') || userRoles.includes('operator'))
+    ? fsm.Roles.ADMIN
+    : fsm.Roles.USER;
+}
 
 // Get all access requests
 router.get(
@@ -72,7 +79,7 @@ router.get(
     // #swagger.tags = ['Cohort Access Requests']
     const request = await accessRequestsService.findOne({ id: req.params.id }, { audit_logs: true });
     request.allowed_transitions = accessRequestsService.fsm.getFSM(request.status)
-      .getAllowedTransitions({ role: fsm.Roles.ADMIN });
+      .getAllowedTransitions({ role: getFSMRole(req.user.roles) });
     res.json(request);
   }),
 );
@@ -92,6 +99,13 @@ router.get(
     if (request.requester_id !== req.user.id) {
       return next(createError(403, 'You are not allowed to access this request'));
     }
+
+    request.allowed_transitions = fsm
+      .getFSM(request.status)
+      .getAllowedTransitions({
+        role: getFSMRole(req.user.roles),
+      });
+
     res.json(req.permission.filter(request));
   }),
 );
@@ -141,55 +155,56 @@ router.get(
 );
 
 // Create new access request
-router.post(
-  '/',
-  isPermittedTo('create'),
-  validate([
-    body('cohort_id').isUUID(),
-    body('requester_id').isInt().toInt(),
-    body('status').optional().isIn(fsm.config.states), // TODO: admins are not allowed to set all statuses
-    body('decision_date').optional().isISO8601(),
-    body('expires_at').optional().isISO8601(),
-    body('notes').isLength({ min: 1, max: 500 }),
-  ]),
-  asyncHandler(async (req, res, next) => {
-    // #swagger.tags = ['Cohort Access Requests']
-    const data = _.flow([
-      _.pick(['cohort_id', 'requester_id', 'status', 'notes', 'decision_date', 'expires_at']),
-      _.omitBy(_.isNil),
-    ])(req.body);
+// no longer used, may use in the future
+// router.post(
+//   '/',
+//   isPermittedTo('create'),
+//   validate([
+//     body('cohort_id').isUUID(),
+//     body('requester_id').isInt().toInt(),
+//     body('status').optional().isIn(fsm.config.states), // TODO: admins are not allowed to set all statuses
+//     body('decision_date').optional().isISO8601(),
+//     body('expires_at').optional().isISO8601(),
+//     body('notes').isLength({ min: 1, max: 500 }),
+//   ]),
+//   asyncHandler(async (req, res, next) => {
+//     // #swagger.tags = ['Cohort Access Requests']
+//     const data = _.flow([
+//       _.pick(['cohort_id', 'requester_id', 'status', 'notes', 'decision_date', 'expires_at']),
+//       _.omitBy(_.isNil),
+//     ])(req.body);
 
-    // check if the cohort exists
-    // cohort should be published and not temporary
-    const cohort = await prisma.cohort.findFirst({
-      where: { id: data.cohort_id, is_published: true, is_temp: false },
-      select: {
-        id: true,
-      },
-    });
-    if (!cohort) {
-      return next(createError(404, 'Cohort does not exist or is not published'));
-    }
+//     // check if the cohort exists
+//     // cohort should be published and not temporary
+//     const cohort = await prisma.cohort.findFirst({
+//       where: { id: data.cohort_id, is_published: true, is_temp: false },
+//       select: {
+//         id: true,
+//       },
+//     });
+//     if (!cohort) {
+//       return next(createError(404, 'Cohort does not exist or is not published'));
+//     }
 
-    // check if the requester exists
-    const requester = await prisma.user.findUnique({
-      where: { id: data.requester_id },
-      select: {
-        id: true,
-      },
-    });
-    if (!requester) {
-      return next(createError(404, 'Requester not found'));
-    }
+//     // check if the requester exists
+//     const requester = await prisma.user.findUnique({
+//       where: { id: data.requester_id },
+//       select: {
+//         id: true,
+//       },
+//     });
+//     if (!requester) {
+//       return next(createError(404, 'Requester not found'));
+//     }
 
-    const request = await accessRequestsService.create(
-      data,
-      { user: req.user, reason: req.body.reason, source: req.user.roles[0] },
-    );
+//     const request = await accessRequestsService.create(
+//       data,
+//       { user: req.user, reason: req.body.reason, source: req.user.roles[0] },
+//     );
 
-    res.status(201).json(request);
-  }),
-);
+//     res.status(201).json(request);
+//   }),
+// );
 
 // Update access request
 router.patch(
@@ -197,7 +212,7 @@ router.patch(
   isPermittedTo('update'),
   validate([
     param('id').isInt().toInt(),
-    body('status').optional().isIn(['PENDING', 'APPROVED', 'REJECTED']),
+    body('status').optional().isIn(fsm.config.states),
     body('notes').optional().isString(),
     body('decision_date').optional({ nullable: true }).isISO8601(),
     body('expires_at').optional({ nullable: true }).isISO8601(),
@@ -214,16 +229,20 @@ router.patch(
       _.omitBy(_.isUndefined),
     ])(req.body);
 
+    const original = await prisma.cohort_access_request.findFirstOrThrow({
+      where: { id: req.params.id },
+      select: { id: true, status: true },
+    });
+
     // check if transition is valid
     if (updateData.status) {
-      const original = await prisma.cohort_access_request.findFirstOrThrow({
-        where: { id: req.params.id },
-        select: { id: true, status: true },
-      });
       if (original.status !== updateData.status) {
-        const canTransition = accessRequestsService.fsm
+        const canTransition = fsm
           .getFSM(original.status)
-          .canTransition({ role: fsm.Roles.ADMIN, to: updateData.status });
+          .canTransition({
+            role: getFSMRole(req.user.roles),
+            to: updateData.status,
+          });
         if (!canTransition) {
           return next(createError(400, `Invalid transition from ${original.status} to ${updateData.status}`));
         }
@@ -290,7 +309,7 @@ router.put(
     const request = await accessRequestsService.create({
       cohort_id,
       requester_id: requester.id,
-    }, { user: req.user, source: 'user' });
+    }, { user: req.user, source: fsm.Roles.USER });
 
     res.status(201).json(request);
   }),
@@ -319,44 +338,114 @@ router.post(
   validate([
     param('request_id').isUUID(),
   ]),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
   // #swagger.tags = ['Cohort Access Requests']
   // #swagger.description = 'Sync records from redcap for the given request ID - Idempotent'
+  /* #swagger.responses[200] = {
+      description: 'Sync performed',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: 'Request updated',
+              },
+            },
+          },
+        },
+      }
+    }
+  */
+    // #swagger.responses[400] = { description: 'Invalid request ID' }
+    // #swagger.responses[403] = { description: 'Forbidden' }
+    // #swagger.responses[404] = { description: 'Request not found or not in a valid state' }
+    // #swagger.responses[502] = { description: 'Error fetching records from redcap' }
 
     const { request_id } = req.params;
 
-    // check if a request with the given request ID exists
-    // in the INITIATED or PENDING state
-    const request = await prisma.cohort_access_request.findFirstOrThrow({
+    // access control:
+    // operators and admins can sync any request
+    // users can only sync their own requests
+    // we'll use resource: cohort_access_requests and action: update to model this
+
+    const request = await prisma.cohort_access_request.findFirst({
       where: {
         request_id,
-        status: {
-          in: ['INITIATED', 'PENDING'],
-        },
       },
     });
 
+    const permission = getPermission({
+      resource: 'cohort_access_requests',
+      action: 'update',
+      requester_roles: req.user.roles,
+      checkOwnerShip: true,
+      requester: req.user.id,
+      resourceOwner: request.requester_id,
+    });
+
+    if (!permission.granted) {
+      return next(createError(403));
+    }
+
+    // check if a request with the given request ID exists
+    // in the INITIATED or PENDING state
+    if (!request || !['INITIATED', 'PENDING'].includes(request.status)) {
+      return next(createError(404, 'Request not found or not in a valid state'));
+    }
+
+    let redcapRecords = [];
     try {
-      logger.info(`sync: ${request_id}`);
       // fetch records from redcap for the given request ID
-      // and created or updated after the request created_at date
-      const redcapRecords = await redcap.getRecords({
+      // and created or updated after the request last synced date if present or created_at date
+      redcapRecords = await redcap.getRecords({
         filters: {
           request_id,
         },
-        start_date: request.created_at,
+        start_date: request.last_synced_at || request.created_at,
       });
-      logger.info(`sync: ${request_id} - Fetched ${redcapRecords.length} records from redcap`);
-      const errors = await redcap.processRecords(redcapRecords, logger);
-      // eslint-disable-next-line no-restricted-syntax
-      for (const error of errors) {
-        logger.error(JSON.stringify(error));
-      }
     } catch (error) {
-      logger.error(`sync: ${request_id} - Error handling records: ${error.message}`);
+      logger.error(`sync: ${request_id} - Error fetching records from redcap: ${error.message}`);
+      return next(createError.BadGateway('Error fetching records from redcap'));
     }
 
-    res.status(204).send();
+    // set no cache headers
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+
+    if (!redcapRecords || redcapRecords.length === 0) {
+      logger.info(`sync: ${request_id} - No records found in redcap`);
+      return res.json({
+        message: 'No changes detected',
+      });
+    }
+
+    logger.info(`sync: ${request_id} - Fetched ${redcapRecords.length} records from redcap`);
+    const [errors, numUpdates] = await redcap.processRecords(redcapRecords, logger);
+    // eslint-disable-next-line no-restricted-syntax
+    for (const error of errors) {
+      logger.error(JSON.stringify(error));
+    }
+
+    // errors.length === 0 && numUpdates > 0 : Request updated
+    // errors.length > 0 && numUpdates > 0 : Request updated
+    // errors.length === 0 && numUpdates === 0 : No changes detected
+    // errors.length > 0 && numUpdates === 0 : Request not updated
+    // errors.length === redcapRecords.length : something went wrong
+
+    if (numUpdates > 0) {
+      res.json({
+        message: 'Request updated',
+      });
+    } else if (errors.length > 0) {
+      res.json({
+        message: 'Request not updated',
+      });
+    } else {
+      res.json({
+        message: 'No changes detected',
+      });
+    }
   }),
 );
 

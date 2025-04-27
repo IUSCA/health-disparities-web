@@ -18,6 +18,7 @@ const config = {
     { from: 'PENDING', to: 'CANCELED', roles: [Roles.ADMIN, Roles.USER] },
     { from: 'PENDING', to: 'EXPIRED', roles: [Roles.SYSTEM] },
     { from: 'APPROVED', to: 'EXPIRED', roles: [Roles.ADMIN, Roles.SYSTEM] },
+    { from: 'CANCELED', to: 'PENDING', roles: [Roles.ADMIN] },
   ],
 };
 

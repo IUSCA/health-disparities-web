@@ -28,24 +28,26 @@
         </VaCard>
       </div>
 
-      <div class="col-span-full" v-if="showActions">
+      <!-- actions -->
+      <div class="col-span-full" v-if="auth.canOperate">
         <VaCard>
           <VaCardTitle>
             <span class="text-lg"> Actions </span>
           </VaCardTitle>
           <VaCardContent>
-            <div class="flex gap-3">
+            <div class="flex flex-wrap items-center gap-3 mb-5">
+              <p class="va-text-secondary font-semibold">Manage Status:</p>
               <!-- cancel request -->
               <VaButton
                 v-if="request.allowed_transitions.includes('CANCELED')"
                 @click="setRequestStatus('CANCELED')"
-                preset="danger"
-                class="flex-none"
-                icon="cancel"
-                :loading="loading"
+                preset="primary"
+                color="danger"
+                class="flex-none min-w-44"
                 :disabled="loading"
               >
                 <div class="flex items-center gap-1">
+                  <Icon :icon="getIcon('CANCELED')" />
                   <span> Cancel Request </span>
                 </div>
               </VaButton>
@@ -54,29 +56,60 @@
               <VaButton
                 v-if="request.allowed_transitions.includes('EXPIRED')"
                 @click="setRequestStatus('EXPIRED')"
-                preset="danger"
-                class="flex-none"
-                icon="cancel"
-                :loading="loading"
+                preset="primary"
+                class="flex-none min-w-44"
                 :disabled="loading"
               >
                 <div class="flex items-center gap-1">
+                  <Icon :icon="getIcon('EXPIRED')" />
                   <span> Mark as Expired </span>
                 </div>
               </VaButton>
 
-              <!-- sync now -->
+              <!-- reactivate request -->
               <VaButton
-                @click="setRequestStatus('SYNCED')"
+                v-if="request.allowed_transitions.includes('PENDING')"
+                @click="setRequestStatus('PENDING')"
                 preset="primary"
-                class="flex-none"
-                icon="sync"
-                :loading="loading"
+                color="success"
+                class="flex-none min-w-44"
                 :disabled="loading"
               >
-                <div class="flex items gap-1">
-                  <span> Sync Now </span>
+                <div class="flex items-center gap-1">
+                  <i-mdi-refresh />
+                  <span> Reactivate </span>
                 </div>
+              </VaButton>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <p class="va-text-secondary font-semibold">
+                Other Actions: &nbsp;
+              </p>
+              <!-- sync -->
+              <VaButton
+                v-if="['INITIATED', 'PENDING'].includes(request.status)"
+                @click="sync()"
+                preset="primary"
+                color="info"
+                border-color="info"
+                class="flex-none min-w-44"
+                icon="sync"
+                :disabled="loading"
+              >
+                Sync with REDCap
+              </VaButton>
+
+              <!-- Edit -->
+              <VaButton
+                @click="editModal.show(request)"
+                preset="primary"
+                border-color="primary"
+                class="flex-none min-w-44"
+                icon="edit"
+                :disabled="loading"
+              >
+                Edit Request
               </VaButton>
             </div>
           </VaCardContent>
@@ -146,14 +179,18 @@
 </template>
 
 <script setup>
+import { getIcon } from "@/components/cohort_access_requests/icons";
 import router from "@/router";
 import requestService from "@/services/cohort_access_requests";
+import toast from "@/services/toast";
 import { is403, is404, navigateBackSafely } from "@/services/utils";
 import { useAuthStore } from "@/stores/auth";
 import { useNavStore } from "@/stores/nav";
+import { useModal } from "vuestic-ui";
 
 const nav = useNavStore();
 const auth = useAuthStore();
+const { confirm } = useModal();
 
 const props = defineProps({
   id: {
@@ -164,8 +201,8 @@ const props = defineProps({
 
 const request = ref();
 const loading = ref(false);
-// const editModal = ref();
-const showActions = ref(false);
+const editModal = ref();
+// const showActions = ref(false);
 const unauthorized = ref(false);
 const notFound = ref(false);
 
@@ -179,7 +216,7 @@ watch(
       },
       {
         label: request.value
-          ? `"${request.value.requester.name}" → "${request.value.cohort.name}"`
+          ? `"${request.value.cohort.name}" (${request.value.requester.name})`
           : props.id,
       },
     ]);
@@ -214,10 +251,80 @@ onMounted(() => {
   fetch_request();
 });
 
-// function openModalToEdit() {
-//   if (!request.value) return;
-//   editModal.value.show(request.value);
-// }
+function getModalDetails(status) {
+  let message = `Are you sure you want to set the request status to "${status}"?`;
+  let okText = "Yes";
+  switch (status) {
+    case "CANCELED": {
+      message = "Are you sure you want to cancel the request?";
+      okText = "Yes, Cancel.";
+      break;
+    }
+    case "EXPIRED": {
+      message = "Are you sure you want to mark the request as expired?";
+      okText = "Yes, Mark as Expired.";
+      break;
+    }
+    case "PENDING": {
+      message =
+        "Are you sure you want to reactivate the request? This will set the status to PENDING and will attempt to sync status from REDCap.";
+      okText = "Yes, Reactivate.";
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+  return { message, okText };
+}
+
+function setRequestStatus(status) {
+  const { message, okText } = getModalDetails(status);
+  confirm({
+    title: "Confirm Action",
+    message,
+    okText,
+    cancelText: "No",
+  }).then((ok) => {
+    if (!ok) return;
+    loading.value = true;
+    requestService
+      .update(props.id, {
+        status,
+        decision_date: new Date().toISOString(),
+        version: request.value.version,
+      })
+      .then(() => {
+        toast.success("Request status updated successfully");
+        fetch_request();
+      })
+      .catch((err) => {
+        toast.error("Error updating request status");
+        console.error(err);
+      })
+      .finally(() => {
+        loading.value = false;
+      });
+  });
+}
+
+function sync() {
+  loading.value = true;
+  requestService
+    .sync(request.value.request_id)
+    .then((res) => {
+      const message = res.data?.message;
+      toast.success("Sync successful" + (message ? `: ${message}` : ""));
+      fetch_request();
+    })
+    .catch((err) => {
+      toast.error("Error syncing request");
+      console.error(err);
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+}
 </script>
 
 <route lang="yaml">

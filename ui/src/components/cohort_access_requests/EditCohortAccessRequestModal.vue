@@ -10,49 +10,51 @@
   >
     <VaInnerLoading :loading="loading">
       <VaForm class="flex flex-col gap-3 max-w-xl" ref="formRef">
-        <!-- select cohort -->
-        <VaInput
-          v-model="cohort.name"
-          label="Cohort"
-          readonly
-          class="cursor-not-allowed"
-        >
-          <template #prependInner>
-            <i-mdi-account-multiple />
-          </template>
-        </VaInput>
+        <!-- upstream record id -->
+        <!-- <div class="flex flex-col gap-1">
+          <VaInput
+            v-model="upstreamRecordId"
+            label="REDCap Record ID"
+            placeholder="Enter the REDCap record ID"
+            clearable
+          />
+          <p class="text-sm va-text-secondary">
+            This is the record ID of this request in REDCap.
+          </p>
+        </div> -->
 
-        <!-- select requester -->
-        <VaInput
-          v-model="requester.username"
-          label="Requester"
-          readonly
-          class="cursor-not-allowed"
+        <!-- select expires_at: custom component - optional, default today -->
+        <div
+          v-if="originalRequest?.status !== 'APPROVED'"
+          class="flex flex-col gap-1 my-3"
         >
-          <template #prependInner>
-            <i-mdi-account />
-          </template>
-        </VaInput>
+          <div class="flex items-center gap-2 justify-between">
+            <VaDateInput
+              v-model="expiresAt"
+              label="Expiration Date"
+              placeholder="Click here to select a date"
+              class="max-w-xs"
+              :disabled="neverExpires"
+              :allowedDays="(date) => date.getTime() > Date.now()"
+            />
 
-        <!-- select status (dropdown) -->
-        <VaSelect
-          v-model="status"
-          :options="statusOptions"
-          label="Status"
-          :rules="[(v) => !!v || 'Field is required']"
-        >
-          <template #prependInner>
-            <i-mdi-information-outline />
-          </template>
-        </VaSelect>
+            <!-- Never expires checkbox -->
+            <VaCheckbox
+              v-model="neverExpires"
+              label="Request never expires"
+              class="mt-3"
+            />
+          </div>
 
-        <!-- select decision_date: custom component - optional, default today -->
-        <VaDateInput
-          v-model="decisionDate"
-          label="Decision Date"
-          placeholder="Click here to select a date"
-          clearable
-        />
+          <p class="text-sm va-text-secondary">
+            <span v-if="expiresAt">
+              Request will expire in {{ datetime.fromNow(expiresAt) }} ({{
+                datetime.displayDateTime(expiresAt)
+              }})
+            </span>
+            <span v-else> Request never expires </span>
+          </p>
+        </div>
 
         <!-- notes: textarea -->
         <VaTextarea
@@ -61,7 +63,6 @@
           placeholder="Enter notes for the request"
           :min-rows="3"
           :max-rows="5"
-          :rules="[(v) => !!v || 'Field is required']"
         />
       </VaForm>
 
@@ -75,7 +76,9 @@
         >
           Reset
         </VaButton>
-        <VaButton @click="hide" preset="secondary">Cancel</VaButton>
+        <VaButton @click="hide" preset="secondary" color="secondary"
+          >Cancel
+        </VaButton>
         <VaButton @click="submit" color="success"> Edit Request </VaButton>
       </div>
     </VaInnerLoading>
@@ -84,6 +87,7 @@
 
 <script setup>
 import cohortAccessRequestService from "@/services/cohort_access_requests";
+import * as datetime from "@/services/datetime";
 import { useForm } from "vuestic-ui/web-components";
 
 const emit = defineEmits(["updated"]);
@@ -97,37 +101,47 @@ defineExpose({
 const { validate } = useForm("formRef");
 
 // const props = defineProps({});
-const cohort = ref(null);
-const requester = ref(null);
-const decisionDate = ref();
-const notes = ref(null);
-const status = ref("PENDING");
+
+const expiresAt = ref();
+const notes = ref();
+const upstreamRecordId = ref();
+const neverExpires = ref(false);
+
+// if original request has expires_at as null, set it to true, else false
+// if
+
+function getMidnightNextDay() {
+  const now = new Date();
+  const midnightNextDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+  );
+  return midnightNextDay;
+}
+
+watch(neverExpires, (val) => {
+  if (val) {
+    expiresAt.value = null;
+  } else {
+    expiresAt.value = getMidnightNextDay();
+  }
+});
 
 const visible = ref(false);
 const loading = ref(false);
 const originalRequest = ref(null);
 
-const statusOptions = ["PENDING", "APPROVED", "REJECTED"];
-
-// const cohortName = computed(() => {
-//   return cohort.value ? `${cohort.value.name} (${cohort.value.size})` : null;
-// });
-
 function setState() {
   if (originalRequest.value) {
-    cohort.value = originalRequest.value.cohort;
-    requester.value = originalRequest.value.requester;
-    decisionDate.value = originalRequest.value.decision_date
-      ? new Date(originalRequest.value.decision_date)
-      : null;
+    expiresAt.value = originalRequest.value.expires_at;
+    neverExpires.value = originalRequest.value.expires_at === null;
     notes.value = originalRequest.value.notes;
-    status.value = originalRequest.value.status;
+    upstreamRecordId.value = originalRequest.value.upstream_record_id;
   } else {
-    cohort.value = null;
-    requester.value = null;
-    decisionDate.value = null;
+    expiresAt.value = null;
     notes.value = null;
-    status.value = "PENDING";
+    upstreamRecordId.value = null;
   }
 }
 
@@ -154,9 +168,10 @@ function submit() {
   loading.value = true;
   cohortAccessRequestService
     .update(originalRequest.value.id, {
-      status: status.value,
-      decision_date: decisionDate.value || null,
-      notes: notes.value || null,
+      expires_at: neverExpires.value ? null : expiresAt.value,
+      notes: notes.value ? notes.value : null,
+      // upstream_record_id: upstreamRecordId.value,
+      version: originalRequest.value.version,
     })
     .then((res) => {
       emit("updated", res.data);
@@ -169,12 +184,4 @@ function submit() {
       loading.value = false;
     });
 }
-
-watch(status, (newStatus) => {
-  if (newStatus === "REJECTED" || newStatus === "APPROVED") {
-    if (!decisionDate.value) {
-      decisionDate.value = new Date();
-    }
-  }
-});
 </script>

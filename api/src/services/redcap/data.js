@@ -186,7 +186,8 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
       const upstreamStatus = statusMapper(upstreamRecord.stages);
       const requestStatus = statusMapper(request.stages);
       if (_.isEqual(upstreamStatus, requestStatus)) {
-        return ['No status changes detected - update skipped', null];
+        // 'No status changes detected - update skipped'
+        return [null, null];
       }
     }
 

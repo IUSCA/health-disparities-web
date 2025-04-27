@@ -17,19 +17,6 @@
           </template>
         </va-input>
       </div>
-
-      <!-- Create request button -->
-      <va-button
-        @click="createModal.show()"
-        color="success"
-        class="flex-none"
-        disabled
-        v-if="auth.canOperate"
-      >
-        <div class="flex items-center gap-2"></div>
-        <i-mdi-plus class="" />
-        <span> Create Request </span>
-      </va-button>
     </div>
 
     <div class="">
