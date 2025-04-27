@@ -91,6 +91,14 @@
           <span class=""> Never </span>
         </div>
       </div>
+
+      <!-- unique request id -->
+      <div class="mb-4" v-if="props.adminView">
+        <div class="va-text-secondary text-sm">Request ID</div>
+        <div class="">
+          {{ props.request.request_id }}
+        </div>
+      </div>
     </div>
 
     <!-- notes; may be long text; show neatly -->
