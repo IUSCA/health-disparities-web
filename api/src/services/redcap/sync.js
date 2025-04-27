@@ -7,6 +7,25 @@ const { getRecords } = require('./redcap');
 const BATCH_SIZE = config.get('redcap.polling.update_batch_size');
 const INTERVAL_MS = config.get('redcap.polling.interval_seconds') * 1000;
 
+/**
+ * Processes a list of records by transforming, filtering, grouping, and updating them in the database.
+ *
+ * The function performs the following steps:
+ * 1. Transforms the input records to match the database schema and filters out invalid records.
+ * 2. Groups records by `request_id` and keeps only the most recent record for each group.
+ *    - Records flagged as "CANCELED" are ignored.
+ *    - Groups where all records have a `null` or `undefined` `last_updated_at` are excluded.
+ * 3. Updates the cohort access requests in the database with the processed records.
+ *
+ * @async
+ * @function processRecords
+ * @param {Array<Object>} records - The list of records to process.
+ * @param {Object} logger - Logger instance for logging information and errors.
+ * @returns {Promise<[Array<Object>, number]>} A promise that resolves to a tuple:
+ *   - An array of error objects containing the original record and the associated error.
+ *   - The count of successfully updated records.
+ * @throws {Error} If an unexpected error occurs during processing.
+ */
 async function processRecords(records, logger) {
   // 1. get all records from redcap that are created or updated after a certain date.
   // 2. transform the records to match the database schema and filter out invalid records.
@@ -97,6 +116,18 @@ async function processRecords(records, logger) {
   }
 }
 
+/**
+ * Performs synchronization work by fetching and processing records from Redcap.
+ *
+ * This function retrieves the oldest pending request date, calculates a start date
+ * for fetching records, and processes the records in batches. Errors encountered
+ * during processing are logged.
+ *
+ * @async
+ * @function
+ * @param {Object} logger - The logger instance used for logging information and errors.
+ * @returns {Promise<void>} Resolves when the synchronization work is complete.
+ */
 async function performSyncWork(logger) {
   // return value is a date object in UTC
   const oldestPendingRequestDate = await getOldestPendingRequestDate();

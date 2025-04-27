@@ -143,6 +143,30 @@ async function transformRecord(record) {
   }
 }
 
+/**
+ * Updates a cohort access request based on the provided upstream record.
+ *
+ * This function synchronizes the status and stages of a cohort access request
+ * with the data from an upstream record. It ensures that status transitions
+ * are valid, updates expiration dates for approved requests, and skips updates
+ * if no changes are detected.
+ *
+ * @async
+ * @function
+ * @param {Object} upstreamRecord - The upstream record containing updated data.
+ * @param {string} upstreamRecord.requester_id - The ID of the requester.
+ * @param {string} upstreamRecord.cohort_id - The ID of the cohort.
+ * @param {string} upstreamRecord.request_id - The ID of the request.
+ * @param {string} upstreamRecord.status - The updated status of the request.
+ * @param {Date} [upstreamRecord.decision_date] - The decision date of the request.
+ * @param {Array<Object>} upstreamRecord.stages - The updated stages of the request.
+ * @param {string} upstreamRecord.record_id - The ID of the upstream record.
+ * @returns {Promise<[string|null, Object|null]>} A promise that resolves to a tuple:
+ * - The first element is an error message (if any) or `null`.
+ * - The second element is the updated request object or `null` if no update occurred.
+ *
+ * @throws {Error} If an unexpected error occurs during the update process.
+ */
 async function updateCohortAccessRequest(upstreamRecord) {
   try {
     // find the INITIATED / PENDING record
