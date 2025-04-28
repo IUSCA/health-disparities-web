@@ -93,7 +93,7 @@
       </div>
 
       <!-- unique request id -->
-      <div class="mb-4" v-if="props.adminView">
+      <div class="" v-if="props.adminView">
         <div class="va-text-secondary text-sm">Request ID</div>
         <div class="">
           {{ props.request.request_id }}
@@ -104,7 +104,7 @@
     <!-- notes; may be long text; show neatly -->
     <div class="mb-4" v-if="props.adminView || props.request.notes">
       <div class="va-text-secondary text-sm">Notes</div>
-      <div class="max-h-24 overflow-y-auto">
+      <div class="max-h-20 overflow-y-auto whitespace-pre-line">
         <span v-if="!props.request.notes || props.request.notes.length === 0">
           No notes provided.
         </span>

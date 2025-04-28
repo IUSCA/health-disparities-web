@@ -128,9 +128,11 @@
                 request?.audit_logs?.map((l) => ({
                   ...l,
                   user: l.changed_by,
+                  summary: `Source: ${l?.change_source?.toUpperCase() || ''}`,
                   comments: l.reason,
                 }))
               "
+              class="max-h-[calc(100vh-130px)] overflow-y-auto"
             />
           </VaCardContent>
         </VaCard>
@@ -297,10 +299,6 @@ function setRequestStatus(status) {
       .then(() => {
         toast.success("Request status updated successfully");
         fetch_request();
-      })
-      .catch((err) => {
-        toast.error("Error updating request status");
-        console.error(err);
       })
       .finally(() => {
         loading.value = false;

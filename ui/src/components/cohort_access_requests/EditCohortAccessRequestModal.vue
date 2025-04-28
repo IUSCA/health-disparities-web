@@ -177,9 +177,6 @@ function submit() {
       emit("updated", res.data);
       hide();
     })
-    .catch((error) => {
-      console.error(error);
-    })
     .finally(() => {
       loading.value = false;
     });

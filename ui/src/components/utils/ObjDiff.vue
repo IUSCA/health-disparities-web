@@ -1,5 +1,5 @@
 <template>
-  <VaDataTable :columns="columns" :items="diff" class="table" />
+  <VaDataTable :columns="columns" :items="diff" class="table" hoverable />
 </template>
 
 <script setup>
@@ -10,8 +10,18 @@ const props = defineProps({
 
 const columns = [
   { key: "key" },
-  { key: "before", tdClass: "text-red-500" },
-  { key: "after", tdClass: "text-green-600" },
+  {
+    key: "before",
+    tdClass: "text-red-500",
+    tdStyle:
+      "white-space: pre-wrap; word-wrap: break-word; word-break: break-word;",
+  },
+  {
+    key: "after",
+    tdClass: "text-green-600 dark:text-green-400",
+    tdStyle:
+      "white-space: pre-wrap; word-wrap: break-word; word-break: break-word;",
+  },
 ];
 
 const diff = computed(() => {
@@ -34,6 +44,6 @@ function diffTopLevelProperties(before, after) {
 
 <style scoped>
 .table {
-  --va-data-table-cell-padding: 1px;
+  --va-data-table-cell-padding: 2px;
 }
 </style>
