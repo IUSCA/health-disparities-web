@@ -132,7 +132,7 @@
                   comments: l.reason,
                 }))
               "
-              class="max-h-[calc(100vh-130px)] overflow-y-auto"
+              class="max-h-[calc(100vh-130px)] min-h-96 overflow-y-auto"
             />
           </VaCardContent>
         </VaCard>

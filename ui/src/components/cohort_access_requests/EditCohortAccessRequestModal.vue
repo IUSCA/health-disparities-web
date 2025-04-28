@@ -64,6 +64,17 @@
           :min-rows="3"
           :max-rows="5"
         />
+
+        <!-- reason: select -->
+        <VaTextarea
+          v-model="reason"
+          label="Reason for Edit"
+          placeholder="Enter reason for edit"
+          :min-rows="1"
+          :max-rows="3"
+          required-mark
+          :rules="[(v) => !!v || 'Reason is required']"
+        />
       </VaForm>
 
       <!-- reset, cancel, submit buttons -->
@@ -106,25 +117,13 @@ const expiresAt = ref();
 const notes = ref();
 const upstreamRecordId = ref();
 const neverExpires = ref(false);
-
-// if original request has expires_at as null, set it to true, else false
-// if
-
-function getMidnightNextDay() {
-  const now = new Date();
-  const midnightNextDay = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-  );
-  return midnightNextDay;
-}
+const reason = ref();
 
 watch(neverExpires, (val) => {
   if (val) {
     expiresAt.value = null;
   } else {
-    expiresAt.value = getMidnightNextDay();
+    expiresAt.value = datetime.getMidnightNextDay();
   }
 });
 
@@ -171,6 +170,7 @@ function submit() {
       expires_at: neverExpires.value ? null : expiresAt.value,
       notes: notes.value ? notes.value : null,
       // upstream_record_id: upstreamRecordId.value,
+      reason: reason.value,
       version: originalRequest.value.version,
     })
     .then((res) => {

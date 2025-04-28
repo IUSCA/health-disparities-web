@@ -125,6 +125,25 @@ function formatDuration(duration) {
   return ans;
 }
 
+/**
+ * Calculates and returns the Date object representing midnight of the next day.
+ *
+ * @returns {Date} A Date object set to midnight of the next day.
+ *
+ * @example
+ * If time is currently 2023-10-01 15:30:00,
+ * this function will return 2023-10-02 00:00:00.
+ */
+function getMidnightNextDay() {
+  const now = new Date();
+  const midnightNextDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+  );
+  return midnightNextDay;
+}
+
 export {
   absolute,
   date,
@@ -132,6 +151,7 @@ export {
   displayDateTime,
   formatDuration,
   fromNow,
+  getMidnightNextDay,
   readableDuration,
   time
 };
