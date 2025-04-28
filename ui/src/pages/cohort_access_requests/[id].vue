@@ -1,6 +1,6 @@
 <template>
   <VaInnerLoading :loading="loading">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" v-if="request">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2" v-if="request">
       <!-- details -->
       <div class="md:col-span-2">
         <VaCard class="min-h-[388px]">

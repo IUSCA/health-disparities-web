@@ -198,7 +198,7 @@ async function updateCohortAccessRequest(upstreamRecord) {
         `Cohort access request not found: requester_id=${upstreamRecord.requester_id}, \
 cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id}`, null];
     }
-    request.stages = (request.stages || []).map(accessRequestsService.mapStages);
+    request.stages = (request.stages || []).map(accessRequestsService.mapStage);
 
     // do not update when status did not change
     // or any of the statuses in stages did not change
@@ -258,6 +258,7 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
     });
     return [null, result];
   } catch (error) {
+    console.error(error);
     return [`Error updating cohort access request: ${error.message}`, null];
   }
 }

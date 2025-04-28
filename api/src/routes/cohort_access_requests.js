@@ -216,7 +216,7 @@ router.patch(
     body('notes').optional().isString(),
     body('decision_date').optional({ nullable: true }).isISO8601(),
     body('expires_at').optional({ nullable: true }).isISO8601(),
-    body('reason').isString().isLength({ min: 1, max: 500 }),
+    body('reason').isString().isLength({ min: 1, max: 500 }).optional(),
     body('version').isInt({ min: 1 }).toInt(),
   ]),
   asyncHandler(async (req, res, next) => {
