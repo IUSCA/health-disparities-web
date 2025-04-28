@@ -369,7 +369,7 @@ router.post(
     // access control:
     // operators and admins can sync any request
     // users can only sync their own requests
-    // we'll use resource: cohort_access_requests and action: update to model this
+    // we'll use resource: cohort_access_requests and action: create to model this
 
     const request = await prisma.cohort_access_request.findFirst({
       where: {
@@ -379,7 +379,7 @@ router.post(
 
     const permission = getPermission({
       resource: 'cohort_access_requests',
-      action: 'update',
+      action: 'create',
       requester_roles: req.user.roles,
       checkOwnerShip: true,
       requester: req.user.id,
