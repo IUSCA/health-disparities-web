@@ -39,10 +39,10 @@
                 </div>
               </div>
 
-              <!-- truncated comments -->
-              <div class="w-64 hidden md:block">
+              <!-- summary or truncated comments -->
+              <div class="w-96 hidden md:block">
                 <div class="va-text-secondary text-sm">Summary</div>
-                <div class="line-clamp-1">
+                <div class="line-clamp-1 text-sm">
                   {{ log.summary || log.comments }}
                 </div>
               </div>

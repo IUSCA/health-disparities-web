@@ -2,7 +2,7 @@ const UpdateAccessRequestCommand = require('./update');
 const { findAll, findOne } = require('./read');
 const { create } = require('./create');
 const fsm = require('./fsm');
-const { mapStages } = require('./utils');
+const { mapStage } = require('./utils');
 
 async function update({ identifiers, updates, context }) {
   const command = new UpdateAccessRequestCommand({ identifiers, updates, context });
@@ -15,5 +15,5 @@ module.exports = {
   update,
   create,
   fsm,
-  mapStages,
+  mapStage,
 };

@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { mapStages } = require('./utils');
+const { mapStage } = require('./utils');
 
 const prisma = new PrismaClient();
 
@@ -88,7 +88,7 @@ async function findAll({
   return {
     requests: requests.map((request) => ({
       ...request,
-      stages: mapStages(request.stages),
+      stages: request.stages.map(mapStage),
     })),
     total,
   };
@@ -137,6 +137,11 @@ async function findOne({
         audit_logs: {
           include: {
             changed_by: true,
+            stage: {
+              include: {
+                definition: true,
+              },
+            },
           },
           orderBy: {
             timestamp: 'desc',
@@ -145,7 +150,14 @@ async function findOne({
       } : {}),
     },
   });
-  request.stages = mapStages(request.stages);
+  request.stages = (request.stages || []).map(mapStage);
+  if (include.audit_logs) {
+    request.audit_logs = request.audit_logs.map((log) => ({
+      ...log,
+      stage: log.stage ? mapStage(log.stage) : log.stage,
+    }));
+  }
+
   return request;
 }
 

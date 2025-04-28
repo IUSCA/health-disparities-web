@@ -128,8 +128,10 @@
                 request?.audit_logs?.map((l) => ({
                   ...l,
                   user: l.changed_by,
-                  summary: `Source: ${l?.change_source?.toUpperCase() || ''}`,
-                  comments: l.reason,
+                  summary: getAuditLogSummary(l),
+                  comments:
+                    (l.stage ? `Stage: ${l.stage.name}\n\n` : '') +
+                    (l.reason || ''),
                 }))
               "
               class="max-h-[calc(100vh-130px)] min-h-96 overflow-y-auto"
@@ -322,6 +324,25 @@ function sync() {
     .finally(() => {
       loading.value = false;
     });
+}
+
+function getAuditLogSummary(log) {
+  const { change_source, stage, old_data, new_data } = log;
+  let summaryItems = [];
+  if (change_source) {
+    summaryItems.push(`Source: ${change_source.toUpperCase()}`);
+  }
+  if (stage) {
+    summaryItems.push(`Stage: ${stage.id}`);
+  }
+  if (
+    old_data?.status &&
+    new_data?.status &&
+    old_data.status !== new_data.status
+  ) {
+    summaryItems.push(`Status: ${old_data.status} to ${new_data.status}`);
+  }
+  return summaryItems.join(" | ");
 }
 </script>
 

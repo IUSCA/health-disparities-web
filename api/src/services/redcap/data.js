@@ -198,7 +198,7 @@ async function updateCohortAccessRequest(upstreamRecord) {
         `Cohort access request not found: requester_id=${upstreamRecord.requester_id}, \
 cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id}`, null];
     }
-    request.stages = accessRequestsService.mapStages(request.stages);
+    request.stages = (request.stages || []).map(accessRequestsService.mapStages);
 
     // do not update when status did not change
     // or any of the statuses in stages did not change

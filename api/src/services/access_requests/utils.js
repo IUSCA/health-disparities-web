@@ -1,7 +1,7 @@
 const _ = require('lodash/fp');
 
-function mapStages(stages) {
-  return stages.map((stage) => ({
+function mapStage(stage) {
+  return {
     id: stage.definition.id,
     name: stage.definition.name,
     description: stage.definition.description,
@@ -9,7 +9,7 @@ function mapStages(stages) {
     metadata: stage.metadata,
     decision_date: stage.decision_date,
     updated_at: stage.updated_at,
-  }));
+  };
 }
 
 const toAuditEntry = _.omit([
@@ -18,7 +18,8 @@ const toAuditEntry = _.omit([
 const toAuditStageEntry = _.pick(['status', 'decision_date', 'metadata']);
 
 module.exports = {
-  mapStages,
+
   toAuditEntry,
   toAuditStageEntry,
+  mapStage,
 };
