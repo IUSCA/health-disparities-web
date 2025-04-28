@@ -187,7 +187,12 @@ import { getIcon } from "@/components/cohort_access_requests/icons";
 import router from "@/router";
 import requestService from "@/services/cohort_access_requests";
 import toast from "@/services/toast";
-import { is403, is404, navigateBackSafely } from "@/services/utils";
+import {
+  is403,
+  is404,
+  isHTTPError,
+  navigateBackSafely,
+} from "@/services/utils";
 import { useAuthStore } from "@/stores/auth";
 import { useNavStore } from "@/stores/nav";
 import { useModal } from "vuestic-ui";
@@ -301,6 +306,19 @@ function setRequestStatus(status) {
       .then(() => {
         toast.success("Request status updated successfully");
         fetch_request();
+      })
+      .catch((err) => {
+        console.error(err);
+
+        if (isHTTPError(409)(err)) {
+          toast.error("Request was changed concurrently. Please refresh.");
+          return;
+        } else if (is403(err)) {
+          toast.error("You do not have permission to update this request.");
+          return;
+        }
+
+        toast.error("Error updating request status");
       })
       .finally(() => {
         loading.value = false;

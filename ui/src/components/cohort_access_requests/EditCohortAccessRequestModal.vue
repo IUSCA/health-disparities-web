@@ -99,6 +99,8 @@
 <script setup>
 import cohortAccessRequestService from "@/services/cohort_access_requests";
 import * as datetime from "@/services/datetime";
+import toast from "@/services/toast";
+import { is403, isHTTPError } from "@/services/utils";
 import { useForm } from "vuestic-ui/web-components";
 
 const emit = defineEmits(["updated"]);
@@ -176,6 +178,19 @@ function submit() {
     .then((res) => {
       emit("updated", res.data);
       hide();
+    })
+    .catch((err) => {
+      console.error(err);
+
+      if (isHTTPError(409)(err)) {
+        toast.error("Request was changed concurrently. Please refresh.");
+        return;
+      } else if (is403(err)) {
+        toast.error("You do not have permission to update this request.");
+        return;
+      }
+
+      toast.error("Error updating request status");
     })
     .finally(() => {
       loading.value = false;
