@@ -14,7 +14,7 @@
             />
 
             <div
-              class="ml-2 flex flex-wrap items-center justify-between w-full gap-3 max-w-3xl"
+              class="ml-2 flex flex-wrap items-center justify-between w-full gap-3 max-w-4xl"
             >
               <!-- user -->
               <div class="flex items-center gap-2">
