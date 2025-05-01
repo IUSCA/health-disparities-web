@@ -235,20 +235,44 @@
   "redcap": {
     "base_url": "https://redcap.uits.iu.edu/api",
     "api_token": "",
+    "timezone": "America/New_York",
     "polling": {
-      "enabled": true,
-      "interval": 300,
-      "max_backoff": 1800
+      "interval_seconds": 30,
+      "max_backoff_seconds": 1800,
+      "update_batch_size": 100,
+      "log_level": "info"
     },
     "form_keys": {
-      "requester_email": "user_id",
+      "requester_email": "email",
       "cohort_id": "cohort_identifier",
+      "request_id": "request_id",
+      "decision": "final_approval_status",
+      "decision_date": "date_final_approval_status",
+      "ste_decision": "ste_final_approval_status",
+      "ste_decision_date": "ste_date_final_status",
+      "ssc_decision": "ssc_final_approval_status",
+      "ssc_decision_date": "ssc_date_final_apprv_status",
+      "daa_decision": "daa_reviewed",
+      "daa_decision_date": "daa_approval_date",
+
+
       "approver_email": "who_apprv_catalog_access",
       "revoker_email": "who_revoke_catalog_access",
       "approved_date": "date_catalog_access_apprv",
       "revoked_date": "date_catalog_access_revoked",
-      "rejection_reason": "why_catalog_access_revoked",
-      "decision": "catalog_access_status"
+      "rejection_reason": "why_catalog_access_revoked"
+    },
+    "stages": {
+      "ste": "STE",
+      "ssc": "SSC",
+      "daa": "DAA",
+      "final_review": "FINAL_REVIEW"
+    }
+  },
+  "access_requests": {
+    "expiration": {
+      "enabled": false,
+      "days": 365
     }
   }
 }

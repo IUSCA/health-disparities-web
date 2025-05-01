@@ -16,6 +16,7 @@ const {
   assertionErrorHandler,
   axiosErrorHandler,
   prismaConstraintFailedHandler,
+  conflictErrorHandler,
 } = require('./middleware/error');
 const { apiKeyAuditLogger } = require('./middleware/loggers');
 
@@ -85,6 +86,9 @@ app.use(prismaConstraintFailedHandler);
 
 // handle asserions errors and send 400
 app.use(assertionErrorHandler);
+
+// handle conflict errors
+app.use(conflictErrorHandler);
 
 // handle axios errors
 app.use(axiosErrorHandler);

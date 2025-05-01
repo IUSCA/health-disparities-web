@@ -344,6 +344,14 @@ async function main() {
   await prisma.stage_request_log.createMany({
     data: stage_request_logs,
   });
+
+  // create dataset access requests
+  await Promise.all(data.access_request_stage_definitions
+    .map((stage) => prisma.access_request_stage_definition.upsert({
+      where: { id: stage.id },
+      update: {},
+      create: stage,
+    })));
 }
 
 main()

@@ -10,62 +10,51 @@
   >
     <VaInnerLoading :loading="loading">
       <VaForm class="flex flex-col gap-3 max-w-xl" ref="formRef">
-        <!-- select cohort -->
-        <VaInput
-          v-model="cohort.name"
-          label="Cohort"
-          readonly
-          class="cursor-not-allowed"
-        >
-          <template #prependInner>
-            <i-mdi-account-multiple />
-          </template>
-        </VaInput>
-
-        <!-- select requester -->
-        <VaInput
-          v-model="requester.username"
-          label="Requester"
-          readonly
-          class="cursor-not-allowed"
-        >
-          <template #prependInner>
-            <i-mdi-account />
-          </template>
-        </VaInput>
-
-        <!-- select reviewer -->
-        <VaFormField
-          v-model="reviewer"
-          :rules="[(v) => !!v || 'Field is required']"
-        >
-          <UserSelectInput
-            v-model="reviewer"
-            label="Reviewer"
-            placeholder="Click here to select a reviewer"
-            icon="mdi:account-tie-hat"
+        <!-- upstream record id -->
+        <!-- <div class="flex flex-col gap-1">
+          <VaInput
+            v-model="upstreamRecordId"
+            label="REDCap Record ID"
+            placeholder="Enter the REDCap record ID"
+            clearable
           />
-        </VaFormField>
+          <p class="text-sm va-text-secondary">
+            This is the record ID of this request in REDCap.
+          </p>
+        </div> -->
 
-        <!-- select status (dropdown) -->
-        <VaSelect
-          v-model="status"
-          :options="statusOptions"
-          label="Status"
-          :rules="[(v) => !!v || 'Field is required']"
+        <!-- select expires_at: custom component - optional, default today -->
+        <div
+          v-if="originalRequest?.status !== 'APPROVED'"
+          class="flex flex-col gap-1 my-3"
         >
-          <template #prependInner>
-            <i-mdi-information-outline />
-          </template>
-        </VaSelect>
+          <div class="flex items-center gap-2 justify-between">
+            <VaDateInput
+              v-model="expiresAt"
+              label="Expiration Date"
+              placeholder="Click here to select a date"
+              class="max-w-xs"
+              :disabled="neverExpires"
+              :allowedDays="(date) => date.getTime() > Date.now()"
+            />
 
-        <!-- select decision_date: custom component - optional, default today -->
-        <VaDateInput
-          v-model="decisionDate"
-          label="Decision Date"
-          placeholder="Click here to select a date"
-          clearable
-        />
+            <!-- Never expires checkbox -->
+            <VaCheckbox
+              v-model="neverExpires"
+              label="Request never expires"
+              class="mt-3"
+            />
+          </div>
+
+          <p class="text-sm va-text-secondary">
+            <span v-if="expiresAt">
+              Request will expire in {{ datetime.fromNow(expiresAt) }} ({{
+                datetime.displayDateTime(expiresAt)
+              }})
+            </span>
+            <span v-else> Request never expires </span>
+          </p>
+        </div>
 
         <!-- notes: textarea -->
         <VaTextarea
@@ -74,7 +63,17 @@
           placeholder="Enter notes for the request"
           :min-rows="3"
           :max-rows="5"
-          :rules="[(v) => !!v || 'Field is required']"
+        />
+
+        <!-- reason: select -->
+        <VaTextarea
+          v-model="reason"
+          label="Reason for Edit"
+          placeholder="Enter reason for edit"
+          :min-rows="1"
+          :max-rows="3"
+          required-mark
+          :rules="[(v) => !!v || 'Reason is required']"
         />
       </VaForm>
 
@@ -88,7 +87,9 @@
         >
           Reset
         </VaButton>
-        <VaButton @click="hide" preset="secondary">Cancel</VaButton>
+        <VaButton @click="hide" preset="secondary" color="secondary"
+          >Cancel
+        </VaButton>
         <VaButton @click="submit" color="success"> Edit Request </VaButton>
       </div>
     </VaInnerLoading>
@@ -97,7 +98,9 @@
 
 <script setup>
 import cohortAccessRequestService from "@/services/cohort_access_requests";
-import { useAuthStore } from "@/stores/auth";
+import * as datetime from "@/services/datetime";
+import toast from "@/services/toast";
+import { is403, isHTTPError } from "@/services/utils";
 import { useForm } from "vuestic-ui/web-components";
 
 const emit = defineEmits(["updated"]);
@@ -108,44 +111,38 @@ defineExpose({
   hide,
 });
 
-const authStore = useAuthStore();
 const { validate } = useForm("formRef");
 
 // const props = defineProps({});
-const cohort = ref(null);
-const requester = ref(null);
-const reviewer = ref(null);
-const decisionDate = ref();
-const notes = ref(null);
-const status = ref("PENDING");
+
+const expiresAt = ref();
+const notes = ref();
+const upstreamRecordId = ref();
+const neverExpires = ref(false);
+const reason = ref();
+
+watch(neverExpires, (val) => {
+  if (val) {
+    expiresAt.value = null;
+  } else {
+    expiresAt.value = datetime.getMidnightNextDay();
+  }
+});
 
 const visible = ref(false);
 const loading = ref(false);
 const originalRequest = ref(null);
 
-const statusOptions = ["PENDING", "APPROVED", "REJECTED"];
-
-// const cohortName = computed(() => {
-//   return cohort.value ? `${cohort.value.name} (${cohort.value.size})` : null;
-// });
-
 function setState() {
   if (originalRequest.value) {
-    cohort.value = originalRequest.value.cohort;
-    requester.value = originalRequest.value.requester;
-    reviewer.value = originalRequest.value.reviewer || authStore.user;
-    decisionDate.value = originalRequest.value.decision_date
-      ? new Date(originalRequest.value.decision_date)
-      : null;
+    expiresAt.value = originalRequest.value.expires_at;
+    neverExpires.value = originalRequest.value.expires_at === null;
     notes.value = originalRequest.value.notes;
-    status.value = originalRequest.value.status;
+    upstreamRecordId.value = originalRequest.value.upstream_record_id;
   } else {
-    cohort.value = null;
-    requester.value = null;
-    reviewer.value = null;
-    decisionDate.value = null;
+    expiresAt.value = null;
     notes.value = null;
-    status.value = "PENDING";
+    upstreamRecordId.value = null;
   }
 }
 
@@ -172,28 +169,31 @@ function submit() {
   loading.value = true;
   cohortAccessRequestService
     .update(originalRequest.value.id, {
-      reviewer_id: reviewer.value.id || null,
-      status: status.value,
-      decision_date: decisionDate.value || null,
-      notes: notes.value || null,
+      expires_at: neverExpires.value ? null : expiresAt.value,
+      notes: notes.value ? notes.value : null,
+      // upstream_record_id: upstreamRecordId.value,
+      reason: reason.value,
+      version: originalRequest.value.version,
     })
     .then((res) => {
       emit("updated", res.data);
       hide();
     })
-    .catch((error) => {
-      console.error(error);
+    .catch((err) => {
+      console.error(err);
+
+      if (isHTTPError(409)(err)) {
+        toast.error("Request was changed concurrently. Please refresh.");
+        return;
+      } else if (is403(err)) {
+        toast.error("You do not have permission to update this request.");
+        return;
+      }
+
+      toast.error("Error updating request status");
     })
     .finally(() => {
       loading.value = false;
     });
 }
-
-watch(status, (newStatus) => {
-  if (newStatus === "REJECTED" || newStatus === "APPROVED") {
-    if (!decisionDate.value) {
-      decisionDate.value = new Date();
-    }
-  }
-});
 </script>

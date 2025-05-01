@@ -391,6 +391,7 @@ function isHTTPError(code) {
 }
 
 const is404 = isHTTPError(404);
+const is403 = isHTTPError(403);
 
 function getURL(path, params, relative = true) {
   const base = relative ? "http://placeholder" : window.location.origin;
@@ -399,6 +400,19 @@ function getURL(path, params, relative = true) {
     url.searchParams.append(key, params[key]),
   );
   return relative ? url.pathname + url.search : url.href;
+}
+
+function navigateBackSafely(router, fallback = "/") {
+  const from = router.currentRoute.value.fullPath;
+
+  window.history.back();
+
+  setTimeout(() => {
+    const to = router.currentRoute.value.fullPath;
+    if (to === from) {
+      router.replace(fallback);
+    }
+  }, 300);
 }
 
 export {
@@ -415,6 +429,7 @@ export {
   groupBy,
   groupByAndAggregate,
   initials,
+  is403,
   is404,
   isFeatureEnabled,
   isHTTPError,
@@ -424,6 +439,7 @@ export {
   mapValues,
   maybePluralize,
   memoize,
+  navigateBackSafely,
   readTextFile,
   setIntersection,
   union,

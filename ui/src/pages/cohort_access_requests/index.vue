@@ -17,23 +17,22 @@
           </template>
         </va-input>
       </div>
-
-      <!-- Create request button -->
-      <va-button @click="createModal.show()" color="success" class="flex-none">
-        <i-mdi-plus class="mr-1" />
-        <span> Create Request </span>
-      </va-button>
     </div>
 
-    <div>
-      <va-alert color="info" class="mb-3" dense border="left">
+    <div class="">
+      <va-alert
+        class="text-sm"
+        dense
+        border="left"
+        color="info"
+        text-color="info"
+      >
         <template #icon>
-          <Icon icon="material-symbols:info" style="color: var(--va-info)" />
+          <Icon icon="material-symbols:info" />
         </template>
-        <span style="color: var(--va-info)">
-          Each cohort and requester combination must be unique. To create a new
-          request for this combination, the existing request must be deleted
-          first.
+        <span>
+          Request status updates from the REDCap service may take a few minutes
+          to appear, as they are synced periodically.
         </span>
       </va-alert>
     </div>
@@ -46,13 +45,16 @@
       v-model:sort-by="params.sort_by"
       v-model:sorting-order="params.sort_order"
       disable-client-side-sorting
+      clickable
+      hoverable
+      @row:click="({ item }) => viewRequest(item.id)"
     >
       <template #cell(requester)="{ source }">
         <span> {{ source?.username }} </span>
       </template>
 
-      <template #cell(reviewer)="{ source }">
-        <span> {{ source?.username }} </span>
+      <template #cell(status)="{ rowData }">
+        <AccessRequestStatus :request="rowData" />
       </template>
 
       <template #cell(created_at)="{ source }">
@@ -63,18 +65,41 @@
         <span>{{ datetime.date(source) }}</span>
       </template>
 
-      <template #cell(cohort)="{ source }">
-        <router-link
-          :to="cohortService.getCohortURL({ id: source.id })"
-          class="va-link"
-        >
-          {{ source.name }}
-        </router-link>
+      <template #cell(updated_at)="{ source }">
+        <span>{{ datetime.date(source) }}</span>
       </template>
 
-      <!-- actions: delete -->
+      <template #cell(last_synced_at)="{ source }">
+        <span>{{ datetime.date(source) }}</span>
+      </template>
+
+      <template #cell(cohort)="{ source }">
+        <div class="flex items-center gap-1 hover:text-blue-500">
+          <i-mdi-account-multiple class="text-lg" />
+          <router-link
+            :to="cohortService.getCohortURL({ id: source.id })"
+            class="va-link"
+            @click.stop
+          >
+            {{ source.name }}
+          </router-link>
+        </div>
+      </template>
+
+      <!-- actions -->
       <template #cell(actions)="{ rowData }">
         <div class="flex gap-2">
+          <!-- view -->
+          <VaPopover message="View request" placement="top">
+            <VaButton
+              color="info"
+              size="small"
+              preset="primary"
+              @click="() => viewRequest(rowData.id)"
+            >
+              <i-mdi-eye />
+            </VaButton>
+          </VaPopover>
           <!-- edit -->
           <VaPopover message="Edit request" placement="top">
             <VaButton
@@ -88,7 +113,7 @@
           </VaPopover>
 
           <!-- delete -->
-          <VaPopover message="Delete request" placement="top">
+          <!-- <VaPopover message="Delete request" placement="top">
             <VaButton
               color="danger"
               size="small"
@@ -97,7 +122,7 @@
             >
               <i-mdi-delete />
             </VaButton>
-          </VaPopover>
+          </VaPopover> -->
         </div>
       </template>
     </VaDataTable>
@@ -124,9 +149,10 @@ import cohortAccessRequests from "@/services/cohort_access_requests";
 import cohortService from "@/services/cohorts";
 import * as datetime from "@/services/datetime";
 import toast from "@/services/toast";
-import { useModal } from "vuestic-ui";
+import { useAuthStore } from "@/stores/auth";
 
-const { confirm } = useModal();
+const auth = useAuthStore();
+const router = useRouter();
 
 function defaultParams() {
   return {
@@ -153,10 +179,12 @@ const columns = [
   {
     key: "cohort",
     label: "Cohort",
+    sortable: true,
   },
   {
     key: "requester",
     label: "Requester",
+    sortable: true,
   },
   {
     key: "status",
@@ -164,24 +192,34 @@ const columns = [
     sortable: true,
   },
   {
-    key: "reviewer",
-    label: "Reviewer",
-  },
-  {
     key: "decision_date",
     label: "Decision Date",
     sortable: true,
+    width: "120px",
   },
   {
     key: "created_at",
     label: "Created On",
     sortable: true,
+    width: "120px",
   },
   {
-    key: "actions",
-    label: "Actions",
-    width: "100px",
+    key: "updated_at",
+    label: "Last Updated On",
+    sortable: true,
+    width: "120px",
   },
+  {
+    key: "last_synced_at",
+    label: "Last Synced On",
+    sortable: true,
+    width: "120px",
+  },
+  // {
+  //   key: "actions",
+  //   label: "Actions",
+  //   width: "100px",
+  // },
 ];
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 const createModal = ref(null);
@@ -189,14 +227,16 @@ const editModal = ref(null);
 
 function fetchAll() {
   loading.value = true;
-  cohortAccessRequests
-    .getAll({
-      search: params.value.inclusive_query,
-      sort_by: params.value.sort_by,
-      sort_order: params.value.sort_order,
-      limit: params.value.page_size,
-      offset: (params.value.page - 1) * params.value.page_size,
-    })
+  const fetchFn = auth.canOperate
+    ? cohortAccessRequests.getAll
+    : cohortAccessRequests.getAllForSelf;
+  fetchFn({
+    search: params.value.inclusive_query,
+    sort_by: params.value.sort_by,
+    sort_order: params.value.sort_order,
+    limit: params.value.page_size,
+    offset: (params.value.page - 1) * params.value.page_size,
+  })
     .then((response) => {
       requests.value = response.data.data;
       total_results.value = response.data.metadata.total;
@@ -236,29 +276,17 @@ onMounted(() => {
   fetchAll();
 });
 
-function deleteRequest(id) {
-  confirm("Are you sure you want to delete this request?").then((ok) => {
-    if (!ok) return;
-    loading.value = true;
-    cohortAccessRequests
-      .delete(id)
-      .then(() => {
-        fetchAll();
-      })
-      .catch((error) => {
-        console.error("Error deleting cohort access request:", error);
-        toast.error("Error deleting request");
-      })
-      .finally(() => {
-        loading.value = false;
-      });
-  });
+function viewRequest(id) {
+  if (id) {
+    router.push({
+      path: `/cohort_access_requests/${id}`,
+    });
+  }
 }
 </script>
 
 <route lang="yaml">
 meta:
   title: Cohort Access Requests
-  requiresRoles: ["operator", "admin"]
   nav: [{ label: "Cohort Access Requests" }]
 </route>

@@ -97,13 +97,13 @@ const exports = {
       //   title: 'Data Cleanup',
       //   path: '/clean',
       // },
+    ],
+    bottom_items: [
       {
         icon: "mdi-approval",
         title: "Access Requests",
         path: "/cohort_access_requests",
       },
-    ],
-    bottom_items: [
       {
         icon: "mdi-information",
         title: "About",
