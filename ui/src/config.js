@@ -14,7 +14,7 @@ const exports = {
     import.meta.env.VITE_MICROSOFT_RETURN || "https://localhost/auth/microsoft",
   refreshTokenTMinusSeconds: {
     appToken: 300,
-    uploadToken: 5,
+    uploadToken: 20,
   },
   analyticsId: "G-FOO",
   appTitle: "Biobank",
@@ -140,18 +140,6 @@ const exports = {
   },
   upload: {
     scope_prefix: "upload_file:",
-    types: { DATASET: "DATASET" },
-    status: {
-      COMPUTING_CHECKSUMS: "COMPUTING_CHECKSUMS",
-      CHECKSUM_COMPUTATION_FAILED: "CHECKSUM_COMPUTATION_FAILED",
-      UPLOADING: "UPLOADING",
-      UPLOAD_FAILED: "UPLOAD_FAILED",
-      UPLOADED: "UPLOADED",
-      PROCESSING: "PROCESSING",
-      PROCESSING_FAILED: "PROCESSING_FAILED",
-      COMPLETE: "COMPLETE",
-      FAILED: "FAILED",
-    },
   },
   phenotype_data: {
     cache_busting_id: "41e81ff",

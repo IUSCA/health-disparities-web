@@ -6,6 +6,8 @@ import requests
 import workers.utils as utils
 from glom import glom, assign as glom_assign
 from requests.adapters import HTTPAdapter, Retry
+
+import workers.utils as utils
 from workers.config import config
 
 logger = logging.getLogger(__name__)
@@ -126,13 +128,12 @@ def dataset_setter(dataset: dict):
 
 
 def get_all_datasets(
-    dataset_type=None,
-    name=None,
-    days_since_last_staged=None,
-    deleted=False,
-    archived=None,
-    bundle=False,
-    include_states=False):
+        dataset_type=None,
+        name=None,
+        days_since_last_staged=None,
+        deleted=False,
+        archived=None,
+        bundle=False):
     with APIServerSession() as s:
         payload = {
             'type': dataset_type,
@@ -151,14 +152,12 @@ def get_all_datasets(
 def get_dataset(dataset_id: str,
                 files: bool = False,
                 bundle: bool = False,
-                include_upload_log: bool = False,
                 workflows: bool = False):
     with APIServerSession() as s:
         payload = {
             'files': files,
             'bundle': bundle,
             'workflows': workflows,
-            'include_upload_log': include_upload_log
         }
         r = s.get(f'datasets/{dataset_id}', params=payload)
 
@@ -194,6 +193,12 @@ def update_dataset(dataset_id, update_data):
         r = s.patch(f'datasets/{dataset_id}', json=dataset_setter(update_data))
         r.raise_for_status()
         return r.json()
+
+
+def delete_dataset(dataset_id: int):
+    with APIServerSession() as s:
+        r = s.delete(f'datasets/{dataset_id}')
+        r.raise_for_status()
 
 
 def add_files_to_dataset(dataset_id, files: list[dict]):
@@ -304,22 +309,16 @@ def create_sample_mappings(samples: list[dict]):
         return r.json()
 
 
-def get_dataset_upload_logs():
+def get_dataset_uploads():
     with APIServerSession() as s:
-        r = s.get(f'datasetUploads')
+        r = s.get(f'datasets/uploads')
         r.raise_for_status()
         return r.json()
 
 
-def update_dataset_upload_log(uploaded_dataset_id: int, log_data: dict):
+def update_dataset_upload(uploaded_dataset_id: int, log_data: dict):
     with APIServerSession() as s:
-        r = s.patch(f'datasetUploads/{uploaded_dataset_id}', json=log_data)
-        r.raise_for_status()
-
-
-def delete_dataset_upload_log(uploaded_dataset_id: int):
-    with APIServerSession() as s:
-        r = s.delete(f'datasetUploads/{uploaded_dataset_id}')
+        r = s.patch(f'datasets/{uploaded_dataset_id}/upload', json=log_data)
         r.raise_for_status()
 
 

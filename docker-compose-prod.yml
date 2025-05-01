@@ -12,7 +12,7 @@ services:
       - -c
       - |
         npm install && exec npm run builddev
-    
+  
 
   api:
     restart: unless-stopped
