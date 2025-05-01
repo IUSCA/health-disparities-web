@@ -29,7 +29,8 @@
                   class="flex-none"
                   :color="isDark ? '#9171f8' : '#A020F0'"
                 >
-                  <i-mdi-folder-open class="pr-2 text-xl" /> Browse Files
+                  <i-mdi-folder-open class="pr-2 text-xl" />
+                  Browse Files
                 </va-button>
 
                 <!-- edit description -->
@@ -138,11 +139,7 @@
 
                   <va-button
                     :disabled="
-                      !dataset.is_staged ||
-                      !isFeatureEnabled({
-                        featureKey: 'downloads',
-                        hasRole: auth.hasRole,
-                      })
+                      !dataset.is_staged || !auth.isFeatureEnabled('downloads')
                     "
                     class="flex-initial"
                     color="primary"
@@ -150,7 +147,8 @@
                     preset="secondary"
                     @click="openModalToDownloadDataset"
                   >
-                    <i-mdi-download class="pr-2 text-2xl" /> Download
+                    <i-mdi-download class="pr-2 text-2xl" />
+                    Download
                   </va-button>
                 </div>
               </va-card-content>
@@ -190,7 +188,9 @@
               <va-divider class="my-2" />
 
               <div class="flex flex-col items-center gap-2">
-                <div><i-mdi-zip-box-outline class="text-3xl" /></div>
+                <div>
+                  <i-mdi-zip-box-outline class="text-3xl" />
+                </div>
                 <span class="text-xl tracking-wide">
                   {{ config.dataset.types[dataset.type]?.label }} /
                   {{ dataset.name }}
@@ -202,12 +202,7 @@
                   </div>
                   <div
                     class="flex items-center gap-1"
-                    v-if="
-                      isFeatureEnabled({
-                        featureKey: 'genomeBrowser',
-                        hasRole: auth.hasRole,
-                      })
-                    "
+                    v-if="auth.isFeatureEnabled('genomeBrowser')"
                   >
                     <i-mdi-file-multiple class="text-xl" />
                     <span> {{ dataset.metadata?.num_genome_files }} </span>
@@ -332,7 +327,7 @@
 import config from "@/config";
 import DatasetService from "@/services/dataset";
 import toast from "@/services/toast";
-import { formatBytes, isFeatureEnabled } from "@/services/utils";
+import { formatBytes } from "@/services/utils";
 import workflowService from "@/services/workflow";
 import { useAuthStore } from "@/stores/auth";
 
@@ -491,6 +486,7 @@ function navigateToFileBrowser() {
 }
 
 const downloadModal = ref(null);
+
 function openModalToDownloadDataset() {
   downloadModal.value.show();
 }

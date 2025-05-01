@@ -33,7 +33,11 @@ app.use(cors({
 app.disable('x-powered-by');
 
 // request logger - https://github.com/expressjs/morgan
-app.use(requestLogger('dev'));
+if (config.get('mode') === 'production') {
+  app.use(requestLogger('combined', { skip: (req, res) => res.statusCode < 400 }));
+} else {
+  app.use(requestLogger('dev'));
+}
 
 // save every request made using API access key to the database
 app.use(apiKeyAuditLogger);

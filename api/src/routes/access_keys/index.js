@@ -130,7 +130,7 @@ router.get(
 // get all API keys for a user
 router.get(
   '/:username',
-  isPermittedTo('read', { checkOwnerShip: true }),
+  isPermittedTo('read', { checkOwnership: true }),
   validate([
     query('limit').default(50).isInt({ min: 1, max: 100 }).toInt(),
     query('offset').default(0).isInt({ min: 0 }).toInt(),
@@ -193,7 +193,7 @@ router.get(
 // create a new API key
 router.post(
   '/:username',
-  isPermittedTo('create', { checkOwnerShip: true }),
+  isPermittedTo('create', { checkOwnership: true }),
   validate([
     body('scopes').isArray().isLength({ min: 1 }),
     body('name').isString().trim().isLength({ min: 1 }),
@@ -271,7 +271,7 @@ router.post(
 // to revoke an API key
 router.delete(
   '/:username/:key',
-  isPermittedTo('delete', { checkOwnerShip: true }),
+  isPermittedTo('delete', { checkOwnership: true }),
   asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['API Keys']
 

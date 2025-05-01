@@ -173,6 +173,22 @@ services:
     profiles:
       - repl
       
+  docs:
+    image: node:21
+    volumes:
+      - ./package.json:/opt/sca/app/package.json
+      - ./package-lock.json:/opt/sca/app/package-lock.json
+      - ./docs/:/opt/sca/app/docs
+      - docs_modules:/opt/sca/app/node_modules
+    ports:
+      - 127.0.0.1:5173:5173
+    working_dir: /opt/sca/app
+    entrypoint:
+      - sh
+      - -c
+      - |
+        npm install && exec /opt/sca/app/node_modules/.bin/vitepress dev docs --host
+
 volumes:
   ui_modules:
     external: false
@@ -182,3 +198,4 @@ volumes:
 
   grafana_data:
   prometheus_data:
+  docs_modules:

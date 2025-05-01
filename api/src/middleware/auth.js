@@ -123,12 +123,12 @@ function buildActions(action) {
 const accessControl = _.curry((
   resource,
   action,
-  { checkOwnerShip = false } = {},
+  { checkOwnership = false } = {},
   // resourceOwnerFn = null,
   // requesterFn = null,
 ) => {
-  // default checkOwnerShip is false, meaning '{action}:any' is checked
-  // if checkOwnerShip is true, '{action}:own' is checked instead of '{action}:any'
+  // default checkOwnership is false, meaning '{action}:any' is checked
+  // if checkOwnership is true, '{action}:own' is checked instead of '{action}:any'
 
   // https://github.com/pawangspandey/accesscontrol-middleware/blob/master/index.js
   const actions = buildActions(action);
@@ -141,12 +141,12 @@ const accessControl = _.curry((
     const requester = req.user?.username; // _requesterFn(req);
 
     // console.log('access-controls', {
-    //   resource, action, checkOwnerShip, resourceOwner, requester, roles,
+    //   resource, action, checkOwnership, resourceOwner, requester, roles,
     // });
 
     if (roles && roles.length > 0) {
       const acQuery = ac.can(roles);
-      const permission = (checkOwnerShip && requester === resourceOwner)
+      const permission = (checkOwnership && requester === resourceOwner)
         ? acQuery[actions.own](resource)
         : acQuery[actions.any](resource);
       if (permission.granted) {
@@ -172,7 +172,7 @@ function getPermission({
   resource,
   action,
   requester_roles,
-  checkOwnerShip = false,
+  checkOwnership = false,
   requester,
   resourceOwner,
 }) {
@@ -181,7 +181,7 @@ function getPermission({
   const roles = [...setIntersection(ac.getRoles(), requester_roles || [])];
   if (roles && roles.length > 0) {
     const acQuery = ac.can(roles);
-    return (checkOwnerShip && requester === resourceOwner)
+    return (checkOwnership && requester === resourceOwner)
       ? acQuery[actions.own](resource)
       : acQuery[actions.any](resource);
   }

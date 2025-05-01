@@ -282,7 +282,7 @@ function isFeatureEnabled({ featureKey, hasRole = () => false } = {}) {
   }
 
   const featureEnabled = config.enabledFeatures[featureKey];
-  if (featureEnabled === undefined) {
+  if (featureEnabled == null) {
     // feature's enabled status is not present in the config
     return true;
   } else if (typeof featureEnabled === "boolean") {
