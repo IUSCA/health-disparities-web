@@ -1,6 +1,6 @@
 #!/bin/bash
-set -e
-set -o pipefail
+set -e # Exit on error
+set -o pipefail # Exit if any command in a pipeline fails
 
 RELEASE=$1
 
@@ -11,7 +11,7 @@ RELEASE=$1
 
 } || {
 
-  echo "Failed to find the provided user and group; defaulting to the user and group of the current directory's onwer."
+  echo "Defaulting to the user and group of the current directory's onwer because the provided user or group was not found."
   APP_UID=$(ls -ldn `pwd` | awk '{print $3}') &&
   APP_GID=$(ls -ldn `pwd` | awk '{print $4}')
 }
@@ -49,6 +49,15 @@ if grep -q "APP_GID" .env; then
 else
   # If it doesn't exist, add it
   echo "APP_GID=$APP_GID" >> .env
+fi
+
+# Check if GRAFANA_ADMIN_PASSWORD exists in the .env file
+if grep -q "GRAFANA_ADMIN_PASSWORD" .env; then
+  echo "GRAFANA_ADMIN_PASSWORD already exists in .env file."
+else
+  # If it doesn't exist, add it with a random password
+  GRAFANA_ADMIN_PASSWORD=$(openssl rand -hex 16)
+  echo "GRAFANA_ADMIN_PASSWORD=$GRAFANA_ADMIN_PASSWORD" >> .env
 fi
 
 if [ -z "$RELEASE" ]; then

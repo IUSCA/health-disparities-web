@@ -11,6 +11,7 @@
     "swagger": "node src/scripts/swagger.js && node src/scripts/filter_public_routes.js",
     "lintSwagger": "spectral lint swagger_public.json",
     "lint": "eslint . --ext .js --fix --ignore-path .gitignore",
+    "lint:file": "eslint --fix --ignore-path .gitignore",
     "test": "mocha \"src/**/*.test.js\""
   },
   "keywords": [],

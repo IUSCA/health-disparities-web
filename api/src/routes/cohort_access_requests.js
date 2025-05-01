@@ -87,7 +87,7 @@ router.get(
 // for self
 router.get(
   '/requester/:username/:id',
-  isPermittedTo('read', { checkOwnerShip: true }),
+  isPermittedTo('read', { checkOwnership: true }),
   validate([
     param('id').isInt().toInt(),
   ]),
@@ -113,7 +113,7 @@ router.get(
 // Get all access requests for a requester (self)
 router.get(
   '/requester/:username',
-  isPermittedTo('read', { checkOwnerShip: true }),
+  isPermittedTo('read', { checkOwnership: true }),
   validate([
     query('cohort_id').optional().isUUID(),
     query('status').optional().isIn(fsm.config.states),
@@ -272,7 +272,7 @@ router.patch(
 // Create access request for self
 router.put(
   '/cohort/:cohort_id/requester/:username',
-  isPermittedTo('create', { checkOwnerShip: true }),
+  isPermittedTo('create', { checkOwnership: true }),
   validate([
     param('cohort_id').isUUID(),
   ]),
@@ -381,7 +381,7 @@ router.post(
       resource: 'cohort_access_requests',
       action: 'create',
       requester_roles: req.user.roles,
-      checkOwnerShip: true,
+      checkOwnership: true,
       requester: req.user.id,
       resourceOwner: request.requester_id,
     });
