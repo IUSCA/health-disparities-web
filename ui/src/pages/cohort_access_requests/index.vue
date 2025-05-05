@@ -74,14 +74,15 @@
       </template>
 
       <template #cell(cohort)="{ source }">
-        <div class="flex items-center gap-1 hover:text-blue-500">
+        <div class="flex items-center gap-1">
           <i-mdi-account-multiple class="text-lg" />
+          <span> {{ source.name }} </span>
           <router-link
             :to="cohortService.getCohortURL({ id: source.id })"
             class="va-link"
             @click.stop
           >
-            {{ source.name }}
+            <i-mdi-open-in-new class="text-sm ml-1" />
           </router-link>
         </div>
       </template>

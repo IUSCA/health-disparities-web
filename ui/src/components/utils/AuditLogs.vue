@@ -17,7 +17,7 @@
               class="ml-2 flex flex-wrap items-center justify-between w-full gap-3 max-w-4xl"
             >
               <!-- user -->
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 md:w-[150px] md:truncate">
                 <UserAvatar
                   :username="log.user?.username"
                   :name="log.user?.name"

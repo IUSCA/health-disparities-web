@@ -25,7 +25,7 @@
 
         <!-- select expires_at: custom component - optional, default today -->
         <div
-          v-if="originalRequest?.status !== 'APPROVED'"
+          v-if="originalRequest?.status === 'APPROVED'"
           class="flex flex-col gap-1 my-3"
         >
           <div class="flex items-center gap-2 justify-between">
