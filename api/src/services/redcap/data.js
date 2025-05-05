@@ -228,11 +228,11 @@ cohort_id=${upstreamRecord.cohort_id} and request_id=${upstreamRecord.request_id
     // and we are fetching only INITIATED and PENDING records
 
     // when the status is APPROVED, set the expires_at date
-    // to the current date + config.get('access_requests.exipration.days') days
+    // to the current date + config.get('access_requests.expiration.days') days
     let expires_at;
-    if (upstreamRecord.status === 'APPROVED' && config.get('access_requests.exipration.enabled')) {
+    if (upstreamRecord.status === 'APPROVED' && config.get('access_requests.expiration.enabled')) {
       expires_at = new Date(
-        new Date().getTime() + (config.get('access_requests.exipration.days') * 24 * 60 * 60 * 1000),
+        new Date().getTime() + (config.get('access_requests.expiration.days') * 24 * 60 * 60 * 1000),
       );
     }
 
