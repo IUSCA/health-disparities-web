@@ -91,7 +91,7 @@ function createRandomUsers(num) {
 }
 
 async function main() {
-  await Promise.all(data.roles.map((role) => prisma.role.upsert({
+  await Promise.allSettled(data.roles.map((role) => prisma.role.upsert({
     where: { id: role.id },
     create: role,
     update: role,
@@ -343,6 +343,16 @@ async function main() {
   await prisma.stage_request_log.deleteMany();
   await prisma.stage_request_log.createMany({
     data: stage_request_logs,
+  });
+
+  // create instruments
+  // delete pre-existing records
+  await prisma.instrument.deleteMany();
+  await prisma.instrument.createMany({
+    data: _.range(0, 10).map((i) => ({
+      name: `Instrument ${i + 1}`,
+      host: `instrument ${i + 1}.iu.edu`,
+    })),
   });
 
   // create dataset access requests
