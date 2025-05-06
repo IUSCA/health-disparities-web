@@ -40,6 +40,8 @@ test.js
 src/test.js
 src/test2.js
 data/
+# Ignore personal test files
+src/_test.js
 coverage
 
 admins.json

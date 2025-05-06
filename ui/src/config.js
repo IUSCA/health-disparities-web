@@ -1,6 +1,6 @@
 const exports = {
   mode: "development",
-  // vite server redirects traffic on starting with apiBaseURL
+  // vite server redirects traffic on URLs starting with apiBaseURL
   // to http://${config.apiHost}:${config.apiPort} in dev environment
   apiBasePath: "/api",
   uploadApiBasePath:
@@ -111,7 +111,10 @@ const exports = {
       enabledForRoles: [],
     },
     downloads: true,
-    uploads: { enabledForRoles: [] },
+    signup: true,
+    uploads: {
+      enabledForRoles: ["admin"],
+    },
     accessKeys: true,
   },
   notifications: {

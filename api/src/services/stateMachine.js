@@ -1,5 +1,34 @@
 /**
  * StateMachine class to manage state transitions with role-based access control.
+ *
+ * Usage Example:
+ *
+ * const Roles = {
+ *   ADMIN: 'admin',
+ *   SYSTEM: 'system',
+ * };
+ *
+ * const config = {
+ *   states: ['PENDING', 'CANCELED', 'EXPIRED'],
+ *   transitions: [
+ *     { from: 'PENDING', to: 'CANCELED', roles: [Roles.ADMIN, Roles.USER] },
+ *     { from: 'PENDING', to: 'EXPIRED', roles: [Roles.SYSTEM] },
+ *     { from: 'APPROVED', to: 'EXPIRED', roles: [Roles.ADMIN, Roles.SYSTEM] },
+ *     { from: 'CANCELED', to: 'PENDING', roles: [Roles.ADMIN] },
+ *   ],
+ * };
+ *
+ * function getFSM(status) {
+ *   const fsm = new StateMachine(config);
+ *   if (status) fsm.setState(status);
+ *   return fsm;
+ * }
+ *
+ * const fsm = getFSM('PENDING');
+ * console.log(fsm.getCurrentState()); // 'PENDING'
+ * console.log(fsm.getAllowedTransitions({ role: Roles.ADMIN })); // ['CANCELED', 'EXPIRED']
+ * console.log(fsm.canTransition({ to: 'CANCELED', role: Roles.ADMIN })); // true
+ * console.log(fsm.canTransition({ to: 'CANCELED', role: Roles.SYSTEM })); // false
  */
 class StateMachine {
   /**
