@@ -111,7 +111,7 @@ const exports = {
       enabledForRoles: [],
     },
     downloads: true,
-    signup: true,
+    signup: false,
     uploads: {
       enabledForRoles: [],
     },
