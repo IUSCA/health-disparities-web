@@ -203,7 +203,7 @@
   },
   "enabled_features": {
     "upload": {
-      "enabled_for_roles": ["admin"]
+      "enabled_for_roles": []
     },
     "fs": {
       "enabled_for_roles": [""]
