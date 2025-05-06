@@ -562,10 +562,8 @@ model cohort {
   metadata        Json?
   created_at      DateTime                @default(now()) @db.Timestamp(6)
   updated_at      DateTime                @default(now()) @updatedAt @db.Timestamp(6)
-  is_published    Boolean                 @default(false)
-  is_locked       Boolean                 @default(false)
-  is_protected    Boolean                 @default(false)
   is_temp         Boolean                 @default(false)
+  visibility      cohort_visibility       @default(PRIVATE)
   participants    Int[]
   author_username String
   author          user                    @relation(fields: [author_username], references: [username])
@@ -1204,4 +1202,10 @@ enum RequestStatus {
   APPROVED_WITH_REVISIONS
   CANCELED
   EXPIRED
+}
+
+enum cohort_visibility {
+  PRIVATE
+  UNLISTED
+  PUBLISHED
 }
