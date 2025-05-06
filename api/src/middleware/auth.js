@@ -10,7 +10,6 @@ const ac = require('../services/accesscontrols');
 const nonceService = require('../services/nonce');
 const logger = require('../services/logger');
 const constants = require('../constants');
-const { isFeatureEnabled } = require('../services/features');
 
 const asyncHandler = require('./asyncHandler');
 
@@ -217,7 +216,7 @@ const loginHandler = asyncHandler(async (req, res, next) => {
     return res.json(resObj);
   }
   // User was authenticated but they are not a portal user
-  if (isFeatureEnabled({ key: 'signup' })) {
+  if (config.get('enabled_features.signup')) {
     const email = req.auth?.identity?.email;
     if (!email) {
       logger.error('User authenticated but no email found in identity returned by the provider');

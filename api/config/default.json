@@ -218,7 +218,8 @@
     "fs": {
       "enabled_for_roles": [""]
     },
-    "downloads": true
+    "downloads": true,
+    "signup": false
   },
   "api_keys": {
     "enabled": true,

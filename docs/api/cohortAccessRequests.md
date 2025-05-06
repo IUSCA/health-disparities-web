@@ -254,7 +254,7 @@ Re-requests:
 ## 10. **Open Questions**
 
 1. Should we show REDCap decision timestamps in the UI?
-2. Do we want to enforce a cooldown period before retrying a rejected request?
+2. Do we want to enforce a cool down period before retrying a rejected request?
 3. Should user cancellation require confirmation or justification?
 
 
