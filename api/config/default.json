@@ -219,7 +219,7 @@
       "enabled_for_roles": [""]
     },
     "downloads": true,
-    "signup": false
+    "signup": true
   },
   "api_keys": {
     "enabled": true,
