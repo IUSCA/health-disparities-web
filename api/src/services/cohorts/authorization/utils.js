@@ -12,16 +12,15 @@ function getUserRoles(user, cohort) {
   return roles;
 }
 
-// This should eventually call a real implementation.
-async function hasDependents(cohort) {
-  // eslint-disable-next-line no-console
-  console.log('hasDependents not implemented', cohort);
-  return false;
-}
-
-const ifUnused = async ({ cohort }) => !(await hasDependents(cohort));
+const ifReferenced = ({ cohort }) => cohort.is_referenced;
+const ifInReview = ({ cohort }) => cohort.in_review;
+const ifArchived = ({ cohort }) => cohort.is_archived;
+const ifAuthor = ({ cohort, user }) => cohort.author_username === user.username;
 
 module.exports = {
   getUserRoles,
-  ifUnused,
+  ifReferenced,
+  ifInReview,
+  ifArchived,
+  ifAuthor,
 };

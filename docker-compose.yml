@@ -165,10 +165,14 @@ services:
     image: darkbluestudios/jupyter-ijavascript-utils:latest
     ports:
       - "8888:8888"
+    env_file:
+      - ./api/.env
     volumes:
       - ./api/notebooks:/home/jovyan/work/notebooks
       - ./api/node_modules:/home/jovyan/work/node_modules
       - ./api/package.json:/home/jovyan/work/package.json:ro
+    extra_hosts:
+      - "localhost:host-gateway"
     # stdin_open: true
     # tty: true
     profiles:

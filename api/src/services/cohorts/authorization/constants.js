@@ -7,15 +7,10 @@ const ROLES = {
 const CV = {
   PRIVATE: 'PRIVATE',
   UNLISTED: 'UNLISTED',
-  PUBLISHED: 'PUBLISHED',
+  PUBLIC: 'PUBLIC',
 };
-
-const always = async () => true;
-const never = async () => false;
 
 module.exports = {
   ROLES,
   CV,
-  always,
-  never,
 };
