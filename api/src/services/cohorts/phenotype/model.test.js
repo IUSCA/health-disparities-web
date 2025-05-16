@@ -1,5 +1,3 @@
-const assert = require('assert');
-
 const { validate, sanitize } = require('./model');
 
 describe('Phenotype Query Schema Validation', () => {
@@ -9,12 +7,12 @@ describe('Phenotype Query Schema Validation', () => {
         operator: 'AND',
         children: [
           {
-            field: 'demographic.age',
+            field: 'demographic_extended.age',
             operator: 'gt',
             value: '10',
           },
           {
-            field: 'demographic.age',
+            field: 'demographic_extended.age',
             operator: 'lt',
             value: '30',
           },
@@ -24,18 +22,13 @@ describe('Phenotype Query Schema Validation', () => {
     };
 
     const isValid = validate(body);
-    assert.strictEqual(isValid, true);
+    expect(isValid).toBe(true);
   });
 
   it('should throw an error for an empty query', () => {
     const body = {};
 
-    try {
-      validate(body);
-      assert.fail('Expected an error to be thrown');
-    } catch (error) {
-      assert.strictEqual(error.message, 'Invalid query');
-    }
+    expect(() => validate(body)).toThrow('Invalid query');
   });
 
   it('should throw an error for an invalid query', () => {
@@ -43,12 +36,7 @@ describe('Phenotype Query Schema Validation', () => {
       cohort_ids: ['cohort1_id', 'cohort2_id'],
     };
 
-    try {
-      validate(body);
-      assert.fail('Expected an error to be thrown');
-    } catch (error) {
-      assert.strictEqual(error.message, 'Invalid query');
-    }
+    expect(() => validate(body)).toThrow('Invalid query');
   });
 
   it('should return a sanitized query', () => {
@@ -57,12 +45,12 @@ describe('Phenotype Query Schema Validation', () => {
         operator: 'AND',
         children: [
           {
-            field: 'demographic.age',
+            field: 'demographic_extended.age',
             operator: 'gt',
             value: '10',
           },
           {
-            field: 'demographic.age',
+            field: 'demographic_extended.age',
             operator: 'lt',
             value: '30',
           },
@@ -72,17 +60,17 @@ describe('Phenotype Query Schema Validation', () => {
     };
 
     const sanitizedBody = sanitize(body);
-    assert.deepStrictEqual(sanitizedBody, {
+    expect(sanitizedBody).toEqual({
       filters: {
         operator: 'AND',
         children: [
           {
-            field: 'demographic.age',
+            field: 'demographic_extended.age',
             operator: 'gt',
             value: 10,
           },
           {
-            field: 'demographic.age',
+            field: 'demographic_extended.age',
             operator: 'lt',
             value: 30,
           },

@@ -1,9 +1,7 @@
-const assert = require('assert');
-
 const { validate, sanitize } = require('./model');
 
 describe('Genotype Query Schema Validation', () => {
-  it('should return true for a valid combination query', () => {
+  test('should return true for a valid combination query', () => {
     const body = {
       filters: {
         operator: 'AND',
@@ -41,37 +39,24 @@ describe('Genotype Query Schema Validation', () => {
       source_id: 1,
     };
 
-    const isValid = validate(body);
-    assert.strictEqual(isValid, true);
+    expect(validate(body)).toBe(true);
   });
 
-  it('should throw an error for an empty query', () => {
+  test('should throw an error for an empty query', () => {
     const body = {};
-
-    try {
-      validate(body);
-      assert.fail('Expected an error to be thrown');
-    } catch (error) {
-      assert.strictEqual(error.message, 'Invalid query');
-    }
+    expect(() => validate(body)).toThrow('Invalid query');
   });
 
-  it('should throw an error for an invalid query', () => {
+  test('should throw an error for an invalid query', () => {
     const body = {
       filters: {},
       ranges: [],
       zygosities: [],
     };
-
-    try {
-      validate(body);
-      assert.fail('Expected an error to be thrown');
-    } catch (error) {
-      assert.strictEqual(error.message, 'Invalid query');
-    }
+    expect(() => validate(body)).toThrow('Invalid query');
   });
 
-  it('should return a sanitized query', () => {
+  test('should return a sanitized query', () => {
     const body = {
       filters: {
         operator: 'AND',
@@ -109,8 +94,7 @@ describe('Genotype Query Schema Validation', () => {
       source_id: 1,
     };
 
-    const sanitizedBody = sanitize(body);
-    assert.deepStrictEqual(sanitizedBody, {
+    expect(sanitize(body)).toEqual({
       filters: {
         operator: 'AND',
         children: [

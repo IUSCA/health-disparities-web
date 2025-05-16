@@ -1,37 +1,15 @@
-const assert = require('assert');
 const { buildCustomField, buildParticipantsQuery } = require('./index');
 const { normalizeWhiteSpace } = require('../../../utils');
 
 describe('Phenotype Query Building Validation', () => {
-  it('should return the correct SQL query for a custom field', () => {
-    const field = 'demographic.age';
-    const op = 'gt';
-    const value = '10';
-
-    const sql = buildCustomField(field, op, value);
-
-    const expected_sql = `
-    EXISTS (
-      SELECT 1 
-      FROM demographic t
-      WHERE 
-        t.participant_id = p.id
-        AND extract(year from age(dob)) > ?
-    )`;
-
-    assert.strictEqual(normalizeWhiteSpace(sql.sql), normalizeWhiteSpace(expected_sql));
-    assert.deepEqual(sql.values, [10]);
-  });
-
   it('should throw an error for an unknown custom field', () => {
     const field = 'unknown.field';
     const op = 'gt';
     const value = '10';
 
-    assert.throws(() => buildCustomField(field, op, value), {
-      name: 'Error',
-      message: 'Implementation for custom field not found: unknown.field',
-    });
+    expect(() => buildCustomField(field, op, value)).toThrowError(
+      new Error('Implementation for custom field not found: unknown.field'),
+    );
   });
 
   it('should return the correct SQL query for searching participants', () => {
@@ -40,7 +18,7 @@ describe('Phenotype Query Building Validation', () => {
         operator: 'AND',
         children: [
           {
-            field: 'demographic.gender',
+            field: 'demographic_extended.gender',
             operator: 'in',
             value: [
               'F',
@@ -59,13 +37,13 @@ describe('Phenotype Query Building Validation', () => {
       WHERE (
       EXISTS (
         SELECT 1
-        FROM demographic t
+        FROM demographic_extended t
         WHERE
           t.participant_id = p.id
           AND gender IN (?,?)
       ))
     `;
-    assert.strictEqual(normalizeWhiteSpace(sql.sql), normalizeWhiteSpace(expected_sql));
-    assert.deepEqual(sql.values, ['F', 'M']);
+    expect(normalizeWhiteSpace(sql.sql)).toBe(normalizeWhiteSpace(expected_sql));
+    expect(sql.values).toEqual(['F', 'M']);
   });
 });

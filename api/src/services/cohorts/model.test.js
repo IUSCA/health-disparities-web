@@ -1,9 +1,7 @@
-const assert = require('assert');
-
 const { validate, sanitize } = require('./model');
 
 describe('Query Validation', () => {
-  it('should return true for a valid combination query', () => {
+  test('should return true for a valid combination query', () => {
     const query = {
       schema: {
         name: 'combination',
@@ -16,11 +14,10 @@ describe('Query Validation', () => {
       },
     };
 
-    const isValid = validate(query);
-    assert.strictEqual(isValid, true);
+    expect(validate(query)).toBe(true);
   });
 
-  it('should return true for a valid phenotype query', () => {
+  test('should return true for a valid phenotype query', () => {
     const query = {
       schema: {
         name: 'phenotype',
@@ -32,12 +29,12 @@ describe('Query Validation', () => {
           operator: 'AND',
           children: [
             {
-              field: 'demographic.age',
+              field: 'demographic_extended.age',
               operator: 'gt',
               value: '10',
             },
             {
-              field: 'demographic.age',
+              field: 'demographic_extended.age',
               operator: 'lt',
               value: '30',
             },
@@ -47,11 +44,10 @@ describe('Query Validation', () => {
       },
     };
 
-    const isValid = validate(query);
-    assert.strictEqual(isValid, true);
+    expect(validate(query)).toBe(true);
   });
 
-  it('should return true for a valid genotype query', () => {
+  test('should return true for a valid genotype query', () => {
     const query = {
       schema: {
         name: 'genotype',
@@ -95,35 +91,22 @@ describe('Query Validation', () => {
         source_id: 1,
       },
     };
-    const isValid = validate(query);
-    assert.strictEqual(isValid, true);
+    expect(validate(query)).toBe(true);
   });
 
-  it('should throw an error for an empty query', () => {
+  test('should throw an error for an empty query', () => {
     const body = {};
-
-    try {
-      validate(body);
-      assert.fail('Expected an error to be thrown');
-    } catch (error) {
-      assert.strictEqual(error.message, 'Invalid query');
-    }
+    expect(() => validate(body)).toThrow('Invalid query');
   });
 
-  it('should throw an error for an invalid query', () => {
+  test('should throw an error for an invalid query', () => {
     const body = {
       cohort_ids: ['cohort1_id', 'cohort2_id'],
     };
-
-    try {
-      validate(body);
-      assert.fail('Expected an error to be thrown');
-    } catch (error) {
-      assert.strictEqual(error.message, 'Invalid query');
-    }
+    expect(() => validate(body)).toThrow('Invalid query');
   });
 
-  it('should return a sanitized combination query', () => {
+  test('should return a sanitized combination query', () => {
     const query = {
       schema: {
         name: 'combination',
@@ -136,11 +119,10 @@ describe('Query Validation', () => {
       },
     };
 
-    const sanitizedQuery = sanitize(query);
-    assert.deepStrictEqual(sanitizedQuery, query);
+    expect(sanitize(query)).toEqual(query);
   });
 
-  it('should return a sanitized phenotype query', () => {
+  test('should return a sanitized phenotype query', () => {
     const query = {
       schema: {
         name: 'phenotype',
@@ -152,12 +134,12 @@ describe('Query Validation', () => {
           operator: 'AND',
           children: [
             {
-              field: 'demographic.age',
+              field: 'demographic_extended.age',
               operator: 'gt',
               value: '10',
             },
             {
-              field: 'demographic.age',
+              field: 'demographic_extended.age',
               operator: 'lt',
               value: '30',
             },
@@ -167,8 +149,7 @@ describe('Query Validation', () => {
       },
     };
 
-    const sanitizedQuery = sanitize(query);
-    assert.deepStrictEqual(sanitizedQuery, {
+    expect(sanitize(query)).toEqual({
       schema: {
         name: 'phenotype',
         namespace: 'edu.iu.biobank',
@@ -179,12 +160,12 @@ describe('Query Validation', () => {
           operator: 'AND',
           children: [
             {
-              field: 'demographic.age',
+              field: 'demographic_extended.age',
               operator: 'gt',
               value: 10,
             },
             {
-              field: 'demographic.age',
+              field: 'demographic_extended.age',
               operator: 'lt',
               value: 30,
             },
@@ -195,7 +176,7 @@ describe('Query Validation', () => {
     });
   });
 
-  it('should return a sanitized genotype query', () => {
+  test('should return a sanitized genotype query', () => {
     const query = {
       schema: {
         name: 'genotype',
@@ -240,8 +221,7 @@ describe('Query Validation', () => {
       },
     };
 
-    const sanitizedQuery = sanitize(query);
-    assert.deepStrictEqual(sanitizedQuery, {
+    expect(sanitize(query)).toEqual({
       schema: {
         name: 'genotype',
         namespace: 'edu.iu.biobank',

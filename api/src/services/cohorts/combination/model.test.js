@@ -1,4 +1,3 @@
-const assert = require('assert');
 // const Ajv = require('ajv');
 
 const { validate } = require('./model');
@@ -10,22 +9,16 @@ describe('Combination Query Schema Validation', () => {
     const body = {
       cohort_ids: ['cohort1_id', 'cohort2_id'],
       operators: ['union'],
-
     };
 
     const isValid = validate(body);
-    assert.strictEqual(isValid, true);
+    expect(isValid).toBe(true);
   });
 
   it('should throw an error for an empty query', () => {
     const body = {};
 
-    try {
-      validate(body);
-      assert.fail('Expected an error to be thrown');
-    } catch (error) {
-      assert.strictEqual(error.message, 'Invalid query');
-    }
+    expect(() => validate(body)).toThrow('Invalid query');
   });
 
   it('should throw an error for an invalid query', () => {
@@ -35,11 +28,6 @@ describe('Combination Query Schema Validation', () => {
       zygosities: [],
     };
 
-    try {
-      validate(body);
-      assert.fail('Expected an error to be thrown');
-    } catch (error) {
-      assert.strictEqual(error.message, 'Invalid query');
-    }
+    expect(() => validate(body)).toThrow('Invalid query');
   });
 });

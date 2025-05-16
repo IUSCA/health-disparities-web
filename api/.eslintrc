@@ -47,7 +47,6 @@
   },
   "env": {
     "node": true,
-    "mocha": true,
     "es2020": true,  // <- activate “es2020” globals
     "jest": true
   },

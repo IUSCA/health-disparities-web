@@ -42,6 +42,7 @@ function buildRangesSQL(ranges) {
       return Prisma.sql`(chr = ${range.value.chr} AND position BETWEEN ${range.value.start} AND ${range.value.end})`;
     }
     // variant
+    // eslint-disable-next-line max-len
     return Prisma.sql`(chr = ${range.value.chr} AND position = ${range.value.position} AND ref = ${range.value.ref} AND alt = ${range.value.alt})`;
   }).filter((r) => r != null);
 
