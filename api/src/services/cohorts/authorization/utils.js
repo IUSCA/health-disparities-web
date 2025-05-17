@@ -23,4 +23,5 @@ module.exports = {
   ifInReview,
   ifArchived,
   ifAuthor,
+  getPortalRole,
 };

@@ -6,14 +6,12 @@ const { always, nonePass, not } = require('../../../utils/predicates');
 const permissions = {
   [ROLES.USER]: { // portal role is "user" and is not the author
     view: { [CV.UNLISTED]: always, [CV.PUBLIC]: always },
-    search: { [CV.PUBLIC]: always },
     clone: { [CV.UNLISTED]: always, [CV.PUBLIC]: always },
     derive: { [CV.UNLISTED]: not(ifArchived), [CV.PUBLIC]: not(ifArchived) },
     request: { [CV.UNLISTED]: always, [CV.PUBLIC]: always },
   },
   [ROLES.AUTHOR]: { // is the author; can have any portal role
     view: { [CV.PRIVATE]: always, [CV.UNLISTED]: always, [CV.PUBLIC]: always },
-    search: { [CV.PRIVATE]: always, [CV.UNLISTED]: always, [CV.PUBLIC]: always },
     update: { [CV.PRIVATE]: not(ifArchived) },
     delete: { [CV.PRIVATE]: not(ifReferenced) },
     clone: { [CV.PRIVATE]: always, [CV.UNLISTED]: always, [CV.PUBLIC]: always },
@@ -24,7 +22,6 @@ const permissions = {
   },
   [ROLES.ADMIN]: { // portal role is "operator" / "admin" and is not the author
     view: { [CV.UNLISTED]: always, [CV.PUBLIC]: always },
-    search: { [CV.UNLISTED]: always, [CV.PUBLIC]: always },
     delete: { [CV.UNLISTED]: nonePass([ifInReview, ifReferenced]), [CV.PUBLIC]: nonePass([ifInReview, ifReferenced]) },
     clone: { [CV.UNLISTED]: always, [CV.PUBLIC]: always },
     derive: { [CV.UNLISTED]: not(ifArchived), [CV.PUBLIC]: not(ifArchived) },
@@ -34,6 +31,11 @@ const permissions = {
     publish: { [CV.UNLISTED]: always },
     unpublish: { [CV.PUBLIC]: always },
   },
+};
+
+const searchableStates = {
+  [ROLES.USER]: [CV.PUBLIC],
+  [ROLES.ADMIN]: [CV.UNLISTED, CV.PUBLIC],
 };
 
 const transitions = [
@@ -53,5 +55,5 @@ const visibilityFsm = new StateMachine({
 });
 
 module.exports = {
-  ROLES, CV, permissions, visibilityFsm,
+  ROLES, CV, permissions, visibilityFsm, searchableStates,
 };

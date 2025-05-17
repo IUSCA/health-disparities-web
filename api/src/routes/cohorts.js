@@ -10,13 +10,15 @@ const _ = require('lodash/fp');
 const config = require('config');
 
 const prisma = require('@/db');
-const asyncHandler = require('@/middleware/asyncHandler');
-const { validate } = require('@/middleware/validators');
-const { accessControl, allowOnlyAccessKeys } = require('@/middleware/auth');
-const cohortService = require('@/services/cohorts');
-const cohortModel = require('@/services/cohorts/model');
-const datasetService = require('@/services/dataset');
-const { toTable, toPaginationInfo } = require('@/utils');
+const asyncHandler = require('../middleware/asyncHandler');
+const { validate } = require('../middleware/validators');
+const { accessControl, allowOnlyAccessKeys } = require('../middleware/auth');
+const cohortService = require('../services/cohorts');
+const cohortModel = require('../services/cohorts/model');
+const datasetService = require('../services/dataset');
+const { toTable, toPaginationInfo } = require('../utils');
+const { CV } = require('../services/cohorts/authorization/constants');
+const { createSearch } = require('../services/cohorts/search');
 
 const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
@@ -57,9 +59,7 @@ router.get(
   '/',
   isPermittedTo('read'),
   validate([
-    query('is_mine').optional().toBoolean(),
-    query('is_published').optional().toBoolean(),
-    query('is_locked').optional().toBoolean(),
+    query('visibility').optional().isIn(Object.values(CV)),
     query('type').optional().isIn([
       cohortModel.PHENOTYPE,
       cohortModel.GENOTYPE,
@@ -75,9 +75,7 @@ router.get(
     // #swagger.summary = 'Search cohorts'
     // #swagger.description = 'Search cohorts based on query parameters. Requires read:cohorts scope.'
     // #swagger.parameters['search_term'] = { description: 'Filter cohorts by name or description containing search term' }
-    // #swagger.parameters['is_mine'] = { description: 'Show only the user\'s cohorts', type: 'boolean' }
-    // #swagger.parameters['is_published'] = { description: 'Show only published cohorts', type: 'boolean' }
-    // #swagger.parameters['is_locked'] = { description: 'Show only locked cohorts', type: 'boolean' }
+    // #swagger.parameters['visibility'] = { description: 'Filter cohorts by their visibility', schema: { @enum: ['PRIVATE', 'UNLISTED', 'PUBLIC'] } }
     // #swagger.parameters['type'] = { description: 'Show only cohorts of a certain type', schema: { @enum: ['phenotype', 'genotype', 'combination'] } }
     // #swagger.parameters['sort_by'] = { description: 'Sort by a field', schema: { @enum: ['name', 'size', 'created_at', 'updated_at'], default: 'created_at' }  }
     // #swagger.parameters['sort_order'] = { description: 'Sort order', schema: { @enum: ['asc', 'desc'], default: 'desc' } }
@@ -104,58 +102,18 @@ router.get(
       }
     */
 
-    const data = _.pick(
-      ['search_term', 'is_published', 'is_locked', 'is_protected', 'is_mine', 'type'],
-    )(req.query);
-
-    // A user can only see their own cohorts or published cohorts
-    // The superset of all cohorts that a user can see is: cohort's owned by them union published cohorts
-    // select * from cohort c where c.author_username = $1 or c.is_published = true
-
-    // is_mine: true, is_published: null -    where (c.author_username = $1 or c.is_published = true) and (c.author_username = $1)                              - all user's cohorts whether published or not
-    // is_mine: false, is_published: null -   where (c.author_username = $1 or c.is_published = true) and (c.author_username != $1)                             - all published cohorts not owned by the user
-    // is_mine: null, is_published: null -    where (c.author_username = $1 or c.is_published = true)                                                           - all cohorts that are either owned by the user or published
-    // is_mine: true, is_published: false -   where (c.author_username = $1 or c.is_published = true) and c.author_username = $1    and c.is_published = false  - all user's cohorts that are not published
-    // is_mine: false, is_published: false -  where (c.author_username = $1 or c.is_published = true) and c.author_username != $1   and c.is_published = false  - empty
-    // is_mine: null, is_published: false -   where (c.author_username = $1 or c.is_published = true)                               and c.is_published = false  - all user's cohorts that are not published
-    // is_mine: true, is_published: true -    where (c.author_username = $1 or c.is_published = true) and c.author_username = $1    and c.is_published = true   - all published cohorts owned by the user
-    // is_mine: false, is_published: true -   where (c.author_username = $1 or c.is_published = true) and c.author_username != $1   and c.is_published = true   - all published cohorts not owned by the user
-    // is_mine: null, is_published: true -    where (c.author_username = $1 or c.is_published = true)                               and c.is_published = true   - all published cohorts
-
-    // equivalences
-    // is_mine: false, is_published: null -    is_mine: false, is_published: true
-    // is_mine: null, is_published: false -    is_mine: true, is_published: false
-
-    if (data.is_mine) {
-      data.author_username = req.user.username;
-    } else if (data.is_mine === false) {
-      // early termination
-      if (data.is_published === false) {
-        res.json([]);
-        return;
-      }
-      data.not_author_username = req.user.username;
-    } else {
-      // is_mine is null
-      data.author_username = null;
-    }
-
-    data.is_temp = false;
-
-    const sql = cohortService.searchCohortsQuery(req.user.username, data, {
-      sort_by: req.query.sort_by,
-      sort_order: req.query.sort_order,
-      limit: req.query.limit,
-      offset: req.query.offset,
+    const search = createSearch({
+      filters: req.query,
+      user: req.user,
+      queryParams: req.query,
     });
-
-    const rows = await prisma.$queryRaw(sql);
+    const rows = await search(prisma);
     const cohorts = rows.map(toJSON);
 
     res.format({
       json: () => res.send(cohorts),
       text: () => {
-        const columns = ['id', 'name', 'size', 'description', 'author_username'];
+        const columns = ['id', 'name', 'size', 'description', 'author_username', 'visibility'];
         const tableStr = toTable(cohorts, columns);
         res.send(tableStr);
       },

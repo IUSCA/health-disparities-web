@@ -1,9 +1,9 @@
 const {
-  permissions, visibilityFsm,
+  permissions, visibilityFsm, searchableStates,
 } = require('./policy');
 const { CV } = require('./constants');
 
-const { getUserRoles } = require('./utils');
+const { getUserRoles, getPortalRole } = require('./utils');
 
 function canPerformAction(action, cohort, user) {
   const cohortVisibility = cohort.visibility;
@@ -77,9 +77,15 @@ function getTransitionEffect({ from, to, event }) {
   return transitionEffects[key];
 }
 
+function getSearchableStates(user) {
+  const role = getPortalRole(user);
+  return searchableStates[role] || [];
+}
+
 module.exports = {
   canPerformAction,
   canChangeVisibility,
   getPossibleActions,
   getTransitionEffect,
+  getSearchableStates,
 };

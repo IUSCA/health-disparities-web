@@ -1,5 +1,7 @@
 const path = require('path');
 
+global.__basedir = path.join(__dirname, '..');
+
 const { PrismaClient } = require('@prisma/client');
 const _ = require('lodash/fp');
 const dayjs = require('dayjs');
@@ -14,8 +16,6 @@ const { generate_stage_request_logs } = require('./seed_data/stage_request_logs'
 const { generate_date_range } = require('../src/services/datetime');
 const datasetService = require('../src/services/dataset');
 const { readUsersFromJSON } = require('../src/utils');
-
-global.__basedir = path.join(__dirname, '..');
 
 const prisma = new PrismaClient();
 
@@ -310,10 +310,6 @@ async function main() {
   //   })),
   // );
 
-  // update the auto increment id's sequence numbers
-  const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot'];
-  await Promise.all(tables.map(update_seq));
-
   // add metrics
   // delete first to not overwrite data.
   await prisma.metric.deleteMany();
@@ -362,6 +358,18 @@ async function main() {
       update: {},
       create: stage,
     })));
+
+  // create scopes
+  await Promise.all(data.scopes
+    .map((scope) => prisma.scope.upsert({
+      where: { id: scope.id },
+      update: {},
+      create: scope,
+    })));
+
+  // update the auto increment id's sequence numbers
+  const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot', 'scope'];
+  await Promise.all(tables.map(update_seq));
 }
 
 main()

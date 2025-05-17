@@ -383,6 +383,20 @@ const access_request_stage_definitions = [{
   order: 4,
 }];
 
+const scopes = [{
+  id: 1,
+  name: 'read:cohorts',
+  resource: 'cohorts',
+  action: 'read',
+  description: 'Search / access personal and public cohorts',
+}, {
+  id: 2,
+  name: 'read:cohort_data',
+  resource: 'cohort_data',
+  action: 'read',
+  description: 'Download raw data associated with cohorts',
+}];
+
 module.exports = {
   roles,
   admins,
@@ -402,4 +416,5 @@ module.exports = {
   sources,
   about_records,
   access_request_stage_definitions,
+  scopes,
 };

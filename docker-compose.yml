@@ -97,7 +97,7 @@ services:
         - ./data:/opt/sca/data:ro               # Mount for data directory
         - ./ui/dist:/opt/sca/ui:ro              # Mount for UI static files
         - ./nginx/logs:/var/log/nginx           # Mount for Nginx logs
-        - ./ui/.cert:/etc/nginx/certs:ro       # Mount for SSL certificates
+        - ./ui/.cert:/etc/nginx/certs:ro        # Mount for SSL certificates
     extra_hosts:
       - "host.docker.internal:host-gateway" # for connecting to services running on localhost of the host network
     profiles:
