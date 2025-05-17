@@ -31,14 +31,14 @@
     "eslint-plugin-lodash-fp": "2.2.0-a1",
     "fast-check": "^4.1.1",
     "git-hooks": "^1.1.10",
-    "meilisearch": "^0.33.0",
     "jest": "^29.7.0",
+    "meilisearch": "^0.33.0",
     "nodemon": "^3.0.1",
     "prisma": "^5.18.0",
     "random": "^4.1.0",
     "random-js": "^2.1.0",
-    "tqdm": "^2.0.3",
-    "supertest": "^7.1.0"
+    "supertest": "^7.1.0",
+    "tqdm": "^2.0.3"
   },
   "dependencies": {
     "@badgateway/oauth2-client": "^2.2.3",
@@ -61,6 +61,7 @@
     "he": "^1.2.0",
     "http-errors": "^2.0.0",
     "js-fire": "^1.0.0",
+    "js-yaml": "^4.1.0",
     "jsdom": "^24.0.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",

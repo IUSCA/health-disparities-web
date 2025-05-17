@@ -43,7 +43,10 @@
       }
     ],
     "max-len": ["error", { "ignoreComments": true, "code": 120 }],
-    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.js", "**/*.spec.js"]}]
+    "import/no-extraneous-dependencies": [
+      "error", 
+      {"devDependencies": ["**/*.test.js", "**/*.spec.js"], "includeInternal": false}
+    ]
   },
   "env": {
     "node": true,
