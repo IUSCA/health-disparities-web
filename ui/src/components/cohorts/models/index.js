@@ -240,7 +240,7 @@ class PhenotypeCohort extends Cohort {
   }
 
   isEmpty(_query) {
-    // TODO: what if snapsnhot is null?
+    // TODO: what if snapshot is null?
     const query = _query || this.query;
     return queryBuilder.isStandardQueryEmpty(query.filters);
   }

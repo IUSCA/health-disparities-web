@@ -13,13 +13,13 @@
       <div class="mt-3">
         <div class="flex flex-row gap-2">
           <div
-            v-for="cat in Object.keys(colums_by_category)"
+            v-for="cat in Object.keys(columns_by_category)"
             :key="cat"
             class="flex-auto"
           >
             <span class="font-semibold tracking-wide text-lg"> {{ cat }} </span>
             <div class="flex flex-col mt-2">
-              <div v-for="col in colums_by_category[cat]" :key="col.key">
+              <div v-for="col in columns_by_category[cat]" :key="col.key">
                 <va-checkbox
                   v-model="columnsSelected[col.key]"
                   :label="col.label"
@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-// shows all avaiable columns and allows the user to select which columns to display
+// shows all available columns and allows the user to select which columns to display
 // shows a drag and drop interface to reorder selected columns
 // emits: restoreColumnDefaults: restore the default column selection
 
@@ -82,11 +82,14 @@ const visible = ref(false);
 
 // non-reactive
 // {'Allele Stats': [{...}], 'Genes': [{...}], ...}
-const colums_by_category = Object.entries(COLUMNS).reduce((acc, [key, col]) => {
-  if (!col.category) return acc;
-  acc[col.category] = (acc[col.category] || []).concat({ key, ...col });
-  return acc;
-}, {});
+const columns_by_category = Object.entries(COLUMNS).reduce(
+  (acc, [key, col]) => {
+    if (!col.category) return acc;
+    acc[col.category] = (acc[col.category] || []).concat({ key, ...col });
+    return acc;
+  },
+  {},
+);
 
 function hide() {
   visible.value = false;

@@ -6,7 +6,7 @@
     v-model:sorting-order="defaultSortOrder"
     virtual-scroller
     sticky-header
-    class="datatable text-sm"
+    class="data-table text-sm"
     style="height: 300px"
   >
     <template #cell(date)="{ source }">
@@ -41,7 +41,7 @@ const defaultSortOrder = ref("asc");
 </script>
 
 <style scoped>
-.datatable {
+.data-table {
   --va-data-table-cell-padding: 1px;
 }
 </style>

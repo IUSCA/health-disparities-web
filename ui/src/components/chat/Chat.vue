@@ -33,7 +33,7 @@
         </p>
         <br />
         <div class="flex flex-col gap-3">
-          <p v-for="(msg, idx) in exmapleMessages" :key="idx">
+          <p v-for="(msg, idx) in exampleMessages" :key="idx">
             <a
               @click="addUserMessage(msg)"
               href="#"
@@ -105,7 +105,7 @@ const colors = {
   },
 };
 
-const exmapleMessages = [
+const exampleMessages = [
   "Create a cohort of female patients over 50 years old",
   // "Create a cohort of patients with diabetes and hypertension and age above 50.",
   // "Patients between 18 and 65 years old with diabetes but without hypertension.",

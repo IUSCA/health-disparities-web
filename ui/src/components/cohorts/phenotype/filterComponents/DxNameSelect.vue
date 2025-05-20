@@ -29,9 +29,9 @@ import Multiselect from "@vueform/multiselect";
 const model = defineModel();
 const loading = ref(false);
 
-const debouncedSearch = useDebounceFn(fecthMatchingOptions, 300);
+const debouncedSearch = useDebounceFn(fetchMatchingOptions, 300);
 
-function fecthMatchingOptions(searchQuery) {
+function fetchMatchingOptions(searchQuery) {
   if (searchQuery === "" || searchQuery == null) return Promise.resolve([]);
   loading.value = true;
   return phenotypesService

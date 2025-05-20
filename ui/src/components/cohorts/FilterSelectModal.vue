@@ -10,7 +10,7 @@
   >
     <FilterSelect
       :filters="props.filters"
-      :recent-filters="sortedRecents"
+      :recent-filters="sortedRecent"
       @select="handleSelect"
       @clear-recent-filters="recentFilters = {}"
     />
@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-const recentFilters = defineModel("recents", {
+const recentFilters = defineModel("recent", {
   type: Object,
 });
 const props = defineProps({
@@ -66,7 +66,7 @@ function handleSelect(node) {
 }
 
 const MAX_RECENT_FILTERS = 5;
-const sortedRecents = computed(() => {
+const sortedRecent = computed(() => {
   return Object.entries(recentFilters.value)
     .sort((a, b) => {
       // sort by timestamp descending

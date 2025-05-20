@@ -65,7 +65,7 @@ import { OnClickOutside } from "@vueuse/components";
 document.addEventListener("DOMContentLoaded", function () {
   const input = document.querySelector(".va-input__content__input");
   input.setAttribute("autocomplete", "off");
-  //input.value = ""; // Clears any autofilled value
+  //input.value = ""; // Clears any auto-filled value
 });
 
 const props = defineProps({

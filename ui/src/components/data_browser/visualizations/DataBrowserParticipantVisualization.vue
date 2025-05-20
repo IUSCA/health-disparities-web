@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-wrap gap-3 items-center justify-start">
-    <VaCard v-for="[key, graph] in graphList" :key="key" class="ecgraph-card">
+    <VaCard v-for="[key, graph] in graphList" :key="key" class="ec-graph-card">
       <VaCardContent>
         <div class="h-[256px] w-[256px]">
           <component
@@ -104,7 +104,7 @@ watch(
 </script>
 
 <style scoped>
-.ecgraph-card {
+.ec-graph-card {
   --va-card-padding: 0.1rem;
 }
 </style>

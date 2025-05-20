@@ -23,7 +23,7 @@ use([
 ]);
 
 /*
-This comoponent expect the data to be in the following format:
+This component expect the data to be in the following format:
 {
   dateRange: [date1, date2, ...],
   xData: [data1, data2, ...],

@@ -63,6 +63,7 @@ describe("parseQuery", () => {
     });
   });
 
+  // cSpell: ignore BRCA
   test("should return a gene object for a valid gene string", () => {
     const result = parseQuery("BRCA1");
     expect(result).toStrictEqual({

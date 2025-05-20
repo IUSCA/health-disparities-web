@@ -85,7 +85,7 @@
 
   <FilterSelectModal
     :filters="variantFilters"
-    v-model:recents="recentGenotypeFilters"
+    v-model:recent="recentGenotypeFilters"
     ref="filterSelectModal"
   />
 </template>
@@ -163,7 +163,7 @@ const filterSelectModal = ref(null);
 /**
  * Default operators for different data types.
  */
-const defultOperators = {
+const defaultOperators = {
   select: "in",
   number: "eq",
   text: "eq",
@@ -179,7 +179,7 @@ const rules = flatten(variantFilters).map((field) => {
     component: getComponent(field),
     initialValue: getInitialValue(field.type),
     connectorIdentifier: field.type,
-    defaultConnectorValue: defultOperators[field.type],
+    defaultConnectorValue: defaultOperators[field.type],
   };
 });
 

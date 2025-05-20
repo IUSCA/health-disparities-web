@@ -1,6 +1,7 @@
 import { readTextFile } from "@/services/utils";
 
 function parseQuery(text, { includeCommas = false } = {}) {
+  // cSpell: ignore BRCA
   /*
   Text can be in the following formats:
 
@@ -25,8 +26,10 @@ function parseQuery(text, { includeCommas = false } = {}) {
   // at least one letter must be present
   // e.g. BRCA1, BRCA2, NKX2-5, AC000093.1
   // it does not match 1-1 or 12345
-  // (?=.*[a-zA-Z]): This is a positive lookahead that ensures at least one alphabetic character (either lowercase or uppercase) is present anywhere in the string.
-  // [\w.-]+: Matches one or more word characters (\w): a-zA-Z0-9_, periods (.), or hyphens (-). This part allows for the gene names to contain digits, hyphens, periods, and letters, as long as the lookahead ensures that at least one letter is present.
+  // (?=.*[a-zA-Z]): This is a positive lookahead that ensures at least one alphabetic character (either lowercase or
+  // uppercase) is present anywhere in the string. [\w.-]+: Matches one or more word characters (\w): a-zA-Z0-9_,
+  // periods (.), or hyphens (-). This part allows for the gene names to contain digits, hyphens, periods, and letters,
+  // as long as the lookahead ensures that at least one letter is present.
   const geneRegex = /^(?=.*[a-zA-Z])[\w.-]+$/;
 
   text = text.trim().toUpperCase();

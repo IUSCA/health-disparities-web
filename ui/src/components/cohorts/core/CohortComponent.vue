@@ -147,7 +147,7 @@ function search() {
     });
 }
 
-// getter source ()=>cohort.value.query with deep watch does not provice old value
+// getter source ()=>cohort.value.query with deep watch does not provide old value
 // but returning the shallow copy somehow does
 watchDebounced(
   () => ({ ...cohort.value.query }),

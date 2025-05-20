@@ -7,7 +7,7 @@
     :loading="loading"
     hoverable
     sticky-header
-    class="annotationtable text-sm"
+    class="annotation-table text-sm"
   >
     <template #cell(chr)="{ rowData }">
       {{ `${rowData.chr}-${rowData.position}-${rowData.ref}-${rowData.alt}` }}
@@ -47,8 +47,8 @@ const props = defineProps({
   total_count: Number,
 });
 
-const varaintsStore = useVariantsStore();
-const { currPage, pageSize, columns } = storeToRefs(varaintsStore);
+const variantsStore = useVariantsStore();
+const { currPage, pageSize, columns } = storeToRefs(variantsStore);
 
 function formatNumericData(data) {
   // data is column_key: value object, value is sometimes a number
@@ -70,7 +70,7 @@ const rows = computed(() => {
 </script>
 
 <style scoped>
-.annotationtable {
+.annotation-table {
   --va-data-table-cell-padding: 1px;
 
   /* in Vuestic v1.8.7 va-virtual-scroller css class is applied to table even

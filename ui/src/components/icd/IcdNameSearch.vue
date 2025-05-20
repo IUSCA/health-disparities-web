@@ -61,7 +61,7 @@
         <div class="flex gap-3 my-1 pl-1" v-if="nodes.length > 0">
           <VaCheckbox
             v-model="expandAll"
-            label="Expland All"
+            label="Expand All"
             class="flex-none"
           />
           <VaCheckbox

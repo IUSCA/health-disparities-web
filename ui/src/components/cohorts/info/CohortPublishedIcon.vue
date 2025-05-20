@@ -3,7 +3,7 @@
     <i-mdi-visibility
       class="va-text-secondary ml-2 text-sm"
       v-if="props.is_published"
-      title="publsihed"
+      title="Published"
     />
     <i-mdi-visibility-off
       class="va-text-secondary ml-2 text-sm"

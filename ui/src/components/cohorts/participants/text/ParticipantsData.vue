@@ -74,18 +74,18 @@ function fetchParticipants() {
 }
 // throttled fn runs at most once every 100ms
 // it'll run on first call without delay and then ignores calls for 100ms
-const throttledFecth = useThrottleFn(fetchParticipants, 100);
+const throttledFetch = useThrottleFn(fetchParticipants, 100);
 
 watch(
   [() => props.cohortId, () => props.lastUpdated, pageSize],
   () => {
     currPage.value = 1;
-    throttledFecth();
+    throttledFetch();
   },
   {
     immediate: true,
   },
 );
 
-watch(currPage, throttledFecth);
+watch(currPage, throttledFetch);
 </script>

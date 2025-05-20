@@ -10,7 +10,7 @@
       selected-top-shown
       searchable
       :highlight-matched-text="false"
-      @updateSearch="deboundeSearch"
+      @updateSearch="debounceSearch"
       :noOptionsText="noOptionsText"
       searchPlaceholderText="Type to search..."
     >
@@ -45,9 +45,9 @@ const noOptionsText = computed(() => {
       ? "No options available"
       : "Search to see available options";
 });
-const deboundeSearch = useDebounceFn(handleSearch, props.debounceMs);
+const debounceSearch = useDebounceFn(handleSearch, props.debounceMs);
 
-function fecthMatchingOptions(search) {
+function fetchMatchingOptions(search) {
   const [category, field] = props.identifier.split(props.separator);
   return phenotypesService
     .textFieldAutoComplete(category, field, search)
@@ -73,7 +73,7 @@ function handleSearch(search) {
     noResults.value = false;
   } else {
     loading.value = true;
-    fecthMatchingOptions(search)
+    fetchMatchingOptions(search)
       .then((res) => {
         updateOptions(res);
         noResults.value = res.length === 0;
