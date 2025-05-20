@@ -1,4 +1,4 @@
-# Problem: Variant Search with dervied features is slow
+# Problem: Variant Search with derived features is slow
 
 derived features are columns that are not part of the original data but are computed from the original data. For example, the derived feature could be the number of allele counts in at a genomic site for a given population.
 
@@ -31,7 +31,7 @@ As the derived features depend on generated participant set, we need to precompu
 
 The number of possible participant sets is number of snapshots * number of combinations of protocols, as each user (researcher) can have one or more protocol. This is a large number and not feasible to precompute all possible participant sets.
 
-If we resctrict each user to only one protocol, then the number of possible participant sets is number of snapshots * number of protocols.
+If we restrict each user to only one protocol, then the number of possible participant sets is number of snapshots * number of protocols.
 
 A genotype_stats table can be created with the following columns:
 - chromosome, position, ref, alt, source_id to identify the variant
@@ -47,7 +47,7 @@ We do not partition by protocol_id as the number of protocols is small and is no
 
 Another advantage of first partitioning by snapshot_id is that the derived features for a given snapshot can be easily deleted when the snapshot is deleted. Or we can delete partitions of older snapshots that are less likely to be queries to save space. In this case, we can fallback to the original method of computing derived features on the fly.
 
-genotype_stats table 227656 rows - 106 MB, 40 MB index size inclded in the table size. The index size is large in comparison to the variant table size whose index size is 13 MB for 1/3rd number of rows.
+genotype_stats table 227656 rows - 106 MB, 40 MB index size included in the table size. The index size is large in comparison to the variant table size whose index size is 13 MB for 1/3rd number of rows.
 
 
 ### Alternate Solution tried
@@ -91,7 +91,7 @@ To keep the row count in genotype_stats table small, we can store the derived fe
 ```
 the above is stored as JSONB in the genotype_stats table.
 
-Follows the pattern: `{snaphot_id: {protocol_id: {derived_features}}}`
+Follows the pattern: `{snapshot_id: {protocol_id: {derived_features}}}`
 
 annotation table 227597 rows - 34 MB
 variant table 227656 rows - 245 MB
@@ -226,7 +226,7 @@ model annotation {
 
 Store gene ids in a jsonb column. This allows indexing on the gene column.
 
-Store gene ids in intarray column. This too allows indexing in the gene column.
+Store gene ids in int array column. This too allows indexing in the gene column.
 
 Store genes as semi-colon separated string of gene names. This is not recommended as it is expensive to query and index on the gene column. This can lead to misspellings and inconsistencies in the gene names. Also, it is difficult to show / search individual genes.
 

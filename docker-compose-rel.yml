@@ -29,7 +29,6 @@ services:
         ipv4_address: 172.19.0.2
     depends_on:
       - postgres
-      - meilisearch
 
   postgres:
     container_name: postgres
@@ -46,19 +45,6 @@ services:
     networks:
       network:
         ipv4_address: 172.19.0.3
-
-  meilisearch:
-    container_name: meilisearch
-    image: getmeili/meilisearch:v1.3.2
-    volumes:
-      - /opt/sca/docker/biobank/data/biobank-meilisearch/:/meili_data
-    environment:
-      - MEILI_HTTP_PAYLOAD_SIZE_LIMIT=10Gb
-    expose:
-      - 7700
-    networks:
-      network:
-        ipv4_address: 172.19.0.4
 
 
 

@@ -12,7 +12,7 @@ Update UI cache key is `ui/src/config.js` at `phenotype_data.cachecache_busting_
 
 ## Regeneron Data Ingestion
 
-### Mapping samples to paritcipants
+### Mapping samples to participants
 Assumption: VCFs for each chromosome in the given directory will have the same sample set (same header)
 
 Make sure that the API is up
@@ -117,7 +117,7 @@ python -m workers.scripts.register_ondemand --path /path/to/vcf_dir -r -n 202402
 
 ## Imputed Data Ingestion
 
-### Mapping samples to paritcipants
+### Mapping samples to participants
 
 ```bash
 cd /opt/sca/biobank/workers
@@ -180,6 +180,7 @@ python -m workers.variants.load_annotations --gnomad_root_dir /N/project/phi_ing
 ```
 
 Genes extraction:
+<!-- cSpell: ignore multianno -->
 ```bash
 python -m workers.variants.genes extract --vcf_file_path ../annotations/genes/subset_chr22_biAllelic_eur_chr22.hg19_multianno.vcf --outfile gene_info_chr22.pkl
 ```
@@ -192,7 +193,7 @@ python -m workers.variants.load_annotations --gnomad_root_dir /N/project/phi_ing
 ```
 
 ```bash
-PYTHONIOENCODING="UTF-8" python -m workers.variants.load_annotations --gnomad_root_dir /N/project/phi_ingest_biobank_regeneron/annotations/gnomAD/ --gene_root_dir annotations/genes --clinvar_vcf_path annotations/clivar/clinvar_20240127.vcf.gz --update --sources gene,clinvar
+PYTHONIOENCODING="UTF-8" python -m workers.variants.load_annotations --gnomad_root_dir /N/project/phi_ingest_biobank_regeneron/annotations/gnomAD/ --gene_root_dir annotations/genes --clinvar_vcf_path annotations/clinvar/clinvar_20240127.vcf.gz --update --sources gene,clinvar
 ```
 
 ### Archive
