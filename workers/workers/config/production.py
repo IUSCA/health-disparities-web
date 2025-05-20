@@ -32,6 +32,7 @@ config = {
     },
     'registration': {
         'DATA_PRODUCT': {
+            # cSpell: disable-next-line
             'source_dir': '/N/project/biobank/AnVIL_CCDG_WashU_CVD_Indiana_WGS/crams'
         },
     },

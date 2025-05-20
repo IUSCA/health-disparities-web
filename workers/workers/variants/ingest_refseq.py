@@ -71,9 +71,9 @@ def main(data_path: str, build: str):
         writer.writerow(header)
         writer.writerows(rows)
 
-    with open(Path(tmp_dir) / f'refseq_bad_lines_{build}.txt', 'w', newline='') as txtfile:
+    with open(Path(tmp_dir) / f'refseq_bad_lines_{build}.txt', 'w', newline='') as txt_file:
         for bad_line in bad_lines:
-            txtfile.write(bad_line + '\n')
+            txt_file.write(bad_line + '\n')
 
     load_data(csv_file)
 

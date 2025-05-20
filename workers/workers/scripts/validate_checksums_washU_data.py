@@ -67,8 +67,8 @@ def validate_checksums(d: Path, _log_dir: Path):
 
 
 if __name__ == '__main__':
-    donwload_dir = sys.argv[1]
-    download_dir = Path(donwload_dir).resolve()
+    download_dir = sys.argv[1]
+    download_dir = Path(download_dir).resolve()
     n_cpu = 12
 
     # Create a directory for logs (or use a dedicated log directory)
@@ -77,6 +77,6 @@ if __name__ == '__main__':
 
     print(f'starting computations on {n_cpu} cores')
 
-    dirs = [p for p in download_dir.iterdir() if p.is_dir() and p.name.startswith('TWCJ-INB')]
+    dirs = [p for p in download_dir.iterdir() if p.is_dir() and p.name.startswith('TWCJ-INB')]  # cSpell: ignore TWCJ-INB
     with Pool(n_cpu) as pool:
         pool.starmap(validate_checksums, [(d, log_dir) for d in tqdm(dirs)])
