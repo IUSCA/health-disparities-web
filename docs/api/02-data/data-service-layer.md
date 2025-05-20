@@ -35,11 +35,11 @@ Define robust, clean, and consistent patterns for implementing the data service 
 
 ### **Recommended Form**
 
-Use a higher-order function that returns an async function which accepts a Prisma client:
+Use a higher-order function that returns an function which accepts a Prisma client:
 
 ```js
 function createSearch({ user, queryParams, filters = {}, include = {} }) {
-  return async (prisma) => {
+  return (prisma) => {
     // ...
   };
 }
@@ -172,7 +172,7 @@ function createSearch({ user, queryParams, filters = {}, include = {} }) {
 ```js
 // src/services/cohorts/search.js
 function createSearch({ user, queryParams, filters = {}, include = {} }) {
-  return async (prisma) => {
+  return (prisma) => {
     const where = {
       AND: [
         {
@@ -212,17 +212,3 @@ function createSearch({ user, queryParams, filters = {}, include = {} }) {
 
 module.exports = { search: createSearch };
 ```
-
-
-
-## Summary
-
-| Principle      | Rule                                           |
-| -------------- | ---------------------------------------------- |
-| KISS           | No unnecessary abstraction or flags            |
-| DRY            | Reuse helper logic, don't duplicate filters    |
-| Prisma-aligned | Use Prisma-native `include`, `select`, `where` |
-| Flexible       | Curry for transaction support                  |
-| Descriptive    | Clear param names; avoid generic bags of args  |
-
-

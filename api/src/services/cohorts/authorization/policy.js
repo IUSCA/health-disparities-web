@@ -12,8 +12,9 @@ const permissions = {
   },
   [ROLES.AUTHOR]: { // is the author; can have any portal role
     view: { [CV.PRIVATE]: always, [CV.UNLISTED]: always, [CV.PUBLIC]: always },
+    viewDependents: { [CV.PRIVATE]: always },
     update: { [CV.PRIVATE]: not(ifArchived) },
-    delete: { [CV.PRIVATE]: not(ifReferenced) },
+    delete: { [CV.PRIVATE]: always },
     clone: { [CV.PRIVATE]: always, [CV.UNLISTED]: always, [CV.PUBLIC]: always },
     derive: { [CV.PRIVATE]: not(ifArchived), [CV.UNLISTED]: not(ifArchived), [CV.PUBLIC]: not(ifArchived) },
     archive: { [CV.PRIVATE]: not(ifArchived), [CV.UNLISTED]: not(ifArchived) },

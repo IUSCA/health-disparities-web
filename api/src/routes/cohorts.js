@@ -16,9 +16,10 @@ const { accessControl, allowOnlyAccessKeys } = require('../middleware/auth');
 const cohortService = require('../services/cohorts');
 const cohortModel = require('../services/cohorts/model');
 const datasetService = require('../services/dataset');
-const { toTable, toPaginationInfo } = require('../utils');
-const { CV } = require('../services/cohorts/authorization/constants');
-const { createSearch } = require('../services/cohorts/search');
+const { toTable, toPaginationInfo } = require('../utils/textTable');
+const { CV: COHORT_VISIBILITIES } = require('../services/cohorts/authorization/constants');
+const { createSearch } = require('../services/cohorts/db/search');
+const { canPerformAction, getPossibleActions } = require('../services/cohorts/authorization');
 
 const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
@@ -59,7 +60,7 @@ router.get(
   '/',
   isPermittedTo('read'),
   validate([
-    query('visibility').optional().isIn(Object.values(CV)),
+    query('visibility').optional().isIn(Object.values(COHORT_VISIBILITIES)),
     query('type').optional().isIn([
       cohortModel.PHENOTYPE,
       cohortModel.GENOTYPE,
@@ -127,7 +128,7 @@ router.get(
   validate([
     param('id').isUUID(),
   ]),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     // #swagger.operationId = 'getCohortById'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Get a cohort by id'
@@ -145,10 +146,22 @@ router.get(
       }
     */
 
-    const cohort = await getCohortById(req.params.id, req.user.username);
-    if (!cohort) {
-      return res.sendStatus(404);
+    const cohort = await prisma.cohort_view.findUniqueOrThrow({
+      where: {
+        id: req.params.id,
+      },
+      include: {
+        author: true,
+      },
+    });
+
+    // access control
+    if (!canPerformAction('view', cohort, req.user)) {
+      return next(createError(403));
     }
+
+    cohort.permittedActions = getPossibleActions(cohort, req.user);
+
     res.json(toJSON(cohort));
   }),
 );

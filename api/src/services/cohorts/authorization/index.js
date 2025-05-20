@@ -51,7 +51,7 @@ function getPossibleActions(cohort, user) {
     });
   });
 
-  return actions;
+  return [...actions];
 }
 
 // Transition effects: declarative, functional, and extensible

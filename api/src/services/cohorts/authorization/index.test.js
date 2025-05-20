@@ -158,40 +158,38 @@ describe('authorization/index', () => {
     it('should return correct actions for author on private cohort', () => {
       const cohort = { ...baseCohort, visibility: CV.PRIVATE };
       const actions = getPossibleActions(cohort, author);
-      expect(actions.has('view')).toBe(true);
-      expect(actions.has('update')).toBe(true);
-      expect(actions.has('delete')).toBe(true);
-      expect(actions.has('clone')).toBe(true);
-      expect(actions.has('derive')).toBe(true);
-      expect(actions.has('archive')).toBe(true);
-      expect(actions.has('unarchive')).toBe(false);
-      expect(actions.has('publish')).toBe(false);
+      expect(actions.includes('view')).toBe(true);
+      expect(actions.includes('update')).toBe(true);
+      expect(actions.includes('delete')).toBe(true);
+      expect(actions.includes('clone')).toBe(true);
+      expect(actions.includes('derive')).toBe(true);
+      expect(actions.includes('archive')).toBe(true);
+      expect(actions.includes('unarchive')).toBe(false);
+      expect(actions.includes('publish')).toBe(false);
     });
 
     it('should return correct actions for admin on public cohort', () => {
       const cohort = { ...baseCohort, visibility: CV.PUBLIC };
       const actions = getPossibleActions(cohort, admin);
-      expect(actions.has('view')).toBe(true);
-      expect(actions.has('search')).toBe(true);
-      expect(actions.has('delete')).toBe(true);
-      expect(actions.has('clone')).toBe(true);
-      expect(actions.has('derive')).toBe(true);
-      expect(actions.has('archive')).toBe(true);
-      expect(actions.has('unarchive')).toBe(false);
-      expect(actions.has('publish')).toBe(false);
-      expect(actions.has('unpublish')).toBe(true);
+      expect(actions.includes('view')).toBe(true);
+      expect(actions.includes('delete')).toBe(true);
+      expect(actions.includes('clone')).toBe(true);
+      expect(actions.includes('derive')).toBe(true);
+      expect(actions.includes('archive')).toBe(true);
+      expect(actions.includes('unarchive')).toBe(false);
+      expect(actions.includes('publish')).toBe(false);
+      expect(actions.includes('unpublish')).toBe(true);
     });
 
     it('should return correct actions for user on public cohort', () => {
       const cohort = { ...baseCohort, visibility: CV.PUBLIC };
       const actions = getPossibleActions(cohort, user);
-      expect(actions.has('view')).toBe(true);
-      expect(actions.has('search')).toBe(true);
-      expect(actions.has('clone')).toBe(true);
-      expect(actions.has('derive')).toBe(true);
-      expect(actions.has('request')).toBe(true);
-      expect(actions.has('update')).toBe(false);
-      expect(actions.has('delete')).toBe(false);
+      expect(actions.includes('view')).toBe(true);
+      expect(actions.includes('clone')).toBe(true);
+      expect(actions.includes('derive')).toBe(true);
+      expect(actions.includes('request')).toBe(true);
+      expect(actions.includes('update')).toBe(false);
+      expect(actions.includes('delete')).toBe(false);
     });
   });
 

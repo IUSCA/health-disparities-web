@@ -20,6 +20,7 @@
     "foxundermoon.shell-format",
     "tamasfe.even-better-toml",
     "ahmadalli.vscode-nginx-conf",
-    "streetsidesoftware.code-spell-checker"
+    "streetsidesoftware.code-spell-checker",
+    "firsttris.vscode-jest-runner"
   ]
 }
