@@ -43,7 +43,7 @@
             "
           />
 
-          <!-- Zygosity selectot and participant count + save as cohort button -->
+          <!-- Zygosity selector and participant count + save as cohort button -->
           <div v-if="resultsView" class="mt-3">
             <VaDivider class="mt-4 mb-5" />
             <div class="flex flex-col md:flex-row gap-3">

@@ -19,7 +19,7 @@ import { stringToRGB } from "@/services/colors";
 const props = defineProps({
   filters: Object,
   identifier: String,
-  seperator: {
+  separator: {
     type: String,
     default: ".",
   },
@@ -31,7 +31,7 @@ const filter = ref(null);
 watch(
   () => props.identifier,
   () => {
-    const [category_key, filter_key] = props.identifier.split(props.seperator);
+    const [category_key, filter_key] = props.identifier.split(props.separator);
 
     category.value = props.filters.find(
       (category) => category.key === category_key,

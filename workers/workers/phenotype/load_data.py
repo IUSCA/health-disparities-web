@@ -1,3 +1,4 @@
+# cSpell: ignore DISPENSEQTY DISPENSEQTYUNIT STRENGTHDOSE STRENGTHDOSEUNIT NBRREFILLS IMUNNO
 import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime

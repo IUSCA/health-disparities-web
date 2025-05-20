@@ -20,27 +20,27 @@ def count_lines(filepath):
 
 
 class GeneInfo:
-    def __init__(self, file_path, outfile=None, initfile=None):
+    def __init__(self, file_path, outfile=None, init_file=None):
         """
         Extract gene information from a VCF / TXT file and save it as a pickle file.
-        If initfile is provided, the gene information will be updated with the new information.
+        If init_file is provided, the gene information will be updated with the new information.
         Creates new genes in the database if they do not exist.
 
         @param file_path: Path to the VCF / TXT file containing gene information.
         @param outfile: Path to the output pickle file.
-        @param initfile: Path to the initial pickle file containing gene information.
+        @param init_file: Path to the initial pickle file containing gene information.
         """
         self.genes_curr = set()
         self.file_path = Path(file_path).resolve()
 
         self.outfile = outfile
         self.gene_data = {}
-        if initfile is not None:
-            initfile = Path(initfile).resolve()
-            with open(initfile, 'rb') as f:
+        if init_file is not None:
+            init_file = Path(init_file).resolve()
+            with open(init_file, 'rb') as f:
                 self.gene_data = pickle.load(f)
             if self.outfile is None:
-                self.outfile = initfile
+                self.outfile = init_file
         assert self.outfile is not None
 
     def _transform_vcf(self) -> tuple[dict[Site, dict[str, str]], set[str]]:
@@ -63,7 +63,7 @@ class GeneInfo:
         genes_dict = {}
         genes_agg = set()
 
-        for var in tqdm(vcf, total=vcf.num_records, mininterval=5):
+        for var in tqdm(vcf, total=vcf.num_records, min_interval=5):
             genes = var.INFO.get('Gene.refGene').split('\\x3b')
             genes_agg.update(set(genes))
             # genes_mapped = [self.gene_idx_map[g] for g in genes]
@@ -101,7 +101,7 @@ class GeneInfo:
         genes_agg = set()
         with open(self.file_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile, delimiter='\t')
-            for row in tqdm(reader, total=count_lines(self.file_path) - 1, mininterval=5):
+            for row in tqdm(reader, total=count_lines(self.file_path) - 1, min_interval=5):
                 genes = [g for g in row['Gene.refGene'].split(';') if (g != '.' and g != '')]
                 genes_agg.update(set(genes))
 

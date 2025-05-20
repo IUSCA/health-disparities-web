@@ -16,7 +16,7 @@ const INTERVAL_MS = config.get('redcap.polling.interval_seconds') * 1000;
 let interval = INTERVAL_MS;
 const MAX_BACKOFF_MS = config.get('redcap.polling.max_backoff_seconds') * 1000;
 
-// normal inrerval - 300
+// normal interval - 300
 // delay to 1st retry - 600
 // delay to 2nd retry - 1200
 // delay to 3rd retry - 1800

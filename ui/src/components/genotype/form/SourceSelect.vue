@@ -20,13 +20,13 @@
 </template>
 
 <script setup>
-import sourceSerice from "@/services/sources";
+import sourceService from "@/services/sources";
 const model = defineModel();
 // const props = defineProps({});
 
 const source_options = ref([]);
 
-sourceSerice.getAll().then((res) => {
+sourceService.getAll().then((res) => {
   // change made for a demo:
   // hide source - imputed data
   // select by default AXIN source

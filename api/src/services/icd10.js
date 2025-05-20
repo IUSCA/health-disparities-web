@@ -32,12 +32,14 @@ const { Prisma } = require('@prisma/client');
 
 function synonymsSql({ search_phrase }) {
   /**
-   * Goal: If the search_phrase is "heart attack", return concepts that are related to "heart attack", but whose name is not similar to "heart attack".
+   * Goal: If the search_phrase is "heart attack", return concepts that are related to "heart attack",
+   * but whose name is not similar to "heart attack".
    *       Example: "heart attack" -> "myocardial infarction", this avoids false positives like "heart burn", etc
    *
    * 1. t
-   * 1.a. find concepts whose associated synonyms matches the search_phrase. Result may contain repeated concepts, as a concept can have multiple synonyms.
-   * 1.b. Include a score column, which is
+   * 1.a. find concepts whose associated synonyms matches the search_phrase. Result may contain repeated concepts,
+   * as a concept can have multiple synonyms. 1.b. Include a score column,
+   * which is
    *        - positive when associated synonym is more similar to search_phrase than the concept name.
    *        - zero when the synonym is equally similar to the concept name and the search phrase.
    *        - negative when synonym is more similar to the concept name than the search phrase.
@@ -48,18 +50,26 @@ function synonymsSql({ search_phrase }) {
    *      synonyms that are more similar to the search phrase than to the concept name.
    *
    *
-   *    plainto_tsquery_or: custom function that transforms a string into a tsquery, but using OR as the operator instead of AND.
-   *    OTOH, to_tsquery builtin function converts plain text to tsquery using AND operator as separator
+   *    plainto_tsquery_or: custom function that transforms a string into a tsquery,
+   *    but using OR as the operator instead of AND. OTOH, to_tsquery builtin function converts plain text to tsquery
+   *    using AND operator as separator
    *
-   *    ts_rank_cd: builtin function that ranks the result of a tsquery based on the number of matching terms and their position in the text.
+   *    ts_rank_cd: builtin function that ranks the result of a tsquery based on the number of matching terms and their
+   *    position in the text.
    *
    * 3. final result
-   * 3.a. (When this function was developed,) concept table contained ICD10 and SNOMED concepts. concept_metadata table is a materialized view created only for ICD10 concepts.
-   *      Results from grouped_t includes concepts from both ICD10 and SNOMED vocabularies. But we only need synonyms that are related to ICD10 concepts.
-   *      This is because the synonyms results returned here will be used as search queries against the concept_metadata table, which only contains ICD10 concepts.
+   * 3.a. (When this function was developed,) concept table contained ICD10 and SNOMED concepts.
+   * concept_metadata table is a materialized view created only for ICD10 concepts.
+   *      Results from grouped_t includes concepts from both ICD10 and SNOMED vocabularies.
+   *      But we only need synonyms that are related to ICD10 concepts.
+   *      This is because the synonyms results returned here will be used as search queries against the
+   *      concept_metadata table, which only contains ICD10 concepts.
    *
-   *      This last stage includes a filter to eliminate grouped_t concept namess that might have an average score above zero but are not contextually relevant enough to the ICD10 concept names.
-   *      A results from the previous stage is only included in the final result if there exists some ICD 10 concept whose name is similar to the concept name of the result. This similarity is calculated by the ts_rank_cd function.
+   *      This last stage includes a filter to eliminate grouped_t concept names that might have an average score
+   *      above zero but are not contextually relevant enough to the ICD10 concept names.
+   *      A results from the previous stage is only included in the final result if there exists some ICD 10 concept
+   *      whose name is similar to the concept name of the result. This similarity is calculated by the ts_rank_cd
+   *      function.
    */
   return Prisma.sql`
     with t as (

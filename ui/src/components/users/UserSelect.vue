@@ -1,4 +1,5 @@
 <template>
+  <!-- cSpell: ignore 𝑒𝑚𝑎𝑖𝑙 -->
   <!-- 
        Using Mathematical Italic: 𝑒𝑚𝑎𝑖𝑙 instead of ASCII 'email' 
        to prevent the browser from interpreting this field as an email and showing autofill suggestions. 

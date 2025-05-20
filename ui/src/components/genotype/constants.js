@@ -6,6 +6,7 @@ const EXAMPLE_SEARCHES = {
   genomic_region: "chr22:17455700-17575000",
 };
 const DEFAULT_ZYGOSITIES = ["HET", "HOMALT"];
+// cspell: ignore MYBPC3 ACTC LMNA TNNI TNNT
 const EXAMPLE_GENES_LIST = [
   "MYH7",
   "MYBPC3",

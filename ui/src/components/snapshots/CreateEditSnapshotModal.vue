@@ -12,6 +12,7 @@
           label="Date"
           :rules="[(v) => !!v || 'Field is required']"
         />
+        <!-- cSpell: ignore ampm -->
         <VaTimeInput
           v-model="data.time"
           label="Time"
@@ -49,8 +50,8 @@
 </template>
 
 <script setup>
-import { useForm } from "vuestic-ui";
 import snapshotService from "@/services/snapshots";
+import { useForm } from "vuestic-ui";
 
 const props = defineProps({
   edit: {

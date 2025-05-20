@@ -38,7 +38,7 @@ function combineTwo(q1, q2, operator) {
  * Combines multiple cohort IDs using the specified operators.
  * @param {Array<number>} cohort_ids - An array of cohort IDs.
  * @param {Array<string>} operators - An array of operators.
- * @returns - A prepared statement when evalauted yields the combined cohort participants.
+ * @returns - A prepared statement when evaluated yields the combined cohort participants.
  *
  *
  * Example: combine([1, 2, 3], ['union', 'intersect'])

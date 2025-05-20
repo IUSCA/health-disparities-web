@@ -37,8 +37,8 @@ def validate_checksums(d: Path):
 
 
 if __name__ == '__main__':
-    donwload_dir = sys.argv[1]
-    download_dir = Path(donwload_dir).resolve()
+    download_dir = sys.argv[1]
+    download_dir = Path(download_dir).resolve()
     print(f'starting computations on 24 cores')
 
     dirs = list(download_dir.iterdir())

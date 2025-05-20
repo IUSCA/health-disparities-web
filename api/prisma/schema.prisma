@@ -377,7 +377,7 @@ model participant {
   medications           medication[]
   datasets              dataset[]
   protocols             participant_protocol[]
-  genotype_smaples      genotype_sample[]
+  genotype_samples      genotype_sample[]
   measurements          measurement[]
   drug_screens          drug_screen[]
   vaccinations          vaccination[]
@@ -961,6 +961,7 @@ model ncbiRefSeqCurated {
   @@index([name2])
 }
 
+// cSpell: ignore incmpl cmpl
 enum cds_type {
   none
   unk

@@ -15,7 +15,7 @@ def get_participants_from_csv(csv_file):
     """
     df = pd.read_csv(csv_file, dtype=str, encoding_errors='replace')
     ib_id_col = next(col for col in df.columns if col in ['IB_ID', 'IB_ID_LONG'])
-    study_id_col = next(col for col in df.columns if col in ['STUDY_ID', 'STUDYID'])
+    study_id_col = next(col for col in df.columns if col in ['STUDY_ID', 'STUDYID']) # cSpell: ignore STUDYID
 
     valid_idx = df[ib_id_col].notna() & (df[ib_id_col] != '') & df[study_id_col].notna() & (df[study_id_col] != '')
     valid_df, invalid_df = df[valid_idx].copy(), df[~valid_idx]

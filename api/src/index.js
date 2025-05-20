@@ -24,7 +24,7 @@ const port = config.get('express.port');
 const host = config.get('express.host');
 
 function on_startup() {
-  logger.info('on_startup: trigering initial phenotypes counts to be cached');
+  logger.info('on_startup: triggering initial phenotypes counts to be cached');
   getCounts('lab').then(() => logger.info('lab counts cached'));
   getCounts('dx').then(() => logger.info('dx counts cached'));
   getCounts('medication').then(() => logger.info('medication counts cached'));

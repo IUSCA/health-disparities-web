@@ -1,7 +1,7 @@
 import config from "@/config";
 import cohortService from "@/services/cohorts";
 
-const insitution_types = {
+const institution_types = {
   Commercial: 1,
   "External Academic": 2,
   "Internal Academic": 3,
@@ -24,7 +24,7 @@ function _buildREDCapSurveyUrl({
 }) {
   const url = new URL(config.redcap.survey_base_url);
 
-  const institution_type = insitution_types[institutionType] || 5;
+  const institution_type = institution_types[institutionType] || 5;
 
   const cohortText = `Name: ${cohortName}
 Size: ${cohortSize}

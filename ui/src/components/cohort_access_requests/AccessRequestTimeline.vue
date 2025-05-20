@@ -9,7 +9,7 @@ const props = defineProps({ request: { type: Object, required: true } });
 const timelineItems = computed(() => {
   const stages = props.request?.stages || [];
   let prevStatus = null;
-  let currtStatus = null;
+  let currentStatus = null;
   let isTerminated = false;
   return stages.map((stage) => {
     // set status
@@ -18,22 +18,22 @@ const timelineItems = computed(() => {
 
     const status = stage.status;
     if (status === "APPROVED") {
-      currtStatus = "completed";
+      currentStatus = "completed";
     } else if (status === "REJECTED") {
-      currtStatus = "terminated";
+      currentStatus = "terminated";
       isTerminated = true;
     } else {
-      currtStatus = "upcoming";
+      currentStatus = "upcoming";
     }
 
-    if (prevStatus === "completed" && currtStatus === "upcoming") {
-      currtStatus = "current";
+    if (prevStatus === "completed" && currentStatus === "upcoming") {
+      currentStatus = "current";
     }
-    if (prevStatus === null && currtStatus === "upcoming") {
-      currtStatus = "current";
+    if (prevStatus === null && currentStatus === "upcoming") {
+      currentStatus = "current";
     }
 
-    prevStatus = currtStatus;
+    prevStatus = currentStatus;
 
     // set label and description
     // for completed and terminated steps, show status and date
@@ -64,7 +64,7 @@ const timelineItems = computed(() => {
     return {
       label,
       description,
-      status: currtStatus,
+      status: currentStatus,
     };
   });
 });

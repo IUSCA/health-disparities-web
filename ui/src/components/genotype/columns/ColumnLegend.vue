@@ -5,7 +5,7 @@
     :columns="legend_columns"
     striped
     sticky-header
-    class="legendtable"
+    class="legend-table"
   />
 </template>
 
@@ -34,7 +34,7 @@ const legend_columns = [
 </script>
 
 <style scoped>
-.legendtable {
+.legend-table {
   --va-data-table-cell-padding: 3px;
 }
 </style>

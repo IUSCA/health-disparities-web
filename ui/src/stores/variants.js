@@ -5,7 +5,7 @@ import {
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
 
-export const useVariantsStore = defineStore("varaints", () => {
+export const useVariantsStore = defineStore("variants", () => {
   const currPage = ref(1);
   const pageSize = ref(50);
 

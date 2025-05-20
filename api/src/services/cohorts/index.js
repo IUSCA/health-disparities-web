@@ -161,7 +161,7 @@ function getDependentCohortsQuery(id, requester_username) {
   // This is a recursive query that finds all dependent cohorts (both direct and indirect) of a given cohort
   // A cohort is dependent on another cohort if it is a combination cohort that includes the other cohort
   // Only cohorts of the requester that are not published and not temporary are considered.
-  // the given cohort is assued to be not temporary and not published
+  // the given cohort is assumed to be not temporary and not published
   return Prisma.sql`
     with recursive dependent_cohorts as (
       select c.id

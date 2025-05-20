@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+# cSpell: ignore CHALASANI KEEPTRXyunlong SAMPLEFILE FASTA
 # This script is used to split, left-align, reheader and index the vcf files
 # First argument is the directory where the vcf files are located
 # Second argument is the output directory where the split and left-aligned vcf files will be stored

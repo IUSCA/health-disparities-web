@@ -271,7 +271,7 @@ class VCFIngestor:
         """
         Case: Existing Variant and (all new participants / mixed)
 
-        Create a subarray of genotype values for new participants, and rearrange it by their resolved (new) indices.
+        Create a sub array of genotype values for new participants, and rearrange it by their resolved (new) indices.
 
         The return value is used for a partial update of the genotype array in the database,
         i.e. update values in the array only from start index to end index of the new participants.
@@ -428,7 +428,7 @@ def ingest_vcf(celery_task, dummy, **kwargs):
         print(stats)
     else:
         csv_path = vcfIngestor.transform()
-        print('Transormed to', csv_path)
+        print('Transformed to', csv_path)
         copy_data(csv_path)
         print('Copied to database')
         # delete csv file
@@ -437,7 +437,7 @@ def ingest_vcf(celery_task, dummy, **kwargs):
 
 
 # used to either launch a workflow to run task 'ingest_vcf' on every vcf
-# or directly run code to ingest data from command line based on no_celery falg
+# or directly run code to ingest data from command line based on no_celery flag
 def ingest_data(data_dir, source_id, batch_size=1000, no_celery=False, is_fresh=False, phase=None, is_imputed=False):
     """
     Ingests the data in VCFs in data_dir.

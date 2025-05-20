@@ -5,7 +5,7 @@ const client = axios.create({
   baseURL: config.get('openai.base_url'),
   headers: { 'X-API-Key': config.get('openai.api_key') },
 });
-const model = 'Llama-3-8B-Instruct-GPTQ-4-Bit';
+const model = 'Llama-3-8B-Instruct-GPTQ-4-Bit'; // cSpell: disable-line
 
 const db_schema = `model participant {
   id           Int           @id @default(autoincrement())

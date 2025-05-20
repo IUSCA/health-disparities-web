@@ -153,7 +153,7 @@ const exports = {
     },
   },
   redcap: {
-    survey_id: "LN8PWD7JA3HKCDNE",
+    survey_id: "LN8PWD7JA3HKCDNE", // cSpell: disable-line
     survey_base_url: "https://redcap.uits.iu.edu/surveys/",
   },
 };

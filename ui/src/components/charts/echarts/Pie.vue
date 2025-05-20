@@ -18,7 +18,7 @@ use([
 ]);
 
 /*
-This comoponent expect the data to be in the following format:
+This component expect the data to be in the following format:
 [
   { value: 1048, name: "Search Engine" },
   { value: 735, name: "Direct" },

@@ -1,5 +1,5 @@
 ```sql
--- Matrialized Views for full text search for concept_name
+-- Materialized Views for full text search for concept_name
 create materialized view if not exists concept_metadata as WITH RECURSIVE ancestors AS (
     -- Base case: Select direct relationships
     SELECT
@@ -62,7 +62,7 @@ nodes as (
 select
     id,
     array_to_string(path, '.') :: ltree as path,
-    to_tsvector('english', coalesce(c.concept_name, '')) as textsearchable_index_col
+    to_tsvector('english', coalesce(c.concept_name, '')) as text_searchable_index_col
 from
     nodes
     join concept c on c.concept_id = nodes.id;
@@ -166,7 +166,7 @@ This query represents a multi-step process to establish and process hierarchical
    SELECT
        id,
        array_to_string(path, '.') :: ltree as path,
-       to_tsvector('english', coalesce(c.concept_name, '')) as textsearchable_index_col
+       to_tsvector('english', coalesce(c.concept_name, '')) as text_searchable_index_col
    FROM
        nodes
        JOIN concept c ON c.concept_id = nodes.id;

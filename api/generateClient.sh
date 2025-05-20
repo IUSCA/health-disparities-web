@@ -1,6 +1,7 @@
 RELEASE=$1
 if [ -z "$RELEASE" ]; then
   # non-production
+  # cSpell: ignore openapitools
   docker run --rm \
       -v "$PWD:/local" \
       openapitools/openapi-generator-cli generate \

@@ -35,7 +35,7 @@
 
           <!-- Search for cohort -->
           <!-- opens the CohortSearchModal -->
-          <!-- which emits select event when user clicks on cohort from search resutls -->
+          <!-- which emits select event when user clicks on cohort from search results -->
           <!-- addCohort is the handler -->
           <va-button
             @click="cohortSearchModal.show"

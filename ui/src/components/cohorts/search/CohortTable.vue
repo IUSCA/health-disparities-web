@@ -1,10 +1,10 @@
 <template>
   <!--  -->
-  <div ref="infinitescrollTarget" style="height: 440px; overflow-y: scroll">
+  <div ref="infiniteScrollTarget" style="height: 440px; overflow-y: scroll">
     <va-infinite-scroll
       :load="onScrollToEnd"
-      :scroll-target="infinitescrollTarget"
-      :disabled="infinitescrollDisabled"
+      :scroll-target="infiniteScrollTarget"
+      :disabled="infiniteScrollDisabled"
     >
       <va-data-table
         v-model:sort-by="sortBy"
@@ -89,7 +89,7 @@
         </template>
       </va-data-table>
       <div
-        v-if="infinitescrollDisabled"
+        v-if="infiniteScrollDisabled"
         class="mt-5 flex justify-center"
         :style="{ color: colors.secondary }"
       >
@@ -177,10 +177,10 @@ const cohorts = ref([]);
 const data_loading = ref(false);
 const sortBy = ref("created_at");
 const sortingOrder = ref("desc");
-const infinitescrollTarget = ref(null);
+const infiniteScrollTarget = ref(null);
 const LIMIT = 10;
 const offset = ref(0);
-const infinitescrollDisabled = ref(false);
+const infiniteScrollDisabled = ref(false);
 
 function fetch() {
   // when the sorting order is null, the sorting is not applied
@@ -204,7 +204,7 @@ watch(
   () => {
     data_loading.value = true;
     offset.value = 0;
-    infinitescrollDisabled.value = false;
+    infiniteScrollDisabled.value = false;
 
     fetch()
       .then((data) => {
@@ -230,7 +230,7 @@ function onScrollToEnd() {
   offset.value += LIMIT;
   return fetch().then((data) => {
     if (data && data.length < LIMIT) {
-      infinitescrollDisabled.value = true;
+      infiniteScrollDisabled.value = true;
     }
     cohorts.value = cohorts.value.concat(data || []);
   });
@@ -249,7 +249,7 @@ function onDelete(row) {
 function onDeleteSuccess() {
   data_loading.value = true;
   offset.value = 0;
-  infinitescrollDisabled.value = false;
+  infiniteScrollDisabled.value = false;
 
   fetch()
     .then((data) => {

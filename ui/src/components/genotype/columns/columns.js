@@ -108,7 +108,7 @@ const COLUMNS = {
     type: "select",
   },
   aa_change: {
-    label: "Protien Change",
+    label: "Protein Change",
     category: "Genes",
     thTitle: "Amino Acid Change",
     _show: false,

@@ -72,7 +72,7 @@ try {
   app.use('/doc', swaggerUi.serveFiles(swaggerPublicFile), swaggerUi.setup(swaggerPublicFile));
   // endpoint to download the swagger spec
   app.get('/spec.json', (req, res) => {
-    res.download('./swagger_public.json', 'bionank-api-spec.json');
+    res.download('./swagger_public.json', 'biobank-api-spec.json');
   });
 } catch (e) {
   console.warn('Unable to load "./swagger_public.json". Run "npm run swagger" to generate the file.');
@@ -88,7 +88,7 @@ app.use(notFound);
 app.use(prismaNotFoundHandler);
 app.use(prismaConstraintFailedHandler);
 
-// handle asserions errors and send 400
+// handle assertions errors and send 400
 app.use(assertionErrorHandler);
 
 // handle conflict errors

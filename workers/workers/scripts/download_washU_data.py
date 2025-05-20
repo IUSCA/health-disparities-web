@@ -43,8 +43,9 @@ def execute(cmd: list[str], **kwargs) -> tuple[str, str]:
         raise SubprocessError(msg)
     return p.stdout, p.stderr
 
-
+# cSpell: disable-next-line
 def download_files(sample_id: str, download_root_dir: Path):
+    # cSpell: disable-next-line
     cmd = ['gsutil', '-u', 'in-mmge-indiana-biobank', '-m', 'cp', '-r',
            f'gs://fc-secure-65eb240a-fda1-4c9b-90ff-2476751bc967/{sample_id}', download_root_dir]
 
@@ -71,6 +72,7 @@ if __name__ == '__main__':
     
     download_root_dir.mkdir(exist_ok=True, parents=True)
 
+    # cSpell: disable-next-line
     samples_txt_file = '/N/project/biobank/AnVIL_CCDG_WashU_CVD_Indiana_WGS/missing_samples.txt'
     with open(samples_txt_file) as f:
         samples = f.readlines()

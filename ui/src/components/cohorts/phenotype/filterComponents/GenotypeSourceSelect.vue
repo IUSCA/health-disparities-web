@@ -7,10 +7,10 @@
 </template>
 
 <script setup>
-import sourceSerice from "@/services/sources";
+import sourceService from "@/services/sources";
 
 function fetchOptions() {
-  return sourceSerice.getAll().then((res) => {
+  return sourceService.getAll().then((res) => {
     return res.data.filter((s) => s.id !== 2);
   });
 }
