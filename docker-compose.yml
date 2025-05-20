@@ -75,7 +75,7 @@ services:
     expose:
       - 5432
     
-
+  # cspell: ignore meilisearch getmeili MEILI
   # meilisearch:
   #   image: getmeili/meilisearch:v1.2
   #   volumes:
@@ -160,6 +160,7 @@ services:
     profiles:
       - api-client
     
+  # cspell: ignore darkbluestudios jovyan ijavascript
   jupyter_ijs:
     image: darkbluestudios/jupyter-ijavascript-utils:latest
     ports:
