@@ -94,7 +94,7 @@ router.get(
   isPermittedTo('read'),
   asyncHandler(async (req, res) => {
     // #swagger.tags = ['variants statistics']
-    // #swagger.summary = 'Get total number of clinvar gnoma annotations'
+    // #swagger.summary = 'Get total number of gnomad annotations'
 
     const CACHE_KEY = 'variants.stats.gnomad.count';
     let v = cache.get(CACHE_KEY);

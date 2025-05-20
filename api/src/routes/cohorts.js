@@ -109,7 +109,7 @@ router.get(
     )(req.query);
 
     // A user can only see their own cohorts or published cohorts
-    // The superset of all cohorts that a user can see is: cohort's owned by them union publsished cohorts
+    // The superset of all cohorts that a user can see is: cohort's owned by them union published cohorts
     // select * from cohort c where c.author_username = $1 or c.is_published = true
 
     // is_mine: true, is_published: null -    where (c.author_username = $1 or c.is_published = true) and (c.author_username = $1)                              - all user's cohorts whether published or not

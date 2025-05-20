@@ -64,7 +64,7 @@ async function main() {
 }
 
 // async function test() {
-//   return trigger_wf('SM-NACU2', 'DATA_PRODUCT');
+//   return trigger_wf('test', 'DATA_PRODUCT');
 // }
 
 main().then(() => {

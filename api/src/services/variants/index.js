@@ -26,6 +26,7 @@ function mergeIntervals(intervals) {
   return merged;
 }
 
+// cSpell: ignore nrsc
 async function getDistinctRangesFromGene(gene_name, build) {
   const rows = await prisma.$queryRaw`
     select distinct chr, "txStart" as start, "txEnd" as end 

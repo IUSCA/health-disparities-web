@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const { Prisma } = require('@prisma/client');
 
 function histogramSQL(_table, _column, _num_bins) {

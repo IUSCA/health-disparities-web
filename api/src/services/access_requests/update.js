@@ -56,7 +56,7 @@ class UpdateAccessRequestCommand {
    * - Removes keys with undefined values from the updates.
    * - Processes the `stages` field in the updates:
    *   - For each stage, retains only fields specified in STAGE_FIELDS and removes keys with undefined values.
-   *   - Filters out stages that do not have both `id` and `status` keys or have falsey values for these keys.
+   *   - Filters out stages that do not have both `id` and `status` keys or have falsy values for these keys.
    */
   sanitizeUpdates() {
     this.cleanedUpdates = _.flow(

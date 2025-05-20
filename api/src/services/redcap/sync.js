@@ -63,7 +63,7 @@ async function processRecords(records, logger) {
 
     /**
      * Processes a list of request records by grouping them by `request_id`,
-     * filteres out groups with more than one record and all records have a `null` or `undefined` `last_updated_at`
+     * filters out groups with more than one record and all records have a `null` or `undefined` `last_updated_at`
      * sorts each group by `last_updated_at` in ascending order and selecting the last record from each group - picking
      * the most recent one and returning the resulting records as an array.
      */

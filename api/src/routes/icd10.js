@@ -121,7 +121,7 @@ const prisma = new PrismaClient();
 //       };
 //     }
 
-//     // remove non-leaf nodes if it is not a match and none of thier descendants are matches
+//     // remove non-leaf nodes if it is not a match and none of their descendants are matches
 //     function prune(node) {
 //       const { children } = node;
 //       // if children is null - leaf node, keep it regardless of match
