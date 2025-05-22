@@ -1,14 +1,13 @@
 // CQRS-style: Separate Command Handler with clear responsibilities
 
 const _ = require('lodash/fp');
-const { Prisma, PrismaClient } = require('@prisma/client');
+const { Prisma } = require('@prisma/client');
 
+const prisma = require('@/db');
 const ConflictError = require('../errors/ConflictError');
 const { findOne } = require('./read');
 const { toAuditEntry, toAuditStageEntry } = require('./utils');
 const { Roles } = require('./fsm');
-
-const prisma = new PrismaClient();
 
 const UPDATABLE_FIELDS = ['decision_date', 'status', 'notes', 'expires_at', 'last_synced_at', 'upstream_record_id'];
 const STAGE_FIELDS = ['id', 'status', 'decision_date', 'metadata'];

@@ -1,7 +1,7 @@
-const { Prisma, PrismaClient } = require('@prisma/client');
+const { Prisma } = require('@prisma/client');
 const config = require('config');
 
-const prisma = new PrismaClient();
+const prisma = require('@/db');
 
 /**
  * Merges overlapping intervals.

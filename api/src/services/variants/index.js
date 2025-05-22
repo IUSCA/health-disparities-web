@@ -1,9 +1,9 @@
-const { Prisma, PrismaClient } = require('@prisma/client');
+const { Prisma } = require('@prisma/client');
 const config = require('config');
-const { SQL_OP_MAP, isUnaryOp } = require('../cohorts/common');
-const { histogramSQL } = require('../queries');
 
-const prisma = new PrismaClient();
+const prisma = require('@/db');
+const { SQL_OP_MAP, isUnaryOp } = require('@/services/cohorts/common');
+const { histogramSQL } = require('@/services/queries');
 
 function mergeIntervals(intervals) {
   // merge overlapping intervals

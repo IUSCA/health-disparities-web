@@ -1,15 +1,14 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
 const { body, query } = require('express-validator');
 const _ = require('lodash/fp');
 
-const { validate } = require('../../middleware/validators');
-const asyncHandler = require('../../middleware/asyncHandler');
-const { accessControl } = require('../../middleware/auth');
+const { validate } = require('@/middleware/validators');
+const asyncHandler = require('@/middleware/asyncHandler');
+const { accessControl } = require('@/middleware/auth');
+const prisma = require('@/db');
 
 const isPermittedTo = accessControl('genotype_file');
 const router = express.Router();
-const prisma = new PrismaClient();
 
 router.get(
   '/',

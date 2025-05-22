@@ -1,7 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('@/db');
 const { mapStage } = require('./utils');
-
-const prisma = new PrismaClient();
 
 const cohort_columns = {
   id: true,

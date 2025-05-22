@@ -1,10 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
 const _ = require('lodash/fp');
 const config = require('config');
 
+const prisma = require('@/db');
 const { toAuditEntry } = require('./utils');
-
-const prisma = new PrismaClient();
 
 /**
  * Creates a new cohort access request with the provided details and initializes stages with a default status.

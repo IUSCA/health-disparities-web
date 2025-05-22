@@ -1,12 +1,9 @@
 const crypto = require('crypto');
 const config = require('config');
 
-const { PrismaClient } = require('@prisma/client');
-
 // const logger = require('./logger');
+const prisma = require('@/db');
 const { INCLUDE_ROLES_LOGIN } = require('./user');
-
-const prisma = new PrismaClient();
 
 const API_KEY_INCLUDES = {
   user: {

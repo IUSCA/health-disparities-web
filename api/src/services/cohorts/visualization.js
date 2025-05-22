@@ -1,13 +1,12 @@
-const { Prisma, PrismaClient } = require('@prisma/client');
+const { Prisma } = require('@prisma/client');
+const prisma = require('@/db');
 const {
   histogramSQL2,
   dateRangeSQL,
   aggregateDateByMonthYearSQL,
   aggregateDateByYearSQL,
   aggregateDateByYearsSQL,
-} = require('../queries');
-
-const prisma = new PrismaClient();
+} = require('@/services/queries');
 
 function ageHistogramSQL(cohort_id, bin_width) {
   return Prisma.sql`

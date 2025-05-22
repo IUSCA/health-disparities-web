@@ -1,20 +1,19 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
 const { body, param } = require('express-validator');
 
 const config = require('config');
-const { validate } = require('../../middleware/validators');
-const asyncHandler = require('../../middleware/asyncHandler');
-const { accessControl } = require('../../middleware/auth');
-const { validateProtocols } = require('../../middleware/variants');
-const fields = require('../../services/cohorts/genotype/fields');
-const genotypeService = require('../../services/cohorts/genotype');
-const genotypeModel = require('../../services/cohorts/genotype/model');
-const { transformRanges } = require('../../services/cohorts/genotype/ranges');
+const prisma = require('@/db');
+const { validate } = require('@/middleware/validators');
+const asyncHandler = require('@/middleware/asyncHandler');
+const { accessControl } = require('@/middleware/auth');
+const { validateProtocols } = require('@/middleware/variants');
+const fields = require('@/services/cohorts/genotype/fields');
+const genotypeService = require('@/services/cohorts/genotype');
+const genotypeModel = require('@/services/cohorts/genotype/model');
+const { transformRanges } = require('@/services/cohorts/genotype/ranges');
 
 const isPermittedTo = accessControl('variant');
 const router = express.Router();
-const prisma = new PrismaClient();
 
 router.post(
   '/:field/unique',

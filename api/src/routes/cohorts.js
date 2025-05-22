@@ -1,22 +1,22 @@
 /* eslint-disable comment-length/limit-multi-line-comments */
 /* eslint-disable comment-length/limit-single-line-comments */
 const assert = require('assert');
+const { performance } = require('perf_hooks');
+
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
 const { param, body, query } = require('express-validator');
 const createError = require('http-errors');
 const _ = require('lodash/fp');
-const { performance } = require('perf_hooks');
 const config = require('config');
 
-const prisma = new PrismaClient();
-const asyncHandler = require('../middleware/asyncHandler');
-const { validate } = require('../middleware/validators');
-const { accessControl, allowOnlyAccessKeys } = require('../middleware/auth');
-const cohortService = require('../services/cohorts');
-const cohortModel = require('../services/cohorts/model');
-const datasetService = require('../services/dataset');
-const { toTable, toPaginationInfo } = require('../utils');
+const prisma = require('@/db');
+const asyncHandler = require('@/middleware/asyncHandler');
+const { validate } = require('@/middleware/validators');
+const { accessControl, allowOnlyAccessKeys } = require('@/middleware/auth');
+const cohortService = require('@/services/cohorts');
+const cohortModel = require('@/services/cohorts/model');
+const datasetService = require('@/services/dataset');
+const { toTable, toPaginationInfo } = require('@/utils');
 
 const isPermittedTo = accessControl('cohorts');
 const router = express.Router();

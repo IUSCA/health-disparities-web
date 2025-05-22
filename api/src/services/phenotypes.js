@@ -1,7 +1,7 @@
 const NodeCache = require('node-cache');
-const { Prisma, PrismaClient } = require('@prisma/client');
+const { Prisma } = require('@prisma/client');
 
-const prisma = new PrismaClient();
+const prisma = require('@/db');
 
 const cache = new NodeCache();
 

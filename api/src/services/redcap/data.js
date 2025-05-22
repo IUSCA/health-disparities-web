@@ -1,15 +1,14 @@
 const config = require('config');
-const { PrismaClient } = require('@prisma/client');
 const _ = require('lodash/fp');
 const validator = require('validator');
 
-const accessRequestsService = require('../access_requests');
-const userService = require('../user');
+const prisma = require('@/db');
+const accessRequestsService = require('@/services/access_requests');
+const userService = require('@/services/user');
 const {
   parseDate, parseStatus, parseSTEStatus, getLastModifiedDate,
 } = require('./utils');
 
-const prisma = new PrismaClient();
 const { fsm } = accessRequestsService;
 
 // get the created date of oldest record in pending status

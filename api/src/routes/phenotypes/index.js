@@ -1,19 +1,17 @@
 const express = require('express');
-const { Prisma, PrismaClient } = require('@prisma/client');
+const { Prisma } = require('@prisma/client');
 
 const { param, query } = require('express-validator');
-const asyncHandler = require('../../middleware/asyncHandler');
-const { accessControl } = require('../../middleware/auth');
-const { validate } = require('../../middleware/validators');
-const {
-  histogramSQL2,
-} = require('../../services/queries');
-const { CATEGORIES } = require('../../services/cohorts/phenotype/fields');
-const { getCounts } = require('../../services/phenotypes');
+const asyncHandler = require('@/middleware/asyncHandler');
+const { accessControl } = require('@/middleware/auth');
+const { validate } = require('@/middleware/validators');
+const { histogramSQL2 } = require('@/services/queries');
+const { CATEGORIES } = require('@/services/cohorts/phenotype/fields');
+const { getCounts } = require('@/services/phenotypes');
+const prisma = require('@/db');
 
 const isPermittedTo = accessControl('cohorts');
 const router = express.Router();
-const prisma = new PrismaClient();
 
 router.use('/files', require('./files'));
 

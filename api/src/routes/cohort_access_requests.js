@@ -1,20 +1,17 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
 const { param, body, query } = require('express-validator');
 const createError = require('http-errors');
 const _ = require('lodash/fp');
 
-const asyncHandler = require('../middleware/asyncHandler');
-const { validate } = require('../middleware/validators');
-const { accessControl, getPermission } = require('../middleware/auth');
+const prisma = require('@/db');
+const asyncHandler = require('@/middleware/asyncHandler');
+const { validate } = require('@/middleware/validators');
+const { accessControl, getPermission } = require('@/middleware/auth');
+const accessRequestsService = require('@/services/access_requests');
+// const userService = require('@/services/user');
+const redcap = require('@/services/redcap');
+const logger = require('@/services/logger');
 
-const accessRequestsService = require('../services/access_requests');
-
-// const userService = require('../services/user');
-const redcap = require('../services/redcap');
-const logger = require('../services/logger');
-
-const prisma = new PrismaClient();
 const isPermittedTo = accessControl('cohort_access_requests');
 const router = express.Router();
 const { fsm } = accessRequestsService;

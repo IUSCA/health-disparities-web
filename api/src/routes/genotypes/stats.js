@@ -1,12 +1,12 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
 const NodeCache = require('node-cache');
-const asyncHandler = require('../../middleware/asyncHandler');
-const { accessControl } = require('../../middleware/auth');
+const asyncHandler = require('@/middleware/asyncHandler');
+const { accessControl } = require('@/middleware/auth');
+const prisma = require('@/db');
 
 const isPermittedTo = accessControl('variant');
 const router = express.Router();
-const prisma = new PrismaClient();
+
 const cache = new NodeCache();
 
 router.get(

@@ -1,16 +1,17 @@
 const express = require('express');
-const { Prisma, PrismaClient } = require('@prisma/client');
+const { Prisma } = require('@prisma/client');
 const { query } = require('express-validator');
 // const createHttpError = require('http-errors');
-const asyncHandler = require('../middleware/asyncHandler');
-// const { accessControl } = require('../middleware/auth');
-const { validate } = require('../middleware/validators');
-const icd10Service = require('../services/icd10');
-// const esClient = require('../elasticsearch');
+
+const asyncHandler = require('@/middleware/asyncHandler');
+// const { accessControl } = require('@/middleware/auth');
+const { validate } = require('@/middleware/validators');
+const icd10Service = require('@/services/icd10');
+// const esClient = require('@/elasticsearch');
+const prisma = require('@/db');
 
 // const isPermittedTo = accessControl('cohort');
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // router.get(
 //   '/search/tree',
