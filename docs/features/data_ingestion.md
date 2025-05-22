@@ -1,4 +1,4 @@
-## Introduction
+# Data Ingestion
 
 ## Phenotype Data Ingestion
 
@@ -20,12 +20,12 @@ Make sure that the API is up
 Mode-1: Without mapping
 In this mode, the program attempts to resolve each sample in the VCF file to an "ib_id" (Identifier). Multiple strategies are employed for this resolution. If the program is unable to determine an "ib_id" for any given sample, it will generate a new_participants.csv file containing the problematic samples along with suggested "ib_id" values. The script then exits, allowing users to manually update the "ib_id" values in the CSV file. Subsequent execution of the program with the mapping file provided will incorporate the corrected information.
 
-<img src="assets/data_ingestion/resolve_samples_mode_1.png" >
+<img src="/data_ingestion/resolve_samples_mode_1.png" >
 
 Mode-2: With mapping
 This mode is designed to handle scenarios where a mapping file is available or has been manually created. The program creates new participant entries if required, creates a genotype_set entry, and generates genotype_sample entries for all samples in the database. Additionally, it creates a genotype_set.txt file, containing the id of the created genotype_set entry in the db. A 'sample_mapping.tab' file is also generated, which is a tab-separated file providing information about samples and their corresponding participant_ids. This mapping file is intended for use in the reheader script.
 
-<img src="assets/data_ingestion/resolve_samples_mode_2.png" >
+<img src="/data_ingestion/resolve_samples_mode_2.png" >
 
 ```bash
 cd /opt/sca/biobank/workers
