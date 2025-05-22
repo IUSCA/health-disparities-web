@@ -66,7 +66,7 @@ As an admin, I want to:
 
 * Mark selected UNLISTED cohorts as PUBLIC examples to help new users.
 * Demote PUBLIC cohorts to UNLISTED if they're outdated and have no dependencies.
-* Archive old cohorts while preserving viewability.
+* Archive old cohorts while preserving visibility.
 
 2. **Moderate Dependencies**
 
