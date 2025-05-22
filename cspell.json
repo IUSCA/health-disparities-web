@@ -131,6 +131,7 @@
     "prometheuscommunity",
     "psql",
     "PYTHONIOENCODING",
+    "pyproject",
     "rabbitmq",
     "rawdata",
     "refseq",

@@ -2,12 +2,11 @@ const express = require('express');
 const config = require('config');
 const createError = require('http-errors');
 
-const asyncHandler = require('../../middleware/asyncHandler');
-const { authenticate } = require('../../middleware/auth');
-const { accessControl } = require('../../middleware/auth');
-
-const userService = require('../../services/user');
-const authService = require('../../services/auth');
+const asyncHandler = require('@/middleware/asyncHandler');
+const { authenticate } = require('@/middleware/auth');
+const { accessControl } = require('@/middleware/auth');
+const userService = require('@/services/user');
+const authService = require('@/services/auth');
 
 const isPermittedTo = accessControl('auth');
 const router = express.Router();
