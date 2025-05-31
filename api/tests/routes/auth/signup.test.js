@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+// cspell: ignore newuser
 const { request, getAuthRequest } = require('../../request');
 const { issueToken, issueSignupToken } = require('../../../src/services/auth');
 const nonceService = require('../../../src/services/nonce');
@@ -51,7 +52,7 @@ describe('POST /auth/signup', () => {
 
   it('should create user', async () => {
     const email = `${prefix}_user_${Date.now()}@example.com`;
-    const username = `${prefix}-new-user${Date.now()}`;
+    const username = `${prefix}-newuser${Date.now()}`;
     const token = issueSignupToken({
       email,
       nonce: await nonceService.createNonce(),
@@ -104,7 +105,7 @@ describe('POST /auth/signup', () => {
 
   it('should prevent replay attacks', async () => {
     const email = `${prefix}_user_${Date.now()}@example.com`;
-    const username = `${prefix}-new-user${Date.now()}`;
+    const username = `${prefix}-newuser${Date.now()}`;
     const token = issueSignupToken({
       email,
       nonce: await nonceService.createNonce(),
@@ -138,7 +139,7 @@ describe('POST /auth/signup', () => {
   it('should create a unique username', async () => {
     // create a user
     const email = `${prefix}_user_${Date.now()}@example.com`;
-    const username = `${prefix}-new-user${Date.now()}`;
+    const username = `${prefix}-newuser${Date.now()}`;
     const token = issueSignupToken({
       email,
       nonce: await nonceService.createNonce(),
@@ -272,7 +273,7 @@ describe('POST /auth/signup', () => {
 
   it('should handle concurrent signup requests gracefully', async () => {
     const email = `${prefix}_user_${Date.now()}@example.com`;
-    const username = `${prefix}-new-user${Date.now()}`;
+    const username = `${prefix}-newuser${Date.now()}`;
     const token = issueSignupToken({
       email,
       nonce: await nonceService.createNonce(),
