@@ -10,16 +10,10 @@ const { accessControl } = require('@/middleware/auth');
 
 const cohortModel = require('@/services/cohorts/model');
 const cohortService = require('@/services/cohorts');
+const { cohortToJSON } = require('@/services/cohorts/utils');
 
 const router = express.Router();
 const isPermittedTo = accessControl('cohorts');
-
-function toJSON(cohort) {
-  return {
-    ...cohort,
-    query: cohortModel.toJSON(cohort.query),
-  };
-}
 
 router.post(
   '/',
@@ -67,15 +61,27 @@ router.post(
     // rows is like [{participant_id: 1}, {participant_id: 2}, ...]
     const participants_ids = rows.map((row) => row.participant_id);
 
-    const createdCohort = await prisma.cohort_view.create({
+    const createdCohort = await prisma.cohort.create({
       data: {
         ...cohort_data,
         author_username: req.user.username,
         participants: participants_ids,
       },
+      select: {
+        id: true,
+      },
     });
 
-    return res.json(toJSON(createdCohort));
+    const cohort = await prisma.cohort_view.findUniqueOrThrow({
+      where: {
+        id: createdCohort.id,
+      },
+      include: {
+        author: true,
+      },
+    });
+
+    return res.json(cohortToJSON(cohort));
   }),
 );
 

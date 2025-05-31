@@ -5,21 +5,42 @@ const { CV } = require('../authorization/constants');
 
 function buildWhereClause(user, filters) {
   const where = {
-    AND: [
-      {
-        OR: [{
-          author_username: user.username,
-        }, {
-          visibility: {
-            in: getSearchableStates(user),
-          },
-        }],
-      },
-      {
-        is_temp: false,
-      },
-    ],
+    AND: [{
+      is_temp: false,
+    }],
   };
+
+  // created_by_me filter
+  if (filters.created_by_me != null) {
+    if (filters.created_by_me) {
+      // if created_by_me is set, we filter by the user's username (and all visibilities)
+      where.AND.push({
+        author_username: user.username,
+      });
+    } else {
+      // if created_by_me is false, we filter out the user's cohorts
+      // and only show cohorts that are visible to the user
+      where.AND.push({
+        author_username: {
+          not: user.username,
+        },
+        visibility: {
+          in: getSearchableStates(user),
+        },
+      });
+    }
+  } else {
+    // if created_by_me is not set, we assume the user wants to see all cohorts they can access
+    where.AND.push({
+      OR: [{
+        author_username: user.username,
+      }, {
+        visibility: {
+          in: getSearchableStates(user),
+        },
+      }],
+    });
+  }
 
   // visibility filter
   if (filters.visibility) {
@@ -61,14 +82,14 @@ function buildWhereClause(user, filters) {
   // archived filter
   if (filters.archived !== undefined) {
     where.AND.push({
-      archived: filters.archived,
+      is_archived: filters.archived,
     });
   }
 
   // derivable filter
   if (filters.derivable !== undefined) {
     where.AND.push({
-      derivable: filters.derivable,
+      is_derivable: filters.derivable,
     });
   }
 
@@ -85,18 +106,24 @@ function createSearch({
       author: true,
     };
 
-    return prisma.cohort_view.findMany({
+    const opts = {
       where,
       include: {
         ...defaultInclude,
         ...callerInclude, // caller can override or extend includes
       },
-      orderBy: {
+      take: queryParams.limit ?? Prisma.skip,
+      skip: queryParams.offset ?? Prisma.skip,
+    };
+
+    // apply sorting if specified
+    if (queryParams.sort_by && queryParams.sort_order) {
+      opts.orderBy = {
         [queryParams.sort_by]: queryParams.sort_order,
-      },
-      take: queryParams.limit,
-      skip: queryParams.offset,
-    });
+      };
+    }
+
+    return prisma.cohort_view.findMany(opts);
   };
 }
 

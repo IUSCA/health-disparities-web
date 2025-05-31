@@ -13,15 +13,10 @@ const { accessControl, allowOnlyAccessKeys } = require('@/middleware/auth');
 const { toTable, toPaginationInfo } = require('@/utils/textTable');
 const datasetService = require('@/services/dataset');
 const cohortService = require('@/services/cohorts');
+const { canPerformAction } = require('@/services/cohorts/authorization');
 
 const router = express.Router();
 const isPermittedTo = accessControl('cohorts');
-
-async function getCohortById(id, username) {
-  const sql = cohortService.getCohortByIdQuery(id, username);
-  const cohorts = await prisma.$queryRaw(sql);
-  return cohorts[0];
-}
 
 router.get(
   '/:id/files/summary',
@@ -29,7 +24,7 @@ router.get(
   validate([
     param('id').isUUID(),
   ]),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res, next) => {
     // #swagger.operationId = 'getCohortFilesSummary'
     // #swagger.tags = ['cohorts', 'public']
     // #swagger.summary = 'Get a summary of files in a cohort'
@@ -66,9 +61,15 @@ router.get(
       }
     */
 
-    const cohort = await getCohortById(req.params.id, req.user.username);
-    if (!cohort) {
-      return res.sendStatus(404);
+    const cohort = await prisma.cohort_view.findUniqueOrThrow({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    // access control
+    if (!canPerformAction('view', cohort, req.user)) {
+      return next(createError(403));
     }
 
     const sql = cohortService.getCohortFilesSummaryQuery({ id: req.params.id });
@@ -164,25 +165,23 @@ router.get(
       }),
     ]);
 
+    const filesWithUrls = files.map(mapper);
+    const metadata = {
+      total: total_count,
+      limit: req.query.limit,
+      offset: req.query.offset,
+    };
     res.format({
       json: () => {
         res.json({
-          data: files.map(mapper),
-          metadata: {
-            total: total_count,
-            limit: req.query.limit,
-            offset: req.query.offset,
-          },
+          data: filesWithUrls,
+          metadata,
         });
       },
       text: () => {
         const columns = ['id', 'name', 'md5', 'size', 'participant_id'];
-        const tableStr = toTable(files.map(mapper), columns);
-        const paginationStr = toPaginationInfo({
-          total: total_count,
-          limit: req.query.limit,
-          offset: req.query.offset,
-        });
+        const tableStr = toTable(filesWithUrls, columns);
+        const paginationStr = toPaginationInfo(metadata);
         res.send(`${tableStr}\n${paginationStr}`);
       },
     });

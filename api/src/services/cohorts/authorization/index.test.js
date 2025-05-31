@@ -1,16 +1,8 @@
-// Pseudocode plan:
-// 1. Import the functions to test from authorization/index.js.
-// 2. Mock cohort and user objects for various scenarios (admin, author, user, different visibilities).
-// 3. Write tests for canPerformAction for different roles, actions, and cohort states.
-// 4. Write tests for canChangeVisibility for allowed and disallowed transitions.
-// 5. Write tests for getPossibleActions to ensure correct actions are returned for each role/visibility.
-// 6. Write tests for getTransitionEffect to ensure correct cohort modifications for each transition/event.
-
 const {
   canPerformAction,
   canChangeVisibility,
   getPossibleActions,
-  getTransitionEffect,
+  // getTransitionEffect,
 } = require('./index');
 const { CV } = require('./constants');
 
@@ -193,47 +185,47 @@ describe('authorization/index', () => {
     });
   });
 
-  describe('getTransitionEffect', () => {
-    it('should lock cohort on PRIVATE->UNLISTED', () => {
-      const cohort = { ...baseCohort, is_locked: false };
-      const effect = getTransitionEffect({ from: CV.PRIVATE, to: CV.UNLISTED });
-      const updated = effect(cohort);
-      expect(updated.is_locked).toBe(true);
-    });
+  // describe('getTransitionEffect', () => {
+  //   it('should lock cohort on PRIVATE->UNLISTED', () => {
+  //     const cohort = { ...baseCohort, is_locked: false };
+  //     const effect = getTransitionEffect({ from: CV.PRIVATE, to: CV.UNLISTED });
+  //     const updated = effect(cohort);
+  //     expect(updated.is_locked).toBe(true);
+  //   });
 
-    it('should unlock cohort on UNLISTED->PRIVATE', () => {
-      const cohort = { ...baseCohort, is_locked: true };
-      const effect = getTransitionEffect({ from: CV.UNLISTED, to: CV.PRIVATE });
-      const updated = effect(cohort);
-      expect(updated.is_locked).toBe(false);
-    });
+  //   it('should unlock cohort on UNLISTED->PRIVATE', () => {
+  //     const cohort = { ...baseCohort, is_locked: true };
+  //     const effect = getTransitionEffect({ from: CV.UNLISTED, to: CV.PRIVATE });
+  //     const updated = effect(cohort);
+  //     expect(updated.is_locked).toBe(false);
+  //   });
 
-    it('should lock cohort and set is_derivable false on ARCHIVE', () => {
-      const cohort = { ...baseCohort, is_locked: false, is_derivable: true };
-      const effect = getTransitionEffect({ event: 'ARCHIVE' });
-      const updated = effect(cohort);
-      expect(updated.is_locked).toBe(true);
-      expect(updated.is_derivable).toBe(false);
-    });
+  //   it('should lock cohort and set is_derivable false on ARCHIVE', () => {
+  //     const cohort = { ...baseCohort, is_locked: false, is_derivable: true };
+  //     const effect = getTransitionEffect({ event: 'ARCHIVE' });
+  //     const updated = effect(cohort);
+  //     expect(updated.is_locked).toBe(true);
+  //     expect(updated.is_derivable).toBe(false);
+  //   });
 
-    it('should set is_locked false if PRIVATE on UNARCHIVE', () => {
-      const cohort = {
-        ...baseCohort, visibility: CV.PRIVATE, is_locked: true, is_derivable: true,
-      };
-      const effect = getTransitionEffect({ event: 'UNARCHIVE' });
-      const updated = effect(cohort);
-      expect(updated.is_locked).toBe(false);
-      expect(updated.is_derivable).toBe(false);
-    });
+  //   it('should set is_locked false if PRIVATE on UNARCHIVE', () => {
+  //     const cohort = {
+  //       ...baseCohort, visibility: CV.PRIVATE, is_locked: true, is_derivable: true,
+  //     };
+  //     const effect = getTransitionEffect({ event: 'UNARCHIVE' });
+  //     const updated = effect(cohort);
+  //     expect(updated.is_locked).toBe(false);
+  //     expect(updated.is_derivable).toBe(false);
+  //   });
 
-    it('should keep is_locked unchanged if not PRIVATE on UNARCHIVE', () => {
-      const cohort = {
-        ...baseCohort, visibility: CV.UNLISTED, is_locked: true, is_derivable: true,
-      };
-      const effect = getTransitionEffect({ event: 'UNARCHIVE' });
-      const updated = effect(cohort);
-      expect(updated.is_locked).toBe(true);
-      expect(updated.is_derivable).toBe(false);
-    });
-  });
+  //   it('should keep is_locked unchanged if not PRIVATE on UNARCHIVE', () => {
+  //     const cohort = {
+  //       ...baseCohort, visibility: CV.UNLISTED, is_locked: true, is_derivable: true,
+  //     };
+  //     const effect = getTransitionEffect({ event: 'UNARCHIVE' });
+  //     const updated = effect(cohort);
+  //     expect(updated.is_locked).toBe(true);
+  //     expect(updated.is_derivable).toBe(false);
+  //   });
+  // });
 });

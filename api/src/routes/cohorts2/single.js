@@ -8,18 +8,11 @@ const asyncHandler = require('@/middleware/asyncHandler');
 const { validate } = require('@/middleware/validators');
 const { accessControl } = require('@/middleware/auth');
 
-const cohortModel = require('@/services/cohorts/model');
 const { canPerformAction, getPossibleActions } = require('@/services/cohorts/authorization');
+const { cohortToJSON } = require('@/services/cohorts/utils');
 
 const router = express.Router();
 const isPermittedTo = accessControl('cohorts');
-
-function toJSON(cohort) {
-  return {
-    ...cohort,
-    query: cohortModel.toJSON(cohort.query),
-  };
-}
 
 router.get(
   '/:id',
@@ -62,7 +55,7 @@ router.get(
     cohort.permittedActions = getPossibleActions(cohort, req.user);
 
     // res.json(toJSON(cohort));
-    const cohortJSON = toJSON(cohort);
+    const cohortJSON = cohortToJSON(cohort);
     res.format({
       json: () => res.send(cohortJSON),
       text: () => {

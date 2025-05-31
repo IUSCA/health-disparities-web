@@ -9,9 +9,6 @@ const cohort_columns = {
   // updated_at: true,
   // query: true,
   // metadata: true,
-  // is_published: true,
-  // is_locked: true,
-  // is_protected: true,
   // author_username: true,
 };
 

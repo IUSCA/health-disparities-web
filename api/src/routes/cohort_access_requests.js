@@ -11,6 +11,7 @@ const accessRequestsService = require('@/services/access_requests');
 // const userService = require('@/services/user');
 const redcap = require('@/services/redcap');
 const logger = require('@/services/logger');
+const { canPerformAction } = require('@/services/cohorts/authorization');
 
 const isPermittedTo = accessControl('cohort_access_requests');
 const router = express.Router();
@@ -281,14 +282,19 @@ router.put(
     // check if the cohort exists
     // cohort should be published and not temporary
     const { cohort_id } = req.params;
-    const cohort = await prisma.cohort.findFirst({
-      where: { id: cohort_id, is_published: true, is_temp: false },
-      select: {
-        id: true,
+    const cohort = await prisma.cohort_view.findFirstOrThrow({
+      where: {
+        id: req.params.id,
+        is_temp: false,
+      },
+      include: {
+        author: true,
       },
     });
-    if (!cohort) {
-      return next(createError(404, 'Cohort does not exist or is not published'));
+
+    // access control
+    if (!canPerformAction('request', cohort, req.user)) {
+      return next(createError(403));
     }
 
     // check if the requester exists
