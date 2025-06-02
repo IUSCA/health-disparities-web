@@ -33,18 +33,25 @@
           <span>{{ datetime.date(value) }}</span>
         </template>
 
-        <template #cell(author_username)="{ rowData }">
+        <template #cell(author)="{ rowData }">
           <UserAvatar
-            :username="rowData.author_username"
-            :name="rowData.author_name"
+            :username="rowData.author.username"
+            :name="rowData.author.name"
           />
         </template>
 
         <template #cell(status)="{ rowData }">
           <div class="flex items-center justify-center gap-1">
-            <CohortPublishedIcon :is_published="rowData?.is_published" />
-            <CohortLockedIcon :is_locked="rowData?.is_locked" />
+            <CohortVisibilityIcon :visibility="rowData?.visibility" />
+            <!-- <CohortLockedIcon :is_locked="rowData?.is_locked" /> -->
+            <VaPopover v-if="rowData?.is_archived" message="Archived">
+              <i-mdi-archive class="va-text-secondary text-sm" />
+            </VaPopover>
           </div>
+        </template>
+
+        <template #cell(type)="{ rowData }">
+          <span class="capitalize">{{ rowData?.query?.schema?.name }}</span>
         </template>
 
         <template #cell(actions)="{ rowData }">
@@ -70,17 +77,14 @@
             >
             </VaButton>
 
-            <!-- cannot delete published cohort -->
             <!-- cannot delete currently selected cohorts -->
             <va-button
               size="small"
               color="danger"
               @click="onDelete(rowData)"
               class="mr-1"
-              :disabled="
-                rowData?.is_published || props.selected.includes(rowData.id)
-              "
-              v-if="props.showDelete"
+              :disabled="props.selected.includes(rowData.id)"
+              v-if="can('delete', rowData)"
               icon="delete"
               preset="primary"
             >
@@ -102,7 +106,7 @@
 </template>
 
 <script setup>
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 import * as datetime from "@/services/datetime";
 import { useColors } from "vuestic-ui/web-components";
 
@@ -111,10 +115,6 @@ const props = defineProps({
   selected: {
     type: Array,
     default: () => [],
-  },
-  showDelete: {
-    type: Boolean,
-    default: true,
   },
 });
 
@@ -134,12 +134,12 @@ const columns = [
     width: "400px",
     tdClass: "truncate",
   },
-  // {
-  //   key: "type",
-  //   width: "100px",
-  // },
   {
-    key: "author_username",
+    key: "type",
+    width: "100px",
+  },
+  {
+    key: "author",
     label: "Author",
     sortable: true,
     width: "100px",
@@ -186,17 +186,27 @@ function fetch() {
   // when the sorting order is null, the sorting is not applied
   const _sortingOrder = sortingOrder.value;
   const _sortBy = _sortingOrder == null ? null : sortBy.value;
-  return cohortService
-    .search({
-      ...props.params,
-      sort_by: _sortBy,
-      sort_order: _sortingOrder,
-      limit: LIMIT,
-      offset: offset.value,
-    })
-    .then((res) => {
-      return res.data;
-    });
+  const { view_mode, type, search_term } = props.params;
+  const searchParams = {
+    sort_by: _sortBy,
+    sort_order: _sortingOrder,
+    limit: LIMIT,
+    offset: offset.value,
+  };
+  if (view_mode === "created_by_me") {
+    searchParams.created_by_me = true;
+  } else if (view_mode === "published") {
+    searchParams.visibility = "PUBLIC";
+  }
+  if (type) {
+    searchParams.type = type;
+  }
+  if (search_term) {
+    searchParams.search_term = search_term;
+  }
+  return cohortService.search(searchParams).then((res) => {
+    return res.data?.data || [];
+  });
 }
 
 watch(
@@ -262,6 +272,10 @@ function onDeleteSuccess() {
 
 function onDownload(row) {
   downloadModal.value.show(row);
+}
+
+function can(action, cohort) {
+  return (cohort?.permitted_actions || []).includes(action);
 }
 </script>
 

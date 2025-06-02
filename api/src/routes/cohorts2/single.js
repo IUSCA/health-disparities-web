@@ -52,7 +52,7 @@ router.get(
       return next(createError(403));
     }
 
-    cohort.permittedActions = getPossibleActions(cohort, req.user);
+    cohort.permitted_actions = getPossibleActions(cohort, req.user);
 
     // res.json(toJSON(cohort));
     const cohortJSON = cohortToJSON(cohort);

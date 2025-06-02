@@ -9,7 +9,6 @@
       :params="params"
       @select="(x) => emit('select', x)"
       :selected="cohort_ids"
-      :show-delete="params.is_mine"
     />
   </div>
 </template>
@@ -17,12 +16,6 @@
 <script setup>
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
-const props = defineProps({
-  defaultIsPublished: {
-    type: Boolean,
-    default: null,
-  },
-});
 
 const { cohorts } = storeToRefs(useCohortsStore());
 const cohort_ids = computed(() => cohorts.value.map((c) => c.id));
@@ -31,10 +24,8 @@ const emit = defineEmits(["select"]);
 
 const defaultParams = () => ({
   search_term: "",
-  is_published: props.defaultIsPublished,
-  is_locked: "",
-  is_mine: true,
   type: "",
+  view_mode: "created_by_me",
 });
 const params = ref(defaultParams());
 function reset() {
