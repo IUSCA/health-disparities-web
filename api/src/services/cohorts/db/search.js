@@ -10,7 +10,7 @@ function buildWhereClause(user, filters) {
     }],
   };
 
-  // created_by_me filter
+  // created_by_me / shared_with_me filter
   if (filters.created_by_me != null) {
     if (filters.created_by_me) {
       // if created_by_me is set, we filter by the user's username (and all visibilities)
@@ -23,6 +23,32 @@ function buildWhereClause(user, filters) {
       where.AND.push({
         author_username: {
           not: user.username,
+        },
+        visibility: {
+          in: getSearchableStates(user),
+        },
+      });
+    }
+  } else if (filters.shared_with_me != null) {
+    if (filters.shared_with_me) {
+      // if shared_with_me is set, cohorts that are shared at least once with the user by someone else
+      where.AND.push({
+        shares: {
+          some: {
+            user_id: user.id,
+          },
+        },
+        visibility: {
+          in: getSearchableStates(user),
+        },
+      });
+    } else {
+      // if shared_with_me is false, we filter out the user's cohorts
+      where.AND.push({
+        shares: {
+          none: {
+            user_id: user.id,
+          },
         },
         visibility: {
           in: getSearchableStates(user),
@@ -91,6 +117,27 @@ function buildWhereClause(user, filters) {
     where.AND.push({
       is_derivable: filters.derivable,
     });
+  }
+
+  // favorited filter
+  if (filters.favorited !== undefined) {
+    if (filters.favorited) {
+      where.AND.push({
+        favorites: {
+          some: {
+            user_id: user.id,
+          },
+        },
+      });
+    } else {
+      where.AND.push({
+        favorites: {
+          none: {
+            user_id: user.id,
+          },
+        },
+      });
+    }
   }
 
   return where;

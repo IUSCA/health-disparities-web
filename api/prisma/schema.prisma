@@ -203,6 +203,9 @@ model user {
   access_request_audit_logs  access_request_audit_log[]
   // created_datasets           dataset_create_log[]
   authored_cohorts_views     cohort_view[]
+  favorite_cohorts           cohort_favorite[]
+  received_cohort_shares     cohort_share[]
+  created_cohort_shares      cohort_share[]             @relation("shared_by")
 }
 
 model user_password {
@@ -573,6 +576,8 @@ model cohort {
   author_username String
   author          user                    @relation(fields: [author_username], references: [username])
   access_requests cohort_access_request[]
+  shares          cohort_share[]
+  favorites       cohort_favorite[]
 }
 
 view cohort_view {
@@ -594,6 +599,34 @@ view cohort_view {
   is_referenced   Boolean
   author          user                    @relation(fields: [author_username], references: [username])
   access_requests cohort_access_request[] @relation("cohort_view")
+  shares          cohort_share[]          @relation("cohort_view")
+  favorites       cohort_favorite[]       @relation("cohort_view")
+}
+
+model cohort_share {
+  id          Int          @id @default(autoincrement())
+  cohort_id   String       @db.Uuid
+  cohort      cohort       @relation(fields: [cohort_id], references: [id], onDelete: Cascade)
+  cohort_view cohort_view? @relation("cohort_view", fields: [cohort_id], references: [id], map: "cohort_share_cohort_view_id_fkey")
+
+  // Share targets
+  user_id Int? // direct user share
+  user    user? @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  created_by_id Int // who shared it
+  created_by    user     @relation("shared_by", fields: [created_by_id], references: [id], onDelete: Cascade)
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+}
+
+model cohort_favorite {
+  cohort_id   String       @db.Uuid
+  cohort      cohort       @relation(fields: [cohort_id], references: [id], onDelete: Cascade)
+  cohort_view cohort_view? @relation("cohort_view", fields: [cohort_id], references: [id], map: "cohort_favorite_cohort_view_id_fkey")
+  user_id     Int // who favorited it
+  user        user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at  DateTime     @default(now()) @db.Timestamp(6)
+
+  @@id([cohort_id, user_id]) // composite primary key
 }
 
 // model cohort_user {

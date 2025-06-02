@@ -8,5 +8,7 @@ router.use('/', require('./create'));
 router.use('/', require('./update'));
 router.use('/', require('./files'));
 router.use('/', require('./delete'));
+router.use('/shares', require('./shares'));
+router.use('/favorites', require('./favorites'));
 
 module.exports = router;

@@ -184,6 +184,9 @@ router.patch('/:id/visibility', validate([
 
   const cohort = await prisma.cohort_view.findUniqueOrThrow({
     where: { id },
+    include: {
+      author: true,
+    },
   });
 
   if (!canChangeVisibility({
@@ -203,12 +206,32 @@ router.patch('/:id/visibility', validate([
     'PUBLIC->UNLISTED': { is_locked: true },
   };
 
-  await prisma.cohort.update({
-    where: { id },
-    data: {
-      visibility: to,
-      ...transitionEffect[transitionKey],
-    },
+  // unlisted -> private
+  // delete all shares and delete all favorites except the author's
+
+  await prisma.$transaction(async (tx) => {
+    if (transitionKey === 'UNLISTED->PRIVATE') {
+      await tx.cohort_share.deleteMany({
+        where: {
+          cohort_id: id,
+        },
+      });
+
+      await tx.cohort_favorite.deleteMany({
+        where: {
+          cohort_id: id,
+          user_id: { not: cohort.author.id },
+        },
+      });
+    }
+
+    await tx.cohort.update({
+      where: { id },
+      data: {
+        visibility: to,
+        ...transitionEffect[transitionKey],
+      },
+    });
   });
 
   const updatedCohort = await prisma.cohort_view.findUniqueOrThrow({

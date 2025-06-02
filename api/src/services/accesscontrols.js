@@ -151,6 +151,12 @@ const grantsObject = {
       'update:any': ['*'],
       'delete:any': ['*'],
     },
+    cohort_shares: {
+      'create:own': ['*'],
+      'read:own': ['*'],
+      'update:own': ['*'],
+      'delete:own': ['*'],
+    },
   },
 
   // user role permissions
@@ -227,6 +233,12 @@ const grantsObject = {
     cohort_access_requests: {
       'create:own': ['*'],
       'read:own': ['*', '!audit_logs', '!upstream_record_id'], // cannot read audit logs and upstream record id
+    },
+    cohort_shares: {
+      'create:own': ['*'],
+      'read:own': ['*'],
+      'update:own': ['*'],
+      'delete:own': ['*'],
     },
   },
 
@@ -336,6 +348,12 @@ const grantsObject = {
       'read:any': ['*'],
       'update:any': ['*'],
       'delete:any': ['*'],
+    },
+    cohort_shares: {
+      'create:own': ['*'],
+      'read:own': ['*'],
+      'update:own': ['*'],
+      'delete:own': ['*'],
     },
   },
 };

@@ -33,8 +33,8 @@ router.get(
     query('archived').default(false).isBoolean().toBoolean(),
     query('derivable').optional().isBoolean().toBoolean(),
     query('created_by_me').isBoolean().optional().toBoolean(),
-    // query('shared_with_me').isBoolean().optional().toBoolean(),
-    // query('favorited').isBoolean().optional().toBoolean(),
+    query('shared_with_me').isBoolean().optional().toBoolean(),
+    query('favorited').isBoolean().optional().toBoolean(),
     query('sort_by').default('created_at').isIn(['name', 'size', 'created_at', 'updated_at']),
     query('sort_order').default('desc').isIn(['asc', 'desc']),
     query('limit').default(10).isInt({ min: 1, max: 1000 }).toInt(),
@@ -78,6 +78,13 @@ router.get(
       }
     */
 
+    // created_by_me and shared_with_me are mutually exclusive
+    if (req.query.created_by_me && req.query.shared_with_me) {
+      return res.status(400).json({
+        error: 'created_by_me and shared_with_me are mutually exclusive',
+      });
+    }
+
     const search = createSearch({ filters: req.query, user: req.user, queryParams: req.query });
     const count = createCount({ filters: req.query, user: req.user });
     const [rows, total] = await prisma.$transaction([
@@ -91,6 +98,26 @@ router.get(
         allowed_transitions: getAllowedTransitions(row, req.user),
       }))
       .map(cohortToJSON);
+
+    // fetch is_favorited for each cohort
+    const ids = cohorts.map((c) => c.id);
+    const favorites = await prisma.cohort_favorite.findMany({
+      where: {
+        cohort_id: {
+          in: ids,
+        },
+        user_id: req.user.id,
+      },
+      select: {
+        cohort_id: true,
+      },
+    });
+    const favoritesSet = new Set(favorites.map((f) => f.cohort_id));
+    cohorts.map((cohort) => ({
+      ...cohort,
+      is_favorited: favoritesSet.has(cohort.id),
+    }));
+
     const paginationInfo = {
       total,
       limit: req.query.limit,
