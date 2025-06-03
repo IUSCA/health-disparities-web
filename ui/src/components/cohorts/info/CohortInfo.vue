@@ -26,11 +26,11 @@
           />
         </div>
 
-        <!-- published / unpublished -->
-        <CohortPublishedIcon :is_published="props.cohort.is_published" />
+        <!-- visibility -->
+        <CohortVisibilityIcon :visibility="props.cohort.visibility" />
 
         <!-- locked / unlocked -->
-        <CohortLockedIcon :is_locked="props.cohort.is_locked" />
+        <!-- <CohortLockedIcon :is_locked="props.cohort.is_locked" /> -->
       </div>
     </div>
 
@@ -45,10 +45,10 @@
       <span> participants </span>
     </div>
 
-    <!-- show ID when published -->
+    <!-- show ID when not private -->
     <div
       class="va-text-secondary text-sm mt-1 flex items-center gap-1"
-      v-if="props.cohort.is_published && props.cohort.id"
+      v-if="props.cohort.visibility !== CV.PRIVATE && props.cohort.id"
       :title="props.cohort.id"
     >
       <span>{{ props.cohort.id }}</span>
@@ -58,6 +58,7 @@
 </template>
 
 <script setup>
+import { CV } from "@/components/cohorts/models/index";
 const props = defineProps({
   cohort: Object,
   totalCount: Number,

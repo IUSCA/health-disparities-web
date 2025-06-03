@@ -30,6 +30,19 @@
       clearable
     />
 
+    <!-- Archived select -->
+    <VaSelect
+      v-model="params.archived"
+      :options="[
+        { label: 'Archived', value: true },
+        { label: 'Hide Archived', value: false },
+      ]"
+      placeholder="Archived"
+      class="w-40"
+      text-by="label"
+      value-by="value"
+    />
+
     <!-- reset button -->
     <VaButton @click="emit('reset')" icon="refresh"> Reset </VaButton>
   </VaForm>

@@ -66,29 +66,56 @@
             </va-button> -->
 
             <!-- Download data -->
-            <VaButton
-              size="small"
-              color="primary"
-              @click="onDownload(rowData)"
-              class="mr-1"
-              icon="download"
-              preset="primary"
-              :disabled="!rowData?.is_published"
-            >
-            </VaButton>
+            <VaPopover message="Download data">
+              <VaButton
+                color="primary"
+                @click="onDownload(rowData)"
+                class="mr-1"
+                icon="download"
+                preset="plain"
+              >
+              </VaButton>
+            </VaPopover>
 
             <!-- cannot delete currently selected cohorts -->
-            <va-button
-              size="small"
-              color="danger"
-              @click="onDelete(rowData)"
-              class="mr-1"
-              :disabled="props.selected.includes(rowData.id)"
-              v-if="can('delete', rowData)"
-              icon="delete"
-              preset="primary"
+            <VaPopover v-if="can('delete', rowData)" message="Delete">
+              <va-button
+                color="danger"
+                @click="onDelete(rowData)"
+                class="mr-1"
+                :disabled="props.selected.includes(rowData.id)"
+                icon="delete"
+                preset="plain"
+              >
+              </va-button>
+            </VaPopover>
+
+            <!-- unarchive -->
+            <VaPopover
+              v-if="can('unarchive', rowData)"
+              message="Restore from archive"
             >
-            </va-button>
+              <va-button
+                color="primary"
+                @click="onUnarchive(rowData)"
+                class="mr-1"
+                icon="unarchive"
+                preset="plain"
+              >
+              </va-button>
+            </VaPopover>
+
+            <!-- archive -->
+            <VaPopover v-if="can('archive', rowData)" message="Archive">
+              <va-button
+                color="primary"
+                @click="onArchive(rowData)"
+                class="mr-1"
+                icon="archive"
+                preset="plain"
+              >
+              </va-button>
+            </VaPopover>
           </div>
         </template>
       </va-data-table>
@@ -106,8 +133,11 @@
 </template>
 
 <script setup>
+import { CV } from "@/components/cohorts/models";
 import cohortService from "@/services/cohorts2";
 import * as datetime from "@/services/datetime";
+import toast from "@/services/toast";
+import { useModal } from "vuestic-ui";
 import { useColors } from "vuestic-ui/web-components";
 
 const props = defineProps({
@@ -121,6 +151,7 @@ const props = defineProps({
 const emit = defineEmits(["select"]);
 
 const { colors } = useColors();
+const { confirm } = useModal();
 
 const deleteModal = ref(null);
 const downloadModal = ref(null);
@@ -186,7 +217,7 @@ function fetch() {
   // when the sorting order is null, the sorting is not applied
   const _sortingOrder = sortingOrder.value;
   const _sortBy = _sortingOrder == null ? null : sortBy.value;
-  const { view_mode, type, search_term } = props.params;
+  const { view_mode, type, search_term, archived } = props.params;
   const searchParams = {
     sort_by: _sortBy,
     sort_order: _sortingOrder,
@@ -196,7 +227,7 @@ function fetch() {
   if (view_mode === "created_by_me") {
     searchParams.created_by_me = true;
   } else if (view_mode === "published") {
-    searchParams.visibility = "PUBLIC";
+    searchParams.visibility = CV.PUBLIC;
   }
   if (type) {
     searchParams.type = type;
@@ -204,6 +235,11 @@ function fetch() {
   if (search_term) {
     searchParams.search_term = search_term;
   }
+  if (archived != null) {
+    searchParams.archived = archived;
+  }
+  console.log("searchParams", searchParams);
+  console.log("props.params", props.params);
   return cohortService.search(searchParams).then((res) => {
     return res.data?.data || [];
   });
@@ -276,6 +312,66 @@ function onDownload(row) {
 
 function can(action, cohort) {
   return (cohort?.permitted_actions || []).includes(action);
+}
+
+function onUnarchive(row) {
+  confirm({
+    message:
+      "Are you sure you want to restore this cohort from archive? It will be editable again.",
+    okText: "Restore",
+  }).then(async (ok) => {
+    if (!ok) return;
+    data_loading.value = true;
+    try {
+      await cohortService.unarchive(row.id);
+      toast.success("Cohort restored from archive successfully");
+    } catch (err) {
+      err?.response?.data?.message
+        ? toast.error("Unable to restore cohort : " + err.response.data.message)
+        : toast.error("Unable to restore cohort");
+    }
+
+    offset.value = 0;
+    infiniteScrollDisabled.value = false;
+
+    fetch()
+      .then((data) => {
+        cohorts.value = data;
+      })
+      .finally(() => {
+        data_loading.value = false;
+      });
+  });
+}
+
+function onArchive(row) {
+  confirm({
+    message:
+      "Archiving a cohort will lock it and prevent it from being used in other cohorts, but it will not delete any data. You can restore it later if needed.",
+    okText: "Archive",
+  }).then(async (ok) => {
+    if (!ok) return;
+    data_loading.value = true;
+    try {
+      await cohortService.archive(row.id);
+      toast.success("Cohort archived successfully");
+    } catch (err) {
+      err?.response?.data?.message
+        ? toast.error("Unable to archive cohort : " + err.response.data.message)
+        : toast.error("Unable to archive cohort");
+    }
+
+    offset.value = 0;
+    infiniteScrollDisabled.value = false;
+
+    fetch()
+      .then((data) => {
+        cohorts.value = data;
+      })
+      .finally(() => {
+        data_loading.value = false;
+      });
+  });
 }
 </script>
 

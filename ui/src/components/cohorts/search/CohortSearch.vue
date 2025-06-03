@@ -26,6 +26,7 @@ const defaultParams = () => ({
   search_term: "",
   type: "",
   view_mode: "created_by_me",
+  archived: false,
 });
 const params = ref(defaultParams());
 function reset() {

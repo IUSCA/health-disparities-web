@@ -53,29 +53,6 @@ function getPossibleActions(cohort, user) {
   return [...actions];
 }
 
-// Transition effects: declarative, functional, and extensible
-// const transitionEffects = {
-//   'PRIVATE->UNLISTED': (cohort) => ({ ...cohort, is_locked: true }),
-//   'UNLISTED->PRIVATE': (cohort) => ({ ...cohort, is_locked: false }),
-//   'UNLISTED->PUBLIC': (cohort) => ({ ...cohort, is_locked: true }),
-//   'PUBLIC->UNLISTED': (cohort) => ({ ...cohort, is_locked: true }),
-//   ARCHIVE: (cohort) => ({ ...cohort, is_locked: true, is_derivable: false }),
-//   UNARCHIVE: (cohort) => ({
-//     ...cohort,
-//     is_locked: cohort.visibility === CV.PRIVATE ? false : cohort.is_locked,
-//     is_derivable: false,
-//   }),
-// };
-
-// Helper to get effect function for a transition/event
-// function getTransitionEffect({ from, to, event }) {
-//   if (event === 'ARCHIVE' || event === 'UNARCHIVE') {
-//     return transitionEffects[event];
-//   }
-//   const key = `${from}->${to}`;
-//   return transitionEffects[key];
-// }
-
 function getSearchableStates(user) {
   const role = getPortalRole(user);
   return searchableStates[role] || [];

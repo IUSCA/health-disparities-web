@@ -35,7 +35,6 @@
       preset="primary"
       icon="download"
       size="small"
-      :disabled="!props.cohort.is_published"
       round
       class="min-w-[62px]"
     >
@@ -68,8 +67,7 @@ const props = defineProps({
 const emit = defineEmits(["edit", "export", "remove", "copy"]);
 
 // do not save cohorts with empty queries
-// disable save button when cohort is published
-// - if user cannot edit the cohort (todo)
+// disable save button when cohort is not updatable
 const isSaveDisabled = computed(() => {
   return props.cohort.isSavingDisabled();
 });

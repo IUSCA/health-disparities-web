@@ -61,7 +61,6 @@ const doc = {
                 },
                 is_published: { type: 'boolean', default: false },
                 is_locked: { type: 'boolean', default: false },
-                is_protected: { type: 'boolean', default: false },
                 description: { type: 'string' },
                 metadata: { type: 'object' },
               },
@@ -87,7 +86,6 @@ const doc = {
               },
               is_published: false,
               is_locked: false,
-              is_protected: false,
             },
           },
         },
@@ -134,10 +132,6 @@ const doc = {
           is_locked: {
             type: 'boolean',
             description: 'Indicates if the cohort is locked',
-          },
-          is_protected: {
-            type: 'boolean',
-            description: 'Indicates if the cohort is protected',
           },
           is_published: {
             type: 'boolean',

@@ -104,9 +104,4 @@ function handleSave() {
       toast.error("Failed to save underlying cohorts");
     });
 }
-
-// todo
-// to lock or publish a combined cohort, all underlying cohorts must be locked or published
-
-// todo: better placement of save button
 </script>

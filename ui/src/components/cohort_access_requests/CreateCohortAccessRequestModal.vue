@@ -79,7 +79,6 @@
         <CohortSearchModal
           ref="cohortSearchModal"
           @select="(c) => (cohort = c)"
-          :default-is-published="true"
         />
       </VaForm>
 

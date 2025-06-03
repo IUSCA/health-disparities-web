@@ -252,7 +252,7 @@ import {
 } from "@/components/genotype/constants";
 import { parseBEDFile, parseQuery } from "@/components/genotype/lib";
 import config from "@/config";
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 import genotypeService from "@/services/genotypes";
 import toast from "@/services/toast";
 import { maybePluralize } from "@/services/utils";

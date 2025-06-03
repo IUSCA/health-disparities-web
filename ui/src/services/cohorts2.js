@@ -6,29 +6,9 @@ class CohortService {
     return api.get(`/cohorts2/${id}`);
   }
 
-  search({
-    search_term,
-    type,
-    visibility,
-    archived,
-    derivable,
-    sort_by,
-    sort_order,
-    limit,
-    offset,
-  }) {
+  search(params) {
     return api.get("/cohorts2", {
-      params: {
-        search_term,
-        ...(type !== "" && { type }),
-        visibility,
-        archived,
-        derivable,
-        sort_by,
-        sort_order,
-        limit,
-        offset,
-      },
+      params,
     });
   }
 
@@ -72,6 +52,14 @@ class CohortService {
         delete_dependents,
       },
     });
+  }
+
+  getDependents(id) {
+    return api.get(`/cohorts2/${id}/dependents`);
+  }
+
+  getFilesSummary(id) {
+    return api.get(`/cohorts/${id}/files/summary`);
   }
 
   getCohortURL(params, relative = true) {

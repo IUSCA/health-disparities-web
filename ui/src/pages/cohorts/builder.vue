@@ -57,7 +57,7 @@ import {
   createCohort,
   PhenotypeCohort,
 } from "@/components/cohorts/models";
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 import genAIService from "@/services/gen_ai";
 import participantsService from "@/services/participants";
 import { useCohortsStore } from "@/stores/cohorts";
@@ -81,7 +81,8 @@ const lastUpdated = ref(Date.now()); // used to send a signal to the CohortData 
 // when is lastUpdated set?
 // initially set to Date.now() in the setup
 // when a cohort has performed a search and the participants have been updated - afterSearch
-// when a cohort has been added or removed or operator has been changed and the combinationCohort has performed a search - watch([numCohorts, operators])
+// when a cohort has been added or removed or operator has been changed and the combinationCohort has performed a
+// search - watch([numCohorts, operators])
 const numCohorts = computed(() => cohorts.value.length);
 
 onMounted(() => {

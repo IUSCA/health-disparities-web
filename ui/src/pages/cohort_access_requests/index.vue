@@ -147,7 +147,7 @@
 import useQueryPersistence from "@/composables/useQueryPersistence";
 import config from "@/config";
 import cohortAccessRequests from "@/services/cohort_access_requests";
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 import * as datetime from "@/services/datetime";
 import toast from "@/services/toast";
 import { useAuthStore } from "@/stores/auth";

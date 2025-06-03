@@ -1,10 +1,15 @@
 import * as queryBuilder from "@/components/cohorts/queryBuilder/index";
 import { DEFAULT_ZYGOSITIES } from "@/components/genotype/constants";
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 import _ from "lodash";
 
 const DEFAULT_SNAPSHOT_ID = 1; // todo
 const DEFAULT_SOURCE_ID = 1; // todo
+const CV = {
+  PRIVATE: "PRIVATE",
+  UNLISTED: "UNLISTED",
+  PUBLIC: "PUBLIC",
+};
 
 class Cohort {
   static NAME_PREFIX = "Cohort ";
@@ -18,9 +23,9 @@ class Cohort {
     updated_at,
     schema,
     query,
-    is_published,
     is_locked,
-    is_protected,
+    visibility,
+    is_archived,
     size,
     is_dirty,
     search_id,
@@ -46,9 +51,9 @@ class Cohort {
     this.updated_at = updated_at;
     this.schema = schema || SCHEMA;
     this.query = query || this.defaultQuery();
-    this.is_published = is_published || false;
     this.is_locked = is_locked || false;
-    this.is_protected = is_protected || false;
+    this.visibility = visibility || CV.PRIVATE;
+    this.is_archived = is_archived || false;
     this.size = size || 0;
     this.search_id = search_id;
     this.supports_editing = supports_editing || false;
@@ -90,9 +95,6 @@ class Cohort {
         schema: this.schema,
         body: this.query,
       },
-      is_published: this.is_published,
-      is_locked: this.is_locked,
-      is_protected: this.is_protected,
     };
   }
 
@@ -116,13 +118,7 @@ class Cohort {
     return this.isEmpty() || this.isNew() || !this.supports_copying;
   }
 
-  save({
-    name,
-    description,
-    is_published,
-    is_locked,
-    use_suggested_name_if_new = false,
-  } = {}) {
+  save({ name, description, use_suggested_name_if_new = false } = {}) {
     const updates = _.omitBy(
       {
         name:
@@ -131,8 +127,6 @@ class Cohort {
             ? this.suggested_name
             : null),
         description,
-        is_published,
-        is_locked,
       },
       _.isNil,
     );
@@ -145,11 +139,17 @@ class Cohort {
       this.id = res.data.id;
       this.name = res.data.name;
       this.description = res.data.description;
-      this.is_published = res.data.is_published;
-      this.is_locked = res.data.is_locked;
-      this.is_protected = res.data.is_protected;
       this.updated_at = res.data.updated_at;
       this.is_dirty = false;
+    });
+  }
+
+  updateVisibility(visibility) {
+    cohortService.updateVisibility(this.id, visibility).then((res) => {
+      this.visibility = res.data.visibility;
+      this.is_locked = res.data.is_locked;
+      this.updated_at = res.data.updated_at;
+      // this.is_dirty = false; // TODO
     });
   }
 
@@ -328,6 +328,7 @@ export {
   Cohort,
   CombinationCohort,
   createCohort,
+  CV,
   GenotypeCohort,
   PhenotypeCohort
 };

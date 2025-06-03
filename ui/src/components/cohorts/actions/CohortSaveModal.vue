@@ -22,28 +22,6 @@
           placeholder="Enter a description for the cohort"
           :max-rows="5"
         />
-        <div class="flex flex-col gap-1">
-          <VaCheckbox
-            v-model="data.is_published"
-            label="Publish Cohort"
-            :disabled="props.cohort.is_locked"
-          />
-          <span class="text-sm va-text-secondary pl-7">
-            Make this cohort public so that others can use it. Publishing the
-            cohort will also lock it.
-          </span>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <VaCheckbox
-            v-model="data.is_locked"
-            label="Lock Cohort"
-            :disabled="props.cohort.is_locked || data.is_published"
-          />
-          <span class="text-sm va-text-secondary pl-7"
-            >Freeze the cohort so that it cannot be modified.</span
-          >
-        </div>
       </VaForm>
       <div class="flex justify-end gap-3">
         <VaButton preset="secondary" @click="hide">Cancel</VaButton>
@@ -76,26 +54,12 @@ const emit = defineEmits(["saved"]);
 const data = ref({
   name: props.cohort.name || "",
   description: props.cohort.description || "",
-  is_published: props.cohort.is_published || false,
-  is_locked: props.cohort.is_locked || false,
 });
 
 const visible = ref(false);
 const loading = ref(false);
 const { isValid, validate } = useForm("formRef");
 
-// watch([() => props.cohort.name], () => {
-//   data.value.name = props.cohort.name;
-// });
-// watch([() => props.cohort.description], () => {
-//   data.value.description = props.cohort.description;
-// });
-// watch([() => props.cohort.is_published], () => {
-//   data.value.is_published = props.cohort.is_published;
-// });
-// watch([() => props.cohort.is_locked], () => {
-//   data.value.is_locked = props.cohort.is_locked;
-// });
 watch(
   () => props.cohort.suggested_name,
   (sg_name) => {
@@ -116,15 +80,6 @@ watch(
   },
 );
 
-// is_locked should be true if is_published is true and cannot be changed
-// when is_published is false, is_locked can be toggled
-watch(
-  () => data.value.is_published,
-  (value) => {
-    data.value.is_locked = value;
-  },
-);
-
 function hide() {
   visible.value = false;
 }
@@ -133,7 +88,6 @@ function show() {
   visible.value = true;
 }
 
-// TODO
 function handleSave() {
   if (validate()) {
     loading.value = true;

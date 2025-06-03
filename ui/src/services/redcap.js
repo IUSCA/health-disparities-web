@@ -1,5 +1,5 @@
 import config from "@/config";
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 
 const institution_types = {
   Commercial: 1,

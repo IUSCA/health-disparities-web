@@ -80,14 +80,14 @@ function buildWhereClause(user, filters) {
   }
 
   // archived filter
-  if (filters.archived !== undefined) {
+  if (filters.archived != null) {
     where.AND.push({
       is_archived: filters.archived,
     });
   }
 
   // derivable filter
-  if (filters.derivable !== undefined) {
+  if (filters.derivable != null) {
     where.AND.push({
       is_derivable: filters.derivable,
     });
@@ -101,6 +101,7 @@ function createSearch({
 }) {
   return (prisma) => {
     const where = buildWhereClause(user, filters);
+    // console.log('Cohort search where clause:', filters, where);
 
     const defaultInclude = {
       author: true,
@@ -152,7 +153,7 @@ function getDependentCohortsQuery(id, requester_username) {
         AND query->'body'->'cohort_ids' @> to_jsonb(array[CAST(${id} AS UUID)])
         and is_temp = false
         and author_username = ${requester_username}
-        and visibility = ${CV.PRIVATE}
+        and visibility = CAST(${CV.PRIVATE} AS cohort_visibility) 
       
       union
       
@@ -163,7 +164,7 @@ function getDependentCohortsQuery(id, requester_username) {
         c.query->'schema'->>'name' = 'combination' 
         and c.is_temp = false
         and c.author_username = ${requester_username}
-        and c.visibility = ${CV.PRIVATE}
+        and c.visibility = CAST(${CV.PRIVATE} AS cohort_visibility) 
     )
     select cv.*
     from dependent_cohorts dc
@@ -175,6 +176,7 @@ function getDependentCohortsQuery(id, requester_username) {
 function createSearchDependents({ user, id }) {
   return (prisma) => {
     const sql = getDependentCohortsQuery(id, user.username);
+    // console.log('Executing SQL for dependent cohorts:', sql.text, sql.values);
     return prisma.$queryRaw(sql);
   };
 }

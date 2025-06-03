@@ -115,7 +115,7 @@
 </template>
 
 <script setup>
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 import * as datetime from "@/services/datetime";
 
 const props = defineProps({

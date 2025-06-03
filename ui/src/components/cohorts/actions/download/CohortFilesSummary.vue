@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 import toast from "@/services/toast";
 import { formatBytes } from "@/services/utils";
 

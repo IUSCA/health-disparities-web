@@ -25,7 +25,7 @@
 
 <script setup>
 import { CombinationCohort, createCohort } from "@/components/cohorts/models";
-import cohortService from "@/services/cohorts";
+import cohortService from "@/services/cohorts2";
 import { useModal } from "vuestic-ui";
 
 const cohort = defineModel("cohort", {
