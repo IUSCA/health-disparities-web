@@ -58,6 +58,7 @@ const emit = defineEmits(["reset"]);
 
 const viewModeOptions = [
   { label: "Created by me", value: "created_by_me" },
+  { label: "Shared with me", value: "shared_with_me" },
   { label: "Published", value: "published" },
 ];
 

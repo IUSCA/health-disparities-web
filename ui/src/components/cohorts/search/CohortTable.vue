@@ -131,6 +131,18 @@
               >
               </va-button>
             </VaPopover>
+
+            <!-- share -->
+            <VaPopover message="Share">
+              <va-button
+                color="primary"
+                @click="onShare(rowData)"
+                class="mr-1"
+                icon="share"
+                preset="plain"
+              >
+              </va-button>
+            </VaPopover>
           </div>
         </template>
 
@@ -155,6 +167,7 @@
     ref="changeVisibilityModal"
     @update="onUpdateRefetchData"
   />
+  <CohortShareModal ref="shareModal" @update="onUpdateRefetchData" />
 </template>
 
 <script setup>
@@ -240,8 +253,6 @@ const columns = [
     ? [
         {
           key: "actions",
-          thAlign: "center",
-          tdAlign: "center",
           width: "120px",
         },
       ]
@@ -268,17 +279,26 @@ function fetch() {
     limit: LIMIT,
     offset: offset.value,
   };
+
+  // view_mode can be one of "created_by_me", "published", "shared_with_me"
   if (view_mode === "created_by_me") {
     searchParams.created_by_me = true;
   } else if (view_mode === "published") {
     searchParams.visibility = CV.PUBLIC;
+  } else if (view_mode === "shared_with_me") {
+    searchParams.shared_with_me = true;
   }
+
+  // type
   if (type) {
     searchParams.type = type;
   }
+  // search term
   if (search_term) {
     searchParams.search_term = search_term;
   }
+
+  // status can be one of "all", "archived", "favorited"
   if (status === "archived") {
     searchParams.archived = true;
   } else if (status === "favorited") {
@@ -409,6 +429,11 @@ function onArchive(row) {
 const changeVisibilityModal = ref(null);
 function onChangeVisibility(row) {
   changeVisibilityModal.value.show(row);
+}
+
+const shareModal = ref(null);
+function onShare(row) {
+  shareModal.value.show(row);
 }
 </script>
 

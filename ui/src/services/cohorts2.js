@@ -73,6 +73,18 @@ class CohortService {
   unfavorite(id) {
     return api.delete(`/cohorts2/favorites/${id}`);
   }
+
+  share(cohort_id, user_id) {
+    return api.put(`/cohorts2/shares/${cohort_id}/${user_id}`);
+  }
+
+  unshare(cohort_id, user_id) {
+    return api.delete(`/cohorts2/shares/${cohort_id}/${user_id}`);
+  }
+
+  getSharedUsers(cohort_id) {
+    return api.get(`/cohorts2/shares/${cohort_id}`);
+  }
 }
 
 export default new CohortService();

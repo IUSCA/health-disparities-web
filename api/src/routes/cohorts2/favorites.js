@@ -5,16 +5,13 @@ const createError = require('http-errors');
 const prisma = require('@/db');
 const asyncHandler = require('@/middleware/asyncHandler');
 const { validate } = require('@/middleware/validators');
-const { accessControl } = require('@/middleware/auth');
 
 const { canPerformAction } = require('@/services/cohorts/authorization');
 
 const router = express.Router();
-const isPermittedTo = accessControl('cohorts');
 
 router.put(
   '/:cohort_id',
-  isPermittedTo('create'),
   validate([
     param('cohort_id').isUUID(),
   ]),
@@ -43,21 +40,28 @@ router.put(
       return next(createError(403));
     }
 
-    await prisma.cohort_favorite.create({
-      data: {
-        cohort_id,
-        user_id: req.user.id,
-      },
-      skipDuplicates: true,
-    });
-
-    res.status(201).send();
+    try {
+      await prisma.cohort_favorite.create({
+        data: {
+          cohort_id,
+          user_id: req.user.id,
+        },
+      });
+      res.status(201).send();
+    } catch (error) {
+      if (error.code === 'P2002') {
+        // Unique constraint failed, meaning the favorite already exists
+        // idempotency: if the favorite already exists, we can return 201
+        res.status(201).send();
+      }
+      // Handle other errors
+      throw error;
+    }
   }),
 );
 
 router.delete(
   '/:cohort_id',
-  isPermittedTo('delete'),
   validate([
     param('cohort_id').isUUID(),
   ]),

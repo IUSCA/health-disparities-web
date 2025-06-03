@@ -1,7 +1,7 @@
 <template>
-  <!-- cSpell: ignore 𝑒𝑚𝑎𝑖𝑙 -->
+  <!-- cSpell: ignore 𝑒mail -->
   <!-- 
-       Using Mathematical Italic: 𝑒𝑚𝑎𝑖𝑙 instead of ASCII 'email' 
+       Using Mathematical Italic: 𝑒mail instead of ASCII 'email' 
        to prevent the browser from interpreting this field as an email and showing autofill suggestions. 
        Attempts to set different values for the name, autocomplete, 
        and type attributes on va-input in AutoComplete component were unsuccessful in preventing autofill. 
@@ -10,7 +10,7 @@
     v-model:search-text="searchText"
     :data="users"
     :filter-fn="filterFn"
-    placeholder="Search users by name, username, or 𝑒𝑚𝑎𝑖𝑙"
+    placeholder="Search users by name, username, or 𝑒mail"
   >
     <template #filtered="{ item }">
       <span> {{ item.name }} </span>

@@ -39,7 +39,7 @@ function buildWhereClause(user, filters) {
           },
         },
         visibility: {
-          in: getSearchableStates(user),
+          in: [CV.PUBLIC, CV.UNLISTED],
         },
       });
     } else {
@@ -148,7 +148,7 @@ function createSearch({
 }) {
   return (prisma) => {
     const where = buildWhereClause(user, filters);
-    // console.log('Cohort search where clause:', filters, where);
+    // console.log('Cohort search where clause:', filters, JSON.stringify(where, null, 2));
 
     const defaultInclude = {
       author: true,

@@ -5,16 +5,13 @@ const createError = require('http-errors');
 const prisma = require('@/db');
 const asyncHandler = require('@/middleware/asyncHandler');
 const { validate } = require('@/middleware/validators');
-const { accessControl } = require('@/middleware/auth');
 
 const { canPerformAction } = require('@/services/cohorts/authorization');
 
 const router = express.Router();
-const isPermittedTo = accessControl('cohort_shares');
 
 router.put(
   '/:cohort_id/:user_id',
-  isPermittedTo('create'),
   validate([
     param('cohort_id').isUUID(),
     param('user_id').isInt().toInt(),
@@ -56,13 +53,24 @@ router.put(
       return next(createError(404, 'User not found'));
     }
 
-    await prisma.cohort_share.create({
-      data: {
+    // check if share row already exists
+    const existingShare = await prisma.cohort_share.findFirst({
+      where: {
         cohort_id,
         user_id,
-        created_by_id: req.user.id,
+        created_by_id: req.user.id, // ensure the share was created by the requester
       },
     });
+
+    if (!existingShare) {
+      await prisma.cohort_share.create({
+        data: {
+          cohort_id,
+          user_id,
+          created_by_id: req.user.id,
+        },
+      });
+    }
 
     res.status(201).send();
   }),
@@ -70,7 +78,6 @@ router.put(
 
 router.delete(
   '/:cohort_id/:user_id',
-  isPermittedTo('delete'),
   validate([
     param('cohort_id').isUUID(),
     param('user_id').isInt().toInt(),
@@ -92,16 +99,12 @@ router.delete(
       where: {
         cohort_id,
         user_id,
+        created_by_id: req.user.id, // ensure the share was created by the requester
       },
     });
 
-    // validate if this user created the share
-    if (share.created_by_id !== req.user.id) {
-      return next(createError(403));
-    }
-
     await prisma.cohort_share.delete({
-      where: { id: req.params.id },
+      where: { id: share.id },
     });
 
     res.status(204).send();
@@ -110,7 +113,6 @@ router.delete(
 
 router.get(
   '/:cohort_id',
-  isPermittedTo('read'),
   validate([
     param('cohort_id').isUUID(),
   ]),
