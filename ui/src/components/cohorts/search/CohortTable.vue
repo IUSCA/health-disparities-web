@@ -225,7 +225,6 @@ const columns = [
   {
     key: "author",
     label: "Author",
-    sortable: true,
     width: "100px",
   },
   {
