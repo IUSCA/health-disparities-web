@@ -31,13 +31,30 @@ function buildWhereClause(user, filters) {
     }
   } else if (filters.shared_with_me != null) {
     if (filters.shared_with_me) {
-      // if shared_with_me is set, cohorts that are shared at least once with the user by someone else
+      // if shared_with_me is set, cohorts that are shared at least once with the current user by someone else
+      // also include cohorts favorited by the user but not authored by them
       where.AND.push({
-        shares: {
-          some: {
-            user_id: user.id,
+        OR: [
+          {
+            shares: {
+              some: {
+                user_id: user.id,
+              },
+            },
           },
-        },
+          {
+            favorites: {
+              some: {
+                user_id: user.id,
+              },
+            },
+            author_username: {
+              not: user.username,
+            },
+          },
+        ],
+      });
+      where.AND.push({
         visibility: {
           in: [CV.PUBLIC, CV.UNLISTED],
         },
