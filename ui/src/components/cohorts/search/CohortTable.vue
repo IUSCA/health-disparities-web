@@ -55,7 +55,7 @@
         </template>
 
         <template #cell(actions)="{ rowData }">
-          <div class="flex items-center justify-center gap-1">
+          <div class="flex items-center justify-start gap-1">
             <!-- <va-button
               size="small"
               color="primary"
@@ -133,6 +133,12 @@
             </VaPopover>
           </div>
         </template>
+
+        <template #cell(favorite)="{ rowData }">
+          <div class="flex items-center justify-center">
+            <CohortFavoriteButton :cohort="rowData" :key="rowData.id" />
+          </div>
+        </template>
       </va-data-table>
       <div
         v-if="infiniteScrollDisabled"
@@ -181,6 +187,17 @@ const downloadModal = ref(null);
 
 // table parent div's width is 944px
 const columns = [
+  ...(props.showActions
+    ? [
+        {
+          key: "favorite",
+          label: " ",
+          width: "20px",
+          thAlign: "center",
+          tdAlign: "center",
+        },
+      ]
+    : []),
   {
     key: "name",
     sortable: true,
@@ -244,7 +261,7 @@ function fetch() {
   // when the sorting order is null, the sorting is not applied
   const _sortingOrder = sortingOrder.value;
   const _sortBy = _sortingOrder == null ? null : sortBy.value;
-  const { view_mode, type, search_term, archived } = props.params;
+  const { view_mode, type, search_term, status } = props.params;
   const searchParams = {
     sort_by: _sortBy,
     sort_order: _sortingOrder,
@@ -262,8 +279,10 @@ function fetch() {
   if (search_term) {
     searchParams.search_term = search_term;
   }
-  if (archived != null) {
-    searchParams.archived = archived;
+  if (status === "archived") {
+    searchParams.archived = true;
+  } else if (status === "favorited") {
+    searchParams.favorited = true;
   }
   // console.log("searchParams", searchParams);
   // console.log("props.params", props.params);

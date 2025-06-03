@@ -26,6 +26,7 @@ class Cohort {
     is_locked,
     visibility,
     is_archived,
+    is_favorited,
     size,
     is_dirty,
     search_id,
@@ -54,6 +55,7 @@ class Cohort {
     this.is_locked = is_locked || false;
     this.visibility = visibility || CV.PRIVATE;
     this.is_archived = is_archived || false;
+    this.is_favorited = is_favorited || false;
     this.size = size || 0;
     this.search_id = search_id;
     this.supports_editing = supports_editing || false;

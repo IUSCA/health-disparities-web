@@ -32,10 +32,11 @@
 
     <!-- Archived select -->
     <VaSelect
-      v-model="params.archived"
+      v-model="params.status"
       :options="[
-        { label: 'Archived', value: true },
-        { label: 'Hide Archived', value: false },
+        { label: 'All', value: 'all' },
+        { label: 'Archived', value: 'archived' },
+        { label: 'Favorited', value: 'favorited' },
       ]"
       placeholder="Archived"
       class="w-40"

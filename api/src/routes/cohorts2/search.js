@@ -91,16 +91,9 @@ router.get(
       search(prisma),
       count(prisma),
     ]);
-    const cohorts = rows
-      .map((row) => ({
-        ...row,
-        permitted_actions: getPossibleActions(row, req.user),
-        allowed_transitions: getAllowedTransitions(row, req.user),
-      }))
-      .map(cohortToJSON);
 
     // fetch is_favorited for each cohort
-    const ids = cohorts.map((c) => c.id);
+    const ids = rows.map((c) => c.id);
     const favorites = await prisma.cohort_favorite.findMany({
       where: {
         cohort_id: {
@@ -113,10 +106,15 @@ router.get(
       },
     });
     const favoritesSet = new Set(favorites.map((f) => f.cohort_id));
-    cohorts.map((cohort) => ({
-      ...cohort,
-      is_favorited: favoritesSet.has(cohort.id),
-    }));
+
+    const cohorts = rows
+      .map((row) => ({
+        ...row,
+        permitted_actions: getPossibleActions(row, req.user),
+        allowed_transitions: getAllowedTransitions(row, req.user),
+        is_favorited: favoritesSet.has(row.id),
+      }))
+      .map(cohortToJSON);
 
     const paginationInfo = {
       total,

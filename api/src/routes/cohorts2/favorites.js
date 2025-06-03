@@ -48,6 +48,7 @@ router.put(
         cohort_id,
         user_id: req.user.id,
       },
+      skipDuplicates: true,
     });
 
     res.status(201).send();
@@ -76,8 +77,10 @@ router.delete(
 
     await prisma.cohort_favorite.delete({
       where: {
-        cohort_id,
-        user_id: req.user.id,
+        cohort_id_user_id: {
+          cohort_id,
+          user_id: req.user.id,
+        },
       },
     });
 

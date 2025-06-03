@@ -65,6 +65,14 @@ class CohortService {
   getCohortURL(params, relative = true) {
     return getURL("/cohorts/builder", params, relative);
   }
+
+  favorite(id) {
+    return api.put(`/cohorts2/favorites/${id}`);
+  }
+
+  unfavorite(id) {
+    return api.delete(`/cohorts2/favorites/${id}`);
+  }
 }
 
 export default new CohortService();

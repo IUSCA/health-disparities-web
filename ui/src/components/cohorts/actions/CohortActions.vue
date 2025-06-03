@@ -1,5 +1,13 @@
 <template>
   <div class="flex flex-row gap-3 justify-start">
+    <!-- favorite -->
+    <CohortFavoriteButton
+      :cohort="props.cohort"
+      v-if="!props.cohort.isNew()"
+      class="flex-none"
+      :key="props.cohort.id"
+    />
+
     <!-- open save modal when clicked -->
     <va-button
       color="success"
