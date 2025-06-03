@@ -116,6 +116,21 @@
               >
               </va-button>
             </VaPopover>
+
+            <!-- change visibility -->
+            <VaPopover
+              v-if="rowData?.allowed_transitions?.length > 0"
+              message="Change visibility"
+            >
+              <va-button
+                color="primary"
+                @click="onChangeVisibility(rowData)"
+                class="mr-1"
+                icon="visibility"
+                preset="plain"
+              >
+              </va-button>
+            </VaPopover>
           </div>
         </template>
       </va-data-table>
@@ -128,8 +143,12 @@
       </div>
     </va-infinite-scroll>
   </div>
-  <CohortDeleteModal ref="deleteModal" @update="onDeleteSuccess" />
+  <CohortDeleteModal ref="deleteModal" @update="onUpdateRefetchData" />
   <CohortDownloadModal ref="downloadModal" />
+  <CohortChangeVisibilityModal
+    ref="changeVisibilityModal"
+    @update="onUpdateRefetchData"
+  />
 </template>
 
 <script setup>
@@ -145,6 +164,10 @@ const props = defineProps({
   selected: {
     type: Array,
     default: () => [],
+  },
+  showActions: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -196,12 +219,16 @@ const columns = [
     tdAlign: "center",
     width: "80px",
   },
-  {
-    key: "actions",
-    thAlign: "center",
-    tdAlign: "center",
-    width: "120px",
-  },
+  ...(props.showActions
+    ? [
+        {
+          key: "actions",
+          thAlign: "center",
+          tdAlign: "center",
+          width: "120px",
+        },
+      ]
+    : []),
 ];
 
 const cohorts = ref([]);
@@ -292,7 +319,7 @@ function onDelete(row) {
   deleteModal.value.show(row);
 }
 
-function onDeleteSuccess() {
+function onUpdateRefetchData() {
   data_loading.value = true;
   offset.value = 0;
   infiniteScrollDisabled.value = false;
@@ -331,16 +358,7 @@ function onUnarchive(row) {
         : toast.error("Unable to restore cohort");
     }
 
-    offset.value = 0;
-    infiniteScrollDisabled.value = false;
-
-    fetch()
-      .then((data) => {
-        cohorts.value = data;
-      })
-      .finally(() => {
-        data_loading.value = false;
-      });
+    onUpdateRefetchData();
   });
 }
 
@@ -361,17 +379,13 @@ function onArchive(row) {
         : toast.error("Unable to archive cohort");
     }
 
-    offset.value = 0;
-    infiniteScrollDisabled.value = false;
-
-    fetch()
-      .then((data) => {
-        cohorts.value = data;
-      })
-      .finally(() => {
-        data_loading.value = false;
-      });
+    onUpdateRefetchData();
   });
+}
+
+const changeVisibilityModal = ref(null);
+function onChangeVisibility(row) {
+  changeVisibilityModal.value.show(row);
 }
 </script>
 

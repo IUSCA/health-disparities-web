@@ -16,7 +16,7 @@ const { createSearch, createCount } = require('@/services/cohorts/db/search');
 const { createLogQuery } = require('@/services/cohorts/db/audit');
 const { cohortToJSON } = require('@/services/cohorts/utils');
 const cohortService = require('@/services/cohorts');
-const { getPossibleActions } = require('@/services/cohorts/authorization');
+const { getPossibleActions, getAllowedTransitions } = require('@/services/cohorts/authorization');
 
 const router = express.Router();
 const isPermittedTo = accessControl('cohorts');
@@ -85,7 +85,11 @@ router.get(
       count(prisma),
     ]);
     const cohorts = rows
-      .map((row) => ({ ...row, permitted_actions: getPossibleActions(row, req.user) }))
+      .map((row) => ({
+        ...row,
+        permitted_actions: getPossibleActions(row, req.user),
+        allowed_transitions: getAllowedTransitions(row, req.user),
+      }))
       .map(cohortToJSON);
     const paginationInfo = {
       total,

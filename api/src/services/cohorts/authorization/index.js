@@ -58,10 +58,24 @@ function getSearchableStates(user) {
   return searchableStates[role] || [];
 }
 
+function getAllowedTransitions(cohort, user) {
+  const userRoles = getUserRoles(user, cohort);
+  visibilityFsm.setState(cohort.visibility);
+  const allowed = new Set();
+  userRoles.forEach((r) => {
+    const states = visibilityFsm.getAllowedTransitions({ role: r, context: { cohort, user } });
+    if (Array.isArray(states)) {
+      states.forEach((state) => allowed.add(state));
+    }
+  });
+  return [...allowed];
+}
+
 module.exports = {
   canPerformAction,
   canChangeVisibility,
   getPossibleActions,
   // getTransitionEffect,
   getSearchableStates,
+  getAllowedTransitions,
 };

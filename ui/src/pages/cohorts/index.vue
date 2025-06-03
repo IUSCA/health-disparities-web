@@ -39,7 +39,7 @@
     </div>
     <VaCard class="mt-5">
       <VaCardContent>
-        <CohortSearch @select="addCohort" />
+        <CohortSearch @select="addCohort" show-actions />
       </VaCardContent>
     </VaCard>
   </div>

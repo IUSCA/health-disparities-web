@@ -9,6 +9,7 @@
       :params="params"
       @select="(x) => emit('select', x)"
       :selected="cohort_ids"
+      :show-actions="props.showActions"
     />
   </div>
 </template>
@@ -20,6 +21,12 @@ import { storeToRefs } from "pinia";
 const { cohorts } = storeToRefs(useCohortsStore());
 const cohort_ids = computed(() => cohorts.value.map((c) => c.id));
 
+const props = defineProps({
+  showActions: {
+    type: Boolean,
+    default: false,
+  },
+});
 const emit = defineEmits(["select"]);
 
 const defaultParams = () => ({
