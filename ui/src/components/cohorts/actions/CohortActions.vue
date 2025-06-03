@@ -29,7 +29,7 @@
       Copy
     </VaButton>
 
-    <va-button
+    <!-- <va-button
       color="primary"
       @click="emit('export')"
       preset="primary"
@@ -39,7 +39,7 @@
       class="min-w-[62px]"
     >
       Export
-    </va-button>
+    </va-button> -->
 
     <va-button
       color="danger"

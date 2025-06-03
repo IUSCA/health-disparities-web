@@ -281,10 +281,10 @@ router.put(
 
     // check if the cohort exists
     // cohort should be published and not temporary
-    const { cohort_id } = req.params;
+    const { cohort_id, username } = req.params;
     const cohort = await prisma.cohort_view.findFirstOrThrow({
       where: {
-        id: req.params.id,
+        id: cohort_id,
         is_temp: false,
       },
       include: {
@@ -294,12 +294,12 @@ router.put(
 
     // access control
     if (!canPerformAction('request', cohort, req.user)) {
-      return next(createError(403));
+      return next(createError(403, 'You are not allowed to request access to this cohort'));
     }
 
     // check if the requester exists
     const requester = await prisma.user.findUnique({
-      where: { username: req.params.username },
+      where: { username },
       select: {
         id: true,
       },

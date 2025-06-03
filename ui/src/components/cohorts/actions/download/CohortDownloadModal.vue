@@ -8,7 +8,51 @@
     @close="hide"
   >
     <VaInnerLoading :loading="loading">
-      <div class="">
+      <!-- cohort is PRIVATE -->
+      <div v-if="cohort.visibility === CV.PRIVATE">
+        <VaAlert color="info" outline>
+          <div class="mb-4">
+            <p>
+              To download this cohort's data, you must first request access.
+              <br />
+              <strong>Before requesting access:</strong>
+            </p>
+            <ul class="list-disc ml-6 my-2 text-left">
+              <li>
+                The cohort will be <b>locked</b> and cannot be edited anymore.
+              </li>
+              <li>
+                The cohort's visibility will change from <b>PRIVATE</b> to
+                <b>UNLISTED</b> so reviewers can access it.
+                <br />
+                <span class="text-xs text-gray-500">
+                  (Anyone with the link will be able to view it, but it will not
+                  appear in search results.)
+                </span>
+              </li>
+            </ul>
+          </div>
+          <div class="flex flex-col items-center gap-4">
+            <VaCheckbox
+              v-model="acknowledgeLock"
+              :disabled="loading"
+              class="mb-2"
+              label="I understand this action will lock the cohort and make it unlisted."
+            />
+            <VaButton
+              color="primary"
+              :disabled="!acknowledgeLock || loading"
+              :loading="loading"
+              @click="onChangeVisibilityAndRequest"
+              size="large"
+            >
+              Change Visibility &amp; Request Access
+            </VaButton>
+          </div>
+        </VaAlert>
+      </div>
+      <!-- cohort is UNLISTED or PUBLIC -->
+      <div class="" v-else>
         <!-- no previous request -->
         <div v-if="!request">
           <VaAlert color="secondary" outline>
@@ -164,10 +208,11 @@
 </template>
 
 <script setup>
+import { CV } from "@/components/cohorts/models";
 import requestService from "@/services/cohort_access_requests";
+import cohortService from "@/services/cohorts2";
 import * as datetime from "@/services/datetime";
 import { buildREDCapSurveyUrl } from "@/services/redcap";
-
 import toast from "@/services/toast";
 import { useAuthStore } from "@/stores/auth";
 
@@ -179,10 +224,13 @@ defineExpose({
   hide,
 });
 
+const emit = defineEmits(["update"]);
+
 const visible = ref(false);
 const loading = ref(false);
 const cohort = ref(null);
 const request = ref(null);
+const acknowledgeLock = ref(false);
 
 const summaryCollapseValue = ref(false);
 
@@ -245,7 +293,7 @@ function onOpenForm({ shouldCreateRequest = true } = {}) {
         data: request.value,
       });
 
-  promise
+  return promise
     .then((res) => {
       const newRequest = res.data;
       if (!newRequest) {
@@ -268,6 +316,22 @@ function onOpenForm({ shouldCreateRequest = true } = {}) {
     .finally(() => {
       loading.value = false;
       hide();
+    });
+}
+
+function onChangeVisibilityAndRequest() {
+  loading.value = true;
+  cohortService
+    .updateVisibility(cohort.value.id, CV.UNLISTED)
+    .then(() => {
+      onOpenForm().finally(() => {
+        acknowledgeLock.value = false; // reset the checkbox
+        emit("update");
+      });
+    })
+    .catch((error) => {
+      loading.value = false;
+      toast.error(`Failed to change cohort visibility: ${error.message}`);
     });
 }
 </script>

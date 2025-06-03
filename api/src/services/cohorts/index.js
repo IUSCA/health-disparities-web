@@ -6,103 +6,6 @@ const phenotypeService = require('./phenotype');
 const combinationService = require('./combination');
 const genotypeService = require('./genotype');
 
-const cohort_select = Prisma.raw`
-select
-  c.id,
-  c."name",
-  c.query,
-  c.created_at,
-  c."description",
-  c.metadata,
-  c.updated_at,
-  c.author_username,
-  c.is_locked,
-  c.is_protected,
-  c.is_published,
-  array_length(c.participants, 1) as "size", 
-  u.id as author_id,
-  u."name" as author_name, 
-  u.email as author_email, 
-  u.username as author_username`;
-
-// To not return the participants array but the count of participants
-// Why? Because the participants array can be very large and we don't need it
-function getCohortByIdQuery(id, username) {
-  return Prisma.sql`
-    ${cohort_select}
-    from
-      cohort c
-      join "user" u on c.author_username = u.username
-    where
-      c.id = CAST(${id} AS UUID)
-      and (c.author_username = ${username} or c.is_published = true)
-  `;
-}
-
-/**
- * Generates a SQL query to search for cohorts based on the provided filters.
- * To not return the participants array but the count of participants
- * Why? Because the participants array can be very large and we don't need it
-
- *
- * @param {Object} options - The search options.
- * @param {string|null} options.search_term - The search term to filter by name or description.
- * @param {string|null} options.author_username - The username of the author.
- * @param {boolean|null} options.is_published - Indicates if the cohort is published.
- * @param {boolean|null} options.is_locked - Indicates if the cohort is locked.
- * @param {boolean|null} options.is_protected - Indicates if the cohort is protected.
- * @param {boolean|null} options.is_temp - Indicates if the cohort is temporary.
- * @returns {} The prepared statement of SQL query for searching cohorts.
- */
-function searchCohortsQuery(requester_username, {
-  search_term = null,
-  author_username = null,
-  not_author_username = null,
-  is_published = null,
-  is_locked = null,
-  is_protected = null,
-  is_temp = null,
-  type = null,
-}, {
-  sort_by = 'created_at',
-  sort_order = 'DESC',
-  limit = 100,
-  offset = 0,
-} = {}) {
-  const filters = [
-    search_term != null && search_term !== ''
-      ? Prisma.sql`(c.name ILIKE ${`%${search_term}%`} or c.description ILIKE ${`%${search_term}%`})` : null,
-    author_username != null ? Prisma.sql`c.author_username = ${author_username}` : null,
-    not_author_username != null ? Prisma.sql`c.author_username != ${not_author_username}` : null,
-    is_published != null ? Prisma.sql`c.is_published = ${is_published}` : null,
-    is_locked != null ? Prisma.sql`c.is_locked = ${is_locked}` : null,
-    is_protected != null ? Prisma.sql`c.is_protected = ${is_protected}` : null,
-    is_temp != null ? Prisma.sql`c.is_temp = ${is_temp}` : null,
-    type != null ? Prisma.sql`c.query->>'name' = ${type}` : null,
-  ].filter((x) => x);
-
-  const where = filters.length ? Prisma.join(filters, ' AND ') : Prisma.raw('1 = 1');
-
-  // orderBy accepted values are created_at, updated_at, name, size;
-  // this and orderDirection are validated in the middleware
-  // if orderBy is name, created_at or updated_at, add c. to the column name
-  // if orderBy is size, do not add c. to the column name
-  const orderBy = sort_by === 'size' ? Prisma.raw(sort_by) : Prisma.raw(`c.${sort_by}`);
-  const orderDirection = Prisma.raw(sort_order);
-  return Prisma.sql`
-    ${cohort_select}
-    from
-      cohort c
-    join "user" u on c.author_username = u.username
-    where
-      (c.author_username = ${requester_username} or c.is_published = true) and
-      ${where}
-    order by ${orderBy} ${orderDirection} NULLS LAST
-    limit ${limit}
-    offset ${offset}
-  `;
-}
-
 /**
  * Saves the search results to the cohort table as a temporary cohort.
  * If id is null, it will create a new cohort.
@@ -155,39 +58,6 @@ async function searchParticipantsQueryAsync(query, { count = false } = {}) {
   }
   // won't reach here because of query validation
   throw new Error(`Invalid cohort query name: ${query.name}`);
-}
-
-function getDependentCohortsQuery(id, requester_username) {
-  // This is a recursive query that finds all dependent cohorts (both direct and indirect) of a given cohort
-  // A cohort is dependent on another cohort if it is a combination cohort that includes the other cohort
-  // Only cohorts of the requester that are not published and not temporary are considered.
-  // the given cohort is assumed to be not temporary and not published
-  return Prisma.sql`
-    with recursive dependent_cohorts as (
-      select c.id
-      from cohort c
-      WHERE query->'schema'->>'name' = 'combination'
-        AND query->'body'->'cohort_ids' @> to_jsonb(array[CAST(${id} AS UUID)])
-        and is_temp = false
-        and author_username = ${requester_username}
-        and is_published = false
-      
-      union
-      
-      select c.id
-      from cohort c
-      join dependent_cohorts dc on c.query->'body'->'cohort_ids' @> to_jsonb(array[dc.id])
-      where 
-        c.query->'schema'->>'name' = 'combination' 
-        and c.is_temp = false
-        and c.author_username = ${requester_username}
-        and c.is_published = false
-    )
-    ${cohort_select}
-    from dependent_cohorts dc
-    join cohort c on dc.id = c.id
-    join "user" u on c.author_username = u.username
-  `;
 }
 
 function getCohortFilesQuery({
@@ -268,11 +138,8 @@ function getCohortFilesSummaryQuery({ id }) {
 }
 
 module.exports = {
-  getCohortByIdQuery,
-  searchCohortsQuery,
   searchParticipantsQueryAsync,
   saveSearchResultsQuery,
-  getDependentCohortsQuery,
   getCohortFilesQuery,
   getFileInfoQuery,
   getCohortFilesSummaryQuery,

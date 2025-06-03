@@ -59,7 +59,7 @@ class CohortService {
   }
 
   getFilesSummary(id) {
-    return api.get(`/cohorts/${id}/files/summary`);
+    return api.get(`/cohorts2/${id}/files/summary`);
   }
 
   getCohortURL(params, relative = true) {

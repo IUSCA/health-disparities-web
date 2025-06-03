@@ -45,7 +45,10 @@
         <va-button @click="hide" :disabled="loading" preset="primary">
           Cancel
         </va-button>
-        <va-button @click="onChange()" :disabled="loading">
+        <va-button
+          @click="onChange()"
+          :disabled="loading || !selectedVisibility"
+        >
           Change Visibility
         </va-button>
       </div>

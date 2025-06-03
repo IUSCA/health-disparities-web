@@ -10,7 +10,7 @@
         </div>
       </div>
 
-      <div class="flex ml-auto w-3/12 items-center">
+      <div class="flex ml-auto w-3/12 items-center gap-1">
         <!-- edit icon -->
         <div
           title="Edit"

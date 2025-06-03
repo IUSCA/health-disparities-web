@@ -56,7 +56,6 @@ router.use('/fs', require('./fs'));
 router.use('/uploads', require('./uploads'));
 router.use('/instruments', require('./instruments'));
 
-router.use('/cohorts', require('./cohorts'));
 router.use('/participants', require('./participants'));
 router.use('/genotypes', require('./genotypes/index'));
 router.use('/phenotypes', require('./phenotypes/index'));

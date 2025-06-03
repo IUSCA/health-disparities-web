@@ -59,8 +59,6 @@ const doc = {
                 query: {
                   $ref: '#/components/schemas/CohortQuery',
                 },
-                is_published: { type: 'boolean', default: false },
-                is_locked: { type: 'boolean', default: false },
                 description: { type: 'string' },
                 metadata: { type: 'object' },
               },
@@ -84,8 +82,6 @@ const doc = {
                   snapshot_id: 1,
                 },
               },
-              is_published: false,
-              is_locked: false,
             },
           },
         },
@@ -133,9 +129,14 @@ const doc = {
             type: 'boolean',
             description: 'Indicates if the cohort is locked',
           },
-          is_published: {
+          is_archived: {
             type: 'boolean',
-            description: 'Indicates if the cohort is published',
+            description: 'Indicates if the cohort is archived',
+          },
+          visibility: {
+            type: 'string',
+            enum: ['PUBLIC', 'PRIVATE', 'UNLISTED'],
+            description: 'The cohort visibility status',
           },
           size: {
             type: 'integer',

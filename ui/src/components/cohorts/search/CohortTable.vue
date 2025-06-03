@@ -144,7 +144,7 @@
     </va-infinite-scroll>
   </div>
   <CohortDeleteModal ref="deleteModal" @update="onUpdateRefetchData" />
-  <CohortDownloadModal ref="downloadModal" />
+  <CohortDownloadModal ref="downloadModal" @update="onUpdateRefetchData" />
   <CohortChangeVisibilityModal
     ref="changeVisibilityModal"
     @update="onUpdateRefetchData"
@@ -265,8 +265,8 @@ function fetch() {
   if (archived != null) {
     searchParams.archived = archived;
   }
-  console.log("searchParams", searchParams);
-  console.log("props.params", props.params);
+  // console.log("searchParams", searchParams);
+  // console.log("props.params", props.params);
   return cohortService.search(searchParams).then((res) => {
     return res.data?.data || [];
   });
@@ -367,19 +367,23 @@ function onArchive(row) {
     message:
       "Archiving a cohort will lock it and prevent it from being used in other cohorts, but it will not delete any data. You can restore it later if needed.",
     okText: "Archive",
-  }).then(async (ok) => {
+  }).then((ok) => {
     if (!ok) return;
     data_loading.value = true;
-    try {
-      await cohortService.archive(row.id);
-      toast.success("Cohort archived successfully");
-    } catch (err) {
-      err?.response?.data?.message
-        ? toast.error("Unable to archive cohort : " + err.response.data.message)
-        : toast.error("Unable to archive cohort");
-    }
-
-    onUpdateRefetchData();
+    cohortService
+      .archive(row.id)
+      .then(() => {
+        toast.success("Cohort archived successfully");
+        onUpdateRefetchData();
+      })
+      .catch((err) => {
+        data_loading.value = false;
+        err?.response?.data?.message
+          ? toast.error(
+              "Unable to archive cohort : " + err.response.data.message,
+            )
+          : toast.error("Unable to archive cohort");
+      });
   });
 }
 
