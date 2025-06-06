@@ -21,6 +21,12 @@
           label="Description"
           placeholder="Enter a description for the cohort"
           :max-rows="5"
+          :rules="[
+            (v) => !!v || 'Description is required',
+            (v) =>
+              (v && v.length >= 10) ||
+              'Description must be at least 10 characters',
+          ]"
         />
       </VaForm>
       <div class="flex justify-end gap-3">
@@ -72,8 +78,11 @@ watch(
 );
 watch(
   () => props.cohort.suggested_description,
-  () => {
-    data.value.description = props.cohort.suggested_description;
+  (sg_description) => {
+    if (sg_description)
+      data.value.description = props.cohort.isNew()
+        ? sg_description
+        : props.cohort.suggested_description;
   },
   {
     immediate: true,

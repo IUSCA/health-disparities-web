@@ -20,6 +20,7 @@ router.post(
   isPermittedTo('create'),
   validate([
     body('name').isString().notEmpty(),
+    body('description').isString().isLength({ min: 10 }),
     body('query').custom(cohortModel.validate).bail().customSanitizer(cohortModel.sanitize),
     body('metadata').optional().isObject(),
   ]),

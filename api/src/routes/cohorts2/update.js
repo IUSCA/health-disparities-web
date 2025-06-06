@@ -24,6 +24,7 @@ router.patch(
   validate([
     param('id').isUUID(),
     body('name').optional().isString().notEmpty(),
+    body('description').isString().isLength({ min: 10 }),
     body('query').optional()
       .custom(cohortModel.validate).bail()
       .customSanitizer(cohortModel.sanitize),
