@@ -1,10 +1,8 @@
 <script setup>
 import participantsService from "@/services/participants";
-import { useNavStore } from "@/stores/nav";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-const nav = useNavStore();
 const patients = ref();
 
 const count = ref(0);
@@ -13,12 +11,6 @@ const pageOptions = [1, 5, 10, 25, 50, 100];
 const pages = computed(() =>
   Math.floor(count.value / options.value.numPerPage),
 );
-
-nav.setNavItems([
-  {
-    label: `Participants`,
-  },
-]);
 
 const getData = async () => {
   const results = await participantsService.getAll({
@@ -92,15 +84,11 @@ const sortBy = (col) => {
           <th>
             <button class="text-base" @click="sortBy('id')">
               Person ID &nbsp;<i-mdi-arrow-up
-                v-if="
-                  options.sortBy === 'id' &&
-                  options.sortingOrder === 'asc'
-                "
+                v-if="options.sortBy === 'id' && options.sortingOrder === 'asc'"
               />
               <i-mdi-arrow-down
                 v-if="
-                  options.sortBy === 'id' &&
-                  options.sortingOrder === 'desc'
+                  options.sortBy === 'id' && options.sortingOrder === 'desc'
                 "
               />
             </button>
@@ -175,9 +163,6 @@ const sortBy = (col) => {
         </tr>
       </thead>
       <tbody>
-
-
-
         <tr v-for="patient in patients" :key="patient.id">
           <td>{{ patient.id }}</td>
           <td>{{ patient.demographics[0].gender }}</td>
@@ -194,7 +179,7 @@ const sortBy = (col) => {
     </table>
     <div class="mt-2 flex flex-row content-end">
       <va-select
-        class="w-2 w-full rounded"
+        class="w-2 rounded"
         v-model="options.numPerPage"
         :options="pageOptions"
         label="Number Per Page"
@@ -204,3 +189,9 @@ const sortBy = (col) => {
     </div>
   </div>
 </template>
+
+<route lang="yaml">
+meta:
+  title: Participants
+  nav: [{ label: "Participants" }]
+</route>

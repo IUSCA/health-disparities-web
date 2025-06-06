@@ -1,5 +1,6 @@
 const express = require('express');
 const { param, query } = require('express-validator');
+const config = require('config');
 
 const prisma = require('@/db');
 const asyncHandler = require('@/middleware/asyncHandler');
@@ -25,62 +26,64 @@ router.get(
   }),
 );
 
-router.get(
-  '/',
-  isPermittedTo('read'),
-  validate([
-    query('cohort_id').isUUID(),
-    query('limit').default(10).isInt({ min: 1, max: 100 })
-      .toInt(),
-    query('offset').default(0).isInt({ min: 0 })
-      .toInt(),
-  ]),
-  asyncHandler(async (req, res, next) => {
+if (config.get('enabled_features.participant_details')) {
+  router.get(
+    '/',
+    isPermittedTo('read'),
+    validate([
+      query('cohort_id').isUUID(),
+      query('limit').default(10).isInt({ min: 1, max: 100 })
+        .toInt(),
+      query('offset').default(0).isInt({ min: 0 })
+        .toInt(),
+    ]),
+    asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['participants']
     // #swagger.summary = 'Get participants of a cohort.'
-    const cohort = await prisma.cohort.findFirstOrThrow({
-      where: {
-        id: req.query.cohort_id,
-      },
-    });
-    const participant_ids = cohort.participants.slice(
-      req.query.offset,
-      req.query.offset + req.query.limit,
-    );
-    const total_count = cohort.participants.length;
-    const participants = await prisma.participant.findMany({
-      where: {
-        id: {
-          in: participant_ids,
+      const cohort = await prisma.cohort.findFirstOrThrow({
+        where: {
+          id: req.query.cohort_id,
         },
-      },
-      include: {
-        demographics: true,
-      },
-    });
+      });
+      const participant_ids = cohort.participants.slice(
+        req.query.offset,
+        req.query.offset + req.query.limit,
+      );
+      const total_count = cohort.participants.length;
+      const participants = await prisma.participant.findMany({
+        where: {
+          id: {
+            in: participant_ids,
+          },
+        },
+        include: {
+          demographics: true,
+        },
+      });
 
-    // remove ib_id, study_id and
-    // change demographics from array on one object to a simple object
-    const _participants = participants.map((participant) => {
-      const {
+      // remove ib_id, study_id and
+      // change demographics from array on one object to a simple object
+      const _participants = participants.map((participant) => {
+        const {
         // eslint-disable-next-line no-unused-vars
-        ib_id, study_id, demographics, ...rest
-      } = participant;
-      return {
-        ...rest,
-        demographics: demographics?.[0],
-      };
-    });
-    res.json({
-      metadata: {
-        total_count,
-        limit: req.query.limit,
-        offset: req.query.offset,
-      },
-      participants: _participants,
-    });
-  }),
-);
+          ib_id, study_id, demographics, ...rest
+        } = participant;
+        return {
+          ...rest,
+          demographics: demographics?.[0],
+        };
+      });
+      res.json({
+        metadata: {
+          total_count,
+          limit: req.query.limit,
+          offset: req.query.offset,
+        },
+        participants: _participants,
+      });
+    }),
+  );
+}
 
 router.get(
   '/aggregate',
@@ -142,126 +145,134 @@ router.get(
   }),
 );
 
-router.get(
-  '/:participant_id',
-  isPermittedTo('read'),
-  validate([
-    param('participant_id').isInt().toInt(),
-  ]),
-  asyncHandler(async (req, res, next) => {
+if (config.get('enabled_features.participant_details')) {
+  router.get(
+    '/:participant_id',
+    isPermittedTo('read'),
+    validate([
+      param('participant_id').isInt().toInt(),
+    ]),
+    asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['participants']
     // #swagger.summary = 'Get details of a participant by id.'
 
-    const participant = await prisma.participant.findUniqueOrThrow({
-      where: {
-        id: req.params.participant_id,
-      },
-      include: {
-        demographics: true,
-        labs: true,
-        covid_tests: true,
-        covid_vaxes: true,
-        dxs: true,
-        hospitals: true,
-        medications: true,
-      },
-    });
-    // cache indefinitely - 1 year
-    // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
-    res.set('Cache-control', 'private, max-age=31536000');
-    res.json(participant);
-  }),
-);
+      const participant = await prisma.participant.findUniqueOrThrow({
+        where: {
+          id: req.params.participant_id,
+        },
+        include: {
+          demographics: true,
+          labs: true,
+          covid_tests: true,
+          covid_vaxes: true,
+          dxs: true,
+          hospitals: true,
+          medications: true,
+        },
+      });
+      // cache indefinitely - 1 year
+      // use ui/src/services/cohort2.js cache_busting_id to invalidate cache if a need arises
+      res.set('Cache-control', 'private, max-age=31536000');
+      res.json(participant);
+    }),
+  );
+}
 
-router.post(
-  '/all',
-  isPermittedTo('read'),
-  asyncHandler(async (req, res, next) => {
+if (config.get('enabled_features.participant_details')) {
+  router.post(
+    '/all',
+    isPermittedTo('read'),
+    asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['participants']
-    const {
-      currentPage, itemsPerPage, sortBy, sortingOrder,
-    } = req.body;
+      const {
+        currentPage, itemsPerPage, sortBy, sortingOrder,
+      } = req.body;
 
-    const data = await prisma.participant.findMany({
-      take: itemsPerPage,
-      skip: (currentPage - 1) * itemsPerPage,
-      orderBy: {
-        [sortBy]: sortingOrder,
-      },
-      include: {
-        demographics: true,
-      },
-    });
-    const count = await prisma.participant.count();
+      const data = await prisma.participant.findMany({
+        take: itemsPerPage,
+        skip: (currentPage - 1) * itemsPerPage,
+        orderBy: {
+          [sortBy]: sortingOrder,
+        },
+        include: {
+          demographics: true,
+        },
+      });
+      const count = await prisma.participant.count();
 
-    return res.json({ data, count });
-  }),
-);
+      return res.json({ data, count });
+    }),
+  );
+}
 
-router.get(
-  '/:id/details',
-  isPermittedTo('read'),
-  validate([
-    param('id').isInt().toInt(),
-  ]),
-  asyncHandler(async (req, res, next) => {
+if (config.get('enabled_features.participant_details')) {
+  router.get(
+    '/:id/details',
+    isPermittedTo('read'),
+    validate([
+      param('id').isInt().toInt(),
+    ]),
+    asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['participants']
 
-    const data = await prisma.participant.findUniqueOrThrow({
-      where: {
-        id: req.params.id,
-      },
-      include: {
-        demographics: true,
-      },
-    });
+      const data = await prisma.participant.findUniqueOrThrow({
+        where: {
+          id: req.params.id,
+        },
+        include: {
+          demographics: true,
+        },
+      });
 
-    return res.json(data);
-  }),
-);
+      return res.json(data);
+    }),
+  );
+}
 
-router.post(
-  '/:id/:category/:view',
-  isPermittedTo('read'),
-  validate([
-    param('id').isInt().toInt(),
-  ]),
-  asyncHandler(async (req, res, next) => {
+if (config.get('enabled_features.participant_details')) {
+  router.post(
+    '/:id/:category/:view',
+    isPermittedTo('read'),
+    validate([
+      param('id').isInt().toInt(),
+    ]),
+    asyncHandler(async (req, res, next) => {
     // #swagger.tags = ['participants']
-    const { id, category, view } = req.params;
-    const { dateRange } = req.body;
+      const { id, category, view } = req.params;
+      const { dateRange } = req.body;
 
-    let data = [];
+      let data = [];
 
-    switch (category) {
-      case 'Overview':
-        data = await process_overview(id, view, dateRange);
-        break;
-      case 'Diagnosis':
-        data = await process_diagnosis(id, view, dateRange);
-        break;
-      case 'Medications':
-        data = await process_medication(id, view, dateRange);
-        break;
-      case 'Labs':
-        data = await process_lab(id, view, dateRange);
-        break;
-      case 'Hospital Visits':
-        data = await process_hospital(id, view, dateRange);
-        break;
-      case 'Covid Tests':
-        data = await process_covid_test(id, view, dateRange);
-        break;
-      case 'Covid Vaccines':
-        data = await process_covid_vaccine(id, view, dateRange);
-        break;
-      default:
-        break;
-    }
+      switch (category) {
+        case 'Overview':
+          data = await process_overview(id, view, dateRange);
+          break;
+        case 'Diagnosis':
+          data = await process_diagnosis(id, view, dateRange);
+          break;
+        case 'Medications':
+          data = await process_medication(id, view, dateRange);
+          break;
+        case 'Labs':
+          data = await process_lab(id, view, dateRange);
+          break;
+        case 'Hospital Visits':
+          data = await process_hospital(id, view, dateRange);
+          break;
+        case 'Covid Tests':
+          data = await process_covid_test(id, view, dateRange);
+          break;
+        case 'Covid Vaccines':
+          data = await process_covid_vaccine(id, view, dateRange);
+          break;
+        default:
+          break;
+      }
 
-    return res.json(data);
-  }),
-);
+      return res.json(data);
+    }),
+  );
+}
 
 const process_overview = async (id, view, dateRange) => {
   const data = {};

@@ -6,6 +6,7 @@
       color="background-element"
       border-color="background-border"
       toggleColor="primary"
+      v-if="auth.isFeatureEnabled('participantDetails')"
     />
 
     <!-- select a cohort -->
@@ -15,7 +16,7 @@
       text-by="name"
       value-by="id"
       placeholder="Select a cohort"
-      class="flex-none"
+      class="flex-none ml-auto"
       noOptionsText="No valid cohorts available"
       style="
         max-width: 300px;
@@ -51,8 +52,11 @@
 </template>
 
 <script setup>
+import { useAuthStore } from "@/stores/auth";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
+
+const auth = useAuthStore();
 
 // lastUpdated is a timestamp and is a proxy for change events that parent can emit and pass down
 // whenever a cohort is searched, lastUpdated is updated to current time so that child components can re-fetch data

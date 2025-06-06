@@ -1,8 +1,10 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable no-console */
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { readUsersFromJSON } = require('../utils');
-const { access_request_stage_definitions } = require('../../prisma/seed_data/data');
+const { access_request_stage_definitions, scopes } = require('../../prisma/seed_data/data');
 
 global.__basedir = path.join(__dirname, '..', '..');
 
@@ -39,11 +41,13 @@ async function update_seq(table) {
 }
 
 async function main() {
-  await Promise.allSettled(roles.map((role) => prisma.role.upsert({
-    where: { id: role.id },
-    create: role,
-    update: role,
-  })));
+  for (const role of roles) {
+    await prisma.role.upsert({
+      where: { id: role.id },
+      create: role,
+      update: role,
+    });
+  }
 
   // eslint-disable-next-line no-console
   console.log(`created ${roles.length} roles`);
@@ -69,14 +73,6 @@ async function main() {
       },
     }));
 
-  const users_read = readUsersFromJSON('users.json');
-  const users = users_read.map((user) => ({
-    ...user,
-    cas_id: user.username,
-    user_role: {
-      create: [{ role_id: 3 }],
-    },
-  }));
   const operators_read = readUsersFromJSON('operators.json');
   const operators = operators_read.map((user) => ({
     ...user,
@@ -86,26 +82,32 @@ async function main() {
     },
   }));
 
-  const promises = admins
+  const users_read = readUsersFromJSON('users.json');
+  const users = users_read.map((user) => ({
+    ...user,
+    cas_id: user.username,
+    user_role: {
+      create: [{ role_id: 3 }],
+    },
+  }));
+
+  const all_users = admins
     .concat(operators)
-    .concat(users)
-    .map((user) => prisma.user.upsert({
+    .concat(users);
+
+  for (const user of all_users) {
+    await prisma.user.upsert({
       where: { email: user.email },
       update: {},
       create: user,
-    }));
-
-  await Promise.all(promises);
+    });
+  }
 
   console.log(`created ${admins.length} administrators`);
   console.log(`created ${operators.length} operators`);
   console.log(`created ${users.length} users`);
 
-  // using for loop to create in sequence to make id same as order - nitpick
-  // create access request stage definitions
-  // eslint-disable-next-line no-restricted-syntax
   for (const ard of access_request_stage_definitions) {
-    // eslint-disable-next-line no-await-in-loop
     await prisma.access_request_stage_definition.upsert({
       where: {
         id: ard.id,
@@ -115,7 +117,61 @@ async function main() {
     });
   }
 
-  const tables = ['user', 'role'];
+  // create a protocol
+  await prisma.protocol.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: 'Default Protocol',
+      description: 'This is the default protocol for the system.',
+      author_id: 1,
+    },
+  });
+
+  // add all users to the default protocol
+  const all_users_ids = all_users.map((user) => user.id);
+  await prisma.user_protocol.createMany({
+    data: all_users_ids.map((id) => ({
+      user_id: id,
+      protocol_id: 1,
+    })),
+  });
+
+  // create api access key scopes
+  for (const scope of scopes) {
+    await prisma.scope.upsert({
+      where: { id: scope.id },
+      update: {},
+      create: scope,
+    });
+  }
+
+  // create snapshot
+  await prisma.snapshot.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: 'Initial Snapshot',
+      description: 'This is the initial snapshot of the system.',
+      author_id: 1,
+    },
+  });
+
+  // create source
+  await prisma.source.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: 'Default Source',
+      description: 'This is the default source for the system.',
+      author_id: 1,
+    },
+  });
+
+  const tables = ['user', 'role', 'access_request_stage_definition', 'scope', 'snapshot', 'source'];
   await Promise.all(tables.map(update_seq));
 }
 

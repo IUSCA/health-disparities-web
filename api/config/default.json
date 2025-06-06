@@ -219,7 +219,8 @@
       "enabled_for_roles": [""]
     },
     "downloads": true,
-    "signup": true
+    "signup": true,
+    "participant_details": false
   },
   "api_keys": {
     "enabled": true,

@@ -28,6 +28,7 @@ const exports = {
         icon: "material-symbols:person",
         title: "Participants",
         path: "/participants",
+        feature_key: "participantDetails",
       },
       {
         icon: "mdi-folder-plus-outline",

@@ -116,6 +116,7 @@ const exports = {
       enabledForRoles: [],
     },
     accessKeys: true,
+    participantDetails: false,
   },
   notifications: {
     pollingInterval: 5000, // milliseconds

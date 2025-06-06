@@ -33,7 +33,7 @@ const categories = ref([
   "Labs",
   "Hospital Visits",
   "Covid Tests",
-  "Covid Vaccines"
+  "Covid Vaccines",
 ]);
 
 const views = ref([
@@ -66,8 +66,8 @@ onMounted(async () => {
       dob: detailData.demographics[0].dob,
       race: detailData.demographics[0].race,
       ethnicity: detailData.demographics[0].ethnicity,
-      gender: detailData.demographics[0].gender
-    }
+      gender: detailData.demographics[0].gender,
+    };
 
     await getData();
     dateRange.value = [
@@ -135,9 +135,7 @@ const updateDateRange = (range) => {
             {{ capitalizeFirstLetter(details.gender) }}
           </h1>
           <h2 class="text-base">
-            Age: {{ age }} ({{
-              new Date(details.dob).toLocaleDateString()
-            }})
+            Age: {{ age }} ({{ new Date(details.dob).toLocaleDateString() }})
           </h2>
         </div>
       </div>
@@ -249,3 +247,8 @@ const updateDateRange = (range) => {
   width: 100%;
 }
 </style>
+
+<route lang="yaml">
+meta:
+  title: Participant Details
+</route>
