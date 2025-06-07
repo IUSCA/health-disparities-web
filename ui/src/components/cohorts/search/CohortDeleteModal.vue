@@ -47,9 +47,7 @@
                     {{ c.name }}
                   </div>
                   <div class="text-sm va-text-secondary w-[72px]">
-                    <span class="font-semibold">
-                      {{ c.size }}
-                    </span>
+                    <CohortSize :cohort="c" class="font-semibold" />
                     <span> pax. </span>
                   </div>
                 </div>

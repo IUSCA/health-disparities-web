@@ -61,7 +61,17 @@ const option = computed(() => ({
   xAxis: [
     {
       type: "category",
-      data: props.data.map((bin) => `${bin.bin_start}-${bin.bin_end}`),
+      data: props.data.map((bin) => {
+        if (bin.bin_start && bin.bin_end) {
+          return `${bin.bin_start}-${bin.bin_end}`;
+        } else if (bin.bin_start) {
+          return `${bin.bin_start}`;
+        } else if (bin.bin_end) {
+          return `${bin.bin_end}`;
+        } else {
+          return "";
+        }
+      }),
       nameRotate: 45,
       axisTick: {
         alignWithLabel: true,

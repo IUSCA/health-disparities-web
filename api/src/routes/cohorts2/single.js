@@ -54,7 +54,6 @@ router.get(
 
     cohort.permitted_actions = getPossibleActions(cohort, req.user);
 
-    // res.json(toJSON(cohort));
     const cohortJSON = cohortToJSON(cohort);
     res.format({
       json: () => res.send(cohortJSON),

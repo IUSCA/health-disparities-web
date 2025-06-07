@@ -27,6 +27,7 @@ class Cohort {
     visibility,
     is_archived,
     is_favorited,
+    is_below_min_cohort_size,
     size,
     is_dirty,
     search_id,
@@ -56,6 +57,7 @@ class Cohort {
     this.visibility = visibility || CV.PRIVATE;
     this.is_archived = is_archived || false;
     this.is_favorited = is_favorited || false;
+    this.is_below_min_cohort_size = is_below_min_cohort_size || false;
     this.size = size || 0;
     this.search_id = search_id;
     this.supports_editing = supports_editing || false;
@@ -187,6 +189,7 @@ class Cohort {
       .then((res) => {
         this.size = res.data.count;
         this.search_id = res.data.search_id;
+        this.is_below_min_cohort_size = res.data.is_below_min_cohort_size;
       });
   }
 

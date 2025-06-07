@@ -129,6 +129,52 @@ router.get(
 );
 
 router.get(
+  '/age/bins',
+  isPermittedTo('read'),
+  validate([
+    query('cohort_id').isUUID(),
+  ]),
+  asyncHandler(async (req, res, next) => {
+    // #swagger.tags = ['participants']
+    // only works for age field
+    const { cohort_id } = req.query;
+    const BIN_WIDTH = 10; // fixing this to make deidentification easier
+    const sql = visualization.ageHistogramSQL(cohort_id, BIN_WIDTH);
+    // console.log(sql.sql, sql.values);
+    const _rows = await prisma.$queryRaw(sql);
+
+    // _rows ex: [{bin_number: 1, bin_start: "20", bin_end: "30", bin_count: 1613}]
+
+    const age_deid = config.get('cohorts.deidentification.age');
+    if (age_deid.enabled) {
+      // aggregate all bins with age > age_deid.max_age into one bin
+      const invalid_bins = _rows.filter((row) => {
+        const bin_start = parseInt(row.bin_start, 10);
+        return bin_start > age_deid.max_age;
+      });
+      const _count = invalid_bins.reduce((acc, row) => acc + row.bin_count, 0);
+
+      const valid_bins = _rows.filter((row) => {
+        const bin_start = parseInt(row.bin_start, 10);
+        return bin_start <= age_deid.max_age;
+      });
+
+      const _bin = {
+        bin_number: valid_bins.length + 1,
+        bin_start: age_deid.above_max_age_bin_label,
+        bin_end: '',
+        bin_count: _count,
+      };
+
+      _rows.length = 0; // clear the array
+      _rows.push(...valid_bins, _bin);
+    }
+
+    res.json(_rows);
+  }),
+);
+
+router.get(
   '/date/bins',
   isPermittedTo('read'),
   validate([

@@ -7,10 +7,11 @@
     ></div>
 
     <h2 class="text-xl font-semibold text-center mb-2">
-      No Participants in the selected cohort
+      Not enough participants to show data.
     </h2>
     <p class="text text-center">
-      Please select another cohort or update its query to include participants.
+      Please select another cohort or update its query to include more
+      participants.
     </p>
   </div>
 </template>
@@ -19,11 +20,11 @@
 
 <style scoped>
 /* image is from
- * https://www.reshot.com/free-vector-illustrations/item/man-with-magnifying-glass-2WCSQX3KD5/
+ * https://www.reshot.com/free-vector-illustrations/item/nature-research-6KB8J35LAN/
  * converted from eps to svg using https://cloudconvert.com/eps-to-svg
 */
 
 .illustration-bg {
-  background-image: url("/cohort-data-no-participants.svg");
+  background-image: url("/cohort-data-no-visualization.svg");
 }
 </style>

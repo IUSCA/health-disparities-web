@@ -49,6 +49,14 @@ class ParticipantService {
     });
   }
 
+  ageBins(cohort_id) {
+    return api.get(`/participants/age/bins`, {
+      params: {
+        cohort_id,
+      },
+    });
+  }
+
   dateBins({ cohort_id, field, bins }) {
     return api.get(`/participants/date/bins`, {
       params: {

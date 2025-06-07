@@ -14,7 +14,7 @@ const cohortModel = require('@/services/cohorts/model');
 const { CV: COHORT_VISIBILITIES } = require('@/services/cohorts/authorization/constants');
 const { createSearch, createCount } = require('@/services/cohorts/db/search');
 const { createLogQuery } = require('@/services/cohorts/db/audit');
-const { cohortToJSON } = require('@/services/cohorts/utils');
+const { cohortToJSON, applySizeDeidentification } = require('@/services/cohorts/utils');
 const cohortService = require('@/services/cohorts');
 const { getPossibleActions, getAllowedTransitions } = require('@/services/cohorts/authorization');
 
@@ -210,9 +210,13 @@ router.post(
     // console.log('saveQuery:', saveQuery.sql, saveQuery.values);
     const rows = await prisma.$queryRaw(saveQuery);
     // rows is like [{count: 123, id: '038ab88f-752b-4ad1-ac1c-56a72a2ff28a'}]
+    const count = Number(rows[0].count);
+    const { size, is_below_min_cohort_size } = applySizeDeidentification(count);
+
     res.json({
-      count: Number(rows[0].count),
+      count: size,
       search_id: rows[0].id,
+      is_below_min_cohort_size,
     });
 
     // log the query and its sql

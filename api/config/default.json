@@ -168,9 +168,11 @@
         }
       ]
     }
-
   },
-  "dataset_types" : ["RAW_DATA", "DATA_PRODUCT"],
+  "dataset_types": [
+    "RAW_DATA",
+    "DATA_PRODUCT"
+  ],
   "system_user": {
     "username": "svc_tasks"
   },
@@ -182,7 +184,7 @@
     "genome_build": "hg38"
   },
   "openai": {
-    "base_url":"http://rc-156-247.rci.uits.iu.edu/api/v1/chat",
+    "base_url": "http://rc-156-247.rci.uits.iu.edu/api/v1/chat",
     "api_key": ""
   },
   "e2e": {
@@ -216,7 +218,9 @@
       "enabled_for_roles": []
     },
     "fs": {
-      "enabled_for_roles": [""]
+      "enabled_for_roles": [
+        ""
+      ]
     },
     "downloads": true,
     "signup": true,
@@ -261,8 +265,6 @@
       "ssc_decision_date": "ssc_date_final_apprv_status",
       "daa_decision": "daa_reviewed",
       "daa_decision_date": "daa_approval_date",
-
-
       "approver_email": "who_apprv_catalog_access",
       "revoker_email": "who_revoke_catalog_access",
       "approved_date": "date_catalog_access_apprv",
@@ -288,5 +290,18 @@
     "Internal Academic",
     "Non-profit",
     "Other"
-  ]
+  ],
+  "cohorts": {
+    "deidentification": {
+      "age": {
+        "enabled": true,
+        "max_age": 89,
+        "above_max_age_bin_label": "89+"
+      },
+      "size": {
+        "enabled": true,
+        "min_size": 10
+      }
+    }
+  }
 }

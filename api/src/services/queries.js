@@ -27,6 +27,7 @@ function histogramSQL2(_table, _column, _bin_width) {
   const column = Prisma.raw(_column);
   const bin_width = Prisma.raw(_bin_width);
 
+  // bin_end is inclusive ex: [0, 10] is 0-9
   const sql = Prisma.sql`select
     width_bucket(${column}, min_value, max_value, num_bins) AS bin_number,
     min_value + (
@@ -34,7 +35,7 @@ function histogramSQL2(_table, _column, _bin_width) {
     ) * ${bin_width} AS bin_start,
     min_value + (
       width_bucket(${column}, min_value, max_value, num_bins)
-    ) * ${bin_width} as bin_end,
+    ) * ${bin_width} - 1 as bin_end,
     count(*) :: int AS bin_count
   from
     ${table},

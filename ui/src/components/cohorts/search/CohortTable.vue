@@ -151,6 +151,10 @@
             <CohortFavoriteButton :cohort="rowData" :key="rowData.id" />
           </div>
         </template>
+
+        <template #cell(size)="{ rowData }">
+          <CohortSize :cohort="rowData" class="text-center" />
+        </template>
       </va-data-table>
       <div
         v-if="infiniteScrollDisabled"

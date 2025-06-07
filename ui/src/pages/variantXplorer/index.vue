@@ -58,11 +58,17 @@
                   class="flex flex-col flex-wrap items-center justify-center"
                 >
                   <span class="text-lg">
+                    <span
+                      v-if="cohort.is_below_min_cohort_size"
+                      class="mr-1 font-semibold"
+                    >
+                      <
+                    </span>
                     <NumberTransition
                       :target="cohort.size"
                       :debounce="100"
                       :duration="30"
-                      class="mr-1 font-semibold"
+                      class="font-semibold"
                     />
                     {{ maybePluralize(cohort.size, "Participant", "s", false) }}
                   </span>

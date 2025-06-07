@@ -37,6 +37,9 @@
     <!-- participant count -->
     <div class="va-text-secondary">
       <span class="font-semibold">
+        <!-- show less than symbol when cohort size is below deidentification threshold -->
+        <!-- assuming cohort.size will be set as the min threshold -->
+        <span v-if="props.cohort.is_below_min_cohort_size"> < </span>
         <NumberTransition :target="props.cohort.size" :debounce="50" />
       </span>
       <span v-if="props.totalCount">

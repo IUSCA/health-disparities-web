@@ -30,6 +30,9 @@
     <div v-if="selectedCohort?.size === 0">
       <CohortDataNoParticipants />
     </div>
+    <div v-else-if="selectedCohort.is_below_min_cohort_size">
+      <CohortDataBelowMinSize />
+    </div>
     <div v-else>
       <div v-if="mode === 'data'">
         <ParticipantsData

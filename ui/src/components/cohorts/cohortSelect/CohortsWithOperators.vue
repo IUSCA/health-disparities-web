@@ -25,9 +25,7 @@
           {{ cohort.getDisplayName() }}
         </div>
         <div class="text-sm va-text-secondary w-[72px]">
-          <span class="font-semibold">
-            {{ cohort.size }}
-          </span>
+          <CohortSize :cohort="cohort" class="font-semibold" />
           <span> pax. </span>
         </div>
       </div>

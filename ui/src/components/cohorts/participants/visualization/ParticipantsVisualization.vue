@@ -91,13 +91,21 @@ function fetchVizData() {
       });
   });
 
-  Object.keys(graphs.numericals).map((field) => {
-    return participantsService
-      .bins({ cohort_id: props.cohortId, field, bins: 10 })
-      .then((res) => {
-        graphs.numericals[field].data.value = res.data;
-      });
-  });
+  Object.keys(graphs.numericals)
+    .filter((field) => field !== "age")
+    .map((field) => {
+      return participantsService
+        .bins({ cohort_id: props.cohortId, field, bins: 10 })
+        .then((res) => {
+          graphs.numericals[field].data.value = res.data;
+        });
+    });
+
+  if (graphs.numericals.age) {
+    participantsService.ageBins(props.cohortId).then((res) => {
+      graphs.numericals.age.data.value = res.data;
+    });
+  }
 
   Object.keys(graphs.dates).map((field) => {
     return participantsService
