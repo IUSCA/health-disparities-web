@@ -154,6 +154,10 @@ config = {
                     'task': 'setup_dataset_download'
                 },
                 {
+                    'name': 'delete_source',
+                    'task': 'delete_source'
+                },
+                {
                     'name': 'unstage',
                     'task': 'unstage_dataset'
                 }
