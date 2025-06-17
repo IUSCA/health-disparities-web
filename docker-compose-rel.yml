@@ -1,5 +1,4 @@
-version: "3"
-name: biobank
+name: hdw
 services:
   ui:
     container_name: ui

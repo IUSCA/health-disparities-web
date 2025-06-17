@@ -1,4 +1,4 @@
-name: bioloop
+name: hdw
 services:
   ui:
     image: node:19

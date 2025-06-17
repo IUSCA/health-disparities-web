@@ -1,4 +1,4 @@
-name: biobank
+name: hdw
 services:
   ui:
     restart: unless-stopped

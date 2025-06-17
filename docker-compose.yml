@@ -1,4 +1,4 @@
-name: biobank
+name: hdw
 services:
   ui:
     image: node:21

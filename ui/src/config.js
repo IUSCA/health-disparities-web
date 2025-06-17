@@ -17,8 +17,8 @@ const exports = {
     uploadToken: 20,
   },
   analyticsId: "G-FOO",
-  appTitle: "Biobank",
-  appName: "Indiana Biobank",
+  appTitle: "Health Disparities",
+  appName: "Health Disparities",
   contact: {
     app_admin: "bioloop-ops-l@list.iu.edu",
   },

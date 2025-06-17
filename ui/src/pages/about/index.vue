@@ -1,7 +1,9 @@
 <template>
   <div class="grid grid-cols-1 gap-5">
     <div class="banner flex items-end">
-      <h1 class="heading_text p-[20px] text-center text-gray-800">Bioloop</h1>
+      <h1 class="heading_text p-[20px] text-center text-gray-800">
+        {{ config.appTitle }}
+      </h1>
     </div>
 
     <va-card>
@@ -104,6 +106,7 @@
 
 <script setup>
 // cspell:ignore commonmark dompurify linkify markdownit
+import config from "@/config";
 import Edit from "@/pages/about/Edit.vue";
 import Preview from "@/pages/about/Preview.vue";
 import aboutService from "@/services/about";
