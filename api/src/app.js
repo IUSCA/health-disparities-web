@@ -24,6 +24,7 @@ const { apiKeyAuditLogger } = require('./middleware/loggers');
 const app = express();
 
 // Enable CORS for all origins
+// justification: allow requests from swagger UI hosted on biobank.sca.iu.edu
 app.use(cors({
   origin: 'https://biobank.sca.iu.edu',
   optionsSuccessStatus: 200,

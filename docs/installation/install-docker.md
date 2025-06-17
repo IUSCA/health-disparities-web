@@ -77,13 +77,29 @@ The application behavior can be customized by editing:
 
 ## Database Setup
 
-1. Run initial migrations:
+1. Create admins.json file in `api/` with initial admin users:
+
+example `api/admins.json`:
+<!-- cspell: ignore janedoe -->
+```json
+[
+  {
+    "name": "Jane Doe",
+    "username": "janedoe",
+    "email": "janedoe@iu.edu"
+  },
+]
+```
+
+Replace with your own admin user details. username and email must be unique refer to IU CAS ID and email. After this setup, you should be able to login with IU single sign-on using your IU credentials.
+
+2. Run initial migrations:
 ```bash
 docker compose exec api bash
 npx prisma migrate dev
 ```
 
-2. Seed the database:
+3. Seed the database:
 ```bash
 # Edit api/prisma/data.js to add required users first
 npx prisma db seed

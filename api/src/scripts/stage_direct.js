@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-console */
+require('module-alias/register');
 const fsPromises = require('fs/promises');
 // const { setTimeout } = require('timers/promises');
 

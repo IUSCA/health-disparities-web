@@ -1,3 +1,6 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
+require('module-alias/register');
 const path = require('path');
 
 global.__basedir = path.join(__dirname, '..');
@@ -100,62 +103,62 @@ async function main() {
   // Create default admins
   const additional_admins = readUsersFromJSON('admins.json');
   const admin_data = insert_random_dates(data.admins.concat(additional_admins));
-  const admin_promises = admin_data.map((admin) => prisma.user.upsert({
-    where: { email: `${admin.username}@iu.edu` },
-    update: {},
-    create: {
-      username: admin.username,
-      email: `${admin.username}@iu.edu`,
-      cas_id: admin.username,
-      name: admin.name,
-      created_at: admin.date,
-      user_role: {
-        create: [{ role_id: 1 }],
+  for (const admin of admin_data) {
+    await prisma.user.upsert({
+      where: { email: `${admin.username}@iu.edu` },
+      update: {},
+      create: {
+        username: admin.username,
+        email: `${admin.username}@iu.edu`,
+        cas_id: admin.username,
+        name: admin.name,
+        created_at: admin.date,
+        user_role: {
+          create: [{ role_id: 1 }],
+        },
       },
-    },
-  }));
-
-  await Promise.all(admin_promises);
+    });
+  }
 
   // create users
   const user_data = insert_random_dates(
     data.users.concat(createRandomUsers(50)), // mock some extra users
   );
-  const user_promises = user_data.map((user) => prisma.user.upsert({
-    where: { email: `${user.username}@iu.edu` },
-    update: {},
-    create: {
-      username: user.username,
-      email: `${user.username}@iu.edu`,
-      cas_id: user.username,
-      name: user.name,
-      created_at: user.date,
-      user_role: {
-        create: [{ role_id: 3 }],
+  for (const user of user_data) {
+    await prisma.user.upsert({
+      where: { email: `${user.username}@iu.edu` },
+      update: {},
+      create: {
+        username: user.username,
+        email: `${user.username}@iu.edu`,
+        cas_id: user.username,
+        name: user.name,
+        created_at: user.date,
+        user_role: {
+          create: [{ role_id: 3 }],
+        },
       },
-    },
-  }));
-
-  await Promise.all(user_promises);
+    });
+  }
 
   // create operators
   const operator_data = insert_random_dates(data.operators);
-  const operator_promises = operator_data.map((user) => prisma.user.upsert({
-    where: { email: `${user.username}@iu.edu` },
-    update: {},
-    create: {
-      username: user.username,
-      email: `${user.username}@iu.edu`,
-      cas_id: user.username,
-      name: user.name,
-      created_at: user.date,
-      user_role: {
-        create: [{ role_id: 2 }],
+  for (const user of operator_data) {
+    await prisma.user.upsert({
+      where: { email: `${user.username}@iu.edu` },
+      update: {},
+      create: {
+        username: user.username,
+        email: `${user.username}@iu.edu`,
+        cas_id: user.username,
+        name: user.name,
+        created_at: user.date,
+        user_role: {
+          create: [{ role_id: 2 }],
+        },
       },
-    },
-  }));
-
-  await Promise.all(operator_promises);
+    });
+  }
 
   const datasetPromises = data.datasets.map((dataset) => {
     const { workflows, ...dataset_obj } = dataset;
@@ -352,20 +355,22 @@ async function main() {
   });
 
   // create dataset access requests
-  await Promise.all(data.access_request_stage_definitions
-    .map((stage) => prisma.access_request_stage_definition.upsert({
+  for (const stage of data.access_request_stage_definitions) {
+    await prisma.access_request_stage_definition.upsert({
       where: { id: stage.id },
       update: {},
       create: stage,
-    })));
+    });
+  }
 
   // create scopes
-  await Promise.all(data.scopes
-    .map((scope) => prisma.scope.upsert({
+  for (const scope of data.scopes) {
+    await prisma.scope.upsert({
       where: { id: scope.id },
       update: {},
       create: scope,
-    })));
+    });
+  }
 
   // update the auto increment id's sequence numbers
   const tables = ['dataset', 'user', 'role', 'dataset_audit', 'contact', 'protocol', 'snapshot', 'scope'];

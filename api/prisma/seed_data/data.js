@@ -315,8 +315,8 @@ const project_contact_assoc = [
 const protocols = [
   {
     id: 1,
-    name: 'protocol-1',
-    description: 'description of the protocol',
+    name: 'Default Protocol',
+    description: 'This is the default protocol for the system.',
     author_id: 1,
   },
   {
@@ -329,8 +329,8 @@ const protocols = [
 const snapshots = [
   {
     id: 1,
-    name: 'Initial',
-    description: '',
+    name: 'Initial Snapshot',
+    description: 'This is the initial snapshot of the system.',
     published: false,
     author_id: 1,
   },
@@ -339,9 +339,11 @@ const snapshots = [
 const sources = [
   {
     id: 1,
-    name: 'source-1',
-    author_id: 1,
+    name: 'Default Source',
     build: 'hg38',
+    description: 'This is the default source for the system.',
+    author_id: 1,
+
   },
   {
     id: 2,

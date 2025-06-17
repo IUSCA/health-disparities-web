@@ -1,3 +1,4 @@
+require('module-alias/register');
 const { PrismaClient } = require('@prisma/client');
 
 const _ = require('lodash/fp');

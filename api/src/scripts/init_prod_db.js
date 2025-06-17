@@ -107,6 +107,7 @@ async function main() {
   console.log(`created ${operators.length} operators`);
   console.log(`created ${users.length} users`);
 
+  // create access request stage definitions
   for (const ard of access_request_stage_definitions) {
     await prisma.access_request_stage_definition.upsert({
       where: {
@@ -130,12 +131,16 @@ async function main() {
   });
 
   // add all users to the default protocol
-  const all_users_ids = all_users.map((user) => user.id);
+  const db_users = await prisma.user.findMany({
+    select: { id: true },
+  });
+  const all_users_ids = db_users.map((user) => user.id);
   await prisma.user_protocol.createMany({
     data: all_users_ids.map((id) => ({
       user_id: id,
       protocol_id: 1,
     })),
+    skipDuplicates: true,
   });
 
   // create api access key scopes
@@ -166,12 +171,13 @@ async function main() {
     create: {
       id: 1,
       name: 'Default Source',
+      build: 'hg38',
       description: 'This is the default source for the system.',
       author_id: 1,
     },
   });
 
-  const tables = ['user', 'role', 'access_request_stage_definition', 'scope', 'snapshot', 'source'];
+  const tables = ['user', 'role', 'scope', 'snapshot', 'source'];
   await Promise.all(tables.map(update_seq));
 }
 
