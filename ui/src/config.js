@@ -17,8 +17,8 @@ const exports = {
     uploadToken: 20,
   },
   analyticsId: "G-FOO",
-  appTitle: "Health Disparities",
-  appName: "Health Disparities",
+  appTitle: "Health Quality Beacon",
+  appName: "Health Quality Beacon",
   contact: {
     app_admin: "bioloop-ops-l@list.iu.edu",
   },

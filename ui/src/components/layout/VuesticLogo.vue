@@ -8,7 +8,7 @@
     >
       <AppIcon :size="`${height}rem`" v-show="props.view === 'lg'" />
       <p
-        class="text-4xl tracking-wider uppercase font-[audiowide] whitespace-nowrap"
+        class="text-4xl tracking-wider uppercase whitespace-nowrap"
         :style="{ color: computedColors.text }"
       >
         {{ config.appTitle }}

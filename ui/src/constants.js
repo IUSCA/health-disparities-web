@@ -8,55 +8,82 @@ const exports = {
       //   title: "Categories",
       //   path: "/categories/data",
       // },
+      // {
+      //   icon: "mdi-table-search",
+      //   title: "Data Browser",
+      //   path: "/data_browser",
+      // },
+      // {
+      //   icon: "mdi:account-multiple",
+      //   title: "Cohort Builder",
+      //   path: "/cohorts",
+      // },
+      // {
+      //   icon: "mdi:chart-sankey-variant", //"mdi:puzzle",
+      //   title: "Variant Xplorer",
+      //   path: "/variantXplorer",
+      // },
+      // {
+      //   icon: "material-symbols:person",
+      //   title: "Participants",
+      //   path: "/participants",
+      //   feature_key: "participantDetails",
+      // },
+      // {
+      //   icon: "mdi-folder-plus-outline",
+      //   title: "Create Dataset",
+      //   test_id: "sidebar-create-dataset",
+      //   children: [
+      //     {
+      //       feature_key: "ingestion",
+      //       icon: "mdi-file-cog-outline",
+      //       title: "Ingest",
+      //       path: "/datasets/ingest",
+      //     },
+      //     {
+      //       feature_key: "uploads",
+      //       icon: "mdi:folder-upload",
+      //       title: "Upload",
+      //       path: "/datasetUpload",
+      //     },
+      //   ],
+      // },
       {
-        icon: "mdi-table-search",
-        title: "Data Browser",
-        path: "/data_browser",
+        title: "Dashboard",
+        icon: "mdi-view-dashboard",
+        path: "/hdw/dashboard",
       },
       {
-        icon: "mdi:account-multiple",
-        title: "Cohort Builder",
-        path: "/cohorts",
-      },
-
-      {
-        icon: "mdi:chart-sankey-variant", //"mdi:puzzle",
-        title: "Variant Xplorer",
-        path: "/variantXplorer",
-      },
-      {
-        icon: "material-symbols:person",
-        title: "Participants",
-        path: "/participants",
-        feature_key: "participantDetails",
-      },
-      {
-        icon: "mdi-folder-plus-outline",
-        title: "Create Dataset",
-        test_id: "sidebar-create-dataset",
+        icon: "mdi-account-group",
+        title: "Cohorts",
         children: [
           {
-            feature_key: "ingestion",
-            icon: "mdi-file-cog-outline",
-            title: "Ingest",
-            path: "/datasets/ingest",
+            icon: "mdi-account-group-outline",
+            title: "Manage",
+            path: "/hdw/cohorts",
           },
           {
-            feature_key: "uploads",
-            icon: "mdi:folder-upload",
-            title: "Upload",
-            path: "/datasetUpload",
+            icon: "mdi-group-add",
+            title: "New",
+            path: "/hdw/cohorts/new",
           },
         ],
       },
+
+      {
+        icon: "mdi-filter",
+        title: "Interventions",
+        path: "/hdw/interventions",
+      },
+      { icon: "mdi-chart-line", title: "Analysis", path: "/hdw/analysis" },
     ],
     operator_items: [
-      {
-        icon: "mdi-monitor-dashboard",
-        title: "Dashboard",
-        path: "/dashboard",
-        test_id: "sidebar-dashboard",
-      },
+      // {
+      //   icon: "mdi-monitor-dashboard",
+      //   title: "Dashboard",
+      //   path: "/dashboard",
+      //   test_id: "sidebar-dashboard",
+      // },
       // {
       //   icon: "mdi-file-lock",
       //   title: "Data Products",
@@ -78,40 +105,40 @@ const exports = {
       //   path: "/rawdata",
       //   test_id: "sidebar-raw-data",
       // },
-      {
-        icon: "mdi-package-variant-closed",
-        title: "Data Products",
-        path: "/dataproducts",
-        test_id: "sidebar-data-products",
-      },
+      // {
+      //   icon: "mdi-package-variant-closed",
+      //   title: "Data Products",
+      //   path: "/dataproducts",
+      //   test_id: "sidebar-data-products",
+      // },
       {
         icon: "mdi-table-account",
         title: "User Management",
         path: "/users",
         test_id: "sidebar-user-management",
       },
-      {
-        icon: "mdi-format-list-bulleted",
-        title: "Stats/Tracking",
-        path: "/stats",
-        test_id: "sidebar-stats-tracking",
-      },
-      {
-        icon: "mdi:map-marker-path",
-        title: "Workflows",
-        path: "/workflows",
-        test_id: "sidebar-workflows",
-      },
-      {
-        icon: "mdi-account-multiple",
-        title: "Protocols",
-        path: "/protocols",
-      },
-      {
-        icon: "mdi:camera",
-        title: "Data Snapshots",
-        path: "/snapshots",
-      },
+      // {
+      //   icon: "mdi-format-list-bulleted",
+      //   title: "Stats/Tracking",
+      //   path: "/stats",
+      //   test_id: "sidebar-stats-tracking",
+      // },
+      // {
+      //   icon: "mdi:map-marker-path",
+      //   title: "Workflows",
+      //   path: "/workflows",
+      //   test_id: "sidebar-workflows",
+      // },
+      // {
+      //   icon: "mdi-account-multiple",
+      //   title: "Protocols",
+      //   path: "/protocols",
+      // },
+      // {
+      //   icon: "mdi:camera",
+      //   title: "Data Snapshots",
+      //   path: "/snapshots",
+      // },
       // {
       //   icon: 'mdi-delete-empty-outline',
       //   title: 'Data Cleanup',
@@ -119,11 +146,11 @@ const exports = {
       // },
     ],
     bottom_items: [
-      {
-        icon: "mdi-approval",
-        title: "Access Requests",
-        path: "/cohort_access_requests",
-      },
+      // {
+      //   icon: "mdi-approval",
+      //   title: "Access Requests",
+      //   path: "/cohort_access_requests",
+      // },
       {
         icon: "mdi-information",
         title: "About",
@@ -146,21 +173,21 @@ const exports = {
     admin_items: [
       ...(config.enabledFeatures?.accessKeys
         ? [
-            {
-              icon: "mdi-key",
-              title: "Access Keys",
-              path: "/keys",
-            },
-            {
-              icon: "mdi-security",
-              title: "Scopes",
-              path: "/scopes",
-            },
-            {
-              icon: "mdi-file-chart-outline",
-              title: "API Audit Logs",
-              path: "/audit_logs",
-            },
+            // {
+            //   icon: "mdi-key",
+            //   title: "Access Keys",
+            //   path: "/keys",
+            // },
+            // {
+            //   icon: "mdi-security",
+            //   title: "Scopes",
+            //   path: "/scopes",
+            // },
+            // {
+            //   icon: "mdi-file-chart-outline",
+            //   title: "API Audit Logs",
+            //   path: "/audit_logs",
+            // },
           ]
         : []),
     ],
