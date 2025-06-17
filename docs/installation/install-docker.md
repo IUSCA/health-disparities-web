@@ -87,7 +87,7 @@ example `api/admins.json`:
     "name": "Jane Doe",
     "username": "janedoe",
     "email": "janedoe@iu.edu"
-  },
+  }
 ]
 ```
 
@@ -101,7 +101,6 @@ npx prisma migrate dev
 
 3. Seed the database:
 ```bash
-# Edit api/prisma/data.js to add required users first
 npx prisma db seed
 ```
 
