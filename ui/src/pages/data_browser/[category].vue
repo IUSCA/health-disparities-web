@@ -35,7 +35,7 @@
       </p>
 
       <p class="mt-2">
-        The total number of participants in the biobank is
+        The total number of participants is
         <b> {{ totalParticipantCount }} </b>.
       </p>
     </div>

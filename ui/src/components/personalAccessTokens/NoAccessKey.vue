@@ -12,7 +12,7 @@
       <!-- description -->
       <div class="mt-2 va-text-secondary font-medium">
         Need to access the API for scripts or data downloads? Create an Access
-        Key for seamless integration with the Biobank API.
+        Key for seamless integration with the {{ config.appName }} API.
       </div>
 
       <!-- Button to generate new access key -->

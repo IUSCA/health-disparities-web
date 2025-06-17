@@ -18,6 +18,7 @@ const exports = {
   },
   analyticsId: "G-FOO",
   appTitle: "Biobank",
+  appName: "Indiana Biobank",
   contact: {
     app_admin: "bioloop-ops-l@list.iu.edu",
   },

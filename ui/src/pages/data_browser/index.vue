@@ -1,6 +1,6 @@
 <template>
   <p class="text-gray-500">
-    Browse and search through the data in the Indiana Biobank.
+    Browse and search through the data in the {{ config.appName }}.
   </p>
 
   <div class="mt-3">

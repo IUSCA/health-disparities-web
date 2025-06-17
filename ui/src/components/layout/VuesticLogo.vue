@@ -11,13 +11,14 @@
         class="text-4xl tracking-wider uppercase font-[audiowide] whitespace-nowrap"
         :style="{ color: computedColors.text }"
       >
-        Biobank
+        {{ config.appTitle }}
       </p>
     </div>
   </div>
 </template>
 
 <script setup>
+import config from "@/config";
 import { computed } from "vue";
 import { useColors } from "vuestic-ui";
 import AppIcon from "./AppIcon.vue";
