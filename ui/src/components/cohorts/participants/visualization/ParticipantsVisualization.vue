@@ -2,7 +2,7 @@
   <div class="flex flex-wrap gap-3 items-center justify-start">
     <VaCard v-for="[key, graph] in graphList" :key="key" class="ec-graph-card">
       <VaCardContent>
-        <div class="h-[300px] w-[300px]">
+        <div class="h-[275px] w-[275px]">
           <component
             :is="graph.component"
             :data="graph.data.value"
@@ -13,11 +13,15 @@
       </VaCardContent>
     </VaCard>
   </div>
+  <HDWCohortDetails
+    v-if="props.cohortId"
+    :cohort-id="props.cohortId"
+    class="mt-5"
+  />
 </template>
 
 <script setup>
 import participantsService from "@/services/participants";
-import ECDateHistogram from "./ECDateHistogram.vue";
 import ECHistogram from "./ECHistogram.vue";
 import ECPie from "./ECPie.vue";
 
@@ -60,16 +64,16 @@ const graphs = {
     //   data: ref([]),
     //   title: "Date of Birth",
     // },
-    max_enc_date: {
-      data: ref([]),
-      title: "Max Enc. Date",
-      component: ECDateHistogram,
-    },
-    enroll_date: {
-      data: ref([]),
-      title: "Enrollment Date",
-      component: ECDateHistogram,
-    },
+    // max_enc_date: {
+    //   data: ref([]),
+    //   title: "Max Enc. Date",
+    //   component: ECDateHistogram,
+    // },
+    // enroll_date: {
+    //   data: ref([]),
+    //   title: "Enrollment Date",
+    //   component: ECDateHistogram,
+    // },
   },
 };
 // const cohort_id = "c0fab846-37aa-430f-ade6-1cb0201b6d1a";

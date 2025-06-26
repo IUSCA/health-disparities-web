@@ -233,7 +233,8 @@
     "api/swagger_output.json",
     "bin/docker",
     "bin/scaffold",
-    "docs/cohort_builder/assets/"
+    "docs/cohort_builder/assets/",
+    "disparity_analysis/.gitignore",
   ],
   "ignoreRegExpList": [
     "mdi-.*",

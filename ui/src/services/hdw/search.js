@@ -1,12 +1,12 @@
-import api from "@/services/hdw/api";
+import api from "@/services/api";
 
 class SearchService {
   subjects(body) {
-    return api.post(`/search/subjects`, body);
+    return api.post(`/hdw/search/subjects`, body);
   }
 
   dx(name) {
-    return api.get(`/search/dx`, {
+    return api.get(`/hdw/search/dx`, {
       params: {
         name: name,
       },
@@ -14,7 +14,7 @@ class SearchService {
   }
 
   procedures(name) {
-    return api.get(`/search/procedures`, {
+    return api.get(`/hdw/search/procedures`, {
       params: {
         name: name,
       },

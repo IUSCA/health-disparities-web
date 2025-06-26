@@ -98,12 +98,12 @@ export default defineConfig(({ command, mode }) => {
       // useful when running vite on localhost
       // as the primary web / dev server
       proxy: {
-        "/hdw-api": {
-          target: env.VITE_HDW_API_REDIRECT_URL,
-          changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/hdw-api/, ""),
-        },
+        // "/hdw-api": {
+        //   target: env.VITE_HDW_API_REDIRECT_URL,
+        //   changeOrigin: true,
+        //   secure: false,
+        //   rewrite: (path) => path.replace(/^\/hdw-api/, ""),
+        // },
         "/api": {
           target: env.VITE_API_REDIRECT_URL,
           changeOrigin: true,

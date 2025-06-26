@@ -43,7 +43,7 @@
         >
           <div
             v-for="result in results"
-            :key="result.id"
+            :key="result.code"
             class="p-1 hover:bg-gray-50 cursor-pointer flex items-center"
             @click="toggleSelection(result)"
             @keydown.enter="toggleSelection(result)"
@@ -85,7 +85,7 @@
       >
         <div
           v-for="item in selectedList"
-          :key="item.id"
+          :key="item.code"
           class="p-1 flex items-center justify-between"
         >
           <span class="text-sm">{{ item.name }} ({{ item.code }})</span>
@@ -135,12 +135,12 @@ function search() {
 }
 
 function isSelected(item) {
-  return selectedList.value.some((selected) => selected.id === item.id);
+  return selectedList.value.some((selected) => selected.code === item.code);
 }
 
 function toggleSelection(item) {
   const index = selectedList.value.findIndex(
-    (selected) => selected.id === item.id,
+    (selected) => selected.code === item.code,
   );
   if (index === -1) {
     selectedList.value.push(item);
@@ -160,14 +160,15 @@ function toggleAllResults(value) {
   } else {
     // Remove all results that are in the search results
     selectedList.value = selectedList.value.filter(
-      (selected) => !results.value.some((result) => result.id === selected.id),
+      (selected) =>
+        !results.value.some((result) => result.code === selected.code),
     );
   }
 }
 
 function removeSelection(item) {
   const index = selectedList.value.findIndex(
-    (selected) => selected.id === item.id,
+    (selected) => selected.code === item.code,
   );
   if (index !== -1) {
     selectedList.value.splice(index, 1);

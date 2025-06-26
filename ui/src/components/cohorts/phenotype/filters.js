@@ -1,7 +1,7 @@
 export const filters = [
   {
     label: "Demographics",
-    key: "demographic_extended",
+    key: "demographic",
     icon: "mdi-human-male-female",
     filters: [
       {
@@ -60,10 +60,41 @@ export const filters = [
       },
     ],
   },
+  // {
+  //   label: "Lab Results",
+  //   key: "lab",
+  //   icon: "mdi-test-tube",
+  //   filters: [
+  //     {
+  //       key: "name",
+  //       type: "select",
+  //       label: "Name",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "date",
+  //       type: "date",
+  //       label: "Date",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "result",
+  //       type: "number",
+  //       label: "Result",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "unit",
+  //       type: "select",
+  //       label: "Unit",
+  //       info: null,
+  //     },
+  //   ],
+  // },
   {
-    label: "Lab Results",
-    key: "lab",
-    icon: "mdi-test-tube",
+    label: "Diagnoses",
+    key: "dx",
+    icon: "mdi-stethoscope",
     filters: [
       {
         key: "name",
@@ -72,48 +103,17 @@ export const filters = [
         info: null,
       },
       {
-        key: "date",
-        type: "date",
-        label: "Date",
-        info: null,
-      },
-      {
-        key: "result",
-        type: "number",
-        label: "Result",
-        info: null,
-      },
-      {
-        key: "unit",
-        type: "select",
-        label: "Unit",
-        info: null,
-      },
-    ],
-  },
-  {
-    label: "Diagnoses",
-    key: "dx",
-    icon: "mdi-stethoscope",
-    filters: [
-      // {
-      //   key: "name",
-      //   type: "select",
-      //   label: "Name",
-      //   info: null,
-      // },
-      {
         key: "code",
         type: "select",
-        label: "Name / Code",
+        label: "Code",
         info: null,
       },
-      {
-        key: "date",
-        type: "date",
-        label: "Date",
-        info: null,
-      },
+      // {
+      //   key: "date",
+      //   type: "date",
+      //   label: "Date",
+      //   info: null,
+      // },
       // {
       //   key: "code_system",
       //   type: "select",
@@ -123,162 +123,8 @@ export const filters = [
     ],
   },
   {
-    label: "Medications",
-    key: "medication",
-    icon: "mdi-pill",
-    filters: [
-      {
-        key: "name",
-        type: "select",
-        label: "Name",
-        info: null,
-      },
-      {
-        key: "category",
-        type: "select",
-        label: "Category",
-        info: null,
-      },
-      {
-        key: "start_date",
-        type: "date",
-        label: "Start Date",
-        info: null,
-      },
-      {
-        key: "dispense_qty",
-        type: "number",
-        label: "Dispense Quantity",
-        info: null,
-      },
-      {
-        key: "dispense_qty_unit",
-        type: "select",
-        label: "Dispense Quantity Unit",
-        info: null,
-      },
-      {
-        key: "nbr_refills",
-        type: "number",
-        label: "Number of Refills",
-        info: null,
-      },
-      {
-        key: "strength_dose",
-        type: "number",
-        label: "Strength Dose",
-        info: null,
-      },
-      {
-        key: "strength_dose_unit",
-        type: "select",
-        label: "Strength Dose Unit",
-        info: null,
-      },
-    ],
-  },
-  {
-    label: "Hospitalizations",
-    key: "hospital",
-    icon: "mdi-hospital-box",
-    filters: [
-      {
-        key: "admit_date",
-        type: "date",
-        label: "Admit Date",
-        info: null,
-      },
-      {
-        key: "discharge_date",
-        type: "date",
-        label: "Discharge Date",
-        info: null,
-      },
-      {
-        key: "dx_code",
-        type: "select",
-        label: "Diagnosis",
-        info: null,
-      },
-      // {
-      //   key: "dx_code_system",
-      //   type: "select",
-      //   label: "DX Code System",
-      //   info: null,
-      // },
-    ],
-  },
-  {
-    label: "COVID Tests",
-    key: "covid_test",
-    icon: "mdi-virus",
-    filters: [
-      {
-        key: "test_date",
-        type: "date",
-        label: "Test Date",
-        info: null,
-      },
-      {
-        key: "result",
-        type: "select",
-        label: "Result",
-        info: null,
-      },
-      {
-        key: "name",
-        type: "select",
-        label: "Name",
-        info: null,
-      },
-    ],
-  },
-  {
-    label: "COVID Vaccinations",
-    key: "covid_vax",
-    icon: "mdi-needle",
-    filters: [
-      {
-        key: "name",
-        type: "select",
-        label: "Name",
-        info: null,
-      },
-      {
-        key: "date",
-        type: "date",
-        label: "Date",
-        info: null,
-      },
-      {
-        key: "manufacturer",
-        type: "select",
-        label: "Manufacturer",
-        info: null,
-      },
-      {
-        key: "dose_number",
-        type: "number",
-        label: "Dose Number",
-        info: null,
-      },
-      {
-        key: "series_doses",
-        type: "number",
-        label: "Series Doses",
-        info: null,
-      },
-      {
-        key: "is_booster",
-        type: "select",
-        label: "Is Booster",
-        info: null,
-      },
-    ],
-  },
-  {
-    label: "Drug Screenings",
-    key: "drug_screen",
+    label: "Procedures",
+    key: "procedure",
     icon: "mdi-medical-bag",
     filters: [
       {
@@ -288,61 +134,234 @@ export const filters = [
         info: null,
       },
       {
-        key: "date",
-        type: "date",
-        label: "Date",
-        info: null,
-      },
-      {
-        key: "result",
+        key: "code",
         type: "select",
-        label: "Result",
+        label: "Code",
         info: null,
       },
     ],
   },
-  {
-    label: "Vaccinations",
-    key: "vaccination",
-    icon: "mdi-needle",
-    filters: [
-      {
-        key: "name",
-        type: "select",
-        label: "Name",
-        info: null,
-      },
-      {
-        key: "date",
-        type: "date",
-        label: "Date",
-        info: null,
-      },
-      {
-        key: "dose_number",
-        type: "number",
-        label: "Dose Number",
-        info: null,
-      },
-      {
-        key: "series_doses",
-        type: "number",
-        label: "Series Doses",
-        info: null,
-      },
-    ],
-  },
-  {
-    label: "Genotype Data",
-    key: "participant_genotype",
-    icon: "mdi-dna",
-    filters: [
-      {
-        key: "source_id",
-        type: "select",
-        label: "Source",
-        info: null,
-      },
-    ],
-  },
+  // {
+  //   label: "Medications",
+  //   key: "medication",
+  //   icon: "mdi-pill",
+  //   filters: [
+  //     {
+  //       key: "name",
+  //       type: "select",
+  //       label: "Name",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "category",
+  //       type: "select",
+  //       label: "Category",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "start_date",
+  //       type: "date",
+  //       label: "Start Date",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "dispense_qty",
+  //       type: "number",
+  //       label: "Dispense Quantity",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "dispense_qty_unit",
+  //       type: "select",
+  //       label: "Dispense Quantity Unit",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "nbr_refills",
+  //       type: "number",
+  //       label: "Number of Refills",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "strength_dose",
+  //       type: "number",
+  //       label: "Strength Dose",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "strength_dose_unit",
+  //       type: "select",
+  //       label: "Strength Dose Unit",
+  //       info: null,
+  //     },
+  //   ],
+  // },
+  // {
+  //   label: "Hospitalizations",
+  //   key: "hospital",
+  //   icon: "mdi-hospital-box",
+  //   filters: [
+  //     {
+  //       key: "admit_date",
+  //       type: "date",
+  //       label: "Admit Date",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "discharge_date",
+  //       type: "date",
+  //       label: "Discharge Date",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "dx_code",
+  //       type: "select",
+  //       label: "Diagnosis",
+  //       info: null,
+  //     },
+  //     // {
+  //     //   key: "dx_code_system",
+  //     //   type: "select",
+  //     //   label: "DX Code System",
+  //     //   info: null,
+  //     // },
+  //   ],
+  // },
+  // {
+  //   label: "COVID Tests",
+  //   key: "covid_test",
+  //   icon: "mdi-virus",
+  //   filters: [
+  //     {
+  //       key: "test_date",
+  //       type: "date",
+  //       label: "Test Date",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "result",
+  //       type: "select",
+  //       label: "Result",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "name",
+  //       type: "select",
+  //       label: "Name",
+  //       info: null,
+  //     },
+  //   ],
+  // },
+  // {
+  //   label: "COVID Vaccinations",
+  //   key: "covid_vax",
+  //   icon: "mdi-needle",
+  //   filters: [
+  //     {
+  //       key: "name",
+  //       type: "select",
+  //       label: "Name",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "date",
+  //       type: "date",
+  //       label: "Date",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "manufacturer",
+  //       type: "select",
+  //       label: "Manufacturer",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "dose_number",
+  //       type: "number",
+  //       label: "Dose Number",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "series_doses",
+  //       type: "number",
+  //       label: "Series Doses",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "is_booster",
+  //       type: "select",
+  //       label: "Is Booster",
+  //       info: null,
+  //     },
+  //   ],
+  // },
+  // {
+  //   label: "Drug Screenings",
+  //   key: "drug_screen",
+  //   icon: "mdi-medical-bag",
+  //   filters: [
+  //     {
+  //       key: "name",
+  //       type: "select",
+  //       label: "Name",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "date",
+  //       type: "date",
+  //       label: "Date",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "result",
+  //       type: "select",
+  //       label: "Result",
+  //       info: null,
+  //     },
+  //   ],
+  // },
+  // {
+  //   label: "Vaccinations",
+  //   key: "vaccination",
+  //   icon: "mdi-needle",
+  //   filters: [
+  //     {
+  //       key: "name",
+  //       type: "select",
+  //       label: "Name",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "date",
+  //       type: "date",
+  //       label: "Date",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "dose_number",
+  //       type: "number",
+  //       label: "Dose Number",
+  //       info: null,
+  //     },
+  //     {
+  //       key: "series_doses",
+  //       type: "number",
+  //       label: "Series Doses",
+  //       info: null,
+  //     },
+  //   ],
+  // },
+  // {
+  //   label: "Genotype Data",
+  //   key: "participant_genotype",
+  //   icon: "mdi-dna",
+  //   filters: [
+  //     {
+  //       key: "source_id",
+  //       type: "select",
+  //       label: "Source",
+  //       info: null,
+  //     },
+  //   ],
+  // },
 ];

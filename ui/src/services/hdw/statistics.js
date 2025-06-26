@@ -1,8 +1,8 @@
-import api from "@/services/hdw/api";
+import api from "@/services/api";
 
 class StatisticsService {
   get() {
-    return api.get("/statistics");
+    return api.get("/hdw/statistics");
   }
 }
 

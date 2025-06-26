@@ -140,7 +140,7 @@ router.get(
     const { cohort_id } = req.query;
     const BIN_WIDTH = 10; // fixing this to make deidentification easier
     const sql = visualization.ageHistogramSQL(cohort_id, BIN_WIDTH);
-    // console.log(sql.sql, sql.values);
+    console.log(sql.sql, sql.values);
     const _rows = await prisma.$queryRaw(sql);
 
     // _rows ex: [{bin_number: 1, bin_start: "20", bin_end: "30", bin_count: 1613}]

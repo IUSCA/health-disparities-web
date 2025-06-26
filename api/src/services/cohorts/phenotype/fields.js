@@ -1,6 +1,6 @@
 const { getFieldsWithType } = require('../../db');
 
-const tables = ['demographic_extended', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication',
+const tables = ['demographic', 'lab', 'covid_test', 'covid_vax', 'dx', 'hospital', 'medication',
   'drug_screen', 'vaccination', 'participant_genotype'];
 const customFields = {
 };

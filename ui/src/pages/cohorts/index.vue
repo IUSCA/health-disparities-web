@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-5">
+  <div class="mt-1">
     <div>
       <div>
         <h2 class="text-3xl font-bold text-center mb-4">
@@ -24,7 +24,7 @@
         </va-button>
 
         <!-- new genotype cohort button -->
-        <va-button
+        <!-- <va-button
           @click="addNewGTCohort"
           preset="primary"
           icon="add"
@@ -34,7 +34,7 @@
           border-color="primary"
         >
           New Genotype Cohort
-        </va-button>
+        </va-button> -->
       </div>
     </div>
     <VaCard class="mt-5">
@@ -47,11 +47,7 @@
 
 <script setup>
 import { DEFAULT_LOGICAL_OPERATOR } from "@/components/cohorts/combination/constants";
-import {
-  createCohort,
-  GenotypeCohort,
-  PhenotypeCohort,
-} from "@/components/cohorts/models";
+import { createCohort, PhenotypeCohort } from "@/components/cohorts/models";
 import participantsService from "@/services/participants";
 import { useCohortsStore } from "@/stores/cohorts";
 import { storeToRefs } from "pinia";
@@ -83,17 +79,17 @@ function addNewPTCohort() {
   router.push("/cohorts/builder");
 }
 
-function addNewGTCohort() {
-  // add an empty phenotype cohort - dirty: true
-  cohortsStore.appendCohort(
-    new GenotypeCohort({
-      size: totalParticipants.value,
-    }),
-    DEFAULT_LOGICAL_OPERATOR,
-  );
+// function addNewGTCohort() {
+//   // add an empty phenotype cohort - dirty: true
+//   cohortsStore.appendCohort(
+//     new GenotypeCohort({
+//       size: totalParticipants.value,
+//     }),
+//     DEFAULT_LOGICAL_OPERATOR,
+//   );
 
-  router.push("/cohorts/builder");
-}
+//   router.push("/cohorts/builder");
+// }
 
 onMounted(() => {
   participantsService.getTotalCount().then((res) => {

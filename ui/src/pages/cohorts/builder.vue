@@ -5,9 +5,9 @@
   <div>
     <!-- Cohort Selector -->
     <VaInnerLoading :loading="globalLoading">
-      <div class="mb-5">
+      <!-- <div class="mb-5">
         <CohortSelector />
-      </div>
+      </div> -->
 
       <div class="mb-5">
         <CombineValidationError :cohorts="cohorts" @remove="handleRemove" />

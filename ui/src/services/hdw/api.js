@@ -1,7 +1,7 @@
-import axios from "axios";
+// import axios from "axios";
 
-const axiosInstance = axios.create({
-  baseURL: "/hdw-api",
-});
+// const axiosInstance = axios.create({
+//   baseURL: "/hdw-api",
+// });
 
-export default axiosInstance;
+// export default axiosInstance;

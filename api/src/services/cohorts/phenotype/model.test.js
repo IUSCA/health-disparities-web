@@ -7,12 +7,12 @@ describe('Phenotype Query Schema Validation', () => {
         operator: 'AND',
         children: [
           {
-            field: 'demographic_extended.age',
+            field: 'demographic.age',
             operator: 'gt',
             value: '10',
           },
           {
-            field: 'demographic_extended.age',
+            field: 'demographic.age',
             operator: 'lt',
             value: '30',
           },
@@ -45,12 +45,12 @@ describe('Phenotype Query Schema Validation', () => {
         operator: 'AND',
         children: [
           {
-            field: 'demographic_extended.age',
+            field: 'demographic.age',
             operator: 'gt',
             value: '10',
           },
           {
-            field: 'demographic_extended.age',
+            field: 'demographic.age',
             operator: 'lt',
             value: '30',
           },
@@ -65,12 +65,12 @@ describe('Phenotype Query Schema Validation', () => {
         operator: 'AND',
         children: [
           {
-            field: 'demographic_extended.age',
+            field: 'demographic.age',
             operator: 'gt',
             value: 10,
           },
           {
-            field: 'demographic_extended.age',
+            field: 'demographic.age',
             operator: 'lt',
             value: 30,
           },

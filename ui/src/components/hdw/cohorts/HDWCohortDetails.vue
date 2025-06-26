@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col gap-4 lg:gap-7">
     <div class="flex gap-4 flex-wrap h-[200px]">
-      <div class="flex-1">
+      <!-- <div class="flex-1">
         <HDWQueryDisplay :query="props.cohort.query" />
-      </div>
+      </div> -->
       <div class="w-1/2 ml-auto">
         <HDWCohortSummary
           :summary="summary"
@@ -77,8 +77,8 @@
 <script setup>
 import cohortService from "@/services/hdw/cohorts";
 const props = defineProps({
-  cohort: {
-    type: Object,
+  cohortId: {
+    type: String,
     required: true,
   },
 });
@@ -92,10 +92,10 @@ const encounter_bins = ref(null);
 const encounter_bins_loading = ref(false);
 
 watch(
-  () => props.cohort,
+  () => props.cohortId,
   () => {
-    console.log("props.cohort", props.cohort);
-    const id = props.cohort?.id;
+    console.log("props.cohortId", props.cohortId);
+    const id = props.cohortId;
     if (id) {
       summary_loading.value = true;
       encounter_percentiles_loading.value = true;

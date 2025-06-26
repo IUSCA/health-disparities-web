@@ -8,7 +8,7 @@
         <SearchSelect
           label="Select Cohort"
           v-model="selectedCohort"
-          :searchFunction="cohortsService.getAll"
+          :searchFunction="cohortsService.search"
           :loading="cohortLoading"
           searchPlaceholderText="Search by name or description..."
           placeholder="Select a cohort"
@@ -84,8 +84,8 @@
 </template>
 
 <script setup>
+import cohortsService from "@/services/cohorts2";
 import analysisService from "@/services/hdw/analysis";
-import cohortsService from "@/services/hdw/cohorts";
 import interventionsService from "@/services/hdw/interventions";
 // State
 const selectedCohort = ref(null);

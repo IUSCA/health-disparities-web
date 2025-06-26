@@ -11,7 +11,7 @@ const {
 function ageHistogramSQL(cohort_id, bin_width) {
   return Prisma.sql`
     with data as (
-      select extract(year from age(dob)) as age from demographic d
+      select age from demographic d
       JOIN (
         SELECT participants 
         FROM cohort 

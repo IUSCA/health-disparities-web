@@ -1,18 +1,18 @@
-import api from "@/services/hdw/api";
+import api from "@/services/api";
 
 class InterventionService {
   create(data) {
-    return api.post("/interventions", data);
+    return api.post("/hdw/interventions", data);
   }
 
   getAll({ search_query, category } = {}) {
-    return api.get("/interventions", {
+    return api.get("/hdw/interventions", {
       params: { search_query, category },
     });
   }
 
   get(id) {
-    return api.get(`/interventions/${id}`);
+    return api.get(`/hdw/interventions/${id}`);
   }
 }
 

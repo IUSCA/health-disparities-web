@@ -11,7 +11,7 @@ const db_schema = `model participant {
   id           Int           @id @default(autoincrement())
   ib_id        String
   study_id     Int
-  demographics demographic_extended[]
+  demographics demographic[]
   labs         lab[]
   covid_tests  covid_test[]
   covid_vaxes  covid_vax[]
@@ -21,7 +21,7 @@ const db_schema = `model participant {
   @@unique([ib_id, study_id])
 }
 
-model demographic_extended {
+model demographic {
   id           Int       @id @default(autoincrement())
   gender         String
   race           String
@@ -159,8 +159,8 @@ const example_text = 'female participants with diabetes who are 50 years of age 
 const example_json_query = {
   operator: 'AND',
   children: [
-    { field: 'demographic_extended.gender', operator: 'in', value: ['F'] },
-    { field: 'demographic_extended.age', operator: 'gte', value: '50' },
+    { field: 'demographic.gender', operator: 'in', value: ['F'] },
+    { field: 'demographic.age', operator: 'gte', value: '50' },
     { field: 'dx.name', operator: 'in', value: ['diabetes'] },
   ],
 };

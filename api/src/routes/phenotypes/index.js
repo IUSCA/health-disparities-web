@@ -118,7 +118,7 @@ router.get(
 
     const rows = await prisma.$queryRaw`
       with data as (
-        select extract(year from age(dob)) as age 
+        select age 
         from demographic d
         where d.participant_id = ANY(
           ${sql}

@@ -54,21 +54,26 @@ const exports = {
         path: "/hdw/dashboard",
       },
       {
-        icon: "mdi-account-group",
+        icon: "mdi:account-multiple",
         title: "Cohorts",
-        children: [
-          {
-            icon: "mdi-account-group-outline",
-            title: "Manage",
-            path: "/hdw/cohorts",
-          },
-          {
-            icon: "mdi-group-add",
-            title: "New",
-            path: "/hdw/cohorts/new",
-          },
-        ],
+        path: "/cohorts",
       },
+      // {
+      //   icon: "mdi-account-group",
+      //   title: "Cohorts",
+      //   children: [
+      //     {
+      //       icon: "mdi-account-group-outline",
+      //       title: "Manage",
+      //       path: "/hdw/cohorts",
+      //     },
+      //     {
+      //       icon: "mdi-group-add",
+      //       title: "New",
+      //       path: "/hdw/cohorts/new",
+      //     },
+      //   ],
+      // },
 
       {
         icon: "mdi-filter",

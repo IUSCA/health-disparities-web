@@ -18,7 +18,7 @@ describe('Phenotype Query Building Validation', () => {
         operator: 'AND',
         children: [
           {
-            field: 'demographic_extended.gender',
+            field: 'demographic.gender',
             operator: 'in',
             value: [
               'F',
@@ -37,7 +37,7 @@ describe('Phenotype Query Building Validation', () => {
       WHERE (
       EXISTS (
         SELECT 1
-        FROM demographic_extended t
+        FROM demographic t
         WHERE
           t.participant_id = p.id
           AND gender IN (?,?)
