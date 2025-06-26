@@ -387,6 +387,8 @@ model participant {
   drug_screens          drug_screen[]
   vaccinations          vaccination[]
   participant_genotype  participant_genotype[]
+  encounters            encounter[]
+  procedures            procedure[]
 
   @@unique([ib_id])
 }
@@ -410,17 +412,28 @@ model stats {
 
 model demographic {
   id             Int         @id @default(autoincrement())
-  gender         String
-  race           String
+  gender         String?
+  race           String?
   ethnicity      String?
-  max_enc_date   DateTime
-  dob            DateTime
-  enroll_date    DateTime?
+  race_ethnicity String?
+  age            Int?
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
   // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
 
   @@index([participant_id])
+}
+
+model encounter {
+  id             Int         @id @default(autoincrement())
+  type           String?
+  year           Int?
+  site           String?
+  specialty      String?
+  los            Int?
+  insurance      String?
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
 }
 
 model lab {
@@ -472,10 +485,12 @@ model covid_vax {
 // AKA diagnosis
 model dx {
   id             Int         @id @default(autoincrement())
+  encounter_id   Int
   name           String
-  date           DateTime
-  code           String
-  code_system    String
+  date           DateTime?
+  code           String?
+  code_system    String?
+  type           String?
   participant_id Int
   participant    participant @relation(fields: [participant_id], references: [id])
   // @@unique([study_id, ib_id]) // Define a composite unique constraint on study_id and ib_id
@@ -486,6 +501,16 @@ model dx {
   // with index: query planner uses index scan in a loop after all other filters
   // without index: query planner uses sequence scan first / in parallel, then applies other filters
   // @@index([participant_id])
+}
+
+model procedure {
+  id             Int         @id @default(autoincrement())
+  encounter_id   Int
+  code           String?
+  name           String?
+  system         String?
+  participant_id Int
+  participant    participant @relation(fields: [participant_id], references: [id])
 }
 
 // e.g. hospital visit, admission
@@ -578,6 +603,7 @@ model cohort {
   access_requests cohort_access_request[]
   shares          cohort_share[]
   favorites       cohort_favorite[]
+  analysis_result analysis_result[]
 }
 
 view cohort_view {
@@ -627,6 +653,37 @@ model cohort_favorite {
   created_at  DateTime     @default(now()) @db.Timestamp(6)
 
   @@id([cohort_id, user_id]) // composite primary key
+}
+
+model intervention {
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  description          String?
+  category             String
+  created_at           DateTime               @default(now()) @db.Timestamp(6)
+  intervention_concept intervention_concept[]
+  analysis_result      analysis_result[]
+}
+
+model intervention_concept {
+  intervention_id Int
+  intervention    intervention @relation(fields: [intervention_id], references: [id], onDelete: Cascade)
+  concept_id      Int
+  concept         concept      @relation(fields: [concept_id], references: [concept_id], onDelete: Cascade)
+
+  @@id([intervention_id, concept_id])
+}
+
+model analysis_result {
+  id              Int      @id @default(autoincrement())
+  analysis_type   String
+  cohort_id       String   @db.Uuid
+  intervention_id Int
+  result          Json
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+
+  cohort       cohort       @relation(fields: [cohort_id], references: [id], onDelete: Cascade)
+  intervention intervention @relation(fields: [intervention_id], references: [id], onDelete: Cascade)
 }
 
 // model cohort_user {
@@ -1027,19 +1084,20 @@ enum cds_type {
 }
 
 model concept {
-  concept_id         Int                    @id
-  concept_name       String
-  domain_id          String
-  vocabulary_id      String
-  concept_class_id   String
-  standard_concept   String?
-  concept_code       String
-  valid_start_date   DateTime?
-  valid_end_date     DateTime?
-  invalid_reason     String?
-  concept_synonyms   concept_synonym[]
-  left_relationship  concept_relationship[] @relation("left_relationship")
-  right_relationship concept_relationship[] @relation("right_relationship")
+  concept_id           Int                    @id
+  concept_name         String
+  domain_id            String
+  vocabulary_id        String
+  concept_class_id     String
+  standard_concept     String?
+  concept_code         String
+  valid_start_date     DateTime?
+  valid_end_date       DateTime?
+  invalid_reason       String?
+  concept_synonyms     concept_synonym[]
+  left_relationship    concept_relationship[] @relation("left_relationship")
+  right_relationship   concept_relationship[] @relation("right_relationship")
+  intervention_concept intervention_concept[]
 
   // @@index([concept_name(ops: raw("gin_trgm_ops"))], type: Gin)
   @@index([vocabulary_id])
