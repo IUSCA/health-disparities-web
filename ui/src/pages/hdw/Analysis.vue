@@ -42,86 +42,118 @@
     <!-- Analysis Results -->
     <div
       v-if="results"
-      class="w-full flex-1 min-h-0 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 overflow-auto"
+      class="w-full flex-1 min-h-0 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-auto"
     >
-      <div>
-        <p class="text-lg font-semibold mb-2">Summary</p>
-      </div>
-      <div class="flex items-start gap-5 mb-5">
-        <AnalysisSummary :summary="results.summary" />
-      </div>
-
-      <div class="flex items-center justify-between mb-2">
-        <p class="text-lg font-semibold">Results</p>
-        <va-button-group>
-          <va-button
-            :preset="showTable ? 'primary' : 'secondary'"
-            @click="showTable = true"
-            icon="table_chart"
-            size="small"
-          >
-            Table
-          </va-button>
-          <va-button
-            :preset="!showTable ? 'primary' : 'secondary'"
-            @click="showTable = false"
-            icon="bar_chart"
-            size="small"
-          >
-            Visualizations
-          </va-button>
-        </va-button-group>
-      </div>
-
-      <!-- Statistical Help Text -->
-      <div
-        class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
-      >
-        <div class="text-sm text-blue-800 dark:text-blue-200">
-          <div class="font-medium mb-2">Understanding the Results:</div>
-          <div class="space-y-1">
-            <div>
-              <strong>P-values:</strong> P-values less than 0.05 are considered
-              statistically significant, indicating a reliable association with
-              the outcome.
-            </div>
-            <div>
-              <strong>Coefficients:</strong> Each value shows how a factor
-              affects the likelihood of the outcome. A positive number means
-              that higher values of that factor make the outcome more likely. A
-              negative number means the factor makes the outcome less likely.
-              Larger numbers (in either direction) indicate a stronger effect.
-            </div>
-          </div>
+      <!-- Summary Section -->
+      <div class="border-b border-gray-200 dark:border-gray-700 p-6">
+        <div class="mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Differences Between Racial Groups
+          </h2>
+          <p class="text-gray-600 dark:text-gray-400 text-sm">
+            This section shows the overall disparities found between different
+            racial groups in your analysis
+          </p>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+          <AnalysisSummary :summary="results.summary" />
         </div>
       </div>
 
-      <!-- Table View -->
-      <div v-if="showTable" class="flex gap-4 mb-2">
-        <AnalysisResults :results="results.results" class="w-full" />
-      </div>
+      <!-- Results Section -->
+      <div class="p-6">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Variables That Influence the Difference
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400 text-sm">
+              Statistical analysis showing which factors contribute to racial
+              disparities
+            </p>
+          </div>
+          <va-button-group>
+            <va-button
+              :preset="showTable ? 'primary' : 'secondary'"
+              @click="showTable = true"
+              icon="table_chart"
+              size="small"
+            >
+              Table
+            </va-button>
+            <va-button
+              :preset="!showTable ? 'primary' : 'secondary'"
+              @click="showTable = false"
+              icon="bar_chart"
+              size="small"
+            >
+              Visualizations
+            </va-button>
+          </va-button-group>
+        </div>
 
-      <!-- Visualization View -->
-      <div v-else class="flex gap-4 mb-2">
-        <AnalysisResultsVisualization
-          :data="results.results.params"
-          name="Coefficient"
-          title="Coefficients"
-          style="height: 340px; max-width: 600px; min-width: 340px"
-        />
-        <AnalysisResultsVisualization
-          :data="results.results['p-values']"
-          name="P-value"
-          title="P-values"
-          :color-idx="1"
-          style="height: 340px; max-width: 600px; min-width: 340px"
-        />
+        <!-- Statistical Help Text -->
+        <div
+          class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+        >
+          <div class="text-sm text-blue-800 dark:text-blue-200">
+            <div class="font-medium mb-2">Understanding the Results:</div>
+            <div class="space-y-1">
+              <div>
+                <strong>P-values:</strong> P-values less than 0.05 are
+                considered statistically significant, indicating a reliable
+                association with the outcome.
+              </div>
+              <div>
+                <strong>Coefficients:</strong> Each value shows how a factor
+                affects the likelihood of the outcome. A positive number means
+                that higher values of that factor make the outcome more likely.
+                A negative number means the factor makes the outcome less
+                likely. Larger numbers (in either direction) indicate a stronger
+                effect.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table View -->
+        <div
+          v-if="showTable"
+          class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+        >
+          <AnalysisResults :results="results.results" class="w-full" />
+        </div>
+
+        <!-- Visualization View -->
+        <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+          >
+            <AnalysisResultsVisualization
+              :data="results.results.params"
+              name="Coefficient"
+              title="Coefficients"
+              style="height: 340px"
+            />
+          </div>
+          <div
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+          >
+            <AnalysisResultsVisualization
+              :data="results.results['p-values']"
+              name="P-value"
+              title="P-values"
+              :color-idx="1"
+              style="height: 340px"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Empty State -->
     <div v-else-if="!analyzing" class="flex-1 flex items-center justify-center">
-      <div class="text-center text-gray-500">
+      <div class="text-center text-gray-500 dark:text-gray-400">
         <div class="text-xl mb-2">No Analysis Results Yet</div>
         <p>Select a cohort and intervention, then click Analyze to begin</p>
       </div>
