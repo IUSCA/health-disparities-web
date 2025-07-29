@@ -84,7 +84,7 @@ const option = {
     name: "Subjects",
     nameLocation: "middle",
     type: "value",
-    nameGap: 25,
+    nameGap: 45,
   },
   series: [
     {

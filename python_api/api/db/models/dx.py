@@ -7,7 +7,12 @@ def search_name(name: str) -> list[dict]:
         cursor = conn.cursor()
         cursor.execute(
             """
-                SELECT id, name, code, code_system FROM concept WHERE lower(name) like lower('%' || ? || '%') AND type = 'dx'
+                SELECT c.id, c.name, c.code, c.code_system, COALESCE(cc.participant_count, 0) as participant_count
+                FROM concept c
+                LEFT JOIN concept_counts cc ON c.id = cc.concept_id
+                WHERE lower(c.name) like lower('%' || ? || '%') AND c.type = 'dx'
+                ORDER BY COALESCE(cc.participant_count, 0) DESC
+                LIMIT 500
             """,
             (name,),
         )

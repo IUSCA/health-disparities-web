@@ -104,9 +104,18 @@ CREATE TABLE analysis_result (
     FOREIGN KEY (cohort_id) REFERENCES cohort (id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (intervention_id) REFERENCES intervention (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+CREATE TABLE IF NOT EXISTS "concept_counts" (
+    "concept_id" INTEGER PRIMARY KEY,
+    "participant_count" INTEGER NOT NULL DEFAULT 0,
+    "updated_at" TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY ("concept_id") REFERENCES "concept" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE INDEX "concept_counts_concept_id_idx" ON "concept_counts" ("concept_id");
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
   ('20241031000433'),
   ('20241101142333'),
   ('20241102041436'),
-  ('20241130194931');
+  ('20241130194931'),
+  ('20250729125013');
