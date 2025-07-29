@@ -2,7 +2,7 @@ import api from "@/services/hdw/api";
 
 class StatisticsService {
   get() {
-    return api.get("/statistics");
+    return api.get("/statistics/");
   }
 }
 

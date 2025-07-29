@@ -2,11 +2,11 @@ import api from "@/services/hdw/api";
 
 class CohortService {
   create(data) {
-    return api.post("/cohorts", data);
+    return api.post("/cohorts/", data);
   }
 
   getAll({ sort_by, sort_order, search_query } = {}) {
-    return api.get("/cohorts", {
+    return api.get("/cohorts/", {
       params: { sort_by, sort_order, search_query },
     });
   }

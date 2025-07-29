@@ -31,6 +31,7 @@ WORKDIR /app
 
 COPY .env ./
 COPY api ./api
+COPY keys ./keys
 
 # create the database if it doesn't exist and apply all pending migrations
 # then start the api server with exec so that it can receive signals

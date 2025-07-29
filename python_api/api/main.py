@@ -3,7 +3,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routers import search, analysis, cohorts, interventions, statistics
+from api.auth import JWTAuthMiddleware
+from api.routers import analysis, cohorts, interventions, search, statistics
 
 app = FastAPI(title="API",
               description="An API to support the front-end of the tauri app", )
@@ -15,6 +16,9 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all HTTP methods. You can specify a list if needed.
     allow_headers=["*"],  # Allows all headers. You can specify a list if needed.
 )
+
+# Add JWT authentication middleware
+app.add_middleware(JWTAuthMiddleware)
 
 
 @app.exception_handler(AssertionError)
