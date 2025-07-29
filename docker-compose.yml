@@ -190,6 +190,16 @@ services:
       - |
         npm install && exec /opt/sca/app/node_modules/.bin/vitepress dev docs --host
 
+  python_api:
+    build:
+      context: ./python_api
+    expose:
+      - 5000
+    ports:
+      - 5000:5000
+    volumes:
+      - ./python_api/db:/app/db
+
 volumes:
   ui_modules:
     external: false

@@ -35,21 +35,23 @@ services:
       network:
         ipv4_address: 172.19.0.2
 
-  # postgres:
-  #   image: postgres:14.5
-  #   restart: unless-stopped
-  #   environment:
-  #     - POSTGRES_DB=${POSTGRES_DB}
-  #     - POSTGRES_USER=${POSTGRES_USER}
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-  #   volumes:
-  #     - ./db/prod/db_postgres:/var/lib/postgresql/data
-  #     - ./db/postgres/scripts:/docker-entrypoint-initdb.d
-  #   expose:
-  #     - 5432
-  #   networks:
-  #     network:
-  #       ipv4_address: 172.19.0.3
+  postgres:
+    image: postgres:14.5
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./db/prod/db_postgres:/var/lib/postgresql/data
+      - ./db/postgres/scripts:/docker-entrypoint-initdb.d
+      - ./db/postgres/aux_scripts:/opt/sca/scripts
+      - ./db/backups:/opt/sca/backups
+    expose:
+      - 5432
+    networks:
+      network:
+        ipv4_address: 172.19.0.3
 
 # sudo docker compose -f "docker-compose-prod.yml" run --rm pgbackup
   pgbackup:
@@ -113,6 +115,19 @@ services:
     networks:
       network:
         ipv4_address: 172.19.0.5
+
+  python_api:
+    build:
+      context: ./python_api
+    expose:
+      - 5000
+    # ports:
+    #   - 5000:5000
+    volumes:
+      - ./python_api/db:/app/db
+    networks:
+      network:
+        ipv4_address: 172.19.0.8
 
 volumes:
   ui_modules:
