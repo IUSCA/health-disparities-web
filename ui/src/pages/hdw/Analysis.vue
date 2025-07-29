@@ -45,31 +45,54 @@
       class="w-full flex-1 min-h-0 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 overflow-auto"
     >
       <div>
-        <p class="text-lg font-semibold mb-2">Results</p>
+        <p class="text-lg font-semibold mb-2">Summary</p>
       </div>
-      <div class="flex gap-4 mb-5">
-        <AnalysisResults
-          :results="results.results"
-          class="w-[320px] flex-none"
-        />
+      <div class="flex items-start gap-5 mb-5">
+        <AnalysisSummary :summary="results.summary" />
+      </div>
+
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-lg font-semibold">Results</p>
+        <va-button-group>
+          <va-button
+            :preset="showTable ? 'primary' : 'secondary'"
+            @click="showTable = true"
+            icon="table_chart"
+            size="small"
+          >
+            Table
+          </va-button>
+          <va-button
+            :preset="!showTable ? 'primary' : 'secondary'"
+            @click="showTable = false"
+            icon="bar_chart"
+            size="small"
+          >
+            Visualizations
+          </va-button>
+        </va-button-group>
+      </div>
+
+      <!-- Table View -->
+      <div v-if="showTable" class="flex gap-4 mb-2">
+        <AnalysisResults :results="results.results" class="w-full" />
+      </div>
+
+      <!-- Visualization View -->
+      <div v-else class="flex gap-4 mb-2">
         <AnalysisResultsVisualization
           :data="results.results.params"
           name="Coefficient"
+          title="Coefficients"
           style="height: 340px; max-width: 600px; min-width: 340px"
         />
         <AnalysisResultsVisualization
           :data="results.results['p-values']"
           name="P-value"
+          title="P-values"
           :color-idx="1"
           style="height: 340px; max-width: 600px; min-width: 340px"
         />
-      </div>
-
-      <div>
-        <p class="text-lg font-semibold mb-2">Summary</p>
-      </div>
-      <div class="flex items-start gap-5">
-        <AnalysisSummary :summary="results.summary" />
       </div>
     </div>
 
@@ -94,6 +117,7 @@ const analyzing = ref(false);
 const results = ref(null);
 const cohortLoading = ref(false);
 const interventionLoading = ref(false);
+const showTable = ref(true);
 
 // Computed
 const canAnalyze = computed(

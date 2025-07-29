@@ -67,9 +67,20 @@ const y_names = [
 ];
 
 const option = computed(() => ({
+  title: {
+    text: props.title,
+    left: "center",
+    top: "2%",
+    textStyle: {
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+  },
   grid: {
-    top: "4%",
-    left: "12%",
+    top: "12%",
+    left: "16%",
+    right: "4%",
+    bottom: "12%",
     containLabel: true,
   },
   tooltip: {
@@ -89,8 +100,15 @@ const option = computed(() => ({
   },
   yAxis: {
     type: "category",
+    name: "Variables",
+    nameLocation: "middle",
+    nameGap: 110,
+    nameTextStyle: {
+      fontSize: 12,
+      fontWeight: "bold",
+    },
     axisLine: { show: false },
-    axisLabel: { show: false },
+    axisLabel: { show: true },
     axisTick: { show: false },
     splitLine: { show: false },
     data: y_names.map((name) => name.label),
@@ -100,7 +118,7 @@ const option = computed(() => ({
       name: props.name,
       type: "bar",
       label: {
-        show: true,
+        show: false, // labels near bars
         formatter: "{b}",
       },
       data: y_names
