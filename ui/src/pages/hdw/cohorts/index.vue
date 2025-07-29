@@ -6,7 +6,7 @@
     >
       <!-- Search and Create -->
       <div
-        class="flex-none mb-4 flex flex-col sm:flex-row justify-between items-center gap-2 p-2 md:p-0"
+        class="flex-none mb-2 flex flex-col sm:flex-row justify-between items-center gap-2 p-2 md:p-0"
       >
         <!-- search bar -->
         <div class="w-full sm:flex-1">
@@ -23,18 +23,6 @@
           </va-input>
         </div>
 
-        <!-- Sort column dropdown -->
-        <!-- <VaButtonDropdown preset="plain" class="mr-2 mb-2">
-          <template #label>
-            <i-mdi-sort-variant />
-          </template>
-
-          <div class="flex flex-col gap-2">
-            <div>Name</div>
-            <div>Created At</div>
-          </div>
-        </VaButtonDropdown> -->
-
         <!-- Create button -->
         <va-button
           @click="navigateToCreate"
@@ -44,6 +32,28 @@
           <i-mdi-plus />
           <span> Create </span>
         </va-button>
+      </div>
+
+      <!-- sort by and order -->
+      <div class="mb-4 flex gap-2 pr-2">
+        <va-select
+          v-model="sortBy"
+          :options="sortOptions"
+          label="Sort by"
+          class="w-1/2 text-sm"
+          innerLabel
+          text-by="label"
+          value-by="value"
+        />
+        <va-select
+          v-model="sortOrder"
+          :options="orderOptions"
+          label="Order"
+          class="w-1/2 text-sm"
+          innerLabel
+          text-by="label"
+          value-by="value"
+        />
       </div>
 
       <!-- Cohorts -->
@@ -92,6 +102,17 @@ const selectedCohort = ref(null);
 
 const cohorts = ref([]);
 
+const sortBy = ref("created_at");
+const sortOrder = ref("desc");
+const sortOptions = [
+  { label: "Name", value: "name" },
+  { label: "Created At", value: "created_at" },
+];
+const orderOptions = [
+  { label: "Ascending", value: "asc" },
+  { label: "Descending", value: "desc" },
+];
+
 // Select cohort
 const selectCohort = (cohort) => {
   selectedCohort.value = cohort;
@@ -105,7 +126,11 @@ const navigateToCreate = () => {
 // Fetch cohorts on mount
 const fetchCohorts = async () => {
   cohortService
-    .getAll({ search_query: searchQuery.value.trim() })
+    .getAll({
+      search_query: searchQuery.value.trim(),
+      sort_by: sortBy.value,
+      sort_order: sortOrder.value,
+    })
     .then((response) => {
       cohorts.value = response.data;
     })
@@ -125,6 +150,15 @@ watchDebounced(
   {
     debounce: 300,
   },
+);
+
+watch(
+  [sortBy, sortOrder],
+  () => {
+    selectedCohort.value = null;
+    fetchCohorts();
+  },
+  { immediate: true },
 );
 
 onMounted(() => {

@@ -5,9 +5,9 @@ class InterventionService {
     return api.post("/interventions", data);
   }
 
-  getAll({ search_query, category } = {}) {
+  getAll({ search_query, category, sort_by, sort_order } = {}) {
     return api.get("/interventions", {
-      params: { search_query, category },
+      params: { search_query, category, sort_by, sort_order },
     });
   }
 
