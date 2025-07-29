@@ -73,6 +73,29 @@
         </va-button-group>
       </div>
 
+      <!-- Statistical Help Text -->
+      <div
+        class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+      >
+        <div class="text-sm text-blue-800 dark:text-blue-200">
+          <div class="font-medium mb-2">Understanding the Results:</div>
+          <div class="space-y-1">
+            <div>
+              <strong>P-values:</strong> P-values less than 0.05 are considered
+              statistically significant, indicating a reliable association with
+              the outcome.
+            </div>
+            <div>
+              <strong>Coefficients:</strong> Each value shows how a factor
+              affects the likelihood of the outcome. A positive number means
+              that higher values of that factor make the outcome more likely. A
+              negative number means the factor makes the outcome less likely.
+              Larger numbers (in either direction) indicate a stronger effect.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Table View -->
       <div v-if="showTable" class="flex gap-4 mb-2">
         <AnalysisResults :results="results.results" class="w-full" />
