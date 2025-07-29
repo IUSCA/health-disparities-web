@@ -15,8 +15,8 @@ import {
   TitleComponent,
   TooltipComponent,
 } from "echarts/components";
-import { CanvasRenderer } from "echarts/renderers";
 import { use } from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
 import VChart from "vue-echarts";
 
 // Register ECharts components
@@ -84,7 +84,7 @@ const option = {
     name: "Subjects",
     nameLocation: "middle",
     type: "value",
-    nameGap: 55,
+    nameGap: 25,
   },
   series: [
     {

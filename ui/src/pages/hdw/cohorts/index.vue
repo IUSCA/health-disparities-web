@@ -99,7 +99,7 @@ const selectCohort = (cohort) => {
 
 // Navigate to create page
 const navigateToCreate = () => {
-  router.push("/cohorts/new");
+  router.push("/hdw/cohorts/new");
 };
 
 // Fetch cohorts on mount
