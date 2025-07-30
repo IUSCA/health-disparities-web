@@ -91,13 +91,7 @@
     </div>
   </div>
 
-  <VaModal
-    v-model="showModal"
-    size="large"
-    hide-default-actions
-    close-button
-    title="Create Intervention"
-  >
+  <VaModal v-model="showModal" size="large" hide-default-actions close-button>
     <InterventionForm
       @create="
         showModal = false;

@@ -371,10 +371,11 @@ watch(search_text, (newValue) => {
 <style scoped>
 .dx-table {
   --va-data-table-cell-padding: 4px;
+  --va-data-table-selectable-cell-width: 25px;
 }
 
 /* Enhanced table styling for better readability */
 :deep(.va-data-table) {
-  overflow: hidden;
+  overflow-x: hidden;
 }
 </style>

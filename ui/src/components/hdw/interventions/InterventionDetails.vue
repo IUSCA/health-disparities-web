@@ -4,13 +4,24 @@
     class="h-full overflow-y-auto pr-2"
     v-if="!loading && intervention?.concepts"
   >
-    <div
-      v-for="item in intervention.concepts"
-      :key="item.id"
-      class="p-1 flex items-center justify-between"
+    <VaDataTable
+      :items="intervention.concepts"
+      :columns="[
+        { key: 'code', label: 'Code' },
+        {
+          key: 'code_system',
+          label: 'System',
+          width: '120px',
+          tdClass: 'truncate',
+        },
+        { key: 'name', label: 'Name', tdClass: 'truncate', width: '580px' },
+      ]"
+      class="w-full text-sm intervention-details-table"
     >
-      <span>{{ item.name }} ({{ item.code }})</span>
-    </div>
+      <template #bodyCell="{ item, column }">
+        <span>{{ item[column.key] }}</span>
+      </template>
+    </VaDataTable>
     <div v-if="intervention.concepts.length === 0">
       <div class="p-1 flex items-center justify-between">No concepts</div>
     </div>
@@ -67,3 +78,9 @@ watch(
   },
 );
 </script>
+
+<style scoped>
+.intervention-details-table {
+  --va-data-table-cell-padding: 4px;
+}
+</style>

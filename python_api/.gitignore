@@ -92,6 +92,7 @@ keys/*.pub
 .idea
 db/database.sqlite3
 db/database.sqlite3.bkp
+db/database.zip
 db_stats.txt
 data/
 /keys/
