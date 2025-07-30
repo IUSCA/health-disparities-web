@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-row gap-5">
+  <div class="flex flex-row gap-3">
     <!-- Left Panel -->
     <div class="w-full flex flex-col items-start gap-5">
       <VaCard class="w-full">
@@ -77,7 +77,13 @@
                 </VaButton>
               </div>
 
-              <div v-if="selected_dx.length > 0"></div>
+              <div v-if="selected_dx.length > 0">
+                <HDWSelectedEntities
+                  :selected-list="selected_dx"
+                  entity-type="Diagnoses"
+                  @remove-item="handleDxRemove"
+                />
+              </div>
             </div>
           </div>
 
@@ -114,7 +120,13 @@
                 </VaButton>
               </div>
 
-              <div v-if="selected_dx.length > 0"></div>
+              <div v-if="selected_procedures.length > 0">
+                <HDWSelectedEntities
+                  :selected-list="selected_procedures"
+                  entity-type="Procedures"
+                  @remove-item="handleRemoveProcedure"
+                />
+              </div>
             </div>
           </div>
         </VaCardContent>
@@ -123,7 +135,7 @@
 
     <!-- Right Panel -->
     <div class="flex-none">
-      <VaCard class="mb-5 max-w-[480px]">
+      <VaCard class="mb-3 max-w-[480px]">
         <VaCardTitle>
           <span class="text-base"> Cohort Size </span>
         </VaCardTitle>
@@ -340,7 +352,7 @@ function createCohort() {
     })
     .then((res) => {
       console.log("res", res);
-      router.push("/cohorts");
+      router.push("/hdw/cohorts");
     })
     .catch((err) => {
       console.error(err);
@@ -362,8 +374,18 @@ function handleDxSelect(selected) {
   selected_dx.value = selected;
 }
 
+function handleDxRemove(item) {
+  selected_dx.value = selected_dx.value.filter((dx) => dx.code !== item.code);
+}
+
 function onProceduresSelected(selectedItems) {
   selected_procedures.value = selectedItems;
+}
+
+function handleRemoveProcedure(item) {
+  selected_procedures.value = selected_procedures.value.filter(
+    (p) => p.code !== item.code,
+  );
 }
 </script>
 
