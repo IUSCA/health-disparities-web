@@ -1,7 +1,7 @@
 <template>
   <VaModal
     v-model="visible"
-    title="Search Diagnoses"
+    :title="modalTitle"
     fixed-layout
     close-button
     hide-default-actions
@@ -16,7 +16,7 @@
           <va-input
             v-model="search_text"
             class="w-full"
-            placeholder="Search diagnoses by name"
+            :placeholder="searchPlaceholder"
             outline
             clearable
             :messages="searchValidationMessages"
@@ -50,7 +50,8 @@
             class="text-4xl va-text-secondary mb-2 inline-block"
           />
           <p class="va-text-secondary">
-            Enter at least 3 characters to search for diagnoses...
+            Enter at least 3 characters to search for
+            {{ entityType.toLowerCase() }}...
           </p>
         </div>
 
@@ -85,7 +86,7 @@
             class="text-4xl va-text-secondary mb-2 inline-block"
           />
           <p class="va-text-primary mb-3">
-            No diagnoses found for "{{ search_text }}"
+            No {{ entityType.toLowerCase() }} found for "{{ search_text }}"
           </p>
           <p class="va-text-secondary text-sm">
             Try searching with different keywords or check your spelling
@@ -99,7 +100,7 @@
           class="dx-table"
           :loading="loading"
           :items="results"
-          :columns="columns"
+          :columns="tableColumns"
           selectable
           select-mode="multiple"
           items-track-by="code"
@@ -139,7 +140,6 @@
 </template>
 
 <script setup>
-import searchService from "@/services/hdw/search";
 import { difference } from "@/services/utils";
 import { computed, ref, watch } from "vue";
 
@@ -151,9 +151,50 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  searchFn: {
+    type: Function,
+    required: true,
+  },
+  entityType: {
+    type: String,
+    default: "items",
+  },
+  columns: {
+    type: Array,
+    default: () => [
+      { key: "name", label: "Name", tdClass: "truncate", width: "440px" },
+      {
+        key: "code",
+        label: "Code",
+        tdClass: "truncate",
+        width: "90px",
+        sortable: true,
+      },
+      {
+        key: "code_system",
+        label: "Code System",
+        tdClass: "truncate",
+        width: "120px",
+      },
+      {
+        key: "participant_count",
+        label: "Participant Count",
+        tdClass: "truncate",
+        width: "100px",
+        sortable: true,
+      },
+    ],
+  },
 });
 
 const emit = defineEmits(["select"]);
+
+// Computed properties for dynamic content
+const modalTitle = computed(() => `Search ${props.entityType}`);
+const searchPlaceholder = computed(
+  () => `Search ${props.entityType.toLowerCase()} by name`,
+);
+const tableColumns = computed(() => props.columns);
 
 // Expose methods to parent component
 defineExpose({
@@ -196,31 +237,6 @@ const no_matches = computed(
     !error.value,
 );
 
-// Table columns configuration
-const columns = [
-  { key: "name", label: "Name", tdClass: "truncate", width: "440px" },
-  {
-    key: "code",
-    label: "Code",
-    tdClass: "truncate",
-    width: "90px",
-    sortable: true,
-  },
-  {
-    key: "code_system",
-    label: "Code System",
-    tdClass: "truncate",
-    width: "120px",
-  },
-  {
-    key: "participant_count",
-    label: "Participant Count",
-    tdClass: "truncate",
-    width: "100px",
-    sortable: true,
-  },
-];
-
 // Modal methods
 function show() {
   visible.value = true;
@@ -256,8 +272,8 @@ function search() {
   error.value = false;
   hasSearched.value = true;
 
-  searchService
-    .dx(search_text.value)
+  props
+    .searchFn(search_text.value)
     .then((res) => {
       results.value = res.data || [];
     })

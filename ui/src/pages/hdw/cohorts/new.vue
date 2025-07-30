@@ -191,10 +191,20 @@
     </div>
   </div>
 
-  <HDWDxSearch
+  <HDWEntitySearch
     ref="dxSearchModal"
     :selected-list="selected_dx"
     @select="handleDxSelect"
+    :search-fn="(query) => searchService.dx(query)"
+    entity-type="Diagnoses"
+  />
+
+  <HDWEntitySearch
+    ref="proceduresSearchModal"
+    :selected-list="selected_procedures"
+    @select="onProceduresSelected"
+    :search-fn="(query) => searchService.procedures(query)"
+    entity-type="Procedures"
   />
 </template>
 
@@ -350,6 +360,10 @@ function openProceduresSearch() {
 
 function handleDxSelect(selected) {
   selected_dx.value = selected;
+}
+
+function onProceduresSelected(selectedItems) {
+  selected_procedures.value = selectedItems;
 }
 </script>
 
