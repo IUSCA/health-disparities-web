@@ -1,97 +1,128 @@
 <template>
   <div class="flex flex-row gap-5">
     <!-- Left Panel -->
-    <div class="flex-none flex flex-col items-start gap-5">
-      <VaCard>
+    <div class="w-full flex flex-col items-start gap-5">
+      <VaCard class="w-full">
         <VaCardTitle>
-          <div class="flex items-center justify-between w-full">
-            <p class="text-base">Demographics</p>
-            <VaButton
-              preset="plain"
-              class="flex-none ml-auto"
-              @click="resetDemographics"
-              icon="refresh"
-              color="secondary"
-            >
-              Reset
-            </VaButton>
-          </div>
+          <span class="text-base"> Define Cohort Criteria </span>
         </VaCardTitle>
         <VaCardContent>
-          <VaForm class="flex flex-col gap-3 w-[480px] px-4 mt-4">
-            <VaSlider
-              label="Age Range"
-              v-model="ageRange"
-              class="mb-6 age-range-slider"
-              range
-              track-label-visible
-              :min="0"
-              :max="100"
-            />
+          <div class="flex flex-col gap-5 w-[600px] mt-4">
+            <div class="flex gap-3 items-center w-full">
+              <label for="age-range-slider" class="w-[120px] va-text-primary">
+                Age Range
+              </label>
+              <VaSlider
+                id="age-range-slider"
+                v-model="ageRange"
+                class="age-range-slider flex-1"
+                range
+                track-label-visible
+                :min="0"
+                :max="100"
+              />
+              <VaButton
+                color="secondary"
+                preset="secondary"
+                icon="refresh"
+                @click="resetDemographics"
+                class="ml-2"
+              >
+                Reset
+              </VaButton>
+            </div>
 
-            <VaSelect
-              label="Gender"
-              v-model="gender"
-              class="mb-6"
-              :options="genderOptions"
-              value-by="value"
-              text-by="label"
-            />
-          </VaForm>
+            <div class="flex gap-3 items-center w-full">
+              <label for="hdw-cohort-gender" class="w-[120px] va-text-primary">
+                Gender
+              </label>
+              <VaSelect
+                id="hdw-cohort-gender"
+                v-model="gender"
+                class=""
+                :options="genderOptions"
+                value-by="value"
+                text-by="label"
+              />
+            </div>
+          </div>
+
+          <VaDivider class="my-5" />
+
+          <div class="flex gap-3 items-start mt-5">
+            <label for="launch_dx_search" class="w-[120px] va-text-primary">
+              Diagnoses
+            </label>
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <VaButton
+                  preset="primary"
+                  icon="search"
+                  id="launch_dx_search"
+                  size="small"
+                  borderColor="primary"
+                  @click="openDxSearch"
+                >
+                  Search for Diagnoses
+                </VaButton>
+
+                <VaButton
+                  color="secondary"
+                  preset="secondary"
+                  icon="refresh"
+                  @click="resetDx"
+                  class="ml-2"
+                >
+                  Reset
+                </VaButton>
+              </div>
+
+              <div v-if="selected_dx.length > 0"></div>
+            </div>
+          </div>
+
+          <VaDivider class="my-5" />
+
+          <div class="flex gap-3 items-start mt-5">
+            <label
+              for="launch_procedures_search"
+              class="w-[120px] va-text-primary"
+            >
+              Procedures
+            </label>
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <VaButton
+                  preset="primary"
+                  icon="search"
+                  id="launch_procedures_search"
+                  size="small"
+                  borderColor="primary"
+                  @click="openProceduresSearch"
+                >
+                  Search for Procedures
+                </VaButton>
+
+                <VaButton
+                  color="secondary"
+                  preset="secondary"
+                  icon="refresh"
+                  @click="resetProcedures"
+                  class="ml-2"
+                >
+                  Reset
+                </VaButton>
+              </div>
+
+              <div v-if="selected_dx.length > 0"></div>
+            </div>
+          </div>
         </VaCardContent>
       </VaCard>
-
-      <div class="">
-        <VaCard>
-          <VaCardTitle>
-            <div class="flex items-center justify-between w-full">
-              <p class="text-base">Diagnoses</p>
-              <VaButton
-                preset="plain"
-                class="flex-none ml-auto"
-                @click="resetDx"
-                icon="refresh"
-                color="secondary"
-              >
-                Reset
-              </VaButton>
-            </div>
-          </VaCardTitle>
-          <VaCardContent>
-            <div class="w-[480px]">
-              <HDWDxSelect v-model="selected_dx" />
-            </div>
-          </VaCardContent>
-        </VaCard>
-      </div>
-
-      <div class="">
-        <VaCard>
-          <VaCardTitle>
-            <div class="flex items-center justify-between w-full">
-              <p class="text-base">Procedures</p>
-              <VaButton
-                preset="plain"
-                class="flex-none ml-auto"
-                @click="resetProcedures"
-                icon="refresh"
-                color="secondary"
-              >
-                Reset
-              </VaButton>
-            </div>
-          </VaCardTitle>
-          <VaCardContent>
-            <div class="w-[480px]">
-              <ProcedureSelect v-model="selected_procedures" />
-            </div>
-          </VaCardContent>
-        </VaCard>
-      </div>
     </div>
 
     <!-- Right Panel -->
-    <div class="flex-1">
+    <div class="flex-none">
       <VaCard class="mb-5 max-w-[480px]">
         <VaCardTitle>
           <span class="text-base"> Cohort Size </span>
@@ -123,7 +154,7 @@
 
       <VaCard class="max-w-[480px]">
         <VaCardTitle>
-          <span class="text-base"> Create Cohort </span>
+          <span class="text-base"> Save Cohort </span>
         </VaCardTitle>
         <VaCardContent>
           <VaForm ref="formRef" class="flex flex-col gap-3 px-4">
@@ -159,6 +190,12 @@
       </VaCard>
     </div>
   </div>
+
+  <HDWDxSearch
+    ref="dxSearchModal"
+    :selected-list="selected_dx"
+    @select="handleDxSelect"
+  />
 </template>
 
 <script setup>
@@ -178,6 +215,9 @@ const cohort_name = ref("");
 const cohort_description = ref("");
 const size = ref(0);
 const loading = ref(false);
+
+const dxSearchModal = ref(null);
+const proceduresSearchModal = ref(null);
 
 const genderOptions = [
   { label: "All", value: null },
@@ -298,6 +338,18 @@ function createCohort() {
     .finally(() => {
       loading.value = false;
     });
+}
+
+function openDxSearch() {
+  dxSearchModal.value.show();
+}
+
+function openProceduresSearch() {
+  proceduresSearchModal.value.show();
+}
+
+function handleDxSelect(selected) {
+  selected_dx.value = selected;
 }
 </script>
 
